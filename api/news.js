@@ -39,9 +39,22 @@ const scrapeArticles = async (url, category) => {
     const $ = cheerio.load(html);
     const articles = [];
 
-    // Find all article containers - using actual selectors from Radio Constanta
-    const postItems = $('.post-item');
-    console.log(`Found ${postItems.length} .post-item elements`);
+    // Debug: Check what article-related classes exist
+    const allDivs = $('div[class*="post"], div[class*="article"], div[class*="item"], article');
+    console.log(`Total divs with post/article/item: ${allDivs.length}`);
+
+    // Log first few class names to see structure
+    allDivs.slice(0, 5).each((i, el) => {
+      console.log(`Element ${i} classes:`, $(el).attr('class'));
+    });
+
+    // Try multiple possible selectors
+    let postItems = $('.post-item');
+    if (postItems.length === 0) {
+      console.log('Trying alternative selectors...');
+      postItems = $('.post, article, .article-item, .entry, .blog-post');
+      console.log(`Found ${postItems.length} items with alternative selectors`);
+    }
 
     postItems.each((index, element) => {
       try {
