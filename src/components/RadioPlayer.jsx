@@ -2,17 +2,10 @@ import { motion } from 'framer-motion';
 import Loader from './Loader';
 
 export default function RadioPlayer({ radioState }) {
-  const { isPlaying, isLoading, currentStation, currentQuality, metadata, streamInfo, stations, debugInfo, togglePlay, switchStation, switchQuality } = radioState;
+  const { isPlaying, isLoading, currentStation, currentQuality, metadata, streamInfo, stations, togglePlay, switchStation, switchQuality } = radioState;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 py-8">
-
-      {/* Debug Info - Show only on mobile when not empty */}
-      {debugInfo && (
-        <div className="fixed top-2 left-2 right-2 bg-black/90 text-green-400 text-xs p-2 rounded z-50 max-h-32 overflow-auto font-mono pointer-events-none">
-          <div className="whitespace-pre-wrap">{debugInfo}</div>
-        </div>
-      )}
 
       {/* Cover Art */}
       <motion.div
@@ -106,28 +99,6 @@ export default function RadioPlayer({ radioState }) {
             {station.id === 'fm' ? 'FM' : 'Folclor'}
           </motion.button>
         ))}
-      </div>
-
-      {/* Quality Selector */}
-      <div className="w-full max-w-xs mb-4">
-        <div className="text-xs text-white/40 mb-2 text-center">Calitate audio</div>
-        <div className="flex gap-2">
-          {currentStation.qualities.map((quality) => (
-            <motion.button
-              key={quality.id}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => switchQuality(quality)}
-              disabled={isLoading}
-              className={`flex-1 py-2 px-3 rounded-lg font-medium text-xs transition-all disabled:opacity-50 ${
-                currentQuality.id === quality.id
-                  ? 'bg-primary/20 text-primary border border-primary/40'
-                  : 'bg-dark-card text-white/40 hover:bg-dark-card/80'
-              }`}
-            >
-              {quality.format === 'FLAC' ? 'FLAC' : quality.bitrate.replace(' kbps', 'k')}
-            </motion.button>
-          ))}
-        </div>
       </div>
 
       {/* Stream Quality Info */}

@@ -33,14 +33,12 @@ function App() {
   const [currentQuality, setCurrentQuality] = useState(STATIONS[0].qualities[0]);
   const [metadata, setMetadata] = useState('');
   const [streamInfo, setStreamInfo] = useState(null);
-  const [debugInfo, setDebugInfo] = useState(''); // For mobile debugging
   const audioRef = useRef(null);
   const isSwitchingRef = useRef(false);
 
-  // Helper to log debug info visibly on mobile
+  // Helper to log debug info
   const logDebug = (message) => {
     console.log(message);
-    setDebugInfo(prev => `${new Date().toLocaleTimeString()}: ${message}\n${prev}`.substring(0, 500));
   };
 
   // Create Audio element (HTML5 approach - mobile friendly)
@@ -239,7 +237,6 @@ function App() {
     metadata,
     streamInfo,
     stations: STATIONS,
-    debugInfo,
     togglePlay,
     switchStation,
     switchQuality
