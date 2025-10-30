@@ -110,16 +110,39 @@ const parseRSSFeed = async () => {
         const categoryNames = categories.map(c => extractText(c));
         const category = categoryNames[0] || 'Actualitate';
 
-        // Extract image from enclosure or content
+        // Extract image from multiple possible sources
         let image = null;
-        if (item.enclosure && item.enclosure[0] && item.enclosure[0].url) {
-          image = item.enclosure[0].url;
-        } else {
-          // Try to extract from content:encoded or description
-          const content = extractText(item['content:encoded']) || description;
-          const imgMatch = content.match(/<img[^>]+src="([^">]+)"/i);
+
+        // Try enclosure first
+        if (item.enclosure && item.enclosure[0]) {
+          if (item.enclosure[0].url) {
+            image = item.enclosure[0].url;
+          } else if (typeof item.enclosure[0] === 'string') {
+            image = item.enclosure[0];
+          }
+        }
+
+        // If no enclosure, try media:content
+        if (!image && item['media:content'] && item['media:content'][0]) {
+          image = item['media:content'][0].url || item['media:content'][0];
+        }
+
+        // If still no image, extract from content:encoded or description
+        if (!image) {
+          const content = item['content:encoded'] ? extractText(item['content:encoded']) : description;
+          // Look for img tags with various attribute patterns
+          const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i) ||
+                          content.match(/src=["']([^"']+\.(?:jpg|jpeg|png|webp|gif))["']/i);
           if (imgMatch) {
             image = imgMatch[1];
+          }
+        }
+
+        // Last resort: try to find any image URL in the content
+        if (!image) {
+          const urlMatch = description.match(/(https?:\/\/[^\s<>"]+\.(?:jpg|jpeg|png|webp|gif))/i);
+          if (urlMatch) {
+            image = urlMatch[1];
           }
         }
 
