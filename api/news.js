@@ -163,20 +163,19 @@ const parseRSSFeed = async (limit = null) => {
           image = 'https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=Radio+Constanta';
         }
 
-        // Get full content and clean it
-        const rawContent = extractText(item['content:encoded']) || description;
-        const cleanedContent = cleanArticleContent(rawContent, link);
-        const cleanedDescription = cleanArticleContent(description, link);
+        // For list view, we only need the summary, not the full cleaned content
+        // Full content will be fetched via /api/article when user clicks
+        const rawDescription = extractText(item.description);
 
         return {
           id: guid,
           title: stripHtml(title),
-          summary: truncateAtWord(stripHtml(cleanedDescription), 200),
+          summary: truncateAtWord(stripHtml(rawDescription), 200),
           image: image,
           category: stripHtml(category),
           date: parseRomanianDate(pubDate),
           link: link,
-          content: cleanedContent,
+          content: '', // Don't parse full content for list view
           author: stripHtml(creator)
         };
       } catch (err) {

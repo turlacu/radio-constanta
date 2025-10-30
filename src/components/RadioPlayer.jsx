@@ -39,13 +39,20 @@ export default function RadioPlayer({ radioState }) {
           </>
         )}
 
-        {/* Cover art - clean, no overlay */}
+        {/* Cover art with Live indicator overlay */}
         <div className="relative w-full aspect-square rounded-xl overflow-hidden card-shadow">
           <img
             src={currentStation.coverArt}
             alt={currentStation.name}
             className="w-full h-full object-contain bg-white"
           />
+          {/* Live indicator overlay - top right */}
+          {isPlaying && (
+            <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm flex items-center gap-2">
+              <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+              <span className="text-primary text-xs font-medium">Live</span>
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -54,12 +61,6 @@ export default function RadioPlayer({ radioState }) {
         <h2 className="text-2xl font-bold mb-2 text-shadow">{currentStation.name}</h2>
         {metadata && (
           <p className="text-white/60 text-sm">{metadata}</p>
-        )}
-        {isPlaying && (
-          <p className="text-primary text-sm mt-2 flex items-center justify-center gap-2">
-            <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            Live
-          </p>
         )}
       </div>
 
