@@ -13,7 +13,7 @@ const STATIONS = [
     color: 'from-blue-500/20 to-cyan-500/20',
     qualities: [
       { id: '128', name: 'MP3 128 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-fm', format: 'MP3', bitrate: '128 kbps' },
-      { id: 'flac', name: 'FLAC 1024 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-fm', format: 'MP3', bitrate: '128 kbps' }
+      { id: 'flac', name: 'FLAC', url: 'https://stream4.srr.ro:8443/radio-constanta-fm', format: 'MP3', bitrate: '128 kbps' }
     ]
   },
   {
@@ -34,8 +34,15 @@ function App() {
   const [currentQuality, setCurrentQuality] = useState(STATIONS[0].qualities[0]);
   const [metadata, setMetadata] = useState('');
   const [streamInfo, setStreamInfo] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(''); // For mobile debugging
   const audioRef = useRef(null);
   const isSwitchingRef = useRef(false);
+
+  // Helper to log debug info visibly on mobile
+  const logDebug = (message) => {
+    console.log(message);
+    setDebugInfo(prev => `${new Date().toLocaleTimeString()}: ${message}\n${prev}`.substring(0, 500));
+  };
 
   useEffect(() => {
     // Only update src if not already set (prevents conflicts with switchStation)
@@ -95,21 +102,29 @@ function App() {
   }, [currentQuality]);
 
   const togglePlay = async () => {
+    logDebug(`togglePlay called, isPlaying: ${isPlaying}`);
+
     if (!currentQuality.url) {
+      logDebug('ERROR: No stream URL');
       alert('Stream URL nu este configurat încă.');
       return;
     }
 
     if (isPlaying) {
+      logDebug('Pausing audio');
       audioRef.current?.pause();
       setIsPlaying(false);
     } else {
+      logDebug('Starting audio...');
       setIsLoading(true);
       try {
         // Ensure audio element is ready
         if (!audioRef.current) {
+          logDebug('ERROR: Audio element not found');
           throw new Error('Audio element not initialized');
         }
+
+        logDebug(`Audio src: ${audioRef.current.src}`);
 
         // Load the stream if not loaded
         if (audioRef.current.readyState === 0) {
@@ -122,11 +137,14 @@ function App() {
 
         while (playAttempts < maxAttempts) {
           try {
+            logDebug(`Play attempt ${playAttempts + 1}/${maxAttempts}`);
             await audioRef.current.play();
+            logDebug('✓ Playback started');
             setIsPlaying(true);
             break;
           } catch (err) {
             playAttempts++;
+            logDebug(`Play failed: ${err.message}`);
             if (playAttempts >= maxAttempts) {
               throw err;
             }
@@ -136,6 +154,7 @@ function App() {
           }
         }
       } catch (error) {
+        logDebug(`✗ FINAL ERROR: ${error.name} - ${error.message}`);
         console.error('Error playing audio:', error);
         setIsPlaying(false);
         // Show user-friendly error
@@ -339,6 +358,7 @@ function App() {
     metadata,
     streamInfo,
     stations: STATIONS,
+    debugInfo,
     togglePlay,
     switchStation,
     switchQuality

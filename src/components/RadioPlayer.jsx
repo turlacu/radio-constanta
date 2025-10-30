@@ -2,10 +2,17 @@ import { motion } from 'framer-motion';
 import Loader from './Loader';
 
 export default function RadioPlayer({ radioState }) {
-  const { isPlaying, isLoading, currentStation, currentQuality, metadata, streamInfo, stations, togglePlay, switchStation, switchQuality } = radioState;
+  const { isPlaying, isLoading, currentStation, currentQuality, metadata, streamInfo, stations, debugInfo, togglePlay, switchStation, switchQuality } = radioState;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 py-8">
+
+      {/* Debug Info - Show only on mobile when not empty */}
+      {debugInfo && (
+        <div className="fixed top-2 left-2 right-2 bg-black/90 text-green-400 text-xs p-2 rounded z-50 max-h-32 overflow-auto font-mono">
+          <div className="whitespace-pre-wrap">{debugInfo}</div>
+        </div>
+      )}
 
       {/* Cover Art */}
       <motion.div
