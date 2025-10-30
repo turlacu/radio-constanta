@@ -175,14 +175,13 @@ function App() {
     }
   };
 
-  const switchStation = async (station) => {
+  const switchStation = (station) => {
     if (isSwitchingRef.current || currentStation.id === station.id) {
       return;
     }
 
     logDebug(`Switching to ${station.name}`);
     isSwitchingRef.current = true;
-    const wasPlaying = isPlaying;
 
     try {
       // Stop current playback
@@ -197,20 +196,7 @@ function App() {
       setCurrentQuality(defaultQuality);
       setIsPlaying(false);
 
-      // If was playing, start the new station
-      if (wasPlaying && audioRef.current) {
-        audioRef.current.src = defaultQuality.url;
-        audioRef.current.load();
-        setIsLoading(true);
-
-        try {
-          await audioRef.current.play();
-          logDebug('✓ Station switched and playing');
-        } catch (err) {
-          logDebug(`✗ Play after switch failed: ${err.message}`);
-          setIsLoading(false);
-        }
-      }
+      logDebug('Station switched - press Play to start');
     } catch (error) {
       logDebug(`✗ Switch error: ${error.message}`);
     } finally {
@@ -218,14 +204,13 @@ function App() {
     }
   };
 
-  const switchQuality = async (quality) => {
+  const switchQuality = (quality) => {
     if (isSwitchingRef.current || currentQuality.id === quality.id) {
       return;
     }
 
     logDebug(`Switching to ${quality.name}`);
     isSwitchingRef.current = true;
-    const wasPlaying = isPlaying;
 
     try {
       // Stop current playback
@@ -238,20 +223,7 @@ function App() {
       setCurrentQuality(quality);
       setIsPlaying(false);
 
-      // If was playing, start the new quality
-      if (wasPlaying && audioRef.current) {
-        audioRef.current.src = quality.url;
-        audioRef.current.load();
-        setIsLoading(true);
-
-        try {
-          await audioRef.current.play();
-          logDebug('✓ Quality switched and playing');
-        } catch (err) {
-          logDebug(`✗ Play after quality switch failed: ${err.message}`);
-          setIsLoading(false);
-        }
-      }
+      logDebug('Quality switched - press Play to start');
     } catch (error) {
       logDebug(`✗ Quality switch error: ${error.message}`);
     } finally {
