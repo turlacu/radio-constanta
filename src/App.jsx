@@ -37,6 +37,7 @@ function App() {
   const [debugInfo, setDebugInfo] = useState(''); // For mobile debugging
   const audioRef = useRef(null);
   const isSwitchingRef = useRef(false);
+  const playAttemptRef = useRef(false);
 
   // Helper to log debug info visibly on mobile
   const logDebug = (message) => {
@@ -102,62 +103,69 @@ function App() {
   }, [currentQuality]);
 
   const togglePlay = async () => {
-    logDebug(`togglePlay called, isPlaying: ${isPlaying}, isLoading: ${isLoading}`);
+    logDebug(`togglePlay: isPlaying=${isPlaying}, isLoading=${isLoading}`);
 
-    // Prevent multiple simultaneous play attempts
-    if (isLoading) {
-      logDebug('Already loading, ignoring click');
+    // Prevent double-clicks with ref
+    if (playAttemptRef.current) {
+      logDebug('Play attempt in progress, ignoring');
       return;
     }
 
     if (!currentQuality.url) {
-      logDebug('ERROR: No stream URL');
+      logDebug('ERROR: No URL');
       return;
     }
 
     if (isPlaying) {
-      logDebug('Pausing audio');
+      logDebug('Pausing');
       audioRef.current?.pause();
       setIsPlaying(false);
-    } else {
-      logDebug('Starting audio...');
-      setIsLoading(true);
-      try {
-        // Ensure audio element is ready
-        if (!audioRef.current) {
-          logDebug('ERROR: Audio element not found');
-          throw new Error('Audio element not initialized');
-        }
+      setIsLoading(false);
+      return;
+    }
 
-        logDebug(`Audio src: ${audioRef.current.src}`);
+    // Start play attempt
+    playAttemptRef.current = true;
+    setIsLoading(true);
+    logDebug('Starting playback...');
 
-        // Trigger load if needed
-        if (audioRef.current.readyState === 0) {
-          logDebug('Loading stream...');
-          audioRef.current.load();
-        }
-
-        // Wait briefly for mobile to initialize
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Attempt to play
-        logDebug('Playing stream...');
-        const playPromise = audioRef.current.play();
-
-        if (playPromise !== undefined) {
-          await playPromise;
-        }
-
-        logDebug('✓ Playback started');
-        setIsPlaying(true);
-      } catch (error) {
-        logDebug(`✗ ERROR: ${error.name} - ${error.message}`);
-        console.error('Error playing audio:', error);
-        setIsPlaying(false);
-      } finally {
-        logDebug('Clearing loading state');
-        setIsLoading(false);
+    try {
+      if (!audioRef.current) {
+        throw new Error('Audio element not found');
       }
+
+      // Don't call load() - let play() handle it
+      logDebug(`Playing: ${audioRef.current.src}`);
+
+      // Play with timeout
+      const playPromise = audioRef.current.play();
+
+      if (playPromise !== undefined) {
+        // Race between play() and 5-second timeout
+        await Promise.race([
+          playPromise,
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Play timeout')), 5000)
+          )
+        ]);
+      }
+
+      logDebug('✓ Playing');
+      setIsPlaying(true);
+      setIsLoading(false);
+    } catch (error) {
+      logDebug(`✗ ${error.name}: ${error.message}`);
+      setIsPlaying(false);
+      setIsLoading(false);
+    } finally {
+      playAttemptRef.current = false;
+      // Safety: always clear loading after 100ms
+      setTimeout(() => {
+        if (!audioRef.current?.paused) {
+          setIsPlaying(true);
+        }
+        setIsLoading(false);
+      }, 100);
     }
   };
 
@@ -362,9 +370,8 @@ function App() {
       <div className="min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
         <audio
           ref={audioRef}
-          onLoadStart={() => setIsLoading(true)}
-          onCanPlay={() => setIsLoading(false)}
           onError={() => {
+            logDebug('Audio element error event');
             setIsLoading(false);
             setIsPlaying(false);
           }}
