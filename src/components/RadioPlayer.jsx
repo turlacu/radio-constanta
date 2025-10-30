@@ -9,7 +9,7 @@ export default function RadioPlayer({ radioState }) {
 
       {/* Debug Info - Show only on mobile when not empty */}
       {debugInfo && (
-        <div className="fixed top-2 left-2 right-2 bg-black/90 text-green-400 text-xs p-2 rounded z-50 max-h-32 overflow-auto font-mono">
+        <div className="fixed top-2 left-2 right-2 bg-black/90 text-green-400 text-xs p-2 rounded z-50 max-h-32 overflow-auto font-mono pointer-events-none">
           <div className="whitespace-pre-wrap">{debugInfo}</div>
         </div>
       )}
@@ -74,8 +74,13 @@ export default function RadioPlayer({ radioState }) {
       <motion.button
         whileTap={{ scale: 0.95 }}
         onClick={togglePlay}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          togglePlay();
+        }}
         disabled={isLoading}
-        className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center card-shadow mb-8 disabled:opacity-50"
+        className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center card-shadow mb-8 disabled:opacity-50 touch-none"
+        style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
       >
         {isLoading ? (
           <Loader size="small" />
