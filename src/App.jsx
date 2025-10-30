@@ -45,12 +45,7 @@ function App() {
     setDebugInfo(prev => `${new Date().toLocaleTimeString()}: ${message}\n${prev}`.substring(0, 500));
   };
 
-  useEffect(() => {
-    // Only update src if not already set (prevents conflicts with switchStation)
-    if (audioRef.current && currentQuality.url && audioRef.current.src !== currentQuality.url) {
-      audioRef.current.src = currentQuality.url;
-    }
-  }, [currentQuality]);
+  // React handles src updates via audio element prop, no need for useEffect
 
   // Update stream info based on selected quality
   useEffect(() => {
@@ -134,7 +129,7 @@ function App() {
         throw new Error('Audio element not found');
       }
 
-      logDebug(`Playing: ${audioRef.current.src}`);
+      logDebug(`Calling play() on: ${currentQuality.url}`);
 
       // Call play() - don't await, just initiate
       const playPromise = audioRef.current.play();
@@ -374,6 +369,8 @@ function App() {
       <div className="min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
         <audio
           ref={audioRef}
+          src={currentQuality.url}
+          preload="none"
           onError={() => {
             logDebug('Audio element error event');
             setIsLoading(false);
