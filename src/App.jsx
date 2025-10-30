@@ -153,12 +153,10 @@ function App() {
 
     // If paused, start playing
     if (audio.paused) {
-      // Set src if not already set or different
-      if (audio.src !== currentQuality.url) {
-        logDebug(`Setting src: ${currentQuality.url}`);
-        audio.src = currentQuality.url;
-        audio.type = 'audio/mpeg';
-      }
+      // Always set src and load before playing
+      logDebug(`Setting src: ${currentQuality.url}`);
+      audio.src = currentQuality.url;
+      audio.load(); // Explicitly load the stream
 
       logDebug(`play() - paused=${audio.paused}, ready=${audio.readyState}`);
       setIsLoading(true);
@@ -202,7 +200,7 @@ function App() {
       // If was playing, start the new station
       if (wasPlaying && audioRef.current) {
         audioRef.current.src = defaultQuality.url;
-        audioRef.current.type = 'audio/mpeg';
+        audioRef.current.load();
         setIsLoading(true);
 
         try {
@@ -210,6 +208,7 @@ function App() {
           logDebug('✓ Station switched and playing');
         } catch (err) {
           logDebug(`✗ Play after switch failed: ${err.message}`);
+          setIsLoading(false);
         }
       }
     } catch (error) {
@@ -242,7 +241,7 @@ function App() {
       // If was playing, start the new quality
       if (wasPlaying && audioRef.current) {
         audioRef.current.src = quality.url;
-        audioRef.current.type = 'audio/mpeg';
+        audioRef.current.load();
         setIsLoading(true);
 
         try {
@@ -250,6 +249,7 @@ function App() {
           logDebug('✓ Quality switched and playing');
         } catch (err) {
           logDebug(`✗ Play after quality switch failed: ${err.message}`);
+          setIsLoading(false);
         }
       }
     } catch (error) {
