@@ -67,6 +67,39 @@ const stripHtml = (html) => {
     .trim();
 };
 
+// Extract featured image from article URL using Open Graph tags
+const extractImageFromURL = async (url) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+
+    const html = await response.text();
+
+    // Look for og:image meta tag (most reliable)
+    const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i);
+    if (ogImageMatch) {
+      return ogImageMatch[1];
+    }
+
+    // Fallback: Look for twitter:image
+    const twitterImageMatch = html.match(/<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i);
+    if (twitterImageMatch) {
+      return twitterImageMatch[1];
+    }
+
+    // Fallback: Look for first img in content
+    const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch) {
+      return imgMatch[1];
+    }
+
+    return null;
+  } catch (err) {
+    console.error(`Failed to fetch image from ${url}:`, err.message);
+    return null;
+  }
+};
+
 // Parse RSS feed
 const parseRSSFeed = async () => {
   try {
@@ -93,6 +126,16 @@ const parseRSSFeed = async () => {
     const items = result?.rss?.channel?.[0]?.item || [];
     console.log(`Found ${items.length} items in RSS feed`);
 
+    // Fetch images for first 20 articles in parallel (for initial cache)
+    const itemsToFetch = items.slice(0, 20);
+    const imagePromises = itemsToFetch.map(item => {
+      const link = extractText(item.link);
+      return link ? extractImageFromURL(link) : Promise.resolve(null);
+    });
+
+    const fetchedImages = await Promise.all(imagePromises);
+    console.log(`Fetched ${fetchedImages.filter(img => img).length} images from article pages`);
+
     const articles = items.map((item, index) => {
       try {
         // Extract basic fields
@@ -110,41 +153,8 @@ const parseRSSFeed = async () => {
         const categoryNames = categories.map(c => extractText(c));
         const category = categoryNames[0] || 'Actualitate';
 
-        // Extract image from multiple possible sources
-        let image = null;
-
-        // Try enclosure first
-        if (item.enclosure && item.enclosure[0]) {
-          if (item.enclosure[0].url) {
-            image = item.enclosure[0].url;
-          } else if (typeof item.enclosure[0] === 'string') {
-            image = item.enclosure[0];
-          }
-        }
-
-        // If no enclosure, try media:content
-        if (!image && item['media:content'] && item['media:content'][0]) {
-          image = item['media:content'][0].url || item['media:content'][0];
-        }
-
-        // If still no image, extract from content:encoded or description
-        if (!image) {
-          const content = item['content:encoded'] ? extractText(item['content:encoded']) : description;
-          // Look for img tags with various attribute patterns
-          const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i) ||
-                          content.match(/src=["']([^"']+\.(?:jpg|jpeg|png|webp|gif))["']/i);
-          if (imgMatch) {
-            image = imgMatch[1];
-          }
-        }
-
-        // Last resort: try to find any image URL in the content
-        if (!image) {
-          const urlMatch = description.match(/(https?:\/\/[^\s<>"]+\.(?:jpg|jpeg|png|webp|gif))/i);
-          if (urlMatch) {
-            image = urlMatch[1];
-          }
-        }
+        // Use fetched image if available (for first 20 articles)
+        let image = index < fetchedImages.length ? fetchedImages[index] : null;
 
         // Clean up image URL
         if (image && typeof image === 'string') {
