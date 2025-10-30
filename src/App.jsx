@@ -102,14 +102,16 @@ function App() {
   }, [currentQuality]);
 
   const togglePlay = async () => {
-    // Add immediate visual feedback
-    alert(`togglePlay called! isPlaying: ${isPlaying}, URL: ${currentQuality.url || 'NONE'}`);
+    logDebug(`togglePlay called, isPlaying: ${isPlaying}, isLoading: ${isLoading}`);
 
-    logDebug(`togglePlay called, isPlaying: ${isPlaying}`);
+    // Prevent multiple simultaneous play attempts
+    if (isLoading) {
+      logDebug('Already loading, ignoring click');
+      return;
+    }
 
     if (!currentQuality.url) {
       logDebug('ERROR: No stream URL');
-      alert('Stream URL nu este configurat încă.');
       return;
     }
 
@@ -129,33 +131,46 @@ function App() {
 
         logDebug(`Audio src: ${audioRef.current.src}`);
 
-        // Load the stream if not loaded
-        if (audioRef.current.readyState === 0) {
-          audioRef.current.load();
-        }
+        // Wait for stream to be ready
+        if (audioRef.current.readyState < 2) {
+          logDebug('Waiting for stream to load...');
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              cleanup();
+              reject(new Error('Stream load timeout'));
+            }, 10000);
 
-        // Play with retry for mobile
-        let playAttempts = 0;
-        const maxAttempts = 3;
+            const cleanup = () => {
+              audioRef.current?.removeEventListener('canplay', onCanPlay);
+              audioRef.current?.removeEventListener('error', onError);
+              clearTimeout(timeout);
+            };
 
-        while (playAttempts < maxAttempts) {
-          try {
-            logDebug(`Play attempt ${playAttempts + 1}/${maxAttempts}`);
-            await audioRef.current.play();
-            logDebug('✓ Playback started');
-            setIsPlaying(true);
-            break;
-          } catch (err) {
-            playAttempts++;
-            logDebug(`Play failed: ${err.message}`);
-            if (playAttempts >= maxAttempts) {
-              throw err;
+            const onCanPlay = () => {
+              cleanup();
+              resolve();
+            };
+
+            const onError = (e) => {
+              cleanup();
+              reject(new Error('Stream load error'));
+            };
+
+            audioRef.current?.addEventListener('canplay', onCanPlay, { once: true });
+            audioRef.current?.addEventListener('error', onError, { once: true });
+
+            // Trigger load if needed
+            if (audioRef.current.readyState === 0) {
+              audioRef.current.load();
             }
-            // Wait a bit before retry
-            await new Promise(resolve => setTimeout(resolve, 300));
-            audioRef.current.load();
-          }
+          });
         }
+
+        // Single play attempt
+        logDebug('Playing stream...');
+        await audioRef.current.play();
+        logDebug('✓ Playback started');
+        setIsPlaying(true);
       } catch (error) {
         logDebug(`✗ FINAL ERROR: ${error.name} - ${error.message}`);
         console.error('Error playing audio:', error);
