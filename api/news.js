@@ -67,6 +67,20 @@ const stripHtml = (html) => {
     .trim();
 };
 
+// Helper to truncate text at word boundary
+const truncateAtWord = (text, maxLength) => {
+  if (!text || text.length <= maxLength) return text;
+
+  // Find the last space before maxLength
+  const truncated = text.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+
+  // If we found a space, truncate there; otherwise use maxLength
+  const cutoff = lastSpace > 0 ? lastSpace : maxLength;
+
+  return text.substring(0, cutoff).trim() + '...';
+};
+
 // Helper to clean article content - remove WordPress footer and add Read More link
 const cleanArticleContent = (html, articleLink) => {
   if (!html) return '';
@@ -133,8 +147,10 @@ const parseRSSFeed = async () => {
         if (item.enclosure && item.enclosure[0] && item.enclosure[0].url) {
           image = extractText(item.enclosure[0].url);
           if (image) {
-            // Clean up WordPress CDN URL - remove resize parameters to get original size
-            image = image.split('?')[0];
+            // WordPress CDN optimization: request medium size (768px width) for faster loading
+            // Remove existing query params and add optimized resize params
+            const baseUrl = image.split('?')[0];
+            image = `${baseUrl}?resize=768,432&quality=85`;
           }
         }
 
@@ -151,7 +167,7 @@ const parseRSSFeed = async () => {
         return {
           id: guid,
           title: stripHtml(title),
-          summary: stripHtml(cleanedDescription).substring(0, 250),
+          summary: truncateAtWord(stripHtml(cleanedDescription), 200),
           image: image,
           category: stripHtml(category),
           date: parseRomanianDate(pubDate),
