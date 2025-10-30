@@ -52,31 +52,53 @@ function App() {
 
     // Simple event handlers
     audio.onplay = () => {
-      logDebug('✓ Audio playing');
+      logDebug('✓ onplay fired');
       setIsPlaying(true);
       setIsLoading(false);
     };
 
     audio.onpause = () => {
-      logDebug('Audio paused');
+      logDebug('onpause fired');
       setIsPlaying(false);
       setIsLoading(false);
     };
 
     audio.onerror = (e) => {
       const error = audio.error;
-      logDebug(`✗ Audio error: code=${error?.code}`);
+      logDebug(`✗ onerror: code=${error?.code}, msg=${error?.message}`);
       setIsPlaying(false);
       setIsLoading(false);
     };
 
     audio.onloadstart = () => {
-      logDebug('Loading stream...');
+      logDebug(`onloadstart: ready=${audio.readyState}, net=${audio.networkState}`);
+    };
+
+    audio.onloadeddata = () => {
+      logDebug('onloadeddata: some data loaded');
     };
 
     audio.oncanplay = () => {
-      logDebug('Stream ready');
+      logDebug(`oncanplay: ready=${audio.readyState}`);
       setIsLoading(false);
+    };
+
+    audio.onplaying = () => {
+      logDebug('onplaying: playback started');
+      setIsPlaying(true);
+      setIsLoading(false);
+    };
+
+    audio.onstalled = () => {
+      logDebug('⚠ onstalled: data fetch stalled');
+    };
+
+    audio.onsuspend = () => {
+      logDebug('⚠ onsuspend: loading suspended');
+    };
+
+    audio.onwaiting = () => {
+      logDebug('⚠ onwaiting: buffering');
     };
 
     return () => {
@@ -152,11 +174,18 @@ function App() {
 
     // Toggle play/pause - simple and direct
     if (audio.paused) {
-      logDebug('Calling play()');
+      logDebug(`play() called - paused=${audio.paused}, ready=${audio.readyState}`);
       setIsLoading(true);
-      audio.play();
+      const playPromise = audio.play();
+
+      // Log promise result for debugging
+      if (playPromise) {
+        playPromise
+          .then(() => logDebug('play() promise resolved'))
+          .catch(err => logDebug(`play() promise rejected: ${err.message}`));
+      }
     } else {
-      logDebug('Calling pause()');
+      logDebug('pause() called');
       audio.pause();
     }
   };
