@@ -74,13 +74,8 @@ export default function RadioPlayer({ radioState }) {
       <motion.button
         whileTap={{ scale: 0.95 }}
         onClick={togglePlay}
-        onTouchEnd={(e) => {
-          e.preventDefault();
-          togglePlay();
-        }}
         disabled={isLoading}
-        className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center card-shadow mb-8 disabled:opacity-50 touch-none"
-        style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+        className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center card-shadow mb-8 disabled:opacity-50"
       >
         {isLoading ? (
           <Loader size="small" />

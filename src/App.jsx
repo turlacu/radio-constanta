@@ -97,74 +97,59 @@ function App() {
     };
   }, [currentQuality]);
 
-  const togglePlay = async () => {
-    logDebug(`togglePlay: isPlaying=${isPlaying}, isLoading=${isLoading}`);
+  const togglePlay = () => {
+    // MOBILE FIRST: Call play() synchronously, no delays
+    const audio = audioRef.current;
 
-    // Prevent double-clicks with ref
-    if (playAttemptRef.current) {
-      logDebug('Play attempt in progress, ignoring');
+    if (!audio || !currentQuality.url) {
+      logDebug('No audio element or URL');
       return;
     }
 
-    if (!currentQuality.url) {
-      logDebug('ERROR: No URL');
-      return;
-    }
-
+    // Pause is simple
     if (isPlaying) {
-      logDebug('Pausing');
-      audioRef.current?.pause();
+      audio.pause();
       setIsPlaying(false);
       setIsLoading(false);
+      logDebug('Paused');
       return;
     }
 
-    // Start play attempt
+    // Prevent spam clicks
+    if (playAttemptRef.current) {
+      logDebug('Already attempting play');
+      return;
+    }
+
+    // CRITICAL: Call play() IMMEDIATELY - no state updates before this
     playAttemptRef.current = true;
+    const playPromise = audio.play();
+
+    // NOW update states AFTER play() is called
     setIsLoading(true);
-    logDebug('Starting playback...');
+    logDebug('Play called');
 
-    try {
-      if (!audioRef.current) {
-        throw new Error('Audio element not found');
-      }
-
-      logDebug(`Calling play() on: ${currentQuality.url}`);
-
-      // Call play() - don't await, just initiate
-      const playPromise = audioRef.current.play();
-
-      if (playPromise !== undefined) {
-        // Handle promise but don't block on it
-        playPromise
-          .then(() => {
-            logDebug('✓ Play promise resolved');
-            setIsPlaying(true);
-            setIsLoading(false);
-          })
-          .catch((err) => {
-            logDebug(`✗ Play promise rejected: ${err.message}`);
-            setIsPlaying(false);
-            setIsLoading(false);
-          });
-      }
-
-      // Assume success immediately for mobile
-      logDebug('✓ Play initiated, assuming success');
+    // Handle the promise
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          logDebug('✓ Playing');
+          setIsPlaying(true);
+          setIsLoading(false);
+          playAttemptRef.current = false;
+        })
+        .catch((err) => {
+          logDebug(`✗ ${err.name}: ${err.message}`);
+          setIsPlaying(false);
+          setIsLoading(false);
+          playAttemptRef.current = false;
+        });
+    } else {
+      // Old browsers - no promise
       setIsPlaying(true);
-
-      // Clear loading after brief delay
-      setTimeout(() => {
-        setIsLoading(false);
-        logDebug(`Playing check: paused=${audioRef.current?.paused}`);
-      }, 500);
-
-    } catch (error) {
-      logDebug(`✗ ${error.name}: ${error.message}`);
-      setIsPlaying(false);
       setIsLoading(false);
-    } finally {
       playAttemptRef.current = false;
+      logDebug('✓ Playing (no promise)');
     }
   };
 
