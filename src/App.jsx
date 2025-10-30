@@ -108,11 +108,43 @@ function App() {
     } else {
       setIsLoading(true);
       try {
-        await audioRef.current?.play();
-        setIsPlaying(true);
+        // Ensure audio element is ready
+        if (!audioRef.current) {
+          throw new Error('Audio element not initialized');
+        }
+
+        // Load the stream if not loaded
+        if (audioRef.current.readyState === 0) {
+          audioRef.current.load();
+        }
+
+        // Play with retry for mobile
+        let playAttempts = 0;
+        const maxAttempts = 3;
+
+        while (playAttempts < maxAttempts) {
+          try {
+            await audioRef.current.play();
+            setIsPlaying(true);
+            break;
+          } catch (err) {
+            playAttempts++;
+            if (playAttempts >= maxAttempts) {
+              throw err;
+            }
+            // Wait a bit before retry
+            await new Promise(resolve => setTimeout(resolve, 300));
+            audioRef.current.load();
+          }
+        }
       } catch (error) {
         console.error('Error playing audio:', error);
         setIsPlaying(false);
+        // Show user-friendly error
+        const errorMsg = error.name === 'NotAllowedError'
+          ? 'Vă rugăm să permiteți redarea audio în browser.'
+          : 'Nu s-a putut reda stream-ul. Verificați conexiunea.';
+        alert(errorMsg);
       } finally {
         setIsLoading(false);
       }

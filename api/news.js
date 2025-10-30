@@ -41,28 +41,28 @@ const scrapeArticles = async (url, category) => {
       try {
         const $article = $(element);
 
-        // Extract title and link
-        const $titleLink = $article.find('a').first();
+        // Extract title and link from h3 > a
+        const $titleLink = $article.find('h3 a').first();
         const title = $titleLink.text().trim();
         const link = $titleLink.attr('href');
 
         // Extract image
-        const $img = $article.find('img, .post-thumbnail').first();
+        const $img = $article.find('img').first();
         let image = $img.attr('src') || $img.attr('data-src') || $img.attr('data-lazy-src');
 
-        // Upgrade image size if it's a WordPress thumbnail
+        // Clean up WordPress image URL parameters
         if (image) {
-          // Remove size constraints from WordPress images
-          image = image.replace(/-\d+x\d+\./, '.')
-                       .replace(/\?resize=\d+,\d+/, '')
-                       .replace(/\?w=\d+/, '');
+          // Remove resize parameters but keep the base URL
+          image = image.split('?')[0];
+          // Try to get larger version by removing size suffix
+          image = image.replace(/-\d+x\d+\.(jpg|jpeg|png|webp)/i, '.$1');
         }
 
         // Extract excerpt/description
-        const excerpt = $article.find('.post-excerpt, .excerpt').text().trim();
+        const excerpt = $article.find('.post-excerpt').text().trim();
 
-        // Extract date
-        const dateText = $article.find('.post-date, .date').text().trim();
+        // Extract date from .post-meta .date
+        const dateText = $article.find('.post-meta .date, .date').text().trim();
         const date = dateText ? parseRomanianDate(dateText) : new Date().toISOString();
 
         // Only add if we have at least title and link
