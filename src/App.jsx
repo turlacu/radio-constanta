@@ -44,62 +44,46 @@ function App() {
     setDebugInfo(prev => `${new Date().toLocaleTimeString()}: ${message}\n${prev}`.substring(0, 500));
   };
 
-  // Create Audio instance using JavaScript API
+  // Create Audio element (HTML5 approach - mobile friendly)
   useEffect(() => {
-    const audio = new Audio();
+    // Create audio element and append to document
+    const audio = document.createElement('audio');
     audio.preload = 'none';
     audioRef.current = audio;
 
     // Simple event handlers
-    audio.onplay = () => {
-      logDebug('✓ onplay fired');
+    audio.addEventListener('playing', () => {
+      logDebug('✓ playing event');
       setIsPlaying(true);
       setIsLoading(false);
-    };
+    });
 
-    audio.onpause = () => {
-      logDebug('onpause fired');
+    audio.addEventListener('pause', () => {
+      logDebug('pause event');
       setIsPlaying(false);
       setIsLoading(false);
-    };
+    });
 
-    audio.onerror = (e) => {
+    audio.addEventListener('error', (e) => {
       const error = audio.error;
-      logDebug(`✗ onerror: code=${error?.code}, msg=${error?.message}`);
+      logDebug(`✗ error: code=${error?.code}, msg=${error?.message}`);
       setIsPlaying(false);
       setIsLoading(false);
-    };
+    });
 
-    audio.onloadstart = () => {
-      logDebug(`onloadstart: ready=${audio.readyState}, net=${audio.networkState}`);
-    };
+    audio.addEventListener('waiting', () => {
+      logDebug('⚠ buffering');
+      setIsLoading(true);
+    });
 
-    audio.onloadeddata = () => {
-      logDebug('onloadeddata: some data loaded');
-    };
-
-    audio.oncanplay = () => {
-      logDebug(`oncanplay: ready=${audio.readyState}`);
+    audio.addEventListener('canplay', () => {
+      logDebug(`canplay: ready=${audio.readyState}`);
       setIsLoading(false);
-    };
+    });
 
-    audio.onplaying = () => {
-      logDebug('onplaying: playback started');
-      setIsPlaying(true);
-      setIsLoading(false);
-    };
-
-    audio.onstalled = () => {
-      logDebug('⚠ onstalled: data fetch stalled');
-    };
-
-    audio.onsuspend = () => {
-      logDebug('⚠ onsuspend: loading suspended');
-    };
-
-    audio.onwaiting = () => {
-      logDebug('⚠ onwaiting: buffering');
-    };
+    audio.addEventListener('stalled', () => {
+      logDebug('⚠ stalled');
+    });
 
     return () => {
       audio.pause();
@@ -158,7 +142,7 @@ function App() {
     };
   }, [currentQuality]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     const audio = audioRef.current;
 
     if (!audio || !currentQuality.url) {
@@ -166,208 +150,110 @@ function App() {
       return;
     }
 
-    // Set src if different
-    if (audio.src !== currentQuality.url) {
-      logDebug(`Setting src: ${currentQuality.url}`);
-      audio.src = currentQuality.url;
-    }
-
-    // Toggle play/pause - simple and direct
+    // If paused, start playing
     if (audio.paused) {
-      logDebug(`play() called - paused=${audio.paused}, ready=${audio.readyState}`);
-      setIsLoading(true);
-      const playPromise = audio.play();
+      // Set src if not already set or different
+      if (audio.src !== currentQuality.url) {
+        logDebug(`Setting src: ${currentQuality.url}`);
+        audio.src = currentQuality.url;
+        audio.type = 'audio/mpeg';
+      }
 
-      // Log promise result for debugging
-      if (playPromise) {
-        playPromise
-          .then(() => logDebug('play() promise resolved'))
-          .catch(err => logDebug(`play() promise rejected: ${err.message}`));
+      logDebug(`play() - paused=${audio.paused}, ready=${audio.readyState}`);
+      setIsLoading(true);
+
+      try {
+        await audio.play();
+        logDebug('✓ play() success');
+      } catch (err) {
+        logDebug(`✗ play() failed: ${err.message}`);
+        setIsLoading(false);
       }
     } else {
-      logDebug('pause() called');
+      // Pause
+      logDebug('pause()');
       audio.pause();
     }
   };
 
   const switchStation = async (station) => {
-    // Prevent switching if already switching or same station
     if (isSwitchingRef.current || currentStation.id === station.id) {
-      console.log('Already switching or same station, ignoring...');
       return;
     }
 
-    console.log('Switching to station:', station.name);
+    logDebug(`Switching to ${station.name}`);
     isSwitchingRef.current = true;
-    setIsLoading(true);
-    setIsPlaying(false);
+    const wasPlaying = isPlaying;
 
     try {
-      // Pause and reset current stream
+      // Stop current playback
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        console.log('Paused current stream');
+        audioRef.current.src = '';
       }
 
-      // Switch to new station and set default quality (128 kbps)
+      // Update station and quality
       setCurrentStation(station);
       const defaultQuality = station.qualities[0];
       setCurrentQuality(defaultQuality);
+      setIsPlaying(false);
 
-      // Load and play new station
-      if (defaultQuality.url && audioRef.current) {
-        console.log('Setting new stream URL:', defaultQuality.url);
+      // If was playing, start the new station
+      if (wasPlaying && audioRef.current) {
         audioRef.current.src = defaultQuality.url;
-        audioRef.current.load(); // Explicitly load the new stream
+        audioRef.current.type = 'audio/mpeg';
+        setIsLoading(true);
 
-        // Wait for the stream to be ready with retry logic
-        let retryCount = 0;
-        const maxRetries = 2;
-
-        while (retryCount <= maxRetries) {
-          try {
-            await new Promise((resolve, reject) => {
-              const timeout = setTimeout(() => reject(new Error('Timeout')), 8000);
-
-              const onCanPlay = () => {
-                clearTimeout(timeout);
-                audioRef.current?.removeEventListener('canplay', onCanPlay);
-                audioRef.current?.removeEventListener('error', onError);
-                resolve();
-              };
-
-              const onError = (e) => {
-                clearTimeout(timeout);
-                audioRef.current?.removeEventListener('canplay', onCanPlay);
-                audioRef.current?.removeEventListener('error', onError);
-                reject(new Error('Audio load error'));
-              };
-
-              audioRef.current?.addEventListener('canplay', onCanPlay, { once: true });
-              audioRef.current?.addEventListener('error', onError, { once: true });
-            });
-
-            // Now play
-            console.log('Attempting to play...');
-            await audioRef.current.play();
-            console.log('Playback started successfully');
-            setIsPlaying(true);
-            break; // Success, exit retry loop
-          } catch (playError) {
-            retryCount++;
-            if (retryCount > maxRetries) {
-              throw playError; // Give up after max retries
-            }
-            console.log(`Retry ${retryCount}/${maxRetries} after error:`, playError.message);
-            // Wait a bit before retrying
-            await new Promise(resolve => setTimeout(resolve, 500));
-            // Reload the audio
-            audioRef.current?.load();
-          }
+        try {
+          await audioRef.current.play();
+          logDebug('✓ Station switched and playing');
+        } catch (err) {
+          logDebug(`✗ Play after switch failed: ${err.message}`);
         }
       }
     } catch (error) {
-      console.error('Error switching station:', error);
-      setIsPlaying(false);
-      // Only show alert for real errors, not interruption errors
-      const errorMessage = error?.message || error?.type || '';
-      if (!errorMessage.includes('interrupted') && !errorMessage.includes('Timeout') && !errorMessage.includes('abort')) {
-        alert('Nu s-a putut reda stația. Verificați conexiunea la internet.');
-      }
+      logDebug(`✗ Switch error: ${error.message}`);
     } finally {
-      setIsLoading(false);
       isSwitchingRef.current = false;
     }
   };
 
   const switchQuality = async (quality) => {
-    // Prevent switching if already switching
-    if (isSwitchingRef.current) {
-      console.log('Already switching, ignoring...');
+    if (isSwitchingRef.current || currentQuality.id === quality.id) {
       return;
     }
 
-    console.log('Switching to quality:', quality.name);
+    logDebug(`Switching to ${quality.name}`);
     isSwitchingRef.current = true;
     const wasPlaying = isPlaying;
-    setIsLoading(true);
-    setIsPlaying(false);
 
     try {
-      // Pause current stream
+      // Stop current playback
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        console.log('Paused current stream');
+        audioRef.current.src = '';
       }
 
-      // Switch quality
+      // Update quality
       setCurrentQuality(quality);
+      setIsPlaying(false);
 
-      // Load and play new quality if was playing
-      if (quality.url && audioRef.current) {
-        console.log('Setting new stream URL:', quality.url);
+      // If was playing, start the new quality
+      if (wasPlaying && audioRef.current) {
         audioRef.current.src = quality.url;
-        audioRef.current.load();
+        audioRef.current.type = 'audio/mpeg';
+        setIsLoading(true);
 
-        if (wasPlaying) {
-          // Wait for the stream to be ready with retry logic
-          let retryCount = 0;
-          const maxRetries = 2;
-
-          while (retryCount <= maxRetries) {
-            try {
-              await new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => reject(new Error('Timeout')), 8000);
-
-                const onCanPlay = () => {
-                  clearTimeout(timeout);
-                  audioRef.current?.removeEventListener('canplay', onCanPlay);
-                  audioRef.current?.removeEventListener('error', onError);
-                  resolve();
-                };
-
-                const onError = (e) => {
-                  clearTimeout(timeout);
-                  audioRef.current?.removeEventListener('canplay', onCanPlay);
-                  audioRef.current?.removeEventListener('error', onError);
-                  reject(new Error('Audio load error'));
-                };
-
-                audioRef.current?.addEventListener('canplay', onCanPlay, { once: true });
-                audioRef.current?.addEventListener('error', onError, { once: true });
-              });
-
-              // Now play
-              console.log('Attempting to play...');
-              await audioRef.current.play();
-              console.log('Playback started successfully');
-              setIsPlaying(true);
-              break; // Success, exit retry loop
-            } catch (playError) {
-              retryCount++;
-              if (retryCount > maxRetries) {
-                throw playError; // Give up after max retries
-              }
-              console.log(`Retry ${retryCount}/${maxRetries} after error:`, playError.message);
-              // Wait a bit before retrying
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // Reload the audio
-              audioRef.current?.load();
-            }
-          }
+        try {
+          await audioRef.current.play();
+          logDebug('✓ Quality switched and playing');
+        } catch (err) {
+          logDebug(`✗ Play after quality switch failed: ${err.message}`);
         }
       }
     } catch (error) {
-      console.error('Error switching quality:', error);
-      setIsPlaying(false);
-      const errorMessage = error?.message || error?.type || '';
-      if (!errorMessage.includes('interrupted') && !errorMessage.includes('Timeout') && !errorMessage.includes('abort')) {
-        alert('Nu s-a putut schimba calitatea. Verificați conexiunea la internet.');
-      }
+      logDebug(`✗ Quality switch error: ${error.message}`);
     } finally {
-      setIsLoading(false);
       isSwitchingRef.current = false;
     }
   };
