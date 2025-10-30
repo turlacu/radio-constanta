@@ -131,56 +131,31 @@ function App() {
 
         logDebug(`Audio src: ${audioRef.current.src}`);
 
-        // Wait for stream to be ready
-        if (audioRef.current.readyState < 2) {
-          logDebug('Waiting for stream to load...');
-          await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-              cleanup();
-              reject(new Error('Stream load timeout'));
-            }, 10000);
-
-            const cleanup = () => {
-              audioRef.current?.removeEventListener('canplay', onCanPlay);
-              audioRef.current?.removeEventListener('error', onError);
-              clearTimeout(timeout);
-            };
-
-            const onCanPlay = () => {
-              cleanup();
-              resolve();
-            };
-
-            const onError = (e) => {
-              cleanup();
-              reject(new Error('Stream load error'));
-            };
-
-            audioRef.current?.addEventListener('canplay', onCanPlay, { once: true });
-            audioRef.current?.addEventListener('error', onError, { once: true });
-
-            // Trigger load if needed
-            if (audioRef.current.readyState === 0) {
-              audioRef.current.load();
-            }
-          });
+        // Trigger load if needed
+        if (audioRef.current.readyState === 0) {
+          logDebug('Loading stream...');
+          audioRef.current.load();
         }
 
-        // Single play attempt
+        // Wait briefly for mobile to initialize
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Attempt to play
         logDebug('Playing stream...');
-        await audioRef.current.play();
+        const playPromise = audioRef.current.play();
+
+        if (playPromise !== undefined) {
+          await playPromise;
+        }
+
         logDebug('✓ Playback started');
         setIsPlaying(true);
       } catch (error) {
-        logDebug(`✗ FINAL ERROR: ${error.name} - ${error.message}`);
+        logDebug(`✗ ERROR: ${error.name} - ${error.message}`);
         console.error('Error playing audio:', error);
         setIsPlaying(false);
-        // Show user-friendly error
-        const errorMsg = error.name === 'NotAllowedError'
-          ? 'Vă rugăm să permiteți redarea audio în browser.'
-          : 'Nu s-a putut reda stream-ul. Verificați conexiunea.';
-        alert(errorMsg);
       } finally {
+        logDebug('Clearing loading state');
         setIsLoading(false);
       }
     }
