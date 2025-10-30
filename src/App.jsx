@@ -153,10 +153,12 @@ function App() {
 
     // If paused, start playing
     if (audio.paused) {
-      // Always set src and load before playing
-      logDebug(`Setting src: ${currentQuality.url}`);
-      audio.src = currentQuality.url;
-      audio.load(); // Explicitly load the stream
+      // Only set src and load if src is different or empty
+      if (!audio.src || audio.src !== currentQuality.url) {
+        logDebug(`Setting src: ${currentQuality.url}`);
+        audio.src = currentQuality.url;
+        audio.load(); // Explicitly load the stream
+      }
 
       logDebug(`play() - paused=${audio.paused}, ready=${audio.readyState}`);
       setIsLoading(true);
