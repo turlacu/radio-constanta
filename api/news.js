@@ -27,17 +27,23 @@ const parseRomanianDate = (dateStr) => {
 // Scrape articles from a single page
 const scrapeArticles = async (url, category) => {
   try {
+    console.log(`Fetching URL: ${url}`);
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch ${url}`);
     }
 
     const html = await response.text();
+    console.log(`HTML length: ${html.length} bytes`);
+
     const $ = cheerio.load(html);
     const articles = [];
 
     // Find all article containers - using actual selectors from Radio Constanta
-    $('.post-item').each((index, element) => {
+    const postItems = $('.post-item');
+    console.log(`Found ${postItems.length} .post-item elements`);
+
+    postItems.each((index, element) => {
       try {
         const $article = $(element);
 
@@ -77,12 +83,15 @@ const scrapeArticles = async (url, category) => {
             link: link.startsWith('http') ? link : `https://www.radioconstanta.ro${link}`,
             author: 'Radio Constanta'
           });
+        } else {
+          console.log(`Skipped article ${index}: title=${!!title}, link=${!!link}`);
         }
       } catch (err) {
         console.error('Error parsing article:', err);
       }
     });
 
+    console.log(`Parsed ${articles.length} articles from ${url}`);
     return articles;
   } catch (error) {
     console.error(`Error scraping ${url}:`, error);
