@@ -39,15 +39,11 @@ This guide walks you through deploying the Radio Constanta app using only the Ve
 5. **Add remote and push:**
    ```bash
    git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/radio-constanta.git
+   git remote add origin https://github.com/turlacu/radio-constanta
    git push -u origin main
    ```
 
    Replace `YOUR_USERNAME` with your actual GitHub username.
-
-### Option B: Using GitLab or Bitbucket
-
-Similar process - create repo, initialize git, commit, and push.
 
 ---
 
@@ -135,7 +131,7 @@ npm install
    - Articles should load from Radio Constanta
 
 4. **Test the API directly:**
-   - Visit: `https://your-app.vercel.app/api/news?page=1&limit=5`
+   - Visit: `https://radio-constanta.vercel.app/api/news?page=1&limit=5`
    - You should see JSON with articles
 
 ---

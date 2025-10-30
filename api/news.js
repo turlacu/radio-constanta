@@ -36,33 +36,33 @@ const scrapeArticles = async (url, category) => {
     const $ = cheerio.load(html);
     const articles = [];
 
-    // Find all article containers - adjust selector based on actual HTML
-    // This is a generic approach that should work with most WordPress themes
-    $('article, .article, .post, .entry').each((index, element) => {
+    // Find all article containers - using actual selectors from Radio Constanta
+    $('.post-item').each((index, element) => {
       try {
         const $article = $(element);
 
-        // Extract title
-        const $title = $article.find('h2 a, h3 a, .entry-title a, .article-title a').first();
-        const title = $title.text().trim();
-        const link = $title.attr('href');
+        // Extract title and link
+        const $titleLink = $article.find('a').first();
+        const title = $titleLink.text().trim();
+        const link = $titleLink.attr('href');
 
         // Extract image
-        const $img = $article.find('img').first();
-        let image = $img.attr('src') || $img.attr('data-src');
+        const $img = $article.find('img, .post-thumbnail').first();
+        let image = $img.attr('src') || $img.attr('data-src') || $img.attr('data-lazy-src');
 
         // Upgrade image size if it's a WordPress thumbnail
         if (image) {
-          image = image.replace(/-150x\d+\./, '-768x432.')
-                       .replace(/-300x\d+\./, '-768x432.')
-                       .replace(/-410x\d+\./, '-768x432.');
+          // Remove size constraints from WordPress images
+          image = image.replace(/-\d+x\d+\./, '.')
+                       .replace(/\?resize=\d+,\d+/, '')
+                       .replace(/\?w=\d+/, '');
         }
 
         // Extract excerpt/description
-        const excerpt = $article.find('.entry-excerpt, .excerpt, p').first().text().trim();
+        const excerpt = $article.find('.post-excerpt, .excerpt').text().trim();
 
         // Extract date
-        const dateText = $article.find('.entry-date, .date, time, .published').first().text().trim();
+        const dateText = $article.find('.post-date, .date').text().trim();
         const date = dateText ? parseRomanianDate(dateText) : new Date().toISOString();
 
         // Only add if we have at least title and link
