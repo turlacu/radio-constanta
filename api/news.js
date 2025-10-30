@@ -5,6 +5,11 @@ const parseXML = promisify(parseString);
 
 const RSS_URL = 'https://www.radioconstanta.ro/rss';
 
+// In-memory cache
+let cachedArticles = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
 // Helper to parse Romanian month names
 const parseRomanianDate = (dateStr) => {
   // Try to parse standard date format first
@@ -119,11 +124,13 @@ const parseRSSFeed = async () => {
         }
 
         // Clean up image URL
-        if (image) {
+        if (image && typeof image === 'string') {
           // Remove query parameters and get higher res version
           image = image.split('?')[0];
           image = image.replace(/-300x\d+\./i, '-1024x683.');
           image = image.replace(/-\d+x\d+\./i, '.');
+        } else {
+          image = null; // Reset if not a valid string
         }
 
         // Get full content
@@ -175,8 +182,37 @@ export default async function handler(req, res) {
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
 
-    // Fetch and parse RSS feed
-    let articles = await parseRSSFeed();
+    // Check if cache is valid
+    const now = Date.now();
+    const cacheIsValid = cachedArticles && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION);
+
+    let articles;
+
+    if (cacheIsValid) {
+      console.log(`Cache HIT - returning cached articles (age: ${Math.round((now - cacheTimestamp) / 1000)}s)`);
+      articles = cachedArticles;
+    } else {
+      console.log('Cache MISS - fetching fresh articles');
+      try {
+        // Fetch and parse RSS feed
+        articles = await parseRSSFeed();
+
+        // Update cache
+        cachedArticles = articles;
+        cacheTimestamp = now;
+        console.log(`Cache updated with ${articles.length} articles`);
+      } catch (fetchError) {
+        console.error('Error fetching fresh articles:', fetchError);
+
+        // Fallback to stale cache if available
+        if (cachedArticles) {
+          console.log('Using stale cache as fallback');
+          articles = cachedArticles;
+        } else {
+          throw fetchError; // No cache available, propagate error
+        }
+      }
+    }
 
     // Filter by category if specified
     if (category) {
