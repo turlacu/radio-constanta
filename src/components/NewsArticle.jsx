@@ -13,25 +13,27 @@ export default function NewsArticle({ article, onBack }) {
   // Fetch full article content when component mounts
   useEffect(() => {
     const fetchFullArticle = async () => {
-      // Check if we already have full content (longer than summary)
-      if (article.content && article.content.length > 500) {
-        return; // Already have full content
-      }
-
       try {
         setLoading(true);
         setError(null);
 
+        console.log('Fetching full article from:', article.link);
+
         const response = await fetch(`/api/article?url=${encodeURIComponent(article.link)}`);
 
         if (!response.ok) {
-          throw new Error('Failed to fetch article');
+          throw new Error(`Failed to fetch article: ${response.status}`);
         }
 
         const data = await response.json();
 
+        console.log('Article data received:', data);
+
         if (data.content) {
           setFullContent(data.content);
+          console.log('Full content set, length:', data.content.length);
+        } else {
+          console.warn('No content in response');
         }
 
         if (data.image) {
@@ -39,14 +41,14 @@ export default function NewsArticle({ article, onBack }) {
         }
       } catch (err) {
         console.error('Error fetching full article:', err);
-        setError('Could not load full article content');
+        setError('Nu s-a putut încărca articolul complet. Click pe linkul de mai jos pentru a citi pe site.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchFullArticle();
-  }, [article.link, article.content]);
+  }, [article.link]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
