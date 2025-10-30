@@ -37,7 +37,6 @@ function App() {
   const [debugInfo, setDebugInfo] = useState(''); // For mobile debugging
   const audioRef = useRef(null);
   const isSwitchingRef = useRef(false);
-  const playAttemptRef = useRef(false);
 
   // Helper to log debug info visibly on mobile
   const logDebug = (message) => {
@@ -45,22 +44,45 @@ function App() {
     setDebugInfo(prev => `${new Date().toLocaleTimeString()}: ${message}\n${prev}`.substring(0, 500));
   };
 
-  // React handles src updates via audio element prop, no need for useEffect
-
-  // Intercept load() calls for debugging
+  // Create Audio instance using JavaScript API
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    const audio = new Audio();
+    audio.preload = 'none';
+    audioRef.current = audio;
 
-    const originalLoad = audio.load.bind(audio);
-    audio.load = function() {
-      logDebug('⚠ audio.load() called!');
-      console.trace('load() stack trace');
-      return originalLoad();
+    // Simple event handlers
+    audio.onplay = () => {
+      logDebug('✓ Audio playing');
+      setIsPlaying(true);
+      setIsLoading(false);
+    };
+
+    audio.onpause = () => {
+      logDebug('Audio paused');
+      setIsPlaying(false);
+      setIsLoading(false);
+    };
+
+    audio.onerror = (e) => {
+      const error = audio.error;
+      logDebug(`✗ Audio error: code=${error?.code}`);
+      setIsPlaying(false);
+      setIsLoading(false);
+    };
+
+    audio.onloadstart = () => {
+      logDebug('Loading stream...');
+    };
+
+    audio.oncanplay = () => {
+      logDebug('Stream ready');
+      setIsLoading(false);
     };
 
     return () => {
-      audio.load = originalLoad;
+      audio.pause();
+      audio.src = '';
+      audioRef.current = null;
     };
   }, []);
 
@@ -115,85 +137,27 @@ function App() {
   }, [currentQuality]);
 
   const togglePlay = () => {
-    // MOBILE FIRST: Call play() synchronously, no delays
     const audio = audioRef.current;
 
     if (!audio || !currentQuality.url) {
-      logDebug('No audio element or URL');
+      logDebug('No audio or URL');
       return;
     }
 
-    // Pause is simple
-    if (isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
-      setIsLoading(false);
-      logDebug('Paused');
-      return;
-    }
-
-    // Prevent spam clicks
-    if (playAttemptRef.current) {
-      logDebug('Already attempting play');
-      return;
-    }
-
-    // Set src ONLY if it's different (prevents re-load)
+    // Set src if different
     if (audio.src !== currentQuality.url) {
-      logDebug(`Setting src to: ${currentQuality.url.substring(0, 40)}...`);
+      logDebug(`Setting src: ${currentQuality.url}`);
       audio.src = currentQuality.url;
     }
 
-    // Debug audio element state BEFORE play
-    logDebug(`Audio state: ready=${audio.readyState}, net=${audio.networkState}, src=${audio.src.substring(0, 40)}...`);
-    if (audio.error) {
-      logDebug(`Audio ERROR: code=${audio.error.code}, msg=${audio.error.message}`);
-    }
-
-    // CRITICAL: Call play() IMMEDIATELY (this will also trigger load if needed)
-    playAttemptRef.current = true;
-    const playPromise = audio.play();
-
-    // NOW update states AFTER play() is called
-    setIsLoading(true);
-    logDebug('Play called, promise=' + (playPromise ? 'exists' : 'null'));
-
-    // Safety timeout - if promise doesn't resolve in 3 seconds
-    const timeoutId = setTimeout(() => {
-      logDebug('⚠ Play timeout - checking state');
-      logDebug(`paused=${audio.paused}, ready=${audio.readyState}, net=${audio.networkState}`);
-      if (!audio.paused) {
-        logDebug('Audio playing! Setting state');
-        setIsPlaying(true);
-      }
-      setIsLoading(false);
-      playAttemptRef.current = false;
-    }, 3000);
-
-    // Handle the promise
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          clearTimeout(timeoutId);
-          logDebug('✓ Promise resolved - playing');
-          setIsPlaying(true);
-          setIsLoading(false);
-          playAttemptRef.current = false;
-        })
-        .catch((err) => {
-          clearTimeout(timeoutId);
-          logDebug(`✗ Promise rejected: ${err.name} - ${err.message}`);
-          setIsPlaying(false);
-          setIsLoading(false);
-          playAttemptRef.current = false;
-        });
+    // Toggle play/pause - simple and direct
+    if (audio.paused) {
+      logDebug('Calling play()');
+      setIsLoading(true);
+      audio.play();
     } else {
-      // Old browsers - no promise
-      clearTimeout(timeoutId);
-      setIsPlaying(true);
-      setIsLoading(false);
-      playAttemptRef.current = false;
-      logDebug('✓ No promise - assuming playing');
+      logDebug('Calling pause()');
+      audio.pause();
     }
   };
 
@@ -396,15 +360,6 @@ function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
-        <audio
-          ref={audioRef}
-          preload="none"
-          onError={(e) => {
-            logDebug(`Audio error event: code=${e.target.error?.code}`);
-            setIsLoading(false);
-            setIsPlaying(false);
-          }}
-        />
         <AnimatePresence mode="wait">
           <Routes>
             <Route path="/" element={<Radio radioState={radioState} />} />
