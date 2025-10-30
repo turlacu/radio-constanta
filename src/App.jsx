@@ -121,13 +121,19 @@ function App() {
       return;
     }
 
+    // Set src ONLY if it's different (prevents re-load)
+    if (audio.src !== currentQuality.url) {
+      logDebug(`Setting src to: ${currentQuality.url.substring(0, 40)}...`);
+      audio.src = currentQuality.url;
+    }
+
     // Debug audio element state BEFORE play
     logDebug(`Audio state: ready=${audio.readyState}, net=${audio.networkState}, src=${audio.src.substring(0, 40)}...`);
     if (audio.error) {
       logDebug(`Audio ERROR: code=${audio.error.code}, msg=${audio.error.message}`);
     }
 
-    // CRITICAL: Call play() IMMEDIATELY
+    // CRITICAL: Call play() IMMEDIATELY (this will also trigger load if needed)
     playAttemptRef.current = true;
     const playPromise = audio.play();
 
@@ -375,10 +381,9 @@ function App() {
       <div className="min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
         <audio
           ref={audioRef}
-          src={currentQuality.url}
           preload="none"
-          onError={() => {
-            logDebug('Audio element error event');
+          onError={(e) => {
+            logDebug(`Audio error event: code=${e.target.error?.code}`);
             setIsLoading(false);
             setIsPlaying(false);
           }}
