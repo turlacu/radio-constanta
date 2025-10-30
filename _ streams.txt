@@ -1,0 +1,14 @@
+Radio Constanta Folclor
+https://stream4.srr.ro:8443/radio-constanta-am  mp3 128kbps
+http://stream2.srr.ro:8334/radio-constanta-am   mp3 128kbps
+http://stream2.srr.ro:8336/radio-constanta-am   mp3 256kbps
+
+Radio Constanta FM
+https://stream4.srr.ro:8443/radio-constanta-fm  mp3 128kbps
+http://stream2.srr.ro:8330/radio-constanta-fm   mp3 128kbps
+http://stream2.srr.ro:8332/radio-constanta-fm   mp3 256kbps
+
+Radio Constanta FM FLAC
+https://89.238.207.222:8443/radio-constanta-flac  flac 1024kbps
+http://89.238.207.222:8008/radio-constanta-flac   flac 1024kbps
+
