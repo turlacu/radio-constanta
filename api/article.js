@@ -41,11 +41,29 @@ export default async function handler(req, res) {
     // Parse HTML with Cheerio
     const $ = cheerio.load(html);
 
-    // Extract article content (WordPress standard class)
-    const articleContent = $('.entry-content').html();
+    // Extract article content from Radio Constanta's structure
+    // Content is within <article class="articol"> after the intro
+    const article = $('article.articol');
 
-    if (!articleContent) {
-      throw new Error('Could not extract article content');
+    if (!article.length) {
+      throw new Error('Could not find article element');
+    }
+
+    // Get all paragraphs after the intro, before share buttons
+    const contentParagraphs = article.find('p').not('.articol__intro').not('.articol__autor-data');
+
+    let articleContent = '';
+    contentParagraphs.each((i, elem) => {
+      articleContent += $.html(elem);
+    });
+
+    // Also get any figures/images
+    article.find('figure').each((i, elem) => {
+      articleContent += $.html(elem);
+    });
+
+    if (!articleContent || articleContent.trim().length < 50) {
+      throw new Error('Article content too short or empty');
     }
 
     // Extract featured image if available
