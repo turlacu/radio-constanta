@@ -67,6 +67,24 @@ const stripHtml = (html) => {
     .trim();
 };
 
+// Helper to clean article content - remove WordPress footer and add Read More link
+const cleanArticleContent = (html, articleLink) => {
+  if (!html) return '';
+
+  // Remove WordPress "Articolul ... apare prima dată în..." footer
+  html = html.replace(/<p>Articolul\s+<a[^>]*>.*?<\/a>\s+apare prima dată în\s+<a[^>]*>.*?<\/a>\.<\/p>/gi, '');
+  html = html.replace(/Articolul\s+.*?\s+apare prima dată în\s+.*?\./gi, '');
+
+  // Replace […] or &#8230; with "Read More" link
+  const readMoreLink = `<a href="${articleLink}" target="_blank" rel="noopener noreferrer" style="color: #00BFFF; text-decoration: underline;">Citește mai mult pe www.radioconstanta.ro</a>`;
+
+  html = html.replace(/\[…\]/g, readMoreLink);
+  html = html.replace(/&#8230;/g, readMoreLink);
+  html = html.replace(/\.\.\./g, readMoreLink);
+
+  return html.trim();
+};
+
 // Extract featured image from article URL using Open Graph tags
 const extractImageFromURL = async (url) => {
   try {
@@ -166,18 +184,20 @@ const parseRSSFeed = async () => {
           image = null; // Reset if not a valid string
         }
 
-        // Get full content
-        const content = extractText(item['content:encoded']) || description;
+        // Get full content and clean it
+        const rawContent = extractText(item['content:encoded']) || description;
+        const cleanedContent = cleanArticleContent(rawContent, link);
+        const cleanedDescription = cleanArticleContent(description, link);
 
         return {
           id: guid,
           title: stripHtml(title),
-          summary: stripHtml(description).substring(0, 200),
+          summary: stripHtml(cleanedDescription).substring(0, 250),
           image: image || 'https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=Radio+Constanta',
           category: stripHtml(category),
           date: parseRomanianDate(pubDate),
           link: link,
-          content: content,
+          content: cleanedContent,
           author: stripHtml(creator)
         };
       } catch (err) {
