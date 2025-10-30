@@ -85,39 +85,6 @@ const cleanArticleContent = (html, articleLink) => {
   return html.trim();
 };
 
-// Extract featured image from article URL using Open Graph tags
-const extractImageFromURL = async (url) => {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-
-    const html = await response.text();
-
-    // Look for og:image meta tag (most reliable)
-    const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i);
-    if (ogImageMatch) {
-      return ogImageMatch[1];
-    }
-
-    // Fallback: Look for twitter:image
-    const twitterImageMatch = html.match(/<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i);
-    if (twitterImageMatch) {
-      return twitterImageMatch[1];
-    }
-
-    // Fallback: Look for first img in content
-    const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-    if (imgMatch) {
-      return imgMatch[1];
-    }
-
-    return null;
-  } catch (err) {
-    console.error(`Failed to fetch image from ${url}:`, err.message);
-    return null;
-  }
-};
-
 // Parse RSS feed
 const parseRSSFeed = async () => {
   try {
@@ -144,16 +111,6 @@ const parseRSSFeed = async () => {
     const items = result?.rss?.channel?.[0]?.item || [];
     console.log(`Found ${items.length} items in RSS feed`);
 
-    // Fetch images for first 20 articles in parallel (for initial cache)
-    const itemsToFetch = items.slice(0, 20);
-    const imagePromises = itemsToFetch.map(item => {
-      const link = extractText(item.link);
-      return link ? extractImageFromURL(link) : Promise.resolve(null);
-    });
-
-    const fetchedImages = await Promise.all(imagePromises);
-    console.log(`Fetched ${fetchedImages.filter(img => img).length} images from article pages`);
-
     const articles = items.map((item, index) => {
       try {
         // Extract basic fields
@@ -171,17 +128,19 @@ const parseRSSFeed = async () => {
         const categoryNames = categories.map(c => extractText(c));
         const category = categoryNames[0] || 'Actualitate';
 
-        // Use fetched image if available (for first 20 articles)
-        let image = index < fetchedImages.length ? fetchedImages[index] : null;
+        // Extract image from RSS enclosure tag (instant, no HTTP request needed)
+        let image = null;
+        if (item.enclosure && item.enclosure[0] && item.enclosure[0].url) {
+          image = extractText(item.enclosure[0].url);
+          if (image) {
+            // Clean up WordPress CDN URL - remove resize parameters to get original size
+            image = image.split('?')[0];
+          }
+        }
 
-        // Clean up image URL
-        if (image && typeof image === 'string') {
-          // Remove query parameters and get higher res version
-          image = image.split('?')[0];
-          image = image.replace(/-300x\d+\./i, '-1024x683.');
-          image = image.replace(/-\d+x\d+\./i, '.');
-        } else {
-          image = null; // Reset if not a valid string
+        // Use placeholder if no image in RSS
+        if (!image) {
+          image = 'https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=Radio+Constanta';
         }
 
         // Get full content and clean it
@@ -193,7 +152,7 @@ const parseRSSFeed = async () => {
           id: guid,
           title: stripHtml(title),
           summary: stripHtml(cleanedDescription).substring(0, 250),
-          image: image || 'https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=Radio+Constanta',
+          image: image,
           category: stripHtml(category),
           date: parseRomanianDate(pubDate),
           link: link,
@@ -206,7 +165,8 @@ const parseRSSFeed = async () => {
       }
     }).filter(article => article !== null && article.title && article.link);
 
-    console.log(`Successfully parsed ${articles.length} articles`);
+    const articlesWithImages = articles.filter(a => !a.image.includes('placeholder')).length;
+    console.log(`Successfully parsed ${articles.length} articles (${articlesWithImages} with images from RSS)`);
     return articles;
 
   } catch (error) {
