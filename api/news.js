@@ -1,12 +1,19 @@
-import * as cheerio from 'cheerio';
+import { parseString } from 'xml2js';
+import { promisify } from 'util';
 
-const NEWS_URLS = {
-  stiri: 'https://www.radioconstanta.ro/articole/stiri/',
-  externe: 'https://www.radioconstanta.ro/articole/externe/'
-};
+const parseXML = promisify(parseString);
+
+const RSS_URL = 'https://www.radioconstanta.ro/rss';
 
 // Helper to parse Romanian month names
 const parseRomanianDate = (dateStr) => {
+  // Try to parse standard date format first
+  const date = new Date(dateStr);
+  if (!isNaN(date.getTime())) {
+    return date.toISOString();
+  }
+
+  // Fallback for Romanian format
   const months = {
     'ianuarie': 0, 'februarie': 1, 'martie': 2, 'aprilie': 3,
     'mai': 4, 'iunie': 5, 'iulie': 6, 'august': 7,
@@ -24,91 +31,127 @@ const parseRomanianDate = (dateStr) => {
   return new Date().toISOString();
 };
 
-// Scrape articles from a single page
-const scrapeArticles = async (url, category) => {
+// Helper to extract text from CDATA or regular text
+const extractText = (value) => {
+  if (!value) return '';
+  if (Array.isArray(value)) {
+    value = value[0];
+  }
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  if (typeof value === 'object' && value._) {
+    return value._.trim();
+  }
+  return String(value).trim();
+};
+
+// Helper to clean HTML tags from text
+const stripHtml = (html) => {
+  if (!html) return '';
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#8211;/g, '–')
+    .replace(/&#8217;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Parse RSS feed
+const parseRSSFeed = async () => {
   try {
-    console.log(`Fetching URL: ${url}`);
-    const response = await fetch(url);
+    console.log('Fetching RSS feed...');
+    const response = await fetch(RSS_URL);
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch ${url}`);
+      throw new Error(`RSS fetch failed: ${response.status}`);
     }
 
-    const html = await response.text();
-    console.log(`HTML length: ${html.length} bytes`);
+    let xmlText = await response.text();
+    console.log(`RSS XML length: ${xmlText.length} bytes`);
 
-    const $ = cheerio.load(html);
-    const articles = [];
+    // Fix malformed XML - escape unescaped ampersands
+    xmlText = xmlText.replace(/&(?!(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
 
-    // Debug: Check what article-related classes exist
-    const allDivs = $('div[class*="post"], div[class*="article"], div[class*="item"], article');
-    console.log(`Total divs with post/article/item: ${allDivs.length}`);
-
-    // Log first few class names to see structure
-    allDivs.slice(0, 5).each((i, el) => {
-      console.log(`Element ${i} classes:`, $(el).attr('class'));
+    // Parse XML
+    const result = await parseXML(xmlText, {
+      trim: true,
+      explicitArray: true,
+      mergeAttrs: true
     });
 
-    // Try multiple possible selectors
-    let postItems = $('.post-item');
-    if (postItems.length === 0) {
-      console.log('Trying alternative selectors...');
-      postItems = $('.post, article, .article-item, .entry, .blog-post');
-      console.log(`Found ${postItems.length} items with alternative selectors`);
-    }
+    const items = result?.rss?.channel?.[0]?.item || [];
+    console.log(`Found ${items.length} items in RSS feed`);
 
-    postItems.each((index, element) => {
+    const articles = items.map((item, index) => {
       try {
-        const $article = $(element);
+        // Extract basic fields
+        const title = extractText(item.title);
+        const link = extractText(item.link);
+        const description = extractText(item.description);
+        const pubDate = extractText(item.pubDate);
+        const guid = extractText(item.guid) || `article-${index}`;
 
-        // Extract title and link from h3 > a
-        const $titleLink = $article.find('h3 a').first();
-        const title = $titleLink.text().trim();
-        const link = $titleLink.attr('href');
+        // Extract creator
+        const creator = extractText(item['dc:creator']) || 'Radio Constanta';
 
-        // Extract image
-        const $img = $article.find('img').first();
-        let image = $img.attr('src') || $img.attr('data-src') || $img.attr('data-lazy-src');
+        // Extract categories
+        const categories = item.category || [];
+        const categoryNames = categories.map(c => extractText(c));
+        const category = categoryNames[0] || 'Actualitate';
 
-        // Clean up WordPress image URL parameters
-        if (image) {
-          // Remove resize parameters but keep the base URL
-          image = image.split('?')[0];
-          // Try to get larger version by removing size suffix
-          image = image.replace(/-\d+x\d+\.(jpg|jpeg|png|webp)/i, '.$1');
-        }
-
-        // Extract excerpt/description
-        const excerpt = $article.find('.post-excerpt').text().trim();
-
-        // Extract date from .post-meta .date
-        const dateText = $article.find('.post-meta .date, .date').text().trim();
-        const date = dateText ? parseRomanianDate(dateText) : new Date().toISOString();
-
-        // Only add if we have at least title and link
-        if (title && link) {
-          articles.push({
-            id: link.split('/').filter(Boolean).pop() || `article-${index}`,
-            title,
-            summary: excerpt.substring(0, 200),
-            image: image || 'https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=Radio+Constanta',
-            category,
-            date,
-            link: link.startsWith('http') ? link : `https://www.radioconstanta.ro${link}`,
-            author: 'Radio Constanta'
-          });
+        // Extract image from enclosure or content
+        let image = null;
+        if (item.enclosure && item.enclosure[0] && item.enclosure[0].url) {
+          image = item.enclosure[0].url;
         } else {
-          console.log(`Skipped article ${index}: title=${!!title}, link=${!!link}`);
+          // Try to extract from content:encoded or description
+          const content = extractText(item['content:encoded']) || description;
+          const imgMatch = content.match(/<img[^>]+src="([^">]+)"/i);
+          if (imgMatch) {
+            image = imgMatch[1];
+          }
         }
-      } catch (err) {
-        console.error('Error parsing article:', err);
-      }
-    });
 
-    console.log(`Parsed ${articles.length} articles from ${url}`);
+        // Clean up image URL
+        if (image) {
+          // Remove query parameters and get higher res version
+          image = image.split('?')[0];
+          image = image.replace(/-300x\d+\./i, '-1024x683.');
+          image = image.replace(/-\d+x\d+\./i, '.');
+        }
+
+        // Get full content
+        const content = extractText(item['content:encoded']) || description;
+
+        return {
+          id: guid,
+          title: stripHtml(title),
+          summary: stripHtml(description).substring(0, 200),
+          image: image || 'https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=Radio+Constanta',
+          category: stripHtml(category),
+          date: parseRomanianDate(pubDate),
+          link: link,
+          content: content,
+          author: stripHtml(creator)
+        };
+      } catch (err) {
+        console.error('Error parsing RSS item:', err);
+        return null;
+      }
+    }).filter(article => article !== null && article.title && article.link);
+
+    console.log(`Successfully parsed ${articles.length} articles`);
     return articles;
+
   } catch (error) {
-    console.error(`Error scraping ${url}:`, error);
-    return [];
+    console.error('Error parsing RSS feed:', error);
+    throw error;
   }
 };
 
@@ -132,36 +175,30 @@ export default async function handler(req, res) {
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
 
-    // Fetch articles from both categories (or specific category if requested)
-    let allArticles = [];
+    // Fetch and parse RSS feed
+    let articles = await parseRSSFeed();
 
-    if (!category || category === 'stiri') {
-      const stiriArticles = await scrapeArticles(NEWS_URLS.stiri, 'Știri');
-      allArticles = [...allArticles, ...stiriArticles];
-    }
-
-    if (!category || category === 'externe') {
-      const externeArticles = await scrapeArticles(NEWS_URLS.externe, 'Externe');
-      allArticles = [...allArticles, ...externeArticles];
+    // Filter by category if specified
+    if (category) {
+      articles = articles.filter(article =>
+        article.category.toLowerCase().includes(category.toLowerCase())
+      );
     }
 
     // Sort by date (newest first)
-    allArticles.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    // Remove duplicates based on link
-    const uniqueArticles = allArticles.filter((article, index, self) =>
-      index === self.findIndex((a) => a.link === article.link)
-    );
+    articles.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     // Paginate
     const start = (pageNum - 1) * limitNum;
     const end = start + limitNum;
-    const paginatedArticles = uniqueArticles.slice(start, end);
+    const paginatedArticles = articles.slice(start, end);
+
+    console.log(`Returning ${paginatedArticles.length} articles (page ${pageNum})`);
 
     res.status(200).json({
       articles: paginatedArticles,
-      hasMore: end < uniqueArticles.length,
-      total: uniqueArticles.length,
+      hasMore: end < articles.length,
+      total: articles.length,
       page: pageNum,
       limit: limitNum
     });
