@@ -121,35 +121,56 @@ function App() {
       return;
     }
 
-    // CRITICAL: Call play() IMMEDIATELY - no state updates before this
+    // Debug audio element state BEFORE play
+    logDebug(`Audio state: ready=${audio.readyState}, net=${audio.networkState}, src=${audio.src.substring(0, 40)}...`);
+    if (audio.error) {
+      logDebug(`Audio ERROR: code=${audio.error.code}, msg=${audio.error.message}`);
+    }
+
+    // CRITICAL: Call play() IMMEDIATELY
     playAttemptRef.current = true;
     const playPromise = audio.play();
 
     // NOW update states AFTER play() is called
     setIsLoading(true);
-    logDebug('Play called');
+    logDebug('Play called, promise=' + (playPromise ? 'exists' : 'null'));
+
+    // Safety timeout - if promise doesn't resolve in 3 seconds
+    const timeoutId = setTimeout(() => {
+      logDebug('⚠ Play timeout - checking state');
+      logDebug(`paused=${audio.paused}, ready=${audio.readyState}, net=${audio.networkState}`);
+      if (!audio.paused) {
+        logDebug('Audio playing! Setting state');
+        setIsPlaying(true);
+      }
+      setIsLoading(false);
+      playAttemptRef.current = false;
+    }, 3000);
 
     // Handle the promise
     if (playPromise !== undefined) {
       playPromise
         .then(() => {
-          logDebug('✓ Playing');
+          clearTimeout(timeoutId);
+          logDebug('✓ Promise resolved - playing');
           setIsPlaying(true);
           setIsLoading(false);
           playAttemptRef.current = false;
         })
         .catch((err) => {
-          logDebug(`✗ ${err.name}: ${err.message}`);
+          clearTimeout(timeoutId);
+          logDebug(`✗ Promise rejected: ${err.name} - ${err.message}`);
           setIsPlaying(false);
           setIsLoading(false);
           playAttemptRef.current = false;
         });
     } else {
       // Old browsers - no promise
+      clearTimeout(timeoutId);
       setIsPlaying(true);
       setIsLoading(false);
       playAttemptRef.current = false;
-      logDebug('✓ Playing (no promise)');
+      logDebug('✓ No promise - assuming playing');
     }
   };
 
