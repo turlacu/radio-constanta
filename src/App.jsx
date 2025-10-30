@@ -134,38 +134,42 @@ function App() {
         throw new Error('Audio element not found');
       }
 
-      // Don't call load() - let play() handle it
       logDebug(`Playing: ${audioRef.current.src}`);
 
-      // Play with timeout
+      // Call play() - don't await, just initiate
       const playPromise = audioRef.current.play();
 
       if (playPromise !== undefined) {
-        // Race between play() and 5-second timeout
-        await Promise.race([
-          playPromise,
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Play timeout')), 5000)
-          )
-        ]);
+        // Handle promise but don't block on it
+        playPromise
+          .then(() => {
+            logDebug('✓ Play promise resolved');
+            setIsPlaying(true);
+            setIsLoading(false);
+          })
+          .catch((err) => {
+            logDebug(`✗ Play promise rejected: ${err.message}`);
+            setIsPlaying(false);
+            setIsLoading(false);
+          });
       }
 
-      logDebug('✓ Playing');
+      // Assume success immediately for mobile
+      logDebug('✓ Play initiated, assuming success');
       setIsPlaying(true);
-      setIsLoading(false);
+
+      // Clear loading after brief delay
+      setTimeout(() => {
+        setIsLoading(false);
+        logDebug(`Playing check: paused=${audioRef.current?.paused}`);
+      }, 500);
+
     } catch (error) {
       logDebug(`✗ ${error.name}: ${error.message}`);
       setIsPlaying(false);
       setIsLoading(false);
     } finally {
       playAttemptRef.current = false;
-      // Safety: always clear loading after 100ms
-      setTimeout(() => {
-        if (!audioRef.current?.paused) {
-          setIsPlaying(true);
-        }
-        setIsLoading(false);
-      }, 100);
     }
   };
 
