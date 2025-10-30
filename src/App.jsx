@@ -47,6 +47,23 @@ function App() {
 
   // React handles src updates via audio element prop, no need for useEffect
 
+  // Intercept load() calls for debugging
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const originalLoad = audio.load.bind(audio);
+    audio.load = function() {
+      logDebug('⚠ audio.load() called!');
+      console.trace('load() stack trace');
+      return originalLoad();
+    };
+
+    return () => {
+      audio.load = originalLoad;
+    };
+  }, []);
+
   // Update stream info based on selected quality
   useEffect(() => {
     const audio = audioRef.current;
