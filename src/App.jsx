@@ -102,6 +102,9 @@ function App() {
   }, [currentQuality]);
 
   const togglePlay = async () => {
+    // Add immediate visual feedback
+    alert(`togglePlay called! isPlaying: ${isPlaying}, URL: ${currentQuality.url || 'NONE'}`);
+
     logDebug(`togglePlay called, isPlaying: ${isPlaying}`);
 
     if (!currentQuality.url) {
