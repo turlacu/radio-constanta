@@ -147,10 +147,10 @@ const parseRSSFeed = async () => {
         if (item.enclosure && item.enclosure[0] && item.enclosure[0].url) {
           image = extractText(item.enclosure[0].url);
           if (image) {
-            // WordPress CDN optimization: request medium size (768px width) for faster loading
+            // WordPress CDN optimization: request small thumbnail (400px) for fast list loading
             // Remove existing query params and add optimized resize params
             const baseUrl = image.split('?')[0];
-            image = `${baseUrl}?resize=768,432&quality=85`;
+            image = `${baseUrl}?w=400&quality=80`;
           }
         }
 

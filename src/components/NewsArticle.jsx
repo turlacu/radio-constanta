@@ -1,7 +1,52 @@
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import Loader from './Loader';
 
 export default function NewsArticle({ article, onBack }) {
+  const [fullContent, setFullContent] = useState(article.content || '');
+  const [fullImage, setFullImage] = useState(article.image);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   if (!article) return null;
+
+  // Fetch full article content when component mounts
+  useEffect(() => {
+    const fetchFullArticle = async () => {
+      // Check if we already have full content (longer than summary)
+      if (article.content && article.content.length > 500) {
+        return; // Already have full content
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`/api/article?url=${encodeURIComponent(article.link)}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch article');
+        }
+
+        const data = await response.json();
+
+        if (data.content) {
+          setFullContent(data.content);
+        }
+
+        if (data.image) {
+          setFullImage(data.image);
+        }
+      } catch (err) {
+        console.error('Error fetching full article:', err);
+        setError('Could not load full article content');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFullArticle();
+  }, [article.link, article.content]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -47,10 +92,10 @@ export default function NewsArticle({ article, onBack }) {
       {/* Article Content */}
       <article className="px-6 py-6 max-w-2xl mx-auto">
         {/* Featured Image */}
-        {article.image && (
+        {fullImage && (
           <div className="relative w-full h-72 rounded-2xl overflow-hidden mb-6 card-shadow">
             <img
-              src={article.image}
+              src={fullImage}
               alt={article.title}
               className="w-full h-full object-cover"
               style={{ imageRendering: 'auto' }}
@@ -87,11 +132,32 @@ export default function NewsArticle({ article, onBack }) {
         )}
 
         {/* Content */}
-        {article.content && (
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader size="medium" />
+            <p className="text-white/60 text-sm mt-4">Se încarcă articolul complet...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
+            <p className="text-red-400 text-sm">{error}</p>
+            <a
+              href={article.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 text-sm underline mt-2 inline-block"
+            >
+              Citește pe radioconstanta.ro
+            </a>
+          </div>
+        )}
+
+        {!loading && fullContent && (
           <div className="prose prose-invert max-w-none">
             <div
               className="text-white/80 text-base leading-relaxed space-y-4 text-justify"
-              dangerouslySetInnerHTML={{ __html: article.content }}
+              dangerouslySetInnerHTML={{ __html: fullContent }}
             />
           </div>
         )}
