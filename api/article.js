@@ -57,9 +57,12 @@ export default async function handler(req, res) {
       articleContent += $.html(elem);
     });
 
-    // Also get any figures/images
+    // Get any figures/images from the content, but exclude the first one (featured image)
     article.find('figure').each((i, elem) => {
-      articleContent += $.html(elem);
+      // Skip the first figure as it's usually the featured image already shown
+      if (i > 0) {
+        articleContent += $.html(elem);
+      }
     });
 
     if (!articleContent || articleContent.trim().length < 50) {

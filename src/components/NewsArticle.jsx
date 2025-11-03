@@ -126,8 +126,8 @@ export default function NewsArticle({ article, onBack }) {
           {article.title}
         </h1>
 
-        {/* Summary */}
-        {article.summary && (
+        {/* Summary - only show if full content hasn't loaded yet */}
+        {article.summary && !fullContent && !loading && (
           <p className="text-lg text-white/70 mb-6 leading-relaxed">
             {article.summary}
           </p>
