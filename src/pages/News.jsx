@@ -84,21 +84,34 @@ export default function News({ radioState }) {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background gradient effect */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+      </div>
+
       {/* Header */}
-      <div className="sticky top-0 bg-dark-bg/95 backdrop-blur-sm border-b border-white/10 z-10 px-4 py-4">
-        <h1 className="text-2xl font-bold">Știri</h1>
-        <p className="text-white/50 text-sm mt-1">Ultimele noutăți din Constanța</p>
+      <div className="sticky top-0 z-10 px-4 py-4">
+        {/* Glassmorphic header background */}
+        <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-xl border-b border-white/10" />
+
+        <div className="relative">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">Știri</h1>
+          <p className="text-white/60 text-sm mt-1 font-medium">Ultimele noutăți din Constanța</p>
+        </div>
       </div>
 
       {/* News List */}
-      <NewsList
-        articles={articles}
-        onArticleClick={setSelectedArticle}
-        onLoadMore={loadMoreNews}
-        hasMore={hasMore}
-        loading={loadingMore}
-      />
+      <div className="relative">
+        <NewsList
+          articles={articles}
+          onArticleClick={setSelectedArticle}
+          onLoadMore={loadMoreNews}
+          hasMore={hasMore}
+          loading={loadingMore}
+        />
+      </div>
     </div>
   );
 }

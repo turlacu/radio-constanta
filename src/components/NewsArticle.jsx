@@ -131,26 +131,48 @@ export default function NewsArticle({ article, onBack, radioState }) {
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-dark-bg z-50 overflow-y-auto scrollbar-hide pb-20"
     >
+      {/* Background gradient effect */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 left-1/3 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+      </div>
+
       {/* Header */}
-      <div className="sticky top-0 bg-dark-bg/95 backdrop-blur-sm border-b border-white/10 z-10">
-        <div className="flex items-center gap-4 px-4 py-4">
-          <button
+      <div className="sticky top-0 z-10">
+        {/* Glassmorphic header background */}
+        <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-xl border-b border-white/10" />
+
+        <div className="relative flex items-center gap-4 px-4 py-4">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onBack}
-            className="w-10 h-10 rounded-full bg-dark-card hover:bg-dark-card/80 transition-colors flex items-center justify-center"
+            className="relative w-10 h-10 rounded-full overflow-hidden group"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Glassmorphic background */}
+            <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-full transition-all group-hover:bg-white/15 group-hover:border-white/30" />
+
+            <svg className="relative w-5 h-5 mx-auto mt-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-          </button>
-          <h1 className="text-sm font-medium text-white/80">Înapoi la știri</h1>
+          </motion.button>
+          <h1 className="text-sm font-semibold text-white/90">Înapoi la știri</h1>
         </div>
       </div>
 
       {/* Article Content */}
-      <article className="px-6 py-6 max-w-2xl mx-auto">
+      <article className="relative px-6 py-6 max-w-2xl mx-auto">
         {/* Featured Image */}
         {fullImage && (
-          <div className="relative w-full h-72 rounded-2xl overflow-hidden mb-6 card-shadow">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="relative w-full h-72 rounded-3xl overflow-hidden mb-6 shadow-2xl"
+          >
+            {/* Glassmorphic border effect */}
+            <div className="absolute inset-0 border-2 border-white/10 rounded-3xl z-10 pointer-events-none" />
+
             <img
               src={fullImage}
               alt={article.title}
@@ -160,26 +182,39 @@ export default function NewsArticle({ article, onBack, radioState }) {
                 e.target.src = 'https://via.placeholder.com/800x450/1A1A1A/00BFFF?text=Radio+Constanta';
               }}
             />
-          </div>
+
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/60 via-transparent to-transparent" />
+          </motion.div>
         )}
 
         {/* Category & Date */}
-        <div className="flex items-center gap-2 mb-4 text-xs text-white/50">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-center gap-2 mb-4 text-xs text-white/50 font-medium"
+        >
           {article.category && (
             <>
-              <span className="px-3 py-1 rounded-full bg-primary/20 text-primary font-medium">
+              <span className="px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-primary/10 text-primary font-semibold border border-primary/20">
                 {article.category}
               </span>
-              <span>•</span>
+              <span className="w-1 h-1 bg-white/30 rounded-full" />
             </>
           )}
           <time>{formatDate(article.date)}</time>
-        </div>
+        </motion.div>
 
         {/* Title */}
-        <h1 className="text-3xl font-bold mb-4 leading-tight text-shadow">
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-3xl font-bold mb-4 leading-tight bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent"
+        >
           {article.title}
-        </h1>
+        </motion.h1>
 
         {/* Summary - only show if full content hasn't loaded yet */}
         {article.summary && !fullContent && !loading && (

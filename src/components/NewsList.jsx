@@ -24,51 +24,66 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             key={article.id || index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
+            transition={{ delay: index * 0.05, type: "spring", stiffness: 100 }}
             onClick={() => onArticleClick(article)}
-            className="bg-dark-card rounded-2xl overflow-hidden card-shadow cursor-pointer hover:scale-[1.02] transition-transform active:scale-[0.98]"
+            className="relative rounded-2xl overflow-hidden cursor-pointer group"
           >
-            {/* Image */}
-            {article.image && (
-              <div className="relative w-full h-56 bg-dark-surface overflow-hidden">
-                <img
-                  src={article.image}
-                  alt={article.title}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  style={{ imageRendering: 'auto' }}
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/800x400/1A1A1A/00BFFF?text=Radio+Constanta';
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-dark-card/80 to-transparent" />
-              </div>
-            )}
+            {/* Glassmorphic background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-2xl transition-all group-hover:border-white/20 group-hover:from-white/15 group-hover:to-white/8" />
 
-            {/* Content */}
-            <div className="p-4">
-              {/* Category & Date */}
-              <div className="flex items-center gap-2 mb-2 text-xs text-white/50">
-                {article.category && (
-                  <>
-                    <span className="text-primary font-medium">{article.category}</span>
-                    <span>•</span>
-                  </>
-                )}
-                <time>{formatDate(article.date)}</time>
-              </div>
+            {/* Glow effect on hover */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileHover={{ opacity: 0.5 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent blur-xl rounded-2xl"
+            />
 
-              {/* Title */}
-              <h3 className="text-lg font-semibold mb-2 line-clamp-2 leading-snug">
-                {article.title}
-              </h3>
-
-              {/* Summary */}
-              {article.summary && (
-                <p className="text-white/60 text-sm line-clamp-2 leading-relaxed">
-                  {article.summary}
-                </p>
+            <div className="relative">
+              {/* Image */}
+              {article.image && (
+                <div className="relative w-full h-56 bg-dark-surface overflow-hidden">
+                  <motion.img
+                    src={article.image}
+                    alt={article.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    style={{ imageRendering: 'auto' }}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/800x400/1A1A1A/00BFFF?text=Radio+Constanta';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/80 via-dark-bg/20 to-transparent" />
+                </div>
               )}
+
+              {/* Content */}
+              <div className="p-5">
+                {/* Category & Date */}
+                <div className="flex items-center gap-2 mb-3 text-xs text-white/50 font-medium">
+                  {article.category && (
+                    <>
+                      <span className="px-2 py-1 rounded-full bg-primary/20 text-primary font-semibold">
+                        {article.category}
+                      </span>
+                      <span className="w-1 h-1 bg-white/30 rounded-full" />
+                    </>
+                  )}
+                  <time>{formatDate(article.date)}</time>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-lg font-bold mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                  {article.title}
+                </h3>
+
+                {/* Summary */}
+                {article.summary && (
+                  <p className="text-white/70 text-sm line-clamp-2 leading-relaxed">
+                    {article.summary}
+                  </p>
+                )}
+              </div>
             </div>
           </motion.article>
         ))}
@@ -76,15 +91,33 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
 
       {/* Load More Button */}
       {hasMore && (
-        <div className="px-4 mt-6">
-          <button
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="px-4 mt-6"
+        >
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onLoadMore}
             disabled={loading}
-            className="w-full py-4 rounded-2xl bg-dark-card hover:bg-dark-card/80 transition-colors font-medium disabled:opacity-50"
+            className="relative w-full py-4 rounded-2xl font-semibold overflow-hidden disabled:opacity-50 group"
           >
-            {loading ? 'Se încarcă...' : 'Încarcă mai multe'}
-          </button>
-        </div>
+            {/* Glassmorphic background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 backdrop-blur-xl border border-primary/30 rounded-2xl transition-all group-hover:from-primary/30 group-hover:to-primary/20" />
+
+            {/* Glow effect */}
+            <motion.div
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent blur-lg"
+            />
+
+            <span className="relative text-white">
+              {loading ? 'Se încarcă...' : 'Încarcă mai multe'}
+            </span>
+          </motion.button>
+        </motion.div>
       )}
 
       {/* Link to website */}

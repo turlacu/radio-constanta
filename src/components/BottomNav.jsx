@@ -26,8 +26,14 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-dark-card/95 backdrop-blur-lg border-t border-white/10 z-40">
-      <div className="max-w-mobile mx-auto flex items-center justify-around px-6 py-3">
+    <nav className="fixed bottom-0 left-0 right-0 z-40">
+      {/* Glassmorphic background */}
+      <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/95 to-dark-bg/80 backdrop-blur-2xl border-t border-white/10" />
+
+      {/* Glow effect at top */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+
+      <div className="relative max-w-mobile mx-auto flex items-center justify-around px-6 py-3">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path;
 
@@ -35,20 +41,35 @@ export default function BottomNav() {
             <Link
               key={tab.path}
               to={tab.path}
-              className="relative flex flex-col items-center gap-1 py-2 px-6 transition-colors"
+              className="relative flex flex-col items-center gap-1 py-2 px-6"
             >
               {isActive && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute inset-0 bg-primary/10 rounded-2xl"
-                  initial={false}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
+                <>
+                  {/* Glassmorphic active background */}
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/10 backdrop-blur-md rounded-2xl border border-primary/30"
+                    initial={false}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
+
+                  {/* Glow effect */}
+                  <motion.div
+                    layoutId="activeGlow"
+                    animate={{ opacity: [0.4, 0.6, 0.4] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent blur-lg rounded-2xl"
+                    initial={false}
+                  />
+                </>
               )}
-              <div className={`relative z-10 ${isActive ? 'text-primary' : 'text-white/50'}`}>
+              <motion.div
+                whileTap={{ scale: 0.95 }}
+                className={`relative z-10 transition-colors ${isActive ? 'text-primary' : 'text-white/50'}`}
+              >
                 {tab.icon(isActive)}
-              </div>
-              <span className={`relative z-10 text-xs font-medium ${isActive ? 'text-primary' : 'text-white/50'}`}>
+              </motion.div>
+              <span className={`relative z-10 text-xs font-semibold transition-colors ${isActive ? 'text-primary' : 'text-white/50'}`}>
                 {tab.name}
               </span>
             </Link>
