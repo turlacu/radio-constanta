@@ -1,57 +1,12 @@
-import { parseString } from 'xml2js';
-import { promisify } from 'util';
-
-const parseXML = promisify(parseString);
-
-const RSS_URL = 'https://www.radioconstanta.ro/rss';
+// WordPress REST API endpoint - much faster than RSS
+const WP_API_URL = 'https://www.radioconstanta.ro/wp-json/wp/v2/posts';
 
 // In-memory cache
 let cachedArticles = null;
 let cacheTimestamp = null;
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-// Helper to parse Romanian month names
-const parseRomanianDate = (dateStr) => {
-  // Try to parse standard date format first
-  const date = new Date(dateStr);
-  if (!isNaN(date.getTime())) {
-    return date.toISOString();
-  }
-
-  // Fallback for Romanian format
-  const months = {
-    'ianuarie': 0, 'februarie': 1, 'martie': 2, 'aprilie': 3,
-    'mai': 4, 'iunie': 5, 'iulie': 6, 'august': 7,
-    'septembrie': 8, 'octombrie': 9, 'noiembrie': 10, 'decembrie': 11
-  };
-
-  const match = dateStr.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/);
-  if (match) {
-    const day = parseInt(match[1]);
-    const month = months[match[2].toLowerCase()] || 0;
-    const year = parseInt(match[3]);
-    return new Date(year, month, day).toISOString();
-  }
-
-  return new Date().toISOString();
-};
-
-// Helper to extract text from CDATA or regular text
-const extractText = (value) => {
-  if (!value) return '';
-  if (Array.isArray(value)) {
-    value = value[0];
-  }
-  if (typeof value === 'string') {
-    return value.trim();
-  }
-  if (typeof value === 'object' && value._) {
-    return value._.trim();
-  }
-  return String(value).trim();
-};
-
-// Helper to clean HTML tags from text
+// Helper to strip HTML tags from text
 const stripHtml = (html) => {
   if (!html) return '';
   return html
@@ -63,6 +18,7 @@ const stripHtml = (html) => {
     .replace(/&quot;/g, '"')
     .replace(/&#8211;/g, '–')
     .replace(/&#8217;/g, "'")
+    .replace(/&#8230;/g, '...')
     .replace(/\s+/g, ' ')
     .trim();
 };
@@ -81,115 +37,89 @@ const truncateAtWord = (text, maxLength) => {
   return text.substring(0, cutoff).trim() + '...';
 };
 
-// Helper to clean article content - remove WordPress footer and add Read More link
-const cleanArticleContent = (html, articleLink) => {
-  if (!html) return '';
-
-  // Remove WordPress "Articolul ... apare prima dată în..." footer
-  html = html.replace(/<p>Articolul\s+<a[^>]*>.*?<\/a>\s+apare prima dată în\s+<a[^>]*>.*?<\/a>\.<\/p>/gi, '');
-  html = html.replace(/Articolul\s+.*?\s+apare prima dată în\s+.*?\./gi, '');
-
-  // Replace […] or &#8230; with "Read More" link
-  const readMoreLink = `<a href="${articleLink}" target="_blank" rel="noopener noreferrer" style="color: #00BFFF; text-decoration: underline;">Citește mai mult pe www.radioconstanta.ro</a>`;
-
-  html = html.replace(/\[…\]/g, readMoreLink);
-  html = html.replace(/&#8230;/g, readMoreLink);
-  html = html.replace(/\.\.\./g, readMoreLink);
-
-  return html.trim();
-};
-
-// Parse RSS feed with optional limit for fast initial load
-const parseRSSFeed = async (limit = null) => {
+// Fetch articles from WordPress REST API
+const fetchFromWordPressAPI = async (limit = 20) => {
   try {
-    console.log('Fetching RSS feed...');
-    const response = await fetch(RSS_URL);
+    console.log('Fetching from WordPress REST API...');
+
+    // Use _embed to get featured images and author info in one request
+    const url = `${WP_API_URL}?per_page=${limit}&_embed`;
+    const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`RSS fetch failed: ${response.status}`);
+      throw new Error(`WordPress API fetch failed: ${response.status}`);
     }
 
-    let xmlText = await response.text();
-    console.log(`RSS XML length: ${xmlText.length} bytes`);
+    const posts = await response.json();
+    console.log(`Fetched ${posts.length} posts from WordPress API`);
 
-    // Fix malformed XML - escape unescaped ampersands
-    xmlText = xmlText.replace(/&(?!(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;');
-
-    // Parse XML
-    const result = await parseXML(xmlText, {
-      trim: true,
-      explicitArray: true,
-      mergeAttrs: true
-    });
-
-    const items = result?.rss?.channel?.[0]?.item || [];
-    console.log(`Found ${items.length} items in RSS feed`);
-
-    // If limit specified, only parse the first N items for fast response
-    const itemsToParse = limit ? items.slice(0, limit) : items;
-    console.log(`Parsing ${itemsToParse.length} articles${limit ? ' (fast mode)' : ''}`);
-
-    const articles = itemsToParse.map((item, index) => {
+    const articles = posts.map((post) => {
       try {
         // Extract basic fields
-        const title = extractText(item.title);
-        const link = extractText(item.link);
-        const description = extractText(item.description);
-        const pubDate = extractText(item.pubDate);
-        const guid = extractText(item.guid) || `article-${index}`;
+        const title = post.title?.rendered || '';
+        const link = post.link || '';
+        const content = post.content?.rendered || '';
+        const excerpt = post.excerpt?.rendered || '';
+        const date = post.date || new Date().toISOString();
+        const id = post.id?.toString() || `post-${Date.now()}`;
 
-        // Extract creator
-        const creator = extractText(item['dc:creator']) || 'Radio Constanta';
+        // Extract author name from embedded data
+        const authorName = post._embedded?.author?.[0]?.name || 'Radio Constanta';
 
-        // Extract categories
-        const categories = item.category || [];
-        const categoryNames = categories.map(c => extractText(c));
-        const category = categoryNames[0] || 'Actualitate';
+        // Extract category name from embedded data
+        const categories = post._embedded?.['wp:term']?.[0] || [];
+        const categoryName = categories[0]?.name || 'Actualitate';
 
-        // Extract image from RSS enclosure tag (instant, no HTTP request needed)
+        // Extract featured image from embedded data
         let image = null;
-        if (item.enclosure && item.enclosure[0] && item.enclosure[0].url) {
-          image = extractText(item.enclosure[0].url);
-          if (image) {
-            // WordPress CDN optimization: request small thumbnail (400px) for fast list loading
-            // Remove existing query params and add optimized resize params
-            const baseUrl = image.split('?')[0];
+        const featuredMedia = post._embedded?.['wp:featuredmedia']?.[0];
+
+        if (featuredMedia) {
+          // Use medium_large size for list view (good balance between quality and speed)
+          const mediaDetails = featuredMedia.media_details?.sizes;
+          if (mediaDetails?.medium_large) {
+            image = mediaDetails.medium_large.source_url;
+          } else if (mediaDetails?.large) {
+            image = mediaDetails.large.source_url;
+          } else if (featuredMedia.source_url) {
+            // Fallback to full size with width param for optimization
+            const baseUrl = featuredMedia.source_url.split('?')[0];
             image = `${baseUrl}?w=400&quality=80`;
           }
         }
 
-        // Use placeholder if no image in RSS
+        // Use placeholder if no image
         if (!image) {
           image = 'https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=Radio+Constanta';
         }
 
-        // For list view, we only need the summary, not the full cleaned content
-        // Full content will be fetched via /api/article when user clicks
-        const rawDescription = extractText(item.description);
+        // Create summary from excerpt
+        const cleanExcerpt = stripHtml(excerpt);
+        const summary = truncateAtWord(cleanExcerpt, 200);
 
         return {
-          id: guid,
+          id: id,
           title: stripHtml(title),
-          summary: truncateAtWord(stripHtml(rawDescription), 200),
+          summary: summary,
           image: image,
-          category: stripHtml(category),
-          date: parseRomanianDate(pubDate),
+          category: stripHtml(categoryName),
+          date: date,
           link: link,
-          content: '', // Don't parse full content for list view
-          author: stripHtml(creator)
+          content: '', // Don't include full content for list view
+          author: stripHtml(authorName)
         };
       } catch (err) {
-        console.error('Error parsing RSS item:', err);
+        console.error('Error parsing WordPress post:', err);
         return null;
       }
     }).filter(article => article !== null && article.title && article.link);
 
     const articlesWithImages = articles.filter(a => !a.image.includes('placeholder')).length;
-    console.log(`Successfully parsed ${articles.length} articles (${articlesWithImages} with images from RSS)`);
+    console.log(`Successfully parsed ${articles.length} articles (${articlesWithImages} with images)`);
     return articles;
 
   } catch (error) {
-    console.error('Error parsing RSS feed:', error);
+    console.error('Error fetching from WordPress API:', error);
     throw error;
   }
 };
@@ -226,23 +156,21 @@ export default async function handler(req, res) {
     } else {
       console.log('Cache MISS - fetching fresh articles');
       try {
-        // Fast mode: Parse only first 20 articles for immediate response
-        // This reduces parse time from ~8s to ~2s
-        const FAST_PARSE_LIMIT = 20;
-        articles = await parseRSSFeed(FAST_PARSE_LIMIT);
+        // Fetch articles from WordPress REST API (much faster than RSS)
+        // Start with 20 articles for fast response
+        articles = await fetchFromWordPressAPI(20);
 
-        // Update cache with fast results
+        // Update cache
         cachedArticles = articles;
         cacheTimestamp = now;
-        console.log(`Cache updated with ${articles.length} articles (fast mode)`);
+        console.log(`Cache updated with ${articles.length} articles`);
 
-        // Background: Parse remaining articles after response sent
-        // Note: In serverless, this may not complete, but cache will refresh on next request
-        parseRSSFeed().then(fullArticles => {
+        // Background: Fetch more articles (up to 100) for pagination
+        fetchFromWordPressAPI(100).then(fullArticles => {
           cachedArticles = fullArticles;
-          console.log(`Background: Cache updated with all ${fullArticles.length} articles`);
+          console.log(`Background: Cache updated with ${fullArticles.length} articles`);
         }).catch(err => {
-          console.error('Background parse error:', err);
+          console.error('Background fetch error:', err);
         });
       } catch (fetchError) {
         console.error('Error fetching fresh articles:', fetchError);
