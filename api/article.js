@@ -49,19 +49,59 @@ export default async function handler(req, res) {
       throw new Error('Could not find article element');
     }
 
-    // Get all paragraphs after the intro, before share buttons
-    const contentParagraphs = article.find('p').not('.articol__intro').not('.articol__autor-data');
-
+    // Extract content in the order it appears, preserving paragraphs, figures, audio, iframes, etc.
+    // We want to maintain the natural flow of the article
     let articleContent = '';
-    contentParagraphs.each((i, elem) => {
-      articleContent += $.html(elem);
-    });
+    let firstFigureSkipped = false;
 
-    // Get any figures/images from the content, but exclude the first one (featured image)
-    article.find('figure').each((i, elem) => {
-      // Skip the first figure as it's usually the featured image already shown
-      if (i > 0) {
+    // Get all content elements within the article
+    article.children().each((i, elem) => {
+      const $elem = $(elem);
+      const tagName = elem.tagName.toLowerCase();
+
+      // Skip intro paragraph and author/date metadata
+      if ($elem.hasClass('articol__intro') || $elem.hasClass('articol__autor-data')) {
+        return;
+      }
+
+      // Handle figures (images, audio players)
+      if (tagName === 'figure') {
+        // Skip the first figure (featured image)
+        if (!firstFigureSkipped) {
+          firstFigureSkipped = true;
+          return;
+        }
         articleContent += $.html(elem);
+        return;
+      }
+
+      // Include paragraphs
+      if (tagName === 'p') {
+        articleContent += $.html(elem);
+        return;
+      }
+
+      // Include divs that might contain embedded media (audio/video)
+      if (tagName === 'div') {
+        // Include divs with media-related classes
+        const className = $elem.attr('class') || '';
+        if (className.includes('wp-audio') || className.includes('wp-video') ||
+            className.includes('wp-embed') || className.includes('widget-live')) {
+          articleContent += $.html(elem);
+          return;
+        }
+      }
+
+      // Include iframes (for embedded content)
+      if (tagName === 'iframe') {
+        articleContent += $.html(elem);
+        return;
+      }
+
+      // Include other block-level content elements
+      if (['blockquote', 'ul', 'ol', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'table'].includes(tagName)) {
+        articleContent += $.html(elem);
+        return;
       }
     });
 
