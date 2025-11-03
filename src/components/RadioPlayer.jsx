@@ -5,135 +5,251 @@ export default function RadioPlayer({ radioState }) {
   const { isPlaying, isLoading, currentStation, currentQuality, metadata, streamInfo, stations, togglePlay, switchStation, switchQuality } = radioState;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 py-8">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 py-8 relative overflow-hidden">
 
-      {/* Cover Art */}
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 opacity-30">
+        <motion.div
+          animate={{
+            background: [
+              'radial-gradient(circle at 20% 50%, #00BFFF 0%, transparent 50%)',
+              'radial-gradient(circle at 80% 50%, #9333EA 0%, transparent 50%)',
+              'radial-gradient(circle at 20% 50%, #00BFFF 0%, transparent 50%)',
+            ]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0"
+        />
+      </div>
+
+      {/* Cover Art - Circular with glassmorphic effect */}
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="relative mb-8 w-full max-w-sm px-6"
+        transition={{ duration: 0.6, type: "spring" }}
+        className="relative mb-8 w-full max-w-[280px]"
       >
-        {/* Background glow */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${currentStation.color} blur-3xl opacity-50`} />
+        {/* Outer glow ring */}
+        <motion.div
+          animate={{
+            scale: isPlaying ? [1, 1.1, 1] : 1,
+            opacity: isPlaying ? [0.5, 0.8, 0.5] : 0.3
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          className={`absolute inset-0 rounded-full bg-gradient-to-br ${currentStation.color} blur-2xl`}
+        />
 
-        {/* Animated ring when playing */}
+        {/* Rotating border when playing */}
         {isPlaying && (
-          <>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: `conic-gradient(from 0deg, transparent 0%, ${currentStation.color.includes('blue') ? '#00BFFF' : '#9333EA'} 50%, transparent 100%)`,
-                filter: 'blur(20px)',
-                opacity: 0.6
-              }}
-            />
-            <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute inset-0 rounded-full border-2 border-primary/30"
-              style={{ filter: 'blur(4px)' }}
-            />
-          </>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute -inset-4 rounded-full opacity-60"
+            style={{
+              background: `conic-gradient(from 0deg, ${currentStation.color.includes('blue') ? '#00BFFF' : '#9333EA'}, transparent, ${currentStation.color.includes('blue') ? '#00BFFF' : '#9333EA'})`,
+              filter: 'blur(8px)'
+            }}
+          />
         )}
 
-        {/* Cover art with Live indicator overlay */}
-        <div className="relative w-full aspect-square rounded-xl overflow-hidden card-shadow">
+        {/* Glassmorphic outer ring */}
+        <div className="absolute -inset-3 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20" />
+
+        {/* Cover art container - circular */}
+        <div className="relative w-full aspect-square rounded-full overflow-hidden border-4 border-white/10 shadow-2xl">
           <img
             src={currentStation.coverArt}
             alt={currentStation.name}
-            className="w-full h-full object-contain bg-white"
+            className="w-full h-full object-cover"
           />
-          {/* Live indicator overlay - top right */}
+
+          {/* Overlay gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
+
+          {/* Live indicator - centered at bottom */}
           {isPlaying && (
-            <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm flex items-center gap-2">
-              <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <span className="text-primary text-xs font-medium">Live</span>
-            </div>
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-black/50 backdrop-blur-md flex items-center gap-2 border border-white/20"
+            >
+              <motion.span
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="w-2 h-2 bg-red-500 rounded-full"
+              />
+              <span className="text-white text-xs font-semibold uppercase tracking-wider">Live</span>
+            </motion.div>
           )}
         </div>
       </motion.div>
 
       {/* Station Info */}
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold mb-2 text-shadow">{currentStation.name}</h2>
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="text-center mb-8 relative z-10"
+      >
+        <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">{currentStation.name}</h2>
         {metadata && (
-          <p className="text-white/60 text-sm">{metadata}</p>
+          <motion.p
+            animate={{ opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="text-white/70 text-sm font-medium"
+          >{metadata}</motion.p>
         )}
-      </div>
+      </motion.div>
 
-      {/* Play/Pause Button */}
+      {/* Play/Pause Button - Large glassmorphic */}
       <motion.button
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={togglePlay}
         disabled={isLoading}
-        className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center card-shadow mb-8 disabled:opacity-50"
+        className="relative w-24 h-24 rounded-full mb-8 disabled:opacity-50 group"
       >
-        {isLoading ? (
-          <Loader size="small" />
-        ) : isPlaying ? (
-          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-          </svg>
-        ) : (
-          <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        )}
+        {/* Glow effect */}
+        <motion.div
+          animate={{
+            scale: isPlaying ? [1, 1.3, 1] : 1,
+            opacity: isPlaying ? [0.5, 0.8, 0.5] : 0
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute inset-0 rounded-full bg-primary blur-xl"
+        />
+
+        {/* Glassmorphic button */}
+        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-primary/90 to-primary/70 backdrop-blur-xl border-2 border-white/30 shadow-2xl flex items-center justify-center group-hover:border-white/50 transition-colors">
+          {isLoading ? (
+            <Loader size="small" />
+          ) : isPlaying ? (
+            <svg className="w-10 h-10 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+            </svg>
+          ) : (
+            <svg className="w-10 h-10 text-white ml-1 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
+        </div>
       </motion.button>
 
-      {/* Station Selector */}
-      <div className="flex gap-3 w-full max-w-xs mb-6">
-        {stations.map((station) => (
+      {/* Station Selector - Glassmorphic pills */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="flex gap-3 w-full max-w-xs mb-6 relative z-10"
+      >
+        {stations.map((station, index) => (
           <motion.button
             key={station.id}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => switchStation(station)}
-            className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all ${
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.4 + index * 0.1 }}
+            className={`relative flex-1 py-3 px-4 rounded-2xl font-semibold text-sm transition-all overflow-hidden ${
               currentStation.id === station.id
-                ? 'bg-primary text-white card-shadow'
-                : 'bg-dark-card text-white/60 hover:bg-dark-card/80'
+                ? 'text-white'
+                : 'text-white/60'
             }`}
           >
-            {station.id === 'fm' ? 'FM' : 'Folclor'}
+            {/* Background */}
+            <div className={`absolute inset-0 ${
+              currentStation.id === station.id
+                ? 'bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl border-2 border-white/30'
+                : 'bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10'
+            } rounded-2xl transition-all`} />
+
+            {/* Glow for active */}
+            {currentStation.id === station.id && (
+              <motion.div
+                animate={{ opacity: [0.5, 0.8, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent blur-lg"
+              />
+            )}
+
+            <span className="relative z-10">{station.id === 'fm' ? 'FM' : 'Folclor'}</span>
           </motion.button>
         ))}
-      </div>
+      </motion.div>
 
-      {/* Quality Selector */}
-      <div className="w-full max-w-xs mb-4">
-        <p className="text-xs text-white/50 mb-2 text-center">Calitate audio</p>
+      {/* Quality Selector - Modern chips */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="w-full max-w-xs mb-6 relative z-10"
+      >
+        <p className="text-xs text-white/50 mb-3 text-center font-medium uppercase tracking-wider">Calitate audio</p>
         <div className="flex gap-2 flex-wrap justify-center">
-          {currentStation.qualities.map((quality) => (
+          {currentStation.qualities.map((quality, index) => (
             <motion.button
               key={quality.id}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => switchQuality(quality)}
-              className={`py-2 px-4 rounded-lg font-medium text-xs transition-all ${
-                currentQuality.id === quality.id
-                  ? 'bg-primary/20 text-primary border-2 border-primary'
-                  : 'bg-dark-card text-white/60 border-2 border-transparent hover:bg-dark-card/80'
-              }`}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.6 + index * 0.1, type: "spring" }}
+              className="relative py-2 px-5 rounded-full font-semibold text-xs transition-all overflow-hidden"
             >
-              {quality.name}
+              {/* Background */}
+              <div className={`absolute inset-0 ${
+                currentQuality.id === quality.id
+                  ? 'bg-gradient-to-r from-primary/80 to-primary/60 backdrop-blur-xl'
+                  : 'bg-white/10 backdrop-blur-md hover:bg-white/15'
+              } rounded-full transition-all`} />
+
+              {/* Border */}
+              <div className={`absolute inset-0 rounded-full border-2 ${
+                currentQuality.id === quality.id
+                  ? 'border-white/40'
+                  : 'border-white/20'
+              } transition-all`} />
+
+              {/* Glow for active */}
+              {currentQuality.id === quality.id && (
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute inset-0 bg-primary blur-md rounded-full"
+                />
+              )}
+
+              <span className={`relative z-10 ${
+                currentQuality.id === quality.id ? 'text-white' : 'text-white/70'
+              }`}>{quality.name}</span>
             </motion.button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Stream Quality Info */}
+      {/* Stream Quality Info - Compact glassmorphic card */}
       {streamInfo && (
-        <div className="flex items-center justify-center gap-2 text-xs text-white/50">
-          <span>{streamInfo.format}</span>
-          <span>•</span>
-          <span>{streamInfo.bitrate}</span>
-          <span>•</span>
-          <span>{streamInfo.channels}</span>
-          <span>•</span>
-          <span>{streamInfo.sampleRate}</span>
-        </div>
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="relative px-6 py-3 rounded-2xl overflow-hidden"
+        >
+          {/* Glass background */}
+          <div className="absolute inset-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl" />
+
+          <div className="relative flex items-center justify-center gap-3 text-xs text-white/60 font-medium">
+            <span>{streamInfo.format}</span>
+            <span className="w-1 h-1 bg-white/30 rounded-full" />
+            <span>{streamInfo.bitrate}</span>
+            <span className="w-1 h-1 bg-white/30 rounded-full" />
+            <span>{streamInfo.channels}</span>
+            <span className="w-1 h-1 bg-white/30 rounded-full" />
+            <span>{streamInfo.sampleRate}</span>
+          </div>
+        </motion.div>
       )}
     </div>
   );
