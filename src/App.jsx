@@ -13,7 +13,7 @@ const STATIONS = [
     color: 'from-blue-500/20 to-cyan-500/20',
     qualities: [
       { id: '128', name: '128 kbps', url: 'https://radio.turlacu.workers.dev/?station=fm_128', format: 'MP3', bitrate: '128 kbps' },
-      { id: '256', name: '256 kbps', url: 'https://radio.turlacu.workers.dev/?station=fm_256', format: 'MP3', bitrate: '256 kbps' },
+      { id: '256', name: '256 kbps', url: 'http://89.238.227.6:8332/%7CRadio', format: 'MP3', bitrate: '256 kbps' },
       { id: 'flac', name: 'FLAC', url: 'https://radio.turlacu.workers.dev/?station=fm_flac', format: 'FLAC', bitrate: '1024 kbps' }
     ]
   },
@@ -24,7 +24,7 @@ const STATIONS = [
     color: 'from-purple-500/20 to-pink-500/20',
     qualities: [
       { id: '128', name: '128 kbps', url: 'https://radio.turlacu.workers.dev/?station=folclor_128', format: 'MP3', bitrate: '128 kbps' },
-      { id: '256', name: '256 kbps', url: 'https://radio.turlacu.workers.dev/?station=folclor_256', format: 'MP3', bitrate: '256 kbps' }
+      { id: '256', name: '256 kbps', url: 'http://89.238.227.6:8336/%7CRadio', format: 'MP3', bitrate: '256 kbps' }
     ]
   }
 ];
