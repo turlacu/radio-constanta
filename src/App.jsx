@@ -11,21 +11,14 @@ const STATIONS = [
     name: 'Radio Constanța FM',
     coverArt: '/rcfm.png',
     color: 'from-blue-500/20 to-cyan-500/20',
-    qualities: [
-      { id: '128', name: '128 kbps', url: 'https://radio.turlacu.workers.dev/?station=fm_128', format: 'MP3', bitrate: '128 kbps' },
-      { id: '256', name: '256 kbps', url: 'https://radio.turlacu.workers.dev/?url=http://89.238.227.6:8332/%7CRadio', format: 'MP3', bitrate: '256 kbps' },
-      { id: 'flac', name: 'FLAC', url: 'https://radio.turlacu.workers.dev/?station=fm_flac', format: 'FLAC', bitrate: '1024 kbps' }
-    ]
+    url: 'https://stream4.srr.ro:8443/radio-constanta-fm'
   },
   {
     id: 'folclor',
     name: 'Radio Constanța Folclor',
     coverArt: '/rcf.png',
     color: 'from-purple-500/20 to-pink-500/20',
-    qualities: [
-      { id: '128', name: '128 kbps', url: 'https://radio.turlacu.workers.dev/?station=folclor_128', format: 'MP3', bitrate: '128 kbps' },
-      { id: '256', name: '256 kbps', url: 'https://radio.turlacu.workers.dev/?url=http://89.238.227.6:8336/%7CRadio', format: 'MP3', bitrate: '256 kbps' }
-    ]
+    url: 'https://stream4.srr.ro:8443/radio-constanta-am'
   }
 ];
 
@@ -33,7 +26,6 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStation, setCurrentStation] = useState(STATIONS[0]);
-  const [currentQuality, setCurrentQuality] = useState(STATIONS[0].qualities[0]);
   const [metadata, setMetadata] = useState('');
   const [streamInfo, setStreamInfo] = useState(null);
   const audioRef = useRef(null);
@@ -92,7 +84,7 @@ function App() {
     };
   }, []);
 
-  // Update stream info based on selected quality
+  // Update stream info based on current station
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -113,8 +105,8 @@ function App() {
       }
 
       setStreamInfo({
-        format: currentQuality.format,
-        bitrate: currentQuality.bitrate,
+        format: 'MP3',
+        bitrate: '128 kbps',
         channels,
         sampleRate
       });
@@ -140,12 +132,12 @@ function App() {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('canplay', handleCanPlay);
     };
-  }, [currentQuality]);
+  }, [currentStation]);
 
   const togglePlay = async () => {
     const audio = audioRef.current;
 
-    if (!audio || !currentQuality.url) {
+    if (!audio || !currentStation.url) {
       logDebug('No audio or URL');
       return;
     }
@@ -153,9 +145,9 @@ function App() {
     // If paused, start playing
     if (audio.paused) {
       // Only set src and load if src is different or empty
-      if (!audio.src || audio.src !== currentQuality.url) {
-        logDebug(`Setting src: ${currentQuality.url}`);
-        audio.src = currentQuality.url;
+      if (!audio.src || audio.src !== currentStation.url) {
+        logDebug(`Setting src: ${currentStation.url}`);
+        audio.src = currentStation.url;
         audio.load(); // Explicitly load the stream
       }
 
@@ -193,10 +185,8 @@ function App() {
         audioRef.current.src = '';
       }
 
-      // Update station and quality
+      // Update station
       setCurrentStation(station);
-      const defaultQuality = station.qualities[0];
-      setCurrentQuality(defaultQuality);
       setIsPlaying(false);
 
       logDebug('Station switched');
@@ -205,7 +195,7 @@ function App() {
       if (wasPlaying && audioRef.current) {
         logDebug('Autoplay after station switch');
         setTimeout(async () => {
-          audioRef.current.src = defaultQuality.url;
+          audioRef.current.src = station.url;
           audioRef.current.load();
           setIsLoading(true);
           try {
@@ -219,52 +209,6 @@ function App() {
       }
     } catch (error) {
       logDebug(`✗ Switch error: ${error.message}`);
-    } finally {
-      isSwitchingRef.current = false;
-    }
-  };
-
-  const switchQuality = async (quality) => {
-    if (isSwitchingRef.current || currentQuality.id === quality.id) {
-      return;
-    }
-
-    logDebug(`Switching to ${quality.name}`);
-    isSwitchingRef.current = true;
-
-    const wasPlaying = isPlaying;
-
-    try {
-      // Stop current playback
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
-      }
-
-      // Update quality
-      setCurrentQuality(quality);
-      setIsPlaying(false);
-
-      logDebug('Quality switched');
-
-      // Autoplay if was playing before
-      if (wasPlaying && audioRef.current) {
-        logDebug('Autoplay after quality switch');
-        setTimeout(async () => {
-          audioRef.current.src = quality.url;
-          audioRef.current.load();
-          setIsLoading(true);
-          try {
-            await audioRef.current.play();
-            logDebug('✓ Autoplay success');
-          } catch (err) {
-            logDebug(`✗ Autoplay failed: ${err.message}`);
-            setIsLoading(false);
-          }
-        }, 100);
-      }
-    } catch (error) {
-      logDebug(`✗ Quality switch error: ${error.message}`);
     } finally {
       isSwitchingRef.current = false;
     }
@@ -291,13 +235,11 @@ function App() {
     isPlaying,
     isLoading,
     currentStation,
-    currentQuality,
     metadata,
     streamInfo,
     stations: STATIONS,
     togglePlay,
     switchStation,
-    switchQuality,
     pauseRadio,
     resumeRadio
   };

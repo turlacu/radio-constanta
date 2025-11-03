@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import Loader from './Loader';
 
 export default function RadioPlayer({ radioState }) {
-  const { isPlaying, isLoading, currentStation, currentQuality, metadata, streamInfo, stations, togglePlay, switchStation, switchQuality } = radioState;
+  const { isPlaying, isLoading, currentStation, metadata, streamInfo, stations, togglePlay, switchStation } = radioState;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 py-8 relative overflow-hidden">
@@ -180,57 +180,6 @@ export default function RadioPlayer({ radioState }) {
             <span className="relative z-10">{station.id === 'fm' ? 'FM' : 'Folclor'}</span>
           </motion.button>
         ))}
-      </motion.div>
-
-      {/* Quality Selector - Modern chips */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="w-full max-w-xs mb-6 relative z-10"
-      >
-        <p className="text-xs text-white/50 mb-3 text-center font-medium uppercase tracking-wider">Calitate audio</p>
-        <div className="flex gap-2 flex-wrap justify-center">
-          {currentStation.qualities.map((quality, index) => (
-            <motion.button
-              key={quality.id}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => switchQuality(quality)}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.6 + index * 0.1, type: "spring" }}
-              className="relative py-2 px-5 rounded-full font-semibold text-xs transition-all overflow-hidden"
-            >
-              {/* Background */}
-              <div className={`absolute inset-0 ${
-                currentQuality.id === quality.id
-                  ? 'bg-gradient-to-r from-primary/80 to-primary/60 backdrop-blur-xl'
-                  : 'bg-white/10 backdrop-blur-md hover:bg-white/15'
-              } rounded-full transition-all`} />
-
-              {/* Border */}
-              <div className={`absolute inset-0 rounded-full border-2 ${
-                currentQuality.id === quality.id
-                  ? 'border-white/40'
-                  : 'border-white/20'
-              } transition-all`} />
-
-              {/* Glow for active */}
-              {currentQuality.id === quality.id && (
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute inset-0 bg-primary blur-md rounded-full"
-                />
-              )}
-
-              <span className={`relative z-10 ${
-                currentQuality.id === quality.id ? 'text-white' : 'text-white/70'
-              }`}>{quality.name}</span>
-            </motion.button>
-          ))}
-        </div>
       </motion.div>
 
       {/* Stream Quality Info - Compact glassmorphic card */}
