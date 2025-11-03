@@ -14,7 +14,7 @@ const STATIONS = [
     qualities: [
       { id: '128', name: '128 kbps', url: 'https://radio.turlacu.workers.dev/?station=fm128', format: 'MP3', bitrate: '128 kbps' },
       { id: '256', name: '256 kbps', url: 'https://radio.turlacu.workers.dev/?station=fm256', format: 'MP3', bitrate: '256 kbps' },
-      { id: 'flac', name: 'FLAC 1024 kbps', url: 'https://radio.turlacu.workers.dev/?station=fmflac', format: 'FLAC', bitrate: '1024 kbps' }
+      { id: 'flac', name: 'FLAC', url: 'https://radio.turlacu.workers.dev/?station=fmflac', format: 'FLAC', bitrate: '1024 kbps' }
     ]
   },
   {
@@ -176,13 +176,15 @@ function App() {
     }
   };
 
-  const switchStation = (station) => {
+  const switchStation = async (station) => {
     if (isSwitchingRef.current || currentStation.id === station.id) {
       return;
     }
 
     logDebug(`Switching to ${station.name}`);
     isSwitchingRef.current = true;
+
+    const wasPlaying = isPlaying;
 
     try {
       // Stop current playback
@@ -197,7 +199,24 @@ function App() {
       setCurrentQuality(defaultQuality);
       setIsPlaying(false);
 
-      logDebug('Station switched - press Play to start');
+      logDebug('Station switched');
+
+      // Autoplay if was playing before
+      if (wasPlaying && audioRef.current) {
+        logDebug('Autoplay after station switch');
+        setTimeout(async () => {
+          audioRef.current.src = defaultQuality.url;
+          audioRef.current.load();
+          setIsLoading(true);
+          try {
+            await audioRef.current.play();
+            logDebug('✓ Autoplay success');
+          } catch (err) {
+            logDebug(`✗ Autoplay failed: ${err.message}`);
+            setIsLoading(false);
+          }
+        }, 100);
+      }
     } catch (error) {
       logDebug(`✗ Switch error: ${error.message}`);
     } finally {
@@ -205,13 +224,15 @@ function App() {
     }
   };
 
-  const switchQuality = (quality) => {
+  const switchQuality = async (quality) => {
     if (isSwitchingRef.current || currentQuality.id === quality.id) {
       return;
     }
 
     logDebug(`Switching to ${quality.name}`);
     isSwitchingRef.current = true;
+
+    const wasPlaying = isPlaying;
 
     try {
       // Stop current playback
@@ -224,7 +245,24 @@ function App() {
       setCurrentQuality(quality);
       setIsPlaying(false);
 
-      logDebug('Quality switched - press Play to start');
+      logDebug('Quality switched');
+
+      // Autoplay if was playing before
+      if (wasPlaying && audioRef.current) {
+        logDebug('Autoplay after quality switch');
+        setTimeout(async () => {
+          audioRef.current.src = quality.url;
+          audioRef.current.load();
+          setIsLoading(true);
+          try {
+            await audioRef.current.play();
+            logDebug('✓ Autoplay success');
+          } catch (err) {
+            logDebug(`✗ Autoplay failed: ${err.message}`);
+            setIsLoading(false);
+          }
+        }, 100);
+      }
     } catch (error) {
       logDebug(`✗ Quality switch error: ${error.message}`);
     } finally {
