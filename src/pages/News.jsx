@@ -4,7 +4,7 @@ import NewsArticle from '../components/NewsArticle';
 import Loader from '../components/Loader';
 import { fetchNews } from '../utils/fetchNews';
 
-export default function News() {
+export default function News({ radioState }) {
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +78,7 @@ export default function News() {
       <NewsArticle
         article={selectedArticle}
         onBack={() => setSelectedArticle(null)}
+        radioState={radioState}
       />
     );
   }

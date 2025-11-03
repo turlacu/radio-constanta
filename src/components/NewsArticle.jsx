@@ -2,11 +2,12 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import Loader from './Loader';
 
-export default function NewsArticle({ article, onBack }) {
+export default function NewsArticle({ article, onBack, radioState }) {
   const [fullContent, setFullContent] = useState(article.content || '');
   const [fullImage, setFullImage] = useState(article.image);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [radioPausedByArticle, setRadioPausedByArticle] = useState(false);
 
   if (!article) return null;
 
@@ -49,6 +50,60 @@ export default function NewsArticle({ article, onBack }) {
 
     fetchFullArticle();
   }, [article.link]);
+
+  // Handle article audio players - pause radio when playing, resume when done
+  useEffect(() => {
+    if (!radioState || !fullContent) return;
+
+    // Wait a bit for content to be rendered
+    const timer = setTimeout(() => {
+      // Find all audio elements in the article content
+      const audioElements = document.querySelectorAll('article audio.wp-audio-shortcode');
+
+      if (audioElements.length === 0) return;
+
+      audioElements.forEach((audio) => {
+        // When article audio starts playing
+        const handlePlay = () => {
+          console.log('Article audio playing - pausing radio');
+          const wasPaused = radioState.pauseRadio();
+          if (wasPaused) {
+            setRadioPausedByArticle(true);
+          }
+        };
+
+        // When article audio ends or pauses
+        const handleEnded = () => {
+          console.log('Article audio ended - resuming radio');
+          if (radioPausedByArticle) {
+            radioState.resumeRadio();
+            setRadioPausedByArticle(false);
+          }
+        };
+
+        const handlePause = () => {
+          console.log('Article audio paused - resuming radio');
+          if (radioPausedByArticle) {
+            radioState.resumeRadio();
+            setRadioPausedByArticle(false);
+          }
+        };
+
+        audio.addEventListener('play', handlePlay);
+        audio.addEventListener('ended', handleEnded);
+        audio.addEventListener('pause', handlePause);
+
+        // Cleanup
+        return () => {
+          audio.removeEventListener('play', handlePlay);
+          audio.removeEventListener('ended', handleEnded);
+          audio.removeEventListener('pause', handlePause);
+        };
+      });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [fullContent, radioState, radioPausedByArticle]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

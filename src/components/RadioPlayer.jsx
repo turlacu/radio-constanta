@@ -85,7 +85,7 @@ export default function RadioPlayer({ radioState }) {
       </motion.button>
 
       {/* Station Selector */}
-      <div className="flex gap-3 w-full max-w-xs mb-6">
+      <div className="flex gap-3 w-full max-w-xs mb-4">
         {stations.map((station) => (
           <motion.button
             key={station.id}
@@ -100,27 +100,6 @@ export default function RadioPlayer({ radioState }) {
             {station.id === 'fm' ? 'FM' : 'Folclor'}
           </motion.button>
         ))}
-      </div>
-
-      {/* Quality Selector */}
-      <div className="w-full max-w-xs mb-4">
-        <p className="text-xs text-white/50 mb-2 text-center">Calitate audio</p>
-        <div className="flex gap-2 flex-wrap justify-center">
-          {currentStation.qualities.map((quality) => (
-            <motion.button
-              key={quality.id}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => switchQuality(quality)}
-              className={`py-2 px-4 rounded-lg font-medium text-xs transition-all ${
-                currentQuality.id === quality.id
-                  ? 'bg-primary/20 text-primary border-2 border-primary'
-                  : 'bg-dark-card text-white/60 border-2 border-transparent hover:bg-dark-card/80'
-              }`}
-            >
-              {quality.name}
-            </motion.button>
-          ))}
-        </div>
       </div>
 
       {/* Stream Quality Info */}
