@@ -23,7 +23,15 @@ app.use('/api/article', articleRouter);
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../dist')));
 
-  // Handle React routing, return all requests to React app
+  // 404 handler for unmatched API routes
+  app.use('/api/*', (req, res) => {
+    res.status(404).json({
+      error: 'API endpoint not found',
+      path: req.path
+    });
+  });
+
+  // Handle React routing, return all requests to React app (except /api/*)
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../dist', 'index.html'));
   });
