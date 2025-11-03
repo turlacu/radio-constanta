@@ -74,18 +74,27 @@ const fetchFromWordPressAPI = async (limit = 20) => {
         let image = null;
         const featuredMedia = post._embedded?.['wp:featuredmedia']?.[0];
 
-        if (featuredMedia) {
+        // Check if featured media is valid (not an error response)
+        if (featuredMedia && !featuredMedia.code && featuredMedia.source_url) {
           // Use medium_large size for list view (good balance between quality and speed)
           const mediaDetails = featuredMedia.media_details?.sizes;
           if (mediaDetails?.medium_large) {
             image = mediaDetails.medium_large.source_url;
           } else if (mediaDetails?.large) {
             image = mediaDetails.large.source_url;
-          } else if (featuredMedia.source_url) {
+          } else {
             // Fallback to full size with width param for optimization
             const baseUrl = featuredMedia.source_url.split('?')[0];
             image = `${baseUrl}?w=400&quality=80`;
           }
+        }
+
+        // If no image from _embed, try to get from post's guid or featured_media
+        // For restricted media, we can construct the direct URL pattern
+        if (!image && post.featured_media && post.featured_media > 0) {
+          // Fallback: Try to fetch the media directly from the media endpoint
+          // For now, use a placeholder - we'll enhance this if needed
+          image = null; // Will use placeholder below
         }
 
         // Use placeholder if no image

@@ -46,8 +46,18 @@
 }
 
 /* Custom audio player styles */
-audio {
+/* Hide only the live stream audio (not article audio players) */
+.player-container audio {
   display: none;
+}
+
+/* Style article audio players */
+article audio.wp-audio-shortcode {
+  display: block !important;
+  width: 100%;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Smooth scroll */
