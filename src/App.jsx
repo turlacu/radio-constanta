@@ -12,9 +12,9 @@ const STATIONS = [
     coverArt: '/rcfm.png',
     color: 'from-blue-500/20 to-cyan-500/20',
     qualities: [
-      { id: '128', name: '128 kbps', url: 'http://stream2.srr.ro:8330/radio-constanta-fm', format: 'MP3', bitrate: '128 kbps' },
-      { id: '256', name: '256 kbps', url: 'http://stream2.srr.ro:8332/radio-constanta-fm', format: 'MP3', bitrate: '256 kbps' },
-      { id: 'flac', name: 'FLAC', url: 'http://89.238.207.222:8008/radio-constanta-flac', format: 'FLAC', bitrate: '1024 kbps' }
+      { id: '128', name: '128 kbps', url: 'https://radio.turlacu.workers.dev/?station=fm128', format: 'MP3', bitrate: '128 kbps' },
+      { id: '256', name: '256 kbps', url: 'https://radio.turlacu.workers.dev/?station=fm256', format: 'MP3', bitrate: '256 kbps' },
+      { id: 'flac', name: 'FLAC', url: 'https://radio.turlacu.workers.dev/?station=fmflac', format: 'FLAC', bitrate: '1024 kbps' }
     ]
   },
   {
@@ -23,8 +23,8 @@ const STATIONS = [
     coverArt: '/rcf.png',
     color: 'from-purple-500/20 to-pink-500/20',
     qualities: [
-      { id: '128', name: '128 kbps', url: 'http://stream2.srr.ro:8334/radio-constanta-am', format: 'MP3', bitrate: '128 kbps' },
-      { id: '256', name: '256 kbps', url: 'http://stream2.srr.ro:8336/radio-constanta-am', format: 'MP3', bitrate: '256 kbps' }
+      { id: '128', name: '128 kbps', url: 'https://radio.turlacu.workers.dev/?station=folclor128', format: 'MP3', bitrate: '128 kbps' },
+      { id: '256', name: '256 kbps', url: 'https://radio.turlacu.workers.dev/?station=folclor256', format: 'MP3', bitrate: '256 kbps' }
     ]
   }
 ];
