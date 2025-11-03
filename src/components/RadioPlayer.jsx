@@ -36,7 +36,7 @@ export default function RadioPlayer({ radioState }) {
             opacity: isPlaying ? [0.5, 0.8, 0.5] : 0.3
           }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className={`absolute inset-0 rounded-full bg-gradient-to-br ${currentStation.color} blur-2xl`}
+          className={`absolute inset-0 rounded-lg bg-gradient-to-br ${currentStation.color} blur-2xl`}
         />
 
         {/* Rotating border when playing */}
@@ -44,7 +44,7 @@ export default function RadioPlayer({ radioState }) {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute -inset-4 rounded-full opacity-60"
+            className="absolute -inset-4 rounded-lg opacity-60"
             style={{
               background: `conic-gradient(from 0deg, ${currentStation.color.includes('blue') ? '#00BFFF' : '#9333EA'}, transparent, ${currentStation.color.includes('blue') ? '#00BFFF' : '#9333EA'})`,
               filter: 'blur(8px)'
@@ -53,10 +53,10 @@ export default function RadioPlayer({ radioState }) {
         )}
 
         {/* Glassmorphic outer ring */}
-        <div className="absolute -inset-3 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20" />
+        <div className="absolute -inset-3 rounded-lg bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20" />
 
-        {/* Cover art container - circular */}
-        <div className="relative w-full aspect-square rounded-full overflow-hidden border-4 border-white/10 shadow-2xl">
+        {/* Cover art container - square with small rounded corners */}
+        <div className="relative w-full aspect-square rounded-lg overflow-hidden border-4 border-white/10 shadow-2xl">
           <img
             src={currentStation.coverArt}
             alt={currentStation.name}
@@ -109,18 +109,22 @@ export default function RadioPlayer({ radioState }) {
         disabled={isLoading}
         className="relative w-24 h-24 rounded-full mb-8 disabled:opacity-50 group"
       >
-        {/* Glow effect */}
+        {/* Glow effect - purple for folclor, cyan for FM */}
         <motion.div
           animate={{
             scale: isPlaying ? [1, 1.3, 1] : 1,
             opacity: isPlaying ? [0.5, 0.8, 0.5] : 0
           }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="absolute inset-0 rounded-full bg-primary blur-xl"
+          className={`absolute inset-0 rounded-full blur-xl ${currentStation.id === 'folclor' ? 'bg-purple-500' : 'bg-primary'}`}
         />
 
-        {/* Glassmorphic button */}
-        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-primary/90 to-primary/70 backdrop-blur-xl border-2 border-white/30 shadow-2xl flex items-center justify-center group-hover:border-white/50 transition-colors">
+        {/* Glassmorphic button - purple gradient for folclor */}
+        <div className={`relative w-full h-full rounded-full backdrop-blur-xl border-2 border-white/30 shadow-2xl flex items-center justify-center group-hover:border-white/50 transition-colors ${
+          currentStation.id === 'folclor'
+            ? 'bg-gradient-to-br from-purple-500/90 to-purple-600/70'
+            : 'bg-gradient-to-br from-primary/90 to-primary/70'
+        }`}>
           {isLoading ? (
             <Loader size="small" />
           ) : isPlaying ? (
