@@ -41,6 +41,9 @@ function App() {
     // Create audio element and append to document
     const audio = document.createElement('audio');
     audio.preload = 'none';
+    audio.crossOrigin = 'anonymous'; // For CORS
+    audio.setAttribute('playsinline', ''); // iOS Safari
+    audio.setAttribute('webkit-playsinline', ''); // Older iOS
     audioRef.current = audio;
 
     // Simple event handlers

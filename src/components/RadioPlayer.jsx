@@ -22,20 +22,20 @@ export default function RadioPlayer({ radioState }) {
         />
       </div>
 
-      {/* Cover Art - Circular with glassmorphic effect */}
+      {/* Cover Art - Square with glassmorphic effect */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6, type: "spring" }}
-        className="relative mb-8 w-full max-w-[280px]"
+        className="relative mb-8 w-full max-w-[360px]"
       >
         {/* Outer glow ring */}
         <motion.div
           animate={{
-            scale: isPlaying ? [1, 1.1, 1] : 1,
-            opacity: isPlaying ? [0.5, 0.8, 0.5] : 0.3
+            scale: isPlaying ? [1, 1.05, 1] : 1,
+            opacity: isPlaying ? [0.4, 0.6, 0.4] : 0.2
           }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className={`absolute inset-0 rounded-lg bg-gradient-to-br ${currentStation.color} blur-2xl`}
         />
 
@@ -43,20 +43,20 @@ export default function RadioPlayer({ radioState }) {
         {isPlaying && (
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute -inset-4 rounded-lg opacity-60"
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            className="absolute -inset-4 rounded-lg opacity-40"
             style={{
               background: `conic-gradient(from 0deg, ${currentStation.color.includes('blue') ? '#00BFFF' : '#9333EA'}, transparent, ${currentStation.color.includes('blue') ? '#00BFFF' : '#9333EA'})`,
-              filter: 'blur(8px)'
+              filter: 'blur(10px)'
             }}
           />
         )}
 
         {/* Glassmorphic outer ring */}
-        <div className="absolute -inset-3 rounded-lg bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20" />
+        <div className="absolute -inset-2 rounded-lg bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20" />
 
         {/* Cover art container - square with small rounded corners */}
-        <div className="relative w-full aspect-square rounded-lg overflow-hidden border-4 border-white/10 shadow-2xl">
+        <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-white/10 shadow-2xl">
           <img
             src={currentStation.coverArt}
             alt={currentStation.name}
@@ -109,14 +109,14 @@ export default function RadioPlayer({ radioState }) {
         disabled={isLoading}
         className="relative w-24 h-24 rounded-full mb-8 disabled:opacity-50 group"
       >
-        {/* Glow effect - purple for folclor, cyan for FM */}
+        {/* Glow effect - purple for folclor, cyan for FM - smoother and slower */}
         <motion.div
           animate={{
-            scale: isPlaying ? [1, 1.3, 1] : 1,
-            opacity: isPlaying ? [0.5, 0.8, 0.5] : 0
+            scale: isPlaying ? [1, 1.2, 1] : 1,
+            opacity: isPlaying ? [0.3, 0.5, 0.3] : 0
           }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className={`absolute inset-0 rounded-full blur-xl ${currentStation.id === 'folclor' ? 'bg-purple-500' : 'bg-primary'}`}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          className={`absolute inset-0 rounded-full blur-2xl ${currentStation.id === 'folclor' ? 'bg-purple-500' : 'bg-primary'}`}
         />
 
         {/* Glassmorphic button - purple gradient for folclor */}
@@ -139,7 +139,7 @@ export default function RadioPlayer({ radioState }) {
         </div>
       </motion.button>
 
-      {/* Station Selector - Glassmorphic pills */}
+      {/* Station Selector - More square glassmorphic buttons */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -155,7 +155,7 @@ export default function RadioPlayer({ radioState }) {
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.4 + index * 0.1 }}
-            className={`relative flex-1 py-3 px-4 rounded-2xl font-semibold text-sm transition-all overflow-hidden ${
+            className={`relative flex-1 py-4 px-4 rounded-xl font-semibold text-sm transition-all overflow-hidden ${
               currentStation.id === station.id
                 ? 'text-white'
                 : 'text-white/60'
@@ -166,13 +166,13 @@ export default function RadioPlayer({ radioState }) {
               currentStation.id === station.id
                 ? 'bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl border-2 border-white/30'
                 : 'bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10'
-            } rounded-2xl transition-all`} />
+            } rounded-xl transition-all`} />
 
             {/* Glow for active */}
             {currentStation.id === station.id && (
               <motion.div
-                animate={{ opacity: [0.5, 0.8, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                animate={{ opacity: [0.3, 0.5, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent blur-lg"
               />
             )}
