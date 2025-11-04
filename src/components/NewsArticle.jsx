@@ -51,30 +51,32 @@ export default function NewsArticle({ article, onBack, radioState }) {
     fetchFullArticle();
   }, [article.link]);
 
-  // Handle article audio players - pause radio when playing, resume when done
+  // Handle article audio and video players - pause radio when playing, resume when done
   useEffect(() => {
     if (!radioState || !fullContent) return;
 
     // Wait a bit for content to be rendered
     const timer = setTimeout(() => {
-      // Find all audio elements in the article content
+      // Find all audio and video elements in the article content
       const audioElements = document.querySelectorAll('article audio.wp-audio-shortcode');
+      const videoElements = document.querySelectorAll('article video');
+      const mediaElements = [...audioElements, ...videoElements];
 
-      if (audioElements.length === 0) return;
+      if (mediaElements.length === 0) return;
 
-      audioElements.forEach((audio) => {
-        // When article audio starts playing
+      mediaElements.forEach((media) => {
+        // When article media starts playing
         const handlePlay = () => {
-          console.log('Article audio playing - pausing radio');
+          console.log('Article media playing - pausing radio');
           const wasPaused = radioState.pauseRadio();
           if (wasPaused) {
             setRadioPausedByArticle(true);
           }
         };
 
-        // When article audio ends or pauses
+        // When article media ends or pauses
         const handleEnded = () => {
-          console.log('Article audio ended - resuming radio');
+          console.log('Article media ended - resuming radio');
           if (radioPausedByArticle) {
             radioState.resumeRadio();
             setRadioPausedByArticle(false);
@@ -82,22 +84,22 @@ export default function NewsArticle({ article, onBack, radioState }) {
         };
 
         const handlePause = () => {
-          console.log('Article audio paused - resuming radio');
+          console.log('Article media paused - resuming radio');
           if (radioPausedByArticle) {
             radioState.resumeRadio();
             setRadioPausedByArticle(false);
           }
         };
 
-        audio.addEventListener('play', handlePlay);
-        audio.addEventListener('ended', handleEnded);
-        audio.addEventListener('pause', handlePause);
+        media.addEventListener('play', handlePlay);
+        media.addEventListener('ended', handleEnded);
+        media.addEventListener('pause', handlePause);
 
         // Cleanup
         return () => {
-          audio.removeEventListener('play', handlePlay);
-          audio.removeEventListener('ended', handleEnded);
-          audio.removeEventListener('pause', handlePause);
+          media.removeEventListener('play', handlePlay);
+          media.removeEventListener('ended', handleEnded);
+          media.removeEventListener('pause', handlePause);
         };
       });
     }, 500);
