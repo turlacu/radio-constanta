@@ -64,7 +64,11 @@ export default function NewsArticle({ article, onBack, radioState }) {
 
       if (mediaElements.length === 0) return;
 
+      const cleanupFunctions = [];
+
       mediaElements.forEach((media) => {
+        let handleVideoClick = null;
+
         // Add mobile-friendly attributes to videos
         if (media.tagName === 'VIDEO') {
           // iOS/mobile playback attributes
@@ -88,6 +92,38 @@ export default function NewsArticle({ article, onBack, radioState }) {
           media.addEventListener('error', (e) => {
             console.error('Video error:', e, media.error);
           });
+
+          // CRITICAL FIX for mobile: Pause radio BEFORE video tries to play
+          // Mobile browsers block video if audio stream has focus
+          handleVideoClick = async (e) => {
+            if (radioState.isPlaying) {
+              console.log('Video clicked while radio playing - pausing radio first');
+
+              // Prevent default to stop video from trying to play immediately
+              e.preventDefault();
+              e.stopPropagation();
+
+              // Pause radio immediately
+              const wasPaused = radioState.pauseRadio();
+              if (wasPaused) {
+                setRadioPausedByArticle(true);
+              }
+
+              // Wait for audio context to release (critical for mobile)
+              await new Promise(resolve => setTimeout(resolve, 150));
+
+              // Now manually trigger video play
+              try {
+                await media.play();
+                console.log('Video play started after radio pause');
+              } catch (err) {
+                console.error('Video play failed:', err);
+              }
+            }
+          };
+
+          // Add click handler to video element
+          media.addEventListener('click', handleVideoClick);
         }
 
         // When article media starts playing
@@ -120,13 +156,21 @@ export default function NewsArticle({ article, onBack, radioState }) {
         media.addEventListener('ended', handleEnded);
         media.addEventListener('pause', handlePause);
 
-        // Cleanup
-        return () => {
+        // Store cleanup function
+        cleanupFunctions.push(() => {
           media.removeEventListener('play', handlePlay);
           media.removeEventListener('ended', handleEnded);
           media.removeEventListener('pause', handlePause);
-        };
+          if (handleVideoClick) {
+            media.removeEventListener('click', handleVideoClick);
+          }
+        });
       });
+
+      // Return cleanup function that cleans up all media elements
+      return () => {
+        cleanupFunctions.forEach(cleanup => cleanup());
+      };
     }, 500);
 
     return () => clearTimeout(timer);
