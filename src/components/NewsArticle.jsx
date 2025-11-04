@@ -190,32 +190,61 @@ export default function NewsArticle({ article, onBack, radioState }) {
 
               console.log('✓ Custom play button clicked - attempting video play');
 
-              // If radio is playing, stop it first (synchronous, in user gesture)
+              // If radio is playing, use muted video strategy for mobile
               if (radioState.isPlaying) {
-                console.log('→ Radio is playing - stopping it NOW (synchronous)');
-                const radioSrc = radioState.stopRadio();
-                console.log('→ Radio stopped, src was:', radioSrc);
-                setSavedRadioSrc(radioSrc);
-                setRadioPausedByArticle(true);
-              } else {
-                console.log('→ Radio not playing, proceeding directly');
-              }
+                console.log('→ Radio is playing - using MUTED video strategy for mobile');
 
-              // Now play video (still in user gesture context!)
-              console.log('→ Calling media.play()...');
-              try {
-                await media.play();
-                console.log('✓✓✓ Video is NOW PLAYING via custom controls!');
-                isVideoPlaying = true;
-                playButton.innerHTML = `
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                  </svg>
-                `;
-                updateControlsVisibility();
-              } catch (err) {
-                console.error('✗✗✗ Video play FAILED:', err.name, err.message);
-                console.error('Full error:', err);
+                // STEP 1: Mute video (no audio focus needed)
+                media.muted = true;
+                console.log('→ Video muted');
+
+                // STEP 2: Play muted video immediately (user gesture preserved)
+                try {
+                  await media.play();
+                  console.log('→ Muted video playing!');
+                  isVideoPlaying = true;
+                  playButton.innerHTML = `
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                    </svg>
+                  `;
+                  updateControlsVisibility();
+
+                  // STEP 3: Stop radio now that video is playing
+                  const radioSrc = radioState.stopRadio();
+                  console.log('→ Radio stopped, src was:', radioSrc);
+                  setSavedRadioSrc(radioSrc);
+                  setRadioPausedByArticle(true);
+
+                  // STEP 4: Wait for audio context to settle, then unmute
+                  setTimeout(() => {
+                    media.muted = false;
+                    console.log('✓✓✓ Video UNMUTED - now playing with sound!');
+                  }, 200);
+
+                } catch (err) {
+                  console.error('✗✗✗ Even muted video failed:', err.name, err.message);
+                  media.muted = false;
+                }
+
+              } else {
+                // Radio not playing - play video normally
+                console.log('→ Radio not playing, proceeding directly');
+
+                try {
+                  await media.play();
+                  console.log('✓✓✓ Video is NOW PLAYING via custom controls!');
+                  isVideoPlaying = true;
+                  playButton.innerHTML = `
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                    </svg>
+                  `;
+                  updateControlsVisibility();
+                } catch (err) {
+                  console.error('✗✗✗ Video play FAILED:', err.name, err.message);
+                  console.error('Full error:', err);
+                }
               }
             } else {
               console.log('→ Pausing video');
