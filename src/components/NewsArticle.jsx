@@ -94,46 +94,43 @@ export default function NewsArticle({ article, onBack, radioState }) {
           media.addEventListener('error', handleError);
 
           // CRITICAL FIX for mobile: Override play() method to coordinate with radio
-          // This intercepts play BEFORE browser blocking logic runs
+          // Must be 100% synchronous - any delay breaks user gesture on mobile
           const originalPlay = media.play.bind(media);
           let isCoordinating = false;
 
           media.play = function() {
             // If radio is playing and we haven't started coordinating yet
             if (radioState.isPlaying && !isCoordinating) {
-              console.log('Video play() called while radio playing - coordinating audio focus');
+              console.log('Video play() called while radio playing - stopping radio NOW');
               isCoordinating = true;
 
-              // Stop radio immediately (synchronous, still in user gesture)
+              // Stop radio SYNCHRONOUSLY - no delays, stays in user gesture
               const radioSrc = radioState.stopRadio();
               setSavedRadioSrc(radioSrc);
               setRadioPausedByArticle(true);
-              console.log('Radio stopped - audio focus released');
+              console.log('Radio stopped synchronously');
 
-              // Return promise that resolves after audio context is released
-              return new Promise((resolve, reject) => {
-                // Wait for audio session to fully release on mobile
-                setTimeout(() => {
-                  console.log('Calling original video play() after radio stopped');
-                  originalPlay()
-                    .then(() => {
-                      console.log('✓ Video playing successfully');
-                      isCoordinating = false;
-                      resolve();
-                    })
-                    .catch(err => {
-                      console.error('✗ Video play failed:', err);
-                      isCoordinating = false;
-                      // Restore radio if video failed
-                      if (radioSrc) {
-                        radioState.restoreRadio(radioSrc);
-                        setSavedRadioSrc(null);
-                        setRadioPausedByArticle(false);
-                      }
-                      reject(err);
-                    });
-                }, 300); // Give mobile time to release audio focus
-              });
+              // Call original play IMMEDIATELY - no setTimeout, no delays
+              // Clearing audio.src above should be instant enough for mobile
+              const playPromise = originalPlay();
+
+              playPromise
+                .then(() => {
+                  console.log('✓ Video playing successfully');
+                  isCoordinating = false;
+                })
+                .catch(err => {
+                  console.error('✗ Video play failed:', err);
+                  isCoordinating = false;
+                  // Restore radio if video failed
+                  if (radioSrc) {
+                    radioState.restoreRadio(radioSrc);
+                    setSavedRadioSrc(null);
+                    setRadioPausedByArticle(false);
+                  }
+                });
+
+              return playPromise;
             }
 
             // If radio not playing or already coordinating, just call original play
