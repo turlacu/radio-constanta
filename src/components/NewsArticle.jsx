@@ -67,13 +67,27 @@ export default function NewsArticle({ article, onBack, radioState }) {
       mediaElements.forEach((media) => {
         // Add mobile-friendly attributes to videos
         if (media.tagName === 'VIDEO') {
-          media.setAttribute('playsinline', '');
-          media.setAttribute('webkit-playsinline', '');
+          // iOS/mobile playback attributes
+          media.setAttribute('playsinline', 'true');
+          media.setAttribute('webkit-playsinline', 'true');
           media.setAttribute('x-webkit-airplay', 'allow');
+          media.setAttribute('preload', 'metadata');
           media.setAttribute('controls', 'controls');
+
           // Remove any width/height attributes that might interfere
           media.removeAttribute('width');
           media.removeAttribute('height');
+
+          // Force reload with new attributes
+          media.load();
+
+          // Log for debugging
+          console.log('Video configured for mobile:', media.src);
+
+          // Handle video errors
+          media.addEventListener('error', (e) => {
+            console.error('Video error:', e, media.error);
+          });
         }
 
         // When article media starts playing
