@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import newsRouter from './routes/news.js';
 import articleRouter from './routes/article.js';
+import streamRouter from './routes/stream.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +19,7 @@ app.use(express.json());
 // API Routes
 app.use('/api/news', newsRouter);
 app.use('/api/article', articleRouter);
+app.use('/api/stream', streamRouter);
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {

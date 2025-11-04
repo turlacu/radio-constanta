@@ -5,27 +5,40 @@ import Radio from './pages/Radio';
 import News from './pages/News';
 import BottomNav from './components/BottomNav';
 
-const STATIONS = [
-  {
+const STATIONS = {
+  fm: {
     id: 'fm',
     name: 'Radio Constanța FM',
     coverArt: '/rcfm.png',
     color: 'from-blue-500/20 to-cyan-500/20',
-    url: 'https://stream4.srr.ro:8443/radio-constanta-fm'
+    qualities: [
+      { id: '128', label: '128 kbps', format: 'MP3', bitrate: '128 kbps', url: '/api/stream/fm/128' },
+      { id: '256', label: '256 kbps', format: 'MP3', bitrate: '256 kbps', url: '/api/stream/fm/256' },
+      { id: 'flac', label: 'FLAC', format: 'FLAC', bitrate: '1024 kbps', url: '/api/stream/fm/flac' }
+    ],
+    defaultQuality: '128'
   },
-  {
+  folclor: {
     id: 'folclor',
     name: 'Radio Constanța Folclor',
     coverArt: '/rcf.png',
     color: 'from-purple-500/20 to-pink-500/20',
-    url: 'https://stream4.srr.ro:8443/radio-constanta-am'
+    qualities: [
+      { id: '128', label: '128 kbps', format: 'MP3', bitrate: '128 kbps', url: '/api/stream/folclor/128' },
+      { id: '256', label: '256 kbps', format: 'MP3', bitrate: '256 kbps', url: '/api/stream/folclor/256' }
+    ],
+    defaultQuality: '128'
   }
-];
+};
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentStation, setCurrentStation] = useState(STATIONS[0]);
+  const [currentStation, setCurrentStation] = useState(STATIONS.fm);
+  const [selectedQuality, setSelectedQuality] = useState({
+    fm: STATIONS.fm.defaultQuality,
+    folclor: STATIONS.folclor.defaultQuality
+  });
   const [metadata, setMetadata] = useState('');
   const [streamInfo, setStreamInfo] = useState(null);
   const audioRef = useRef(null);
@@ -34,6 +47,17 @@ function App() {
   // Helper to log debug info
   const logDebug = (message) => {
     console.log(message);
+  };
+
+  // Get current quality object for the current station
+  const getCurrentQuality = () => {
+    const qualityId = selectedQuality[currentStation.id];
+    return currentStation.qualities.find(q => q.id === qualityId) || currentStation.qualities[0];
+  };
+
+  // Get stream URL for current station and quality
+  const getStreamUrl = () => {
+    return getCurrentQuality().url;
   };
 
   // Create Audio element (HTML5 approach - mobile friendly)
@@ -87,14 +111,15 @@ function App() {
     };
   }, []);
 
-  // Update stream info based on current station
+  // Update stream info based on current station and quality
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const updateStreamInfo = () => {
+      const quality = getCurrentQuality();
       let channels = 'Stereo';
-      let sampleRate = '44.1 kHz';
+      let sampleRate = '48.0 kHz';
 
       // Use Audio Context API for sample rate detection
       if (window.AudioContext || window.webkitAudioContext) {
@@ -108,8 +133,8 @@ function App() {
       }
 
       setStreamInfo({
-        format: 'MP3',
-        bitrate: '128 kbps',
+        format: quality.format,
+        bitrate: quality.bitrate,
         channels,
         sampleRate
       });
@@ -135,12 +160,13 @@ function App() {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('canplay', handleCanPlay);
     };
-  }, [currentStation]);
+  }, [currentStation, selectedQuality]);
 
   const togglePlay = async () => {
     const audio = audioRef.current;
+    const streamUrl = getStreamUrl();
 
-    if (!audio || !currentStation.url) {
+    if (!audio || !streamUrl) {
       logDebug('No audio or URL');
       return;
     }
@@ -148,9 +174,9 @@ function App() {
     // If paused, start playing
     if (audio.paused) {
       // Only set src and load if src is different or empty
-      if (!audio.src || audio.src !== currentStation.url) {
-        logDebug(`Setting src: ${currentStation.url}`);
-        audio.src = currentStation.url;
+      if (!audio.src || audio.src !== streamUrl) {
+        logDebug(`Setting src: ${streamUrl}`);
+        audio.src = streamUrl;
         audio.load(); // Explicitly load the stream
       }
 
@@ -198,7 +224,11 @@ function App() {
       if (wasPlaying && audioRef.current) {
         logDebug('Autoplay after station switch');
         setTimeout(async () => {
-          audioRef.current.src = station.url;
+          // Get URL for the new station's selected quality
+          const qualityId = selectedQuality[station.id];
+          const quality = station.qualities.find(q => q.id === qualityId) || station.qualities[0];
+
+          audioRef.current.src = quality.url;
           audioRef.current.load();
           setIsLoading(true);
           try {
@@ -214,6 +244,39 @@ function App() {
       logDebug(`✗ Switch error: ${error.message}`);
     } finally {
       isSwitchingRef.current = false;
+    }
+  };
+
+  // Switch quality for current station
+  const switchQuality = async (qualityId) => {
+    if (selectedQuality[currentStation.id] === qualityId) {
+      return; // Already selected
+    }
+
+    logDebug(`Switching quality to ${qualityId}`);
+
+    // Update selected quality
+    setSelectedQuality(prev => ({
+      ...prev,
+      [currentStation.id]: qualityId
+    }));
+
+    // If currently playing, restart with new quality
+    if (isPlaying && audioRef.current) {
+      const quality = currentStation.qualities.find(q => q.id === qualityId);
+      if (quality) {
+        logDebug(`Reloading stream with new quality: ${quality.url}`);
+        audioRef.current.src = quality.url;
+        audioRef.current.load();
+        setIsLoading(true);
+        try {
+          await audioRef.current.play();
+          logDebug('✓ Quality switch success');
+        } catch (err) {
+          logDebug(`✗ Quality switch failed: ${err.message}`);
+          setIsLoading(false);
+        }
+      }
     }
   };
 
@@ -240,9 +303,12 @@ function App() {
     currentStation,
     metadata,
     streamInfo,
-    stations: STATIONS,
+    stations: Object.values(STATIONS), // Convert to array for compatibility
+    selectedQuality: selectedQuality[currentStation.id],
+    availableQualities: currentStation.qualities,
     togglePlay,
     switchStation,
+    switchQuality,
     pauseRadio,
     resumeRadio
   };

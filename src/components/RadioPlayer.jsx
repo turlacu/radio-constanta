@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import Loader from './Loader';
 
 export default function RadioPlayer({ radioState }) {
-  const { isPlaying, isLoading, currentStation, metadata, streamInfo, stations, togglePlay, switchStation } = radioState;
+  const { isPlaying, isLoading, currentStation, metadata, streamInfo, stations, selectedQuality, availableQualities, togglePlay, switchStation, switchQuality } = radioState;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 py-8 relative overflow-hidden">
@@ -178,6 +178,49 @@ export default function RadioPlayer({ radioState }) {
             )}
 
             <span className="relative z-10">{station.id === 'fm' ? 'FM' : 'Folclor'}</span>
+          </motion.button>
+        ))}
+      </motion.div>
+
+      {/* Quality Selector - Glassmorphic buttons */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="flex gap-2 w-full max-w-xs mb-6 relative z-10"
+      >
+        {availableQualities.map((quality, index) => (
+          <motion.button
+            key={quality.id}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => switchQuality(quality.id)}
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.5 + index * 0.05 }}
+            className={`relative flex-1 py-2.5 px-3 rounded-lg font-medium text-xs transition-all overflow-hidden ${
+              selectedQuality === quality.id
+                ? 'text-white'
+                : 'text-white/50'
+            }`}
+          >
+            {/* Background */}
+            <div className={`absolute inset-0 ${
+              selectedQuality === quality.id
+                ? 'bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/30'
+                : 'bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10'
+            } rounded-lg transition-all`} />
+
+            {/* Glow for active */}
+            {selectedQuality === quality.id && (
+              <motion.div
+                animate={{ opacity: [0.2, 0.4, 0.2] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent blur"
+              />
+            )}
+
+            <span className="relative z-10">{quality.label}</span>
           </motion.button>
         ))}
       </motion.div>
