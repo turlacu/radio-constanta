@@ -225,26 +225,21 @@ export default function RadioPlayer({ radioState }) {
         ))}
       </motion.div>
 
-      {/* Stream Quality Info - Compact glassmorphic card */}
+      {/* Stream Quality Info - Text only */}
       {streamInfo && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="relative px-6 py-3 rounded-2xl overflow-hidden"
+          className="flex items-center justify-center gap-3 text-xs text-primary font-medium"
         >
-          {/* Glass background */}
-          <div className="absolute inset-0 bg-white/5 backdrop-blur-md rounded-2xl" />
-
-          <div className="relative flex items-center justify-center gap-3 text-xs text-primary font-medium">
-            <span>{streamInfo.format}</span>
-            <span className="w-1 h-1 bg-white/30 rounded-full" />
-            <span>{streamInfo.bitrate}</span>
-            <span className="w-1 h-1 bg-white/30 rounded-full" />
-            <span>{streamInfo.channels}</span>
-            <span className="w-1 h-1 bg-white/30 rounded-full" />
-            <span>{streamInfo.sampleRate}</span>
-          </div>
+          <span>{streamInfo.format}</span>
+          <span className="w-1 h-1 bg-white/30 rounded-full" />
+          <span>{streamInfo.bitrate}</span>
+          <span className="w-1 h-1 bg-white/30 rounded-full" />
+          <span>{streamInfo.channels}</span>
+          <span className="w-1 h-1 bg-white/30 rounded-full" />
+          <span>{streamInfo.sampleRate}</span>
         </motion.div>
       )}
     </div>

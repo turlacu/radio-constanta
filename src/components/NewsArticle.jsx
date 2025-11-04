@@ -65,6 +65,17 @@ export default function NewsArticle({ article, onBack, radioState }) {
       if (mediaElements.length === 0) return;
 
       mediaElements.forEach((media) => {
+        // Add mobile-friendly attributes to videos
+        if (media.tagName === 'VIDEO') {
+          media.setAttribute('playsinline', '');
+          media.setAttribute('webkit-playsinline', '');
+          media.setAttribute('x-webkit-airplay', 'allow');
+          media.setAttribute('controls', 'controls');
+          // Remove any width/height attributes that might interfere
+          media.removeAttribute('width');
+          media.removeAttribute('height');
+        }
+
         // When article media starts playing
         const handlePlay = () => {
           console.log('Article media playing - pausing radio');
@@ -149,12 +160,12 @@ export default function NewsArticle({ article, onBack, radioState }) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onBack}
-            className="relative w-10 h-10 rounded-full overflow-hidden group"
+            className="relative w-10 h-10 rounded-full overflow-hidden group flex items-center justify-center"
           >
             {/* Glassmorphic background */}
             <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-full transition-all group-hover:bg-white/15 group-hover:border-white/30" />
 
-            <svg className="relative w-5 h-5 mx-auto mt-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="relative w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </motion.button>
