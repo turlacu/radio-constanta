@@ -68,83 +68,153 @@ export default function NewsArticle({ article, onBack, radioState }) {
       const cleanupFunctions = [];
 
       mediaElements.forEach((media) => {
-        // Add mobile-friendly attributes to videos
+        // Add custom controls for videos (no native controls)
         if (media.tagName === 'VIDEO') {
-          // iOS/mobile playback attributes
+          // iOS/mobile playback attributes (NO CONTROLS)
           media.setAttribute('playsinline', 'true');
           media.setAttribute('webkit-playsinline', 'true');
           media.setAttribute('x-webkit-airplay', 'allow');
           media.setAttribute('preload', 'metadata');
-          media.setAttribute('controls', 'controls');
+          media.removeAttribute('controls'); // Remove native controls
 
           // Remove any width/height attributes that might interfere
           media.removeAttribute('width');
           media.removeAttribute('height');
 
+          // Make video container relative for absolute positioning of controls
+          media.style.display = 'block';
+          media.style.width = '100%';
+          media.style.cursor = 'pointer';
+
           // Force reload with new attributes
           media.load();
 
-          // Log for debugging
-          console.log('Video configured for mobile:', media.src);
+          console.log('Video configured with custom controls:', media.src);
 
-          // Handle video errors
-          const handleError = (e) => {
-            console.error('Video error:', e, media.error);
-          };
-          media.addEventListener('error', handleError);
+          // Create custom controls overlay
+          const controlsOverlay = document.createElement('div');
+          controlsOverlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: opacity 0.3s;
+          `;
 
-          // CRITICAL FIX for mobile: Use muted video strategy to bypass audio focus
-          // Muted videos can play freely, then we unmute after stopping radio
-          const originalPlay = media.play.bind(media);
-          let isCoordinating = false;
+          // Create play button
+          const playButton = document.createElement('div');
+          playButton.style.cssText = `
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 191, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s, background 0.2s;
+          `;
+          playButton.innerHTML = `
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          `;
 
-          media.play = function() {
-            // If radio is playing and we haven't started coordinating yet
-            if (radioState.isPlaying && !isCoordinating && !media.muted) {
-              console.log('Video play() called while radio playing - using muted strategy');
-              isCoordinating = true;
+          controlsOverlay.appendChild(playButton);
 
-              // STEP 1: Mute video (synchronous, no audio focus needed)
-              media.muted = true;
-              console.log('Video muted to bypass audio focus');
+          // Insert overlay after video
+          media.parentElement.style.position = 'relative';
+          media.parentElement.appendChild(controlsOverlay);
 
-              // STEP 2: Play muted video (should succeed - no audio conflict)
-              const playPromise = originalPlay();
+          // Track video state
+          let isVideoPlaying = false;
 
-              playPromise
-                .then(() => {
-                  console.log('✓ Muted video playing - now stopping radio and unmuting');
-
-                  // STEP 3: Stop radio to release audio focus
-                  const radioSrc = radioState.stopRadio();
-                  setSavedRadioSrc(radioSrc);
-                  setRadioPausedByArticle(true);
-
-                  // STEP 4: Wait briefly for audio context to settle, then unmute
-                  setTimeout(() => {
-                    media.muted = false;
-                    console.log('✓ Video unmuted - playing with sound');
-                    isCoordinating = false;
-                  }, 100);
-                })
-                .catch(err => {
-                  console.error('✗ Even muted video failed:', err);
-                  // Unmute video and reset state
-                  media.muted = false;
-                  isCoordinating = false;
-                });
-
-              return playPromise;
+          // Hide controls when video is playing
+          const updateControlsVisibility = () => {
+            if (isVideoPlaying) {
+              controlsOverlay.style.opacity = '0';
+              controlsOverlay.style.pointerEvents = 'none';
+            } else {
+              controlsOverlay.style.opacity = '1';
+              controlsOverlay.style.pointerEvents = 'auto';
             }
-
-            // If radio not playing or already coordinating, just call original play
-            return originalPlay();
           };
+
+          // Handle play/pause button click
+          const handlePlayPause = async () => {
+            if (media.paused) {
+              console.log('Custom play button clicked');
+
+              // If radio is playing, stop it first (synchronous, in user gesture)
+              if (radioState.isPlaying) {
+                console.log('Stopping radio before video play');
+                const radioSrc = radioState.stopRadio();
+                setSavedRadioSrc(radioSrc);
+                setRadioPausedByArticle(true);
+              }
+
+              // Now play video (still in user gesture context!)
+              try {
+                await media.play();
+                console.log('✓ Video playing via custom controls');
+                isVideoPlaying = true;
+                playButton.innerHTML = `
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                  </svg>
+                `;
+                updateControlsVisibility();
+              } catch (err) {
+                console.error('✗ Video play failed:', err);
+              }
+            } else {
+              media.pause();
+              isVideoPlaying = false;
+              playButton.innerHTML = `
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              `;
+              updateControlsVisibility();
+            }
+          };
+
+          // Click on overlay or video triggers play/pause
+          controlsOverlay.addEventListener('click', handlePlayPause);
+          media.addEventListener('click', handlePlayPause);
+
+          // Update button when video ends
+          media.addEventListener('ended', () => {
+            isVideoPlaying = false;
+            playButton.innerHTML = `
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            `;
+            updateControlsVisibility();
+          });
+
+          // Show controls on hover (desktop)
+          media.addEventListener('mouseenter', () => {
+            if (isVideoPlaying) {
+              controlsOverlay.style.opacity = '0.7';
+            }
+          });
+
+          media.addEventListener('mouseleave', () => {
+            if (isVideoPlaying) {
+              controlsOverlay.style.opacity = '0';
+            }
+          });
 
           cleanupFunctions.push(() => {
-            media.removeEventListener('error', handleError);
-            // Restore original play method
-            media.play = originalPlay;
+            controlsOverlay.remove();
           });
         }
 
