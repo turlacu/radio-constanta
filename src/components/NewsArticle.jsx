@@ -81,15 +81,28 @@ export default function NewsArticle({ article, onBack, radioState }) {
           media.removeAttribute('width');
           media.removeAttribute('height');
 
-          // Make video container relative for absolute positioning of controls
-          media.style.display = 'block';
-          media.style.width = '100%';
-          media.style.cursor = 'pointer';
-
           // Force reload with new attributes
           media.load();
 
           console.log('Video configured with custom controls:', media.src);
+
+          // Create wrapper container for video + overlay
+          const wrapper = document.createElement('div');
+          wrapper.style.cssText = `
+            position: relative;
+            width: 100%;
+            display: block;
+            margin: 1rem 0;
+          `;
+
+          // Move video into wrapper
+          media.parentElement.insertBefore(wrapper, media);
+          wrapper.appendChild(media);
+
+          // Style video
+          media.style.display = 'block';
+          media.style.width = '100%';
+          media.style.height = 'auto';
 
           // Create custom controls overlay
           const controlsOverlay = document.createElement('div');
@@ -105,6 +118,7 @@ export default function NewsArticle({ article, onBack, radioState }) {
             background: rgba(0, 0, 0, 0.3);
             cursor: pointer;
             transition: opacity 0.3s;
+            z-index: 10;
           `;
 
           // Create play button
@@ -116,9 +130,10 @@ export default function NewsArticle({ article, onBack, radioState }) {
             border-radius: 50%;
             display: flex;
             align-items: center;
-            justify-center;
+            justify-content: center;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
             transition: transform 0.2s, background 0.2s;
+            pointer-events: auto;
           `;
           playButton.innerHTML = `
             <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
@@ -128,9 +143,8 @@ export default function NewsArticle({ article, onBack, radioState }) {
 
           controlsOverlay.appendChild(playButton);
 
-          // Insert overlay after video
-          media.parentElement.style.position = 'relative';
-          media.parentElement.appendChild(controlsOverlay);
+          // Add overlay to wrapper
+          wrapper.appendChild(controlsOverlay);
 
           // Track video state
           let isVideoPlaying = false;
@@ -147,22 +161,30 @@ export default function NewsArticle({ article, onBack, radioState }) {
           };
 
           // Handle play/pause button click
-          const handlePlayPause = async () => {
+          const handlePlayPause = async (e) => {
+            console.log('=== handlePlayPause called ===');
+            console.log('media.paused:', media.paused);
+            console.log('radioState.isPlaying:', radioState.isPlaying);
+
             if (media.paused) {
-              console.log('Custom play button clicked');
+              console.log('✓ Custom play button clicked - attempting video play');
 
               // If radio is playing, stop it first (synchronous, in user gesture)
               if (radioState.isPlaying) {
-                console.log('Stopping radio before video play');
+                console.log('→ Radio is playing - stopping it NOW (synchronous)');
                 const radioSrc = radioState.stopRadio();
+                console.log('→ Radio stopped, src was:', radioSrc);
                 setSavedRadioSrc(radioSrc);
                 setRadioPausedByArticle(true);
+              } else {
+                console.log('→ Radio not playing, proceeding directly');
               }
 
               // Now play video (still in user gesture context!)
+              console.log('→ Calling media.play()...');
               try {
                 await media.play();
-                console.log('✓ Video playing via custom controls');
+                console.log('✓✓✓ Video is NOW PLAYING via custom controls!');
                 isVideoPlaying = true;
                 playButton.innerHTML = `
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
@@ -171,9 +193,11 @@ export default function NewsArticle({ article, onBack, radioState }) {
                 `;
                 updateControlsVisibility();
               } catch (err) {
-                console.error('✗ Video play failed:', err);
+                console.error('✗✗✗ Video play FAILED:', err.name, err.message);
+                console.error('Full error:', err);
               }
             } else {
+              console.log('→ Pausing video');
               media.pause();
               isVideoPlaying = false;
               playButton.innerHTML = `
