@@ -62,12 +62,20 @@ article audio.wp-audio-shortcode {
 
 /* Style article video players - make responsive */
 article video {
-  display: block;
-  max-width: 100%;
-  height: auto;
+  display: block !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  height: auto !important;
   margin: 1rem 0;
   border-radius: 0.5rem;
   background: rgba(255, 255, 255, 0.05);
+}
+
+/* Also handle video containers */
+article .wp-video,
+article figure.wp-block-video {
+  max-width: 100% !important;
+  width: 100% !important;
 }
 
 /* Smooth scroll */

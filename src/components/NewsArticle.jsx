@@ -248,7 +248,7 @@ export default function NewsArticle({ article, onBack, radioState }) {
         )}
 
         {!loading && fullContent && (
-          <div className="prose prose-invert max-w-none">
+          <div className="prose prose-invert max-w-none overflow-x-hidden">
             <div
               className="text-white/80 text-base leading-relaxed space-y-4 text-justify"
               dangerouslySetInnerHTML={{ __html: fullContent }}
