@@ -289,11 +289,30 @@ function App() {
     return false;
   };
 
+  // Aggressive stop for mobile - fully releases audio focus
+  const stopRadio = () => {
+    if (audioRef.current) {
+      const wasSrc = audioRef.current.src;
+      audioRef.current.pause();
+      audioRef.current.src = ''; // Clear source to release audio session
+      return wasSrc; // Return old src so it can be restored
+    }
+    return null;
+  };
+
   const resumeRadio = () => {
     if (audioRef.current && !isPlaying && audioRef.current.src) {
       audioRef.current.play().catch(err => {
         logDebug(`Resume failed: ${err.message}`);
       });
+    }
+  };
+
+  // Restore radio with specific URL (used after stopRadio)
+  const restoreRadio = (srcUrl) => {
+    if (audioRef.current && srcUrl) {
+      audioRef.current.src = srcUrl;
+      audioRef.current.load();
     }
   };
 
@@ -310,7 +329,9 @@ function App() {
     switchStation,
     switchQuality,
     pauseRadio,
-    resumeRadio
+    stopRadio,
+    resumeRadio,
+    restoreRadio
   };
 
   return (

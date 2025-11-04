@@ -8,6 +8,7 @@ export default function NewsArticle({ article, onBack, radioState }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [radioPausedByArticle, setRadioPausedByArticle] = useState(false);
+  const [savedRadioSrc, setSavedRadioSrc] = useState(null);
 
   if (!article) return null;
 
@@ -67,8 +68,6 @@ export default function NewsArticle({ article, onBack, radioState }) {
       const cleanupFunctions = [];
 
       mediaElements.forEach((media) => {
-        let handleVideoClick = null;
-
         // Add mobile-friendly attributes to videos
         if (media.tagName === 'VIDEO') {
           // iOS/mobile playback attributes
@@ -89,41 +88,62 @@ export default function NewsArticle({ article, onBack, radioState }) {
           console.log('Video configured for mobile:', media.src);
 
           // Handle video errors
-          media.addEventListener('error', (e) => {
+          const handleError = (e) => {
             console.error('Video error:', e, media.error);
-          });
+          };
+          media.addEventListener('error', handleError);
 
-          // CRITICAL FIX for mobile: Pause radio BEFORE video tries to play
-          // Mobile browsers block video if audio stream has focus
-          handleVideoClick = async (e) => {
-            if (radioState.isPlaying) {
-              console.log('Video clicked while radio playing - pausing radio first');
+          // CRITICAL FIX for mobile: Coordinate video play with radio
+          // This flag prevents recursive play event handling
+          let isHandlingPlayConflict = false;
 
-              // Prevent default to stop video from trying to play immediately
-              e.preventDefault();
-              e.stopPropagation();
+          const handleVideoPlayAttempt = (e) => {
+            // Check if radio is currently playing and we haven't already handled this
+            if (radioState.isPlaying && !isHandlingPlayConflict) {
+              console.log('Video play attempted while radio playing - coordinating audio focus');
 
-              // Pause radio immediately
-              const wasPaused = radioState.pauseRadio();
-              if (wasPaused) {
-                setRadioPausedByArticle(true);
-              }
+              isHandlingPlayConflict = true;
 
-              // Wait for audio context to release (critical for mobile)
-              await new Promise(resolve => setTimeout(resolve, 150));
+              // Immediately pause video to prevent conflict
+              media.pause();
 
-              // Now manually trigger video play
-              try {
-                await media.play();
-                console.log('Video play started after radio pause');
-              } catch (err) {
-                console.error('Video play failed:', err);
-              }
+              // Aggressively stop radio - fully releases audio session on mobile
+              const radioSrc = radioState.stopRadio();
+              setSavedRadioSrc(radioSrc); // Save for restoration later
+              console.log('Radio stopped and audio focus released');
+              setRadioPausedByArticle(true);
+
+              // Wait for audio context to release, then resume video
+              requestAnimationFrame(() => {
+                setTimeout(() => {
+                  console.log('Attempting to play video after audio focus released');
+                  media.play()
+                    .then(() => {
+                      console.log('✓ Video playing successfully after radio stopped');
+                      isHandlingPlayConflict = false;
+                    })
+                    .catch(err => {
+                      console.error('✗ Video play still failed:', err);
+                      isHandlingPlayConflict = false;
+                      // Restore radio if video still won't play
+                      if (radioSrc) {
+                        radioState.restoreRadio(radioSrc);
+                        setSavedRadioSrc(null);
+                        setRadioPausedByArticle(false);
+                      }
+                    });
+                }, 200); // Slightly longer delay for mobile
+              });
             }
           };
 
-          // Add click handler to video element
-          media.addEventListener('click', handleVideoClick);
+          // Listen to play event (fires when play is attempted)
+          media.addEventListener('play', handleVideoPlayAttempt);
+
+          cleanupFunctions.push(() => {
+            media.removeEventListener('error', handleError);
+            media.removeEventListener('play', handleVideoPlayAttempt);
+          });
         }
 
         // When article media starts playing
@@ -139,7 +159,17 @@ export default function NewsArticle({ article, onBack, radioState }) {
         const handleEnded = () => {
           console.log('Article media ended - resuming radio');
           if (radioPausedByArticle) {
-            radioState.resumeRadio();
+            // Restore radio src if it was cleared for video playback
+            if (savedRadioSrc) {
+              radioState.restoreRadio(savedRadioSrc);
+              setSavedRadioSrc(null);
+              // Wait a moment then resume playback
+              setTimeout(() => {
+                radioState.resumeRadio();
+              }, 100);
+            } else {
+              radioState.resumeRadio();
+            }
             setRadioPausedByArticle(false);
           }
         };
@@ -147,7 +177,17 @@ export default function NewsArticle({ article, onBack, radioState }) {
         const handlePause = () => {
           console.log('Article media paused - resuming radio');
           if (radioPausedByArticle) {
-            radioState.resumeRadio();
+            // Restore radio src if it was cleared for video playback
+            if (savedRadioSrc) {
+              radioState.restoreRadio(savedRadioSrc);
+              setSavedRadioSrc(null);
+              // Wait a moment then resume playback
+              setTimeout(() => {
+                radioState.resumeRadio();
+              }, 100);
+            } else {
+              radioState.resumeRadio();
+            }
             setRadioPausedByArticle(false);
           }
         };
