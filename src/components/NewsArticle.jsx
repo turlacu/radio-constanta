@@ -93,41 +93,45 @@ export default function NewsArticle({ article, onBack, radioState }) {
           };
           media.addEventListener('error', handleError);
 
-          // CRITICAL FIX for mobile: Override play() method to coordinate with radio
-          // Must be 100% synchronous - any delay breaks user gesture on mobile
+          // CRITICAL FIX for mobile: Use muted video strategy to bypass audio focus
+          // Muted videos can play freely, then we unmute after stopping radio
           const originalPlay = media.play.bind(media);
           let isCoordinating = false;
 
           media.play = function() {
             // If radio is playing and we haven't started coordinating yet
-            if (radioState.isPlaying && !isCoordinating) {
-              console.log('Video play() called while radio playing - stopping radio NOW');
+            if (radioState.isPlaying && !isCoordinating && !media.muted) {
+              console.log('Video play() called while radio playing - using muted strategy');
               isCoordinating = true;
 
-              // Stop radio SYNCHRONOUSLY - no delays, stays in user gesture
-              const radioSrc = radioState.stopRadio();
-              setSavedRadioSrc(radioSrc);
-              setRadioPausedByArticle(true);
-              console.log('Radio stopped synchronously');
+              // STEP 1: Mute video (synchronous, no audio focus needed)
+              media.muted = true;
+              console.log('Video muted to bypass audio focus');
 
-              // Call original play IMMEDIATELY - no setTimeout, no delays
-              // Clearing audio.src above should be instant enough for mobile
+              // STEP 2: Play muted video (should succeed - no audio conflict)
               const playPromise = originalPlay();
 
               playPromise
                 .then(() => {
-                  console.log('✓ Video playing successfully');
-                  isCoordinating = false;
+                  console.log('✓ Muted video playing - now stopping radio and unmuting');
+
+                  // STEP 3: Stop radio to release audio focus
+                  const radioSrc = radioState.stopRadio();
+                  setSavedRadioSrc(radioSrc);
+                  setRadioPausedByArticle(true);
+
+                  // STEP 4: Wait briefly for audio context to settle, then unmute
+                  setTimeout(() => {
+                    media.muted = false;
+                    console.log('✓ Video unmuted - playing with sound');
+                    isCoordinating = false;
+                  }, 100);
                 })
                 .catch(err => {
-                  console.error('✗ Video play failed:', err);
+                  console.error('✗ Even muted video failed:', err);
+                  // Unmute video and reset state
+                  media.muted = false;
                   isCoordinating = false;
-                  // Restore radio if video failed
-                  if (radioSrc) {
-                    radioState.restoreRadio(radioSrc);
-                    setSavedRadioSrc(null);
-                    setRadioPausedByArticle(false);
-                  }
                 });
 
               return playPromise;
