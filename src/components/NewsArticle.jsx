@@ -70,6 +70,11 @@ export default function NewsArticle({ article, onBack, radioState }) {
       mediaElements.forEach((media) => {
         // Add custom controls for videos (no native controls)
         if (media.tagName === 'VIDEO') {
+          // Skip if already configured (prevent duplicate setup on re-renders)
+          if (media.getAttribute('data-video-configured') === 'true') {
+            console.log('✓ Video already configured, skipping');
+            return;
+          }
           // iOS/mobile playback attributes (NO CONTROLS)
           media.setAttribute('playsinline', 'true');
           media.setAttribute('webkit-playsinline', 'true');
@@ -90,15 +95,29 @@ export default function NewsArticle({ article, onBack, radioState }) {
             if (sourceElements.length > 0) {
               videoSrc = sourceElements[0].src;
               console.log('Found video src in <source> element:', videoSrc);
-              // Set it on the video element itself
-              media.src = videoSrc;
             }
           }
+
+          if (!videoSrc) {
+            console.error('✗ Cannot setup video controls - no source found!');
+            return; // Skip this video
+          }
+
+          // IMPORTANT: Set src directly on video element and force it to stay
+          media.src = videoSrc;
+          media.setAttribute('src', videoSrc); // Also set as attribute
+          media.setAttribute('data-video-src', videoSrc); // Store as data attribute for recovery
+
+          // Remove source elements to prevent conflicts
+          media.querySelectorAll('source').forEach(s => s.remove());
 
           // Force reload with new attributes
           media.load();
 
-          console.log('Video configured with custom controls. src:', videoSrc || 'STILL EMPTY!');
+          // Mark as configured to prevent duplicate setup
+          media.setAttribute('data-video-configured', 'true');
+
+          console.log('✓ Video configured with custom controls. src:', media.src);
 
           // Create wrapper container for video + overlay
           const wrapper = document.createElement('div');
@@ -182,10 +201,19 @@ export default function NewsArticle({ article, onBack, radioState }) {
             console.log('radioState.isPlaying:', radioState.isPlaying);
 
             if (media.paused) {
-              // Check if video has a source
+              // Check if video has a source - recover from data attribute if needed
               if (!media.src && !media.currentSrc) {
-                console.error('✗✗✗ Cannot play video - no source URL!');
-                return;
+                console.warn('⚠ Video src missing at play time - attempting recovery');
+                const storedSrc = media.getAttribute('data-video-src');
+                if (storedSrc) {
+                  media.src = storedSrc;
+                  media.setAttribute('src', storedSrc);
+                  media.load();
+                  console.log('→ Recovered src from data attribute:', media.src);
+                } else {
+                  console.error('✗✗✗ Cannot play video - no source URL found anywhere!');
+                  return;
+                }
               }
 
               console.log('✓ Custom play button clicked - attempting video play');
@@ -360,7 +388,7 @@ export default function NewsArticle({ article, onBack, radioState }) {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [fullContent, radioState, radioPausedByArticle]);
+  }, [fullContent, radioState]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
