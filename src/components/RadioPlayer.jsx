@@ -53,7 +53,7 @@ export default function RadioPlayer({ radioState }) {
         )}
 
         {/* Glassmorphic outer ring */}
-        <div className="absolute -inset-2 rounded-lg bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20" />
+        <div className="absolute -inset-1 rounded-lg bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20" />
 
         {/* Cover art container - square with small rounded corners */}
         <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-white/10 shadow-2xl">
@@ -66,12 +66,12 @@ export default function RadioPlayer({ radioState }) {
           {/* Overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
 
-          {/* Live indicator - centered at bottom */}
+          {/* Live indicator - top right overlay */}
           {isPlaying && (
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-black/50 backdrop-blur-md flex items-center gap-2 border border-white/20"
+              className="absolute top-4 right-4 px-4 py-1.5 rounded-lg bg-black/30 backdrop-blur-md flex items-center gap-2 border border-white/20"
             >
               <motion.span
                 animate={{ scale: [1, 1.2, 1] }}
@@ -107,7 +107,7 @@ export default function RadioPlayer({ radioState }) {
         whileTap={{ scale: 0.95 }}
         onClick={togglePlay}
         disabled={isLoading}
-        className="relative w-24 h-24 rounded-full mb-8 disabled:opacity-50 group"
+        className="relative w-20 h-20 rounded-full mb-8 disabled:opacity-50 group"
       >
         {/* Glow effect - purple for folclor, cyan for FM - smoother and slower */}
         <motion.div
@@ -191,9 +191,9 @@ export default function RadioPlayer({ radioState }) {
           className="relative px-6 py-3 rounded-2xl overflow-hidden"
         >
           {/* Glass background */}
-          <div className="absolute inset-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl" />
+          <div className="absolute inset-0 bg-white/5 backdrop-blur-md rounded-2xl" />
 
-          <div className="relative flex items-center justify-center gap-3 text-xs text-white/60 font-medium">
+          <div className="relative flex items-center justify-center gap-3 text-xs text-primary font-medium">
             <span>{streamInfo.format}</span>
             <span className="w-1 h-1 bg-white/30 rounded-full" />
             <span>{streamInfo.bitrate}</span>
