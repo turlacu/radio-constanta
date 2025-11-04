@@ -93,56 +93,57 @@ export default function NewsArticle({ article, onBack, radioState }) {
           };
           media.addEventListener('error', handleError);
 
-          // CRITICAL FIX for mobile: Coordinate video play with radio
-          // This flag prevents recursive play event handling
-          let isHandlingPlayConflict = false;
+          // CRITICAL FIX for mobile: Override play() method to coordinate with radio
+          // This intercepts play BEFORE browser blocking logic runs
+          const originalPlay = media.play.bind(media);
+          let isCoordinating = false;
 
-          const handleVideoPlayAttempt = (e) => {
-            // Check if radio is currently playing and we haven't already handled this
-            if (radioState.isPlaying && !isHandlingPlayConflict) {
-              console.log('Video play attempted while radio playing - coordinating audio focus');
+          media.play = function() {
+            // If radio is playing and we haven't started coordinating yet
+            if (radioState.isPlaying && !isCoordinating) {
+              console.log('Video play() called while radio playing - coordinating audio focus');
+              isCoordinating = true;
 
-              isHandlingPlayConflict = true;
-
-              // Immediately pause video to prevent conflict
-              media.pause();
-
-              // Aggressively stop radio - fully releases audio session on mobile
+              // Stop radio immediately (synchronous, still in user gesture)
               const radioSrc = radioState.stopRadio();
-              setSavedRadioSrc(radioSrc); // Save for restoration later
-              console.log('Radio stopped and audio focus released');
+              setSavedRadioSrc(radioSrc);
               setRadioPausedByArticle(true);
+              console.log('Radio stopped - audio focus released');
 
-              // Wait for audio context to release, then resume video
-              requestAnimationFrame(() => {
+              // Return promise that resolves after audio context is released
+              return new Promise((resolve, reject) => {
+                // Wait for audio session to fully release on mobile
                 setTimeout(() => {
-                  console.log('Attempting to play video after audio focus released');
-                  media.play()
+                  console.log('Calling original video play() after radio stopped');
+                  originalPlay()
                     .then(() => {
-                      console.log('✓ Video playing successfully after radio stopped');
-                      isHandlingPlayConflict = false;
+                      console.log('✓ Video playing successfully');
+                      isCoordinating = false;
+                      resolve();
                     })
                     .catch(err => {
-                      console.error('✗ Video play still failed:', err);
-                      isHandlingPlayConflict = false;
-                      // Restore radio if video still won't play
+                      console.error('✗ Video play failed:', err);
+                      isCoordinating = false;
+                      // Restore radio if video failed
                       if (radioSrc) {
                         radioState.restoreRadio(radioSrc);
                         setSavedRadioSrc(null);
                         setRadioPausedByArticle(false);
                       }
+                      reject(err);
                     });
-                }, 200); // Slightly longer delay for mobile
+                }, 300); // Give mobile time to release audio focus
               });
             }
-          };
 
-          // Listen to play event (fires when play is attempted)
-          media.addEventListener('play', handleVideoPlayAttempt);
+            // If radio not playing or already coordinating, just call original play
+            return originalPlay();
+          };
 
           cleanupFunctions.push(() => {
             media.removeEventListener('error', handleError);
-            media.removeEventListener('play', handleVideoPlayAttempt);
+            // Restore original play method
+            media.play = originalPlay;
           });
         }
 
