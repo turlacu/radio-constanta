@@ -81,10 +81,24 @@ export default function NewsArticle({ article, onBack, radioState }) {
           media.removeAttribute('width');
           media.removeAttribute('height');
 
+          // Extract video source - might be in <source> child elements
+          let videoSrc = media.src || media.currentSrc;
+
+          if (!videoSrc) {
+            // Check for <source> child elements (WordPress style)
+            const sourceElements = media.querySelectorAll('source');
+            if (sourceElements.length > 0) {
+              videoSrc = sourceElements[0].src;
+              console.log('Found video src in <source> element:', videoSrc);
+              // Set it on the video element itself
+              media.src = videoSrc;
+            }
+          }
+
           // Force reload with new attributes
           media.load();
 
-          console.log('Video configured with custom controls:', media.src);
+          console.log('Video configured with custom controls. src:', videoSrc || 'STILL EMPTY!');
 
           // Create wrapper container for video + overlay
           const wrapper = document.createElement('div');
@@ -164,9 +178,16 @@ export default function NewsArticle({ article, onBack, radioState }) {
           const handlePlayPause = async (e) => {
             console.log('=== handlePlayPause called ===');
             console.log('media.paused:', media.paused);
+            console.log('media.src:', media.src);
             console.log('radioState.isPlaying:', radioState.isPlaying);
 
             if (media.paused) {
+              // Check if video has a source
+              if (!media.src && !media.currentSrc) {
+                console.error('✗✗✗ Cannot play video - no source URL!');
+                return;
+              }
+
               console.log('✓ Custom play button clicked - attempting video play');
 
               // If radio is playing, stop it first (synchronous, in user gesture)
