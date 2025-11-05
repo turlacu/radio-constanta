@@ -84,6 +84,17 @@ function App() {
 
     audio.addEventListener('error', (e) => {
       const error = audio.error;
+
+      // Ignore expected errors during switching operations
+      if (isSwitchingRef.current || isSwitchingQualityRef.current) {
+        // Code 4: Empty src attribute (from clearing source)
+        // Code 3: Decode errors (from flushing decoder pipeline)
+        if (error?.code === 4 || error?.code === 3) {
+          logDebug(`⚠ Ignoring expected error (code ${error?.code}) during switch`);
+          return;
+        }
+      }
+
       logDebug(`✗ error: code=${error?.code}, msg=${error?.message}`);
       setIsPlaying(false);
       setIsLoading(false);
