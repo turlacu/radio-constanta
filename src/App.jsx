@@ -41,6 +41,7 @@ function App() {
   const [streamInfo, setStreamInfo] = useState(null);
   const audioRef = useRef(null);
   const isSwitchingRef = useRef(false);
+  const isSwitchingQualityRef = useRef(false);
 
   // Helper to log debug info
   const logDebug = (message) => {
@@ -196,7 +197,8 @@ function App() {
   };
 
   const switchStation = async (station) => {
-    if (isSwitchingRef.current || currentStation.id === station.id) {
+    if (isSwitchingRef.current || isSwitchingQualityRef.current || currentStation.id === station.id) {
+      logDebug('⚠ Cannot switch station - operation in progress');
       return;
     }
 
@@ -258,42 +260,52 @@ function App() {
       return; // Already selected
     }
 
+    if (isSwitchingRef.current || isSwitchingQualityRef.current) {
+      logDebug('⚠ Cannot switch quality - operation in progress');
+      return;
+    }
+
     logDebug(`Switching quality to ${qualityId}`);
+    isSwitchingQualityRef.current = true;
 
-    // Update selected quality
-    setSelectedQuality(prev => ({
-      ...prev,
-      [currentStation.id]: qualityId
-    }));
+    try {
+      // Update selected quality
+      setSelectedQuality(prev => ({
+        ...prev,
+        [currentStation.id]: qualityId
+      }));
 
-    // If currently playing, restart with new quality
-    const audio = audioRef.current;
-    if (isPlaying && audio) {
-      const quality = currentStation.qualities.find(q => q.id === qualityId);
-      if (quality) {
-        logDebug(`Reloading stream with new quality: ${quality.url}`);
+      // If currently playing, restart with new quality
+      const audio = audioRef.current;
+      if (isPlaying && audio) {
+        const quality = currentStation.qualities.find(q => q.id === qualityId);
+        if (quality) {
+          logDebug(`Reloading stream with new quality: ${quality.url}`);
 
-        // Pause and clear to prevent decode errors when switching formats
-        audio.pause();
-        audio.src = '';
-        audio.load();
+          // Pause and clear to prevent decode errors when switching formats
+          audio.pause();
+          audio.src = '';
+          audio.load();
 
-        // Wait for decoder to fully flush (prevents decode errors)
-        await new Promise(resolve => setTimeout(resolve, 50));
+          // Wait for decoder to fully flush (prevents decode errors)
+          await new Promise(resolve => setTimeout(resolve, 50));
 
-        // Now set new quality stream
-        audio.src = quality.url;
-        audio.load();
-        setIsLoading(true);
+          // Now set new quality stream
+          audio.src = quality.url;
+          audio.load();
+          setIsLoading(true);
 
-        try {
-          await audio.play();
-          logDebug('✓ Quality switch success');
-        } catch (err) {
-          logDebug(`✗ Quality switch failed: ${err.message}`);
-          setIsLoading(false);
+          try {
+            await audio.play();
+            logDebug('✓ Quality switch success');
+          } catch (err) {
+            logDebug(`✗ Quality switch failed: ${err.message}`);
+            setIsLoading(false);
+          }
         }
       }
+    } finally {
+      isSwitchingQualityRef.current = false;
     }
   };
 
