@@ -212,6 +212,9 @@ function App() {
         audio.pause();
         audio.src = ''; // Clear old stream to prevent decode errors
         audio.load(); // Flush decoder pipeline
+
+        // Wait for decoder to fully flush (prevents decode errors)
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
 
       // Update station
@@ -228,7 +231,7 @@ function App() {
         const qualityId = selectedQuality[station.id];
         const quality = station.qualities.find(q => q.id === qualityId) || station.qualities[0];
 
-        // Set new src and play (synchronous, no timing issues)
+        // Set new src and play
         audio.src = quality.url;
         audio.load();
         setIsLoading(true);
@@ -270,8 +273,15 @@ function App() {
       if (quality) {
         logDebug(`Reloading stream with new quality: ${quality.url}`);
 
-        // Pause first to prevent decode errors
+        // Pause and clear to prevent decode errors when switching formats
         audio.pause();
+        audio.src = '';
+        audio.load();
+
+        // Wait for decoder to fully flush (prevents decode errors)
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Now set new quality stream
         audio.src = quality.url;
         audio.load();
         setIsLoading(true);
