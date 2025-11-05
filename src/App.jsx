@@ -215,8 +215,8 @@ function App() {
         audio.src = ''; // Clear old stream to prevent decode errors
         audio.load(); // Flush decoder pipeline
 
-        // Wait for decoder to fully flush (prevents decode errors)
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Wait for decoder to fully flush (FLAC needs more time than MP3)
+        await new Promise(resolve => setTimeout(resolve, 150));
       }
 
       // Update station
@@ -287,8 +287,8 @@ function App() {
           audio.src = '';
           audio.load();
 
-          // Wait for decoder to fully flush (prevents decode errors)
-          await new Promise(resolve => setTimeout(resolve, 50));
+          // Wait for decoder to fully flush (FLAC needs more time than MP3)
+          await new Promise(resolve => setTimeout(resolve, 150));
 
           // Now set new quality stream
           audio.src = quality.url;
