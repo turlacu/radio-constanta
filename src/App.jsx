@@ -207,10 +207,11 @@ function App() {
     const audio = audioRef.current;
 
     try {
-      // Stop current playback
+      // Stop current playback and clear buffer
       if (audio) {
         audio.pause();
-        // Don't clear src - causes "Empty src" errors
+        audio.src = ''; // Clear old stream to prevent decode errors
+        audio.load(); // Flush decoder pipeline
       }
 
       // Update station
@@ -227,7 +228,7 @@ function App() {
         const qualityId = selectedQuality[station.id];
         const quality = station.qualities.find(q => q.id === qualityId) || station.qualities[0];
 
-        // Set new src and play immediately (no setTimeout)
+        // Set new src and play (synchronous, no timing issues)
         audio.src = quality.url;
         audio.load();
         setIsLoading(true);
