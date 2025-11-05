@@ -13,7 +13,7 @@ const STATIONS = {
     color: 'from-blue-500/20 to-cyan-500/20',
     qualities: [
       { id: '128', label: '128 kbps', format: 'MP3', bitrate: '128 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-fm' },
-      { id: 'flac', label: 'FLAC', format: 'FLAC', bitrate: '1024 kbps', url: 'https://89.238.207.222:8443/radio-constanta-flac' }
+      { id: 'flac', label: 'FLAC', format: 'FLAC', bitrate: '1024 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-flac' }
     ],
     defaultQuality: '128'
   },
