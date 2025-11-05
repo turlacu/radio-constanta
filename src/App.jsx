@@ -204,12 +204,13 @@ function App() {
     isSwitchingRef.current = true;
 
     const wasPlaying = isPlaying;
+    const audio = audioRef.current;
 
     try {
       // Stop current playback
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
+      if (audio) {
+        audio.pause();
+        // Don't clear src - causes "Empty src" errors
       }
 
       // Update station
@@ -219,27 +220,29 @@ function App() {
       logDebug('Station switched');
 
       // Autoplay if was playing before
-      if (wasPlaying && audioRef.current) {
+      if (wasPlaying && audio) {
         logDebug('Autoplay after station switch');
-        setTimeout(async () => {
-          // Get URL for the new station's selected quality
-          const qualityId = selectedQuality[station.id];
-          const quality = station.qualities.find(q => q.id === qualityId) || station.qualities[0];
 
-          audioRef.current.src = quality.url;
-          audioRef.current.load();
-          setIsLoading(true);
-          try {
-            await audioRef.current.play();
-            logDebug('✓ Autoplay success');
-          } catch (err) {
-            logDebug(`✗ Autoplay failed: ${err.message}`);
-            setIsLoading(false);
-          }
-        }, 100);
+        // Get URL for the new station's selected quality
+        const qualityId = selectedQuality[station.id];
+        const quality = station.qualities.find(q => q.id === qualityId) || station.qualities[0];
+
+        // Set new src and play immediately (no setTimeout)
+        audio.src = quality.url;
+        audio.load();
+        setIsLoading(true);
+
+        try {
+          await audio.play();
+          logDebug('✓ Autoplay success');
+        } catch (err) {
+          logDebug(`✗ Autoplay failed: ${err.message}`);
+          setIsLoading(false);
+        }
       }
     } catch (error) {
       logDebug(`✗ Switch error: ${error.message}`);
+      setIsLoading(false);
     } finally {
       isSwitchingRef.current = false;
     }
@@ -260,15 +263,20 @@ function App() {
     }));
 
     // If currently playing, restart with new quality
-    if (isPlaying && audioRef.current) {
+    const audio = audioRef.current;
+    if (isPlaying && audio) {
       const quality = currentStation.qualities.find(q => q.id === qualityId);
       if (quality) {
         logDebug(`Reloading stream with new quality: ${quality.url}`);
-        audioRef.current.src = quality.url;
-        audioRef.current.load();
+
+        // Pause first to prevent decode errors
+        audio.pause();
+        audio.src = quality.url;
+        audio.load();
         setIsLoading(true);
+
         try {
-          await audioRef.current.play();
+          await audio.play();
           logDebug('✓ Quality switch success');
         } catch (err) {
           logDebug(`✗ Quality switch failed: ${err.message}`);
