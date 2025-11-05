@@ -427,7 +427,7 @@ export default function NewsArticle({ article, onBack, radioState }) {
         {/* Glassmorphic header background */}
         <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-xl border-b border-white/10" />
 
-        <div className="relative flex items-center gap-4 px-4 py-4">
+        <div className="relative flex items-center gap-4 px-6 py-4">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -453,10 +453,10 @@ export default function NewsArticle({ article, onBack, radioState }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative w-full h-72 rounded-3xl overflow-hidden mb-6 shadow-2xl"
+            className="relative w-full h-72 rounded-lg overflow-hidden mb-6 shadow-2xl"
           >
             {/* Glassmorphic border effect */}
-            <div className="absolute inset-0 border-2 border-white/10 rounded-3xl z-10 pointer-events-none" />
+            <div className="absolute inset-0 border-2 border-white/10 rounded-lg z-10 pointer-events-none" />
 
             <img
               src={fullImage}
@@ -482,7 +482,7 @@ export default function NewsArticle({ article, onBack, radioState }) {
         >
           {article.category && (
             <>
-              <span className="px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-primary/10 text-primary font-semibold border border-primary/20">
+              <span className="px-3 py-1.5 rounded-md bg-gradient-to-r from-primary/20 to-primary/10 text-primary font-semibold border border-primary/20">
                 {article.category}
               </span>
               <span className="w-1 h-1 bg-white/30 rounded-full" />

@@ -56,8 +56,18 @@ article audio.wp-audio-shortcode {
   display: block !important;
   width: 100%;
   margin: 1rem 0;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   background: rgba(255, 255, 255, 0.05);
+}
+
+/* Hide volume controls and overflow menu in audio players */
+article audio::-webkit-media-controls-volume-slider,
+article audio::-webkit-media-controls-mute-button {
+  display: none;
+}
+
+article audio::-webkit-media-controls-overflow-button {
+  display: none;
 }
 
 /* Style article video players - make responsive */
