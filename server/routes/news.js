@@ -9,6 +9,11 @@ const WP_API_URL = 'https://www.radioconstanta.ro/wp-json/wp/v2/posts';
 let cachedArticles = null;
 let cacheTimestamp = null;
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+const REFRESH_INTERVAL = 9 * 60 * 1000; // 9 minutes - proactive refresh before expiry
+
+// Request deduplication - prevent thundering herd
+let isFetching = false;
+let fetchPromise = null;
 
 // Helper to strip HTML tags from text
 const stripHtml = (html) => {
@@ -129,6 +134,69 @@ const fetchFromWordPressAPI = async (limit = 20) => {
   }
 };
 
+// Fetch with request deduplication - prevents thundering herd
+const fetchWithLock = async (limit = 20) => {
+  // If already fetching, wait for that fetch to complete
+  if (isFetching && fetchPromise) {
+    console.log('⏳ Waiting for ongoing fetch to complete...');
+    return await fetchPromise;
+  }
+
+  // Start new fetch with lock
+  console.log('🔒 Acquiring fetch lock');
+  isFetching = true;
+  fetchPromise = fetchFromWordPressAPI(limit)
+    .finally(() => {
+      console.log('🔓 Releasing fetch lock');
+      isFetching = false;
+      fetchPromise = null;
+    });
+
+  return await fetchPromise;
+};
+
+// Background refresh helper - updates cache without blocking
+const refreshCacheInBackground = async () => {
+  try {
+    console.log('🔄 Background refresh triggered');
+    const articles = await fetchWithLock(100);
+    cachedArticles = articles;
+    cacheTimestamp = Date.now();
+    console.log(`✅ Background refresh complete: ${articles.length} articles`);
+  } catch (err) {
+    console.error('❌ Background refresh failed:', err.message);
+  }
+};
+
+// Proactive cache refresh - runs every 9 minutes
+const startBackgroundRefresh = () => {
+  console.log(`🕐 Starting background refresh interval (every ${REFRESH_INTERVAL / 1000 / 60} minutes)`);
+
+  setInterval(async () => {
+    await refreshCacheInBackground();
+  }, REFRESH_INTERVAL);
+};
+
+// Initial cache population on server start
+const initializeCache = async () => {
+  try {
+    console.log('🚀 Initializing cache on server start...');
+    const articles = await fetchFromWordPressAPI(100);
+    cachedArticles = articles;
+    cacheTimestamp = Date.now();
+    console.log(`✅ Cache initialized: ${articles.length} articles loaded`);
+
+    // Start background refresh
+    startBackgroundRefresh();
+  } catch (err) {
+    console.error('❌ Cache initialization failed:', err.message);
+    console.log('⚠️  Server will populate cache on first request');
+  }
+};
+
+// Initialize cache when module loads
+initializeCache();
+
 // GET /api/news
 router.get('/', async (req, res) => {
   try {
@@ -143,37 +211,32 @@ router.get('/', async (req, res) => {
     let articles;
 
     if (cacheIsValid) {
-      console.log(`Cache HIT - returning cached articles (age: ${Math.round((now - cacheTimestamp) / 1000)}s)`);
+      // Cache is fresh - return immediately
+      console.log(`✅ Cache HIT - returning fresh cached articles (age: ${Math.round((now - cacheTimestamp) / 1000)}s)`);
       articles = cachedArticles;
-    } else {
-      console.log('Cache MISS - fetching fresh articles');
-      try {
-        // Fetch articles from WordPress REST API (much faster than RSS)
-        // Start with 20 articles for fast response
-        articles = await fetchFromWordPressAPI(20);
 
-        // Update cache
+    } else if (cachedArticles) {
+      // Cache expired but exists - STALE-WHILE-REVALIDATE
+      // Return stale cache immediately for fast response
+      console.log(`⚡ Cache STALE - serving stale cache (age: ${Math.round((now - cacheTimestamp) / 1000)}s), refreshing in background`);
+      articles = cachedArticles;
+
+      // Trigger background refresh (don't await - let user get response immediately)
+      refreshCacheInBackground().catch(err => {
+        console.error('Background refresh error:', err);
+      });
+
+    } else {
+      // No cache at all - must fetch and wait (first request or after server restart)
+      console.log('❌ Cache MISS - no cached articles, fetching from WordPress (this blocks response)');
+      try {
+        articles = await fetchWithLock(100);
         cachedArticles = articles;
         cacheTimestamp = now;
-        console.log(`Cache updated with ${articles.length} articles`);
-
-        // Background: Fetch more articles (up to 100) for pagination
-        fetchFromWordPressAPI(100).then(fullArticles => {
-          cachedArticles = fullArticles;
-          console.log(`Background: Cache updated with ${fullArticles.length} articles`);
-        }).catch(err => {
-          console.error('Background fetch error:', err);
-        });
+        console.log(`✅ Cache populated: ${articles.length} articles`);
       } catch (fetchError) {
-        console.error('Error fetching fresh articles:', fetchError);
-
-        // Fallback to stale cache if available
-        if (cachedArticles) {
-          console.log('Using stale cache as fallback');
-          articles = cachedArticles;
-        } else {
-          throw fetchError; // No cache available, propagate error
-        }
+        console.error('Error fetching articles:', fetchError);
+        throw fetchError; // No cache available, propagate error
       }
     }
 
