@@ -122,7 +122,7 @@ export default function News({ radioState }) {
     }>
       {/* Background gradient effect - blurred in split-screen */}
       {isSplitScreen ? (
-        <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-x-0 top-0 bottom-0 min-h-[300vh] pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg opacity-90" />
           <div className="absolute inset-0 backdrop-blur-xl" />
           <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50" />
