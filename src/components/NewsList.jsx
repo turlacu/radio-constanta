@@ -150,11 +150,11 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="
-            px-4 mt-6
-            md:px-6 md:mt-8
-            tv:px-12 tv:mt-10
-          "
+          className={
+            isSplitScreen
+              ? "px-4 mt-6 max-w-[850px] mx-auto" // Match article width in split-screen
+              : "px-4 mt-6 md:px-6 md:mt-8 tv:px-12 tv:mt-10"
+          }
         >
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -162,12 +162,11 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             onClick={onLoadMore}
             disabled={loading}
             tabIndex={0}
-            className="
-              relative w-full font-semibold overflow-hidden disabled:opacity-50 group tv-focusable
-              py-3 rounded-xl text-sm
-              md:py-4 md:rounded-2xl md:text-base
-              tv:py-6 tv:text-xl
-            "
+            className={
+              isSplitScreen
+                ? "relative max-w-xs mx-auto font-semibold overflow-hidden disabled:opacity-50 group tv-focusable py-3 rounded-xl text-sm" // Normal button size in split-screen
+                : "relative w-full font-semibold overflow-hidden disabled:opacity-50 group tv-focusable py-3 rounded-xl text-sm md:py-4 md:rounded-2xl md:text-base tv:py-6 tv:text-xl"
+            }
           >
             {/* Glassmorphic background */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 backdrop-blur-xl border border-primary/30 rounded-2xl transition-all group-hover:from-primary/30 group-hover:to-primary/20" />
