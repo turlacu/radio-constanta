@@ -12,13 +12,10 @@ export default function RadioPlayer({ radioState }) {
 
   // Responsive layout classes based on device type
   const containerClasses = `
-    flex items-center justify-center relative overflow-hidden
-    px-4 py-6
-    md:px-8 md:py-10
-    lg:px-8 lg:py-8
-    tv:px-12 tv:py-12
-    ${device?.isTV && !isSplitScreen ? 'flex-row gap-16' : 'flex-col'}
-    ${isSplitScreen ? 'h-full' : device?.isTablet || device?.isDesktop ? 'min-h-[calc(100vh-100px)]' : 'min-h-[calc(100vh-80px)]'}
+    flex items-center justify-center relative overflow-hidden flex-col
+    ${isSplitScreen ? 'px-3 py-4 h-full' : 'px-4 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 tv:px-12 tv:py-12'}
+    ${device?.isTV && !isSplitScreen ? 'flex-row gap-16' : ''}
+    ${isSplitScreen ? '' : device?.isTablet || device?.isDesktop ? 'min-h-[calc(100vh-100px)]' : 'min-h-[calc(100vh-80px)]'}
   `;
 
   return (
@@ -44,13 +41,17 @@ export default function RadioPlayer({ radioState }) {
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6, type: "spring" }}
-        className={`
-          relative w-full
-          max-w-[340px] mb-6
-          md:max-w-[400px] md:mb-8
-          lg:max-w-[480px] lg:mb-10
-          tv:max-w-[600px] tv:mb-0 tv:flex-shrink-0
-        `}
+        className={
+          isSplitScreen
+            ? "relative w-full max-w-[260px] mb-4" // Compact for split-screen
+            : `
+              relative w-full
+              max-w-[340px] mb-6
+              md:max-w-[400px] md:mb-8
+              lg:max-w-[480px] lg:mb-10
+              tv:max-w-[600px] tv:mb-0 tv:flex-shrink-0
+            `
+        }
       >
         {/* Outer glow ring */}
         <motion.div
@@ -114,28 +115,37 @@ export default function RadioPlayer({ radioState }) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className={`
-            text-center mb-6
-            md:mb-8
-            tv:text-left tv:mb-10
-          `}
+          className={
+            isSplitScreen
+              ? "text-center mb-4" // Compact for split-screen
+              : `
+                text-center mb-6
+                md:mb-8
+                tv:text-left tv:mb-10
+              `
+          }
         >
-          <h2 className="
-            text-2xl font-bold mb-2 bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent
-            md:text-3xl
-            lg:text-4xl
-            tv:text-5xl
-          ">
+          <h2 className={
+            isSplitScreen
+              ? "text-xl font-bold mb-1 bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent" // Smaller in split-screen
+              : `
+                text-2xl font-bold mb-2 bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent
+                md:text-3xl
+                lg:text-4xl
+                tv:text-5xl
+              `
+          }>
             {currentStation.name}
           </h2>
           {metadata && (
             <motion.p
               animate={{ opacity: [0.6, 1, 0.6] }}
               transition={{ duration: 3, repeat: Infinity }}
-              className="
-                text-white/70 font-medium
-                text-sm md:text-base lg:text-lg tv:text-2xl
-              "
+              className={
+                isSplitScreen
+                  ? "text-white/70 font-medium text-xs" // Smaller in split-screen
+                  : "text-white/70 font-medium text-sm md:text-base lg:text-lg tv:text-2xl"
+              }
             >{metadata}</motion.p>
           )}
         </motion.div>
@@ -147,13 +157,17 @@ export default function RadioPlayer({ radioState }) {
           onClick={togglePlay}
           disabled={isLoading}
           tabIndex={0}
-          className={`
-            relative rounded-full disabled:opacity-50 group tv-focusable
-            w-16 h-16 mb-6
-            md:w-20 md:h-20 md:mb-8
-            lg:w-24 lg:h-24
-            tv:w-32 tv:h-32 tv:mb-12
-          `}
+          className={
+            isSplitScreen
+              ? "relative rounded-full disabled:opacity-50 group tv-focusable w-14 h-14 mb-4" // Compact for split-screen
+              : `
+                relative rounded-full disabled:opacity-50 group tv-focusable
+                w-16 h-16 mb-6
+                md:w-20 md:h-20 md:mb-8
+                lg:w-24 lg:h-24
+                tv:w-32 tv:h-32 tv:mb-12
+              `
+          }
         >
         {/* Glow effect - purple for folclor, cyan for FM - smoother and slower */}
         <motion.div
@@ -174,21 +188,19 @@ export default function RadioPlayer({ radioState }) {
           {isLoading ? (
             <Loader size="small" />
           ) : isPlaying ? (
-            <svg className="
-              w-8 h-8 text-white drop-shadow-lg
-              md:w-10 md:h-10
-              lg:w-12 lg:h-12
-              tv:w-16 tv:h-16
-            " fill="currentColor" viewBox="0 0 24 24">
+            <svg className={
+              isSplitScreen
+                ? "w-7 h-7 text-white drop-shadow-lg" // Smaller in split-screen
+                : "w-8 h-8 text-white drop-shadow-lg md:w-10 md:h-10 lg:w-12 lg:h-12 tv:w-16 tv:h-16"
+            } fill="currentColor" viewBox="0 0 24 24">
               <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
             </svg>
           ) : (
-            <svg className="
-              w-8 h-8 text-white ml-1 drop-shadow-lg
-              md:w-10 md:h-10 md:ml-1
-              lg:w-12 lg:h-12 lg:ml-2
-              tv:w-16 tv:h-16 tv:ml-3
-            " fill="currentColor" viewBox="0 0 24 24">
+            <svg className={
+              isSplitScreen
+                ? "w-7 h-7 text-white ml-1 drop-shadow-lg" // Smaller in split-screen
+                : "w-8 h-8 text-white ml-1 drop-shadow-lg md:w-10 md:h-10 md:ml-1 lg:w-12 lg:h-12 lg:ml-2 tv:w-16 tv:h-16 tv:ml-3"
+            } fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
           )}
@@ -200,13 +212,17 @@ export default function RadioPlayer({ radioState }) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="
-            flex gap-2 w-full mb-5
-            max-w-xs
-            md:gap-3 md:max-w-sm md:mb-6
-            lg:max-w-md lg:gap-4
-            tv:max-w-2xl tv:gap-6 tv:mb-8
-          "
+          className={
+            isSplitScreen
+              ? "flex gap-2 w-full mb-3 max-w-[240px]" // Compact for split-screen
+              : `
+                flex gap-2 w-full mb-5
+                max-w-xs
+                md:gap-3 md:max-w-sm md:mb-6
+                lg:max-w-md lg:gap-4
+                tv:max-w-2xl tv:gap-6 tv:mb-8
+              `
+          }
         >
         {stations.map((station, index) => (
           <motion.button
@@ -253,13 +269,17 @@ export default function RadioPlayer({ radioState }) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="
-            flex gap-2 w-full mb-5
-            max-w-xs
-            md:gap-3 md:max-w-sm md:mb-6
-            lg:max-w-md lg:gap-4
-            tv:max-w-2xl tv:gap-6 tv:mb-8
-          "
+          className={
+            isSplitScreen
+              ? "flex gap-2 w-full mb-3 max-w-[240px]" // Compact for split-screen
+              : `
+                flex gap-2 w-full mb-5
+                max-w-xs
+                md:gap-3 md:max-w-sm md:mb-6
+                lg:max-w-md lg:gap-4
+                tv:max-w-2xl tv:gap-6 tv:mb-8
+              `
+          }
         >
         {availableQualities.map((quality, index) => (
           <motion.button
@@ -307,12 +327,16 @@ export default function RadioPlayer({ radioState }) {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.7 }}
-            className="
-              flex items-center justify-center gap-2 text-primary font-medium
-              text-xs md:gap-3 md:text-sm
-              lg:text-base lg:gap-4
-              tv:text-xl tv:gap-6
-            "
+            className={
+              isSplitScreen
+                ? "flex items-center justify-center gap-1.5 text-primary font-medium text-[10px]" // Very compact in split-screen
+                : `
+                  flex items-center justify-center gap-2 text-primary font-medium
+                  text-xs md:gap-3 md:text-sm
+                  lg:text-base lg:gap-4
+                  tv:text-xl tv:gap-6
+                `
+            }
           >
             <span>{streamInfo.format}</span>
             <span className="w-1 h-1 bg-white/30 rounded-full tv:w-2 tv:h-2" />

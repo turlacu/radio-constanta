@@ -30,7 +30,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
     <div className={isSplitScreen ? "pb-6" : "pb-20 md:pb-24 tv:pb-16"}>
       <div className={
         isSplitScreen
-          ? "px-4 pt-6 grid gap-4 grid-cols-1" // Split-screen: single column
+          ? "px-4 pt-6 grid gap-4 grid-cols-2" // Split-screen: 2 columns to show more articles
           : `
             px-4 pt-6
             md:px-6 md:pt-8
