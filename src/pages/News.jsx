@@ -117,7 +117,7 @@ export default function News({ radioState }) {
   return (
     <div className={
       isSplitScreen
-        ? "h-full relative" // Split-screen: fill container, allow scrolling
+        ? "min-h-screen w-full relative" // Split-screen: fill entire section with background
         : "min-h-screen relative overflow-hidden" // Single page: full screen
     }>
       {/* Background gradient effect - blurred in split-screen */}
@@ -139,7 +139,7 @@ export default function News({ radioState }) {
       <div className={`
         sticky top-0 z-10
         ${isSplitScreen
-          ? 'px-4 py-4' // Keep mobile size in split-screen
+          ? 'px-8 py-6' // More padding in split-screen to match wider layout
           : 'px-4 py-4 md:px-6 md:py-5 lg:px-8 tv:px-12 tv:py-8'
         }
       `}>

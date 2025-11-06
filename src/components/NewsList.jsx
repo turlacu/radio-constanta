@@ -30,7 +30,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
     <div className={isSplitScreen ? "pb-6" : "pb-20 md:pb-24 tv:pb-16"}>
       <div className={
         isSplitScreen
-          ? "px-4 pt-2 flex flex-col gap-3" // Split-screen: reduced top padding for alignment with cover
+          ? "px-8 pt-0 flex flex-col gap-3 max-w-full" // Split-screen: wider padding, full width articles, no top padding
           : `
             px-4 pt-6
             md:px-6 md:pt-8
@@ -78,7 +78,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               {article.image && (
                 <div className={
                   isSplitScreen
-                    ? "relative bg-dark-surface overflow-hidden w-24 h-24 flex-shrink-0" // Square thumbnail for horizontal
+                    ? "relative bg-dark-surface overflow-hidden w-32 h-24 flex-shrink-0 rounded-l-lg" // Wider thumbnail for horizontal
                     : "relative w-full bg-dark-surface overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72"
                 }>
                   <motion.img
@@ -100,13 +100,13 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               {/* Content */}
               <div className={
                 isSplitScreen
-                  ? "p-3 flex-1 flex flex-col justify-center" // Compact padding for horizontal layout
+                  ? "p-4 flex-1 flex flex-col justify-center" // More padding for horizontal layout
                   : "p-4 md:p-5 lg:p-6 tv:p-8"
               }>
                 {/* Category & Date */}
                 <div className={
                   isSplitScreen
-                    ? "flex items-center gap-1.5 mb-1 font-medium text-[10px] text-white/50" // Very compact for horizontal
+                    ? "flex items-center gap-2 mb-2 font-medium text-xs text-white/50" // Slightly larger for horizontal
                     : "flex items-center gap-2 mb-2 font-medium text-xs md:text-sm tv:text-base text-white/50 md:mb-3"
                 }>
                   {article.category && (
@@ -123,7 +123,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 {/* Title */}
                 <h3 className={
                   isSplitScreen
-                    ? "font-bold mb-1 line-clamp-2 leading-tight group-hover:text-primary transition-colors text-sm" // Compact for horizontal
+                    ? "font-bold mb-1 line-clamp-2 leading-tight group-hover:text-primary transition-colors text-base" // Larger for horizontal
                     : "font-bold mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-base md:text-lg lg:text-xl tv:text-2xl"
                 }>
                   {article.title}

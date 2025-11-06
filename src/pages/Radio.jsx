@@ -9,7 +9,7 @@ export default function Radio({ radioState }) {
   return (
     <div className={
       isSplitScreen
-        ? "h-full" // Split-screen mode: fill container height
+        ? "h-screen w-full" // Split-screen mode: fill entire container
         : "min-h-screen md:min-h-[calc(100vh-100px)] tv:min-h-screen" // Single page mode
     }>
       <RadioPlayer radioState={radioState} />

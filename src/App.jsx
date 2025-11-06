@@ -396,8 +396,11 @@ function App() {
                 <Radio radioState={radioState} />
               </div>
 
+              {/* Vertical grey divider */}
+              <div className="w-[1px] bg-white/10 flex-shrink-0" />
+
               {/* News Section - Right (55% width, more space for articles) */}
-              <div className="w-[55%] overflow-y-auto scrollbar-hide relative">
+              <div className="flex-1 overflow-y-auto scrollbar-hide relative">
                 <News radioState={radioState} />
               </div>
             </div>
