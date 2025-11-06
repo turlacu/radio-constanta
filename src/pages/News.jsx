@@ -117,7 +117,7 @@ export default function News({ radioState }) {
   return (
     <div className={
       isSplitScreen
-        ? "h-full relative overflow-hidden" // Split-screen: fill container
+        ? "h-full relative" // Split-screen: fill container, allow scrolling
         : "min-h-screen relative overflow-hidden" // Single page: full screen
     }>
       {/* Background gradient effect */}
