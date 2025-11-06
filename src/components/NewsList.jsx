@@ -30,7 +30,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
     <div className={isSplitScreen ? "pb-6" : "pb-20 md:pb-24 tv:pb-16"}>
       <div className={
         isSplitScreen
-          ? "px-4 pt-6 grid gap-4 grid-cols-2" // Split-screen: 2 columns to show more articles
+          ? "px-4 pt-6 flex flex-col gap-3" // Split-screen: single column, horizontal items
           : `
             px-4 pt-6
             md:px-6 md:pt-8
@@ -56,10 +56,11 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 onArticleClick(article);
               }
             }}
-            className="
-              relative overflow-hidden cursor-pointer group tv-focusable
-              rounded-xl md:rounded-2xl tv:rounded-3xl
-            "
+            className={
+              isSplitScreen
+                ? "relative overflow-hidden cursor-pointer group tv-focusable rounded-lg" // Smaller radius for horizontal
+                : "relative overflow-hidden cursor-pointer group tv-focusable rounded-xl md:rounded-2xl tv:rounded-3xl"
+            }
           >
             {/* Glassmorphic background */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-2xl transition-all group-hover:border-white/20 group-hover:from-white/15 group-hover:to-white/8" />
@@ -72,13 +73,14 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent blur-xl rounded-2xl"
             />
 
-            <div className="relative">
+            <div className={isSplitScreen ? "relative flex flex-row" : "relative"}>
               {/* Image */}
               {article.image && (
-                <div className="
-                  relative w-full bg-dark-surface overflow-hidden
-                  h-48 md:h-52 lg:h-56 tv:h-72
-                ">
+                <div className={
+                  isSplitScreen
+                    ? "relative bg-dark-surface overflow-hidden w-24 h-24 flex-shrink-0" // Square thumbnail for horizontal
+                    : "relative w-full bg-dark-surface overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72"
+                }>
                   <motion.img
                     src={article.image}
                     alt={article.title}
@@ -89,46 +91,47 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                       e.target.src = 'https://via.placeholder.com/800x400/1A1A1A/00BFFF?text=Radio+Constanta';
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/80 via-dark-bg/20 to-transparent" />
+                  {!isSplitScreen && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/80 via-dark-bg/20 to-transparent" />
+                  )}
                 </div>
               )}
 
               {/* Content */}
-              <div className="
-                p-4 md:p-5 lg:p-6 tv:p-8
-              ">
+              <div className={
+                isSplitScreen
+                  ? "p-3 flex-1 flex flex-col justify-center" // Compact padding for horizontal layout
+                  : "p-4 md:p-5 lg:p-6 tv:p-8"
+              }>
                 {/* Category & Date */}
-                <div className="
-                  flex items-center gap-2 mb-2 font-medium
-                  text-xs md:text-sm tv:text-base
-                  text-white/50
-                  md:mb-3
-                ">
+                <div className={
+                  isSplitScreen
+                    ? "flex items-center gap-1.5 mb-1 font-medium text-[10px] text-white/50" // Very compact for horizontal
+                    : "flex items-center gap-2 mb-2 font-medium text-xs md:text-sm tv:text-base text-white/50 md:mb-3"
+                }>
                   {article.category && (
                     <>
-                      <span className="px-2 py-1 rounded-full bg-primary/20 text-primary font-semibold">
+                      <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary font-semibold">
                         {article.category}
                       </span>
-                      <span className="w-1 h-1 bg-white/30 rounded-full" />
+                      <span className="w-0.5 h-0.5 bg-white/30 rounded-full" />
                     </>
                   )}
                   <time>{formatDate(article.date)}</time>
                 </div>
 
                 {/* Title */}
-                <h3 className="
-                  font-bold mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors
-                  text-base md:text-lg lg:text-xl tv:text-2xl
-                ">
+                <h3 className={
+                  isSplitScreen
+                    ? "font-bold mb-1 line-clamp-2 leading-tight group-hover:text-primary transition-colors text-sm" // Compact for horizontal
+                    : "font-bold mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-base md:text-lg lg:text-xl tv:text-2xl"
+                }>
                   {article.title}
                 </h3>
 
-                {/* Summary */}
-                {article.summary && (
-                  <p className="
-                    text-white/70 line-clamp-2 leading-relaxed
-                    text-sm md:text-base tv:text-lg
-                  ">
+                {/* Summary - hide in split-screen for compact layout */}
+                {article.summary && !isSplitScreen && (
+                  <p className="text-white/70 line-clamp-2 leading-relaxed text-sm md:text-base tv:text-lg">
                     {article.summary}
                   </p>
                 )}
