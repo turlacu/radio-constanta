@@ -58,7 +58,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             }}
             className={
               isSplitScreen
-                ? "relative overflow-hidden cursor-pointer group tv-focusable rounded-lg max-w-[850px] mx-auto" // Limit width to 2.5x radio cover (340px × 2.5) and center
+                ? "relative overflow-hidden cursor-pointer group tv-focusable rounded-lg max-w-[850px] mx-auto h-32" // Fixed height and limit width
                 : "relative overflow-hidden cursor-pointer group tv-focusable rounded-xl md:rounded-2xl tv:rounded-3xl"
             }
           >
@@ -73,12 +73,12 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent blur-xl rounded-2xl"
             />
 
-            <div className={isSplitScreen ? "relative flex flex-row" : "relative"}>
+            <div className={isSplitScreen ? "relative flex flex-row h-full" : "relative"}>
               {/* Image */}
               {article.image && (
                 <div className={
                   isSplitScreen
-                    ? "relative bg-dark-surface overflow-hidden w-32 h-24 flex-shrink-0 rounded-l-lg" // Wider thumbnail for horizontal
+                    ? "relative bg-dark-surface overflow-hidden w-32 h-full flex-shrink-0 rounded-l-lg" // Full height to fill article card
                     : "relative w-full bg-dark-surface overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72"
                 }>
                   <motion.img
@@ -100,7 +100,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               {/* Content */}
               <div className={
                 isSplitScreen
-                  ? "p-3 flex-1 flex flex-col justify-center" // Compact padding for horizontal layout
+                  ? "p-3 flex-1 flex flex-col justify-start" // Align content to top, not center
                   : "p-4 md:p-5 lg:p-6 tv:p-8"
               }>
                 {/* Category & Date */}
