@@ -14,7 +14,7 @@ export default function RadioPlayer({ radioState }) {
   const containerClasses = `
     flex items-center justify-center relative overflow-hidden flex-col
     px-4 py-6
-    ${isSplitScreen ? 'h-full' : 'md:px-8 md:py-10 lg:px-8 lg:py-8 tv:px-12 tv:py-12'}
+    ${isSplitScreen ? 'h-full w-full' : 'md:px-8 md:py-10 lg:px-8 lg:py-8 tv:px-12 tv:py-12'}
     ${device?.isTV && !isSplitScreen ? 'flex-row gap-16' : ''}
     ${isSplitScreen ? '' : device?.isTablet || device?.isDesktop ? 'min-h-[calc(100vh-100px)]' : 'min-h-[calc(100vh-80px)]'}
   `;

@@ -117,7 +117,7 @@ export default function News({ radioState }) {
   return (
     <div className={
       isSplitScreen
-        ? "min-h-screen w-full relative" // Split-screen: fill entire section with background
+        ? "h-full w-full relative flex flex-col" // Split-screen: fill entire section with background and use flex layout
         : "min-h-screen relative overflow-hidden" // Single page: full screen
     }>
       {/* Background gradient effect - blurred in split-screen */}

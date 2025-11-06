@@ -389,19 +389,22 @@ function App() {
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
           {showSplitScreen ? (
-            // Desktop/TV: Split-screen layout (both pages visible)
-            <div className="flex h-screen overflow-hidden">
-              {/* Radio Section - Left (45% width, centered content) */}
-              <div className="w-[45%] overflow-hidden relative">
-                <Radio radioState={radioState} />
-              </div>
+            // Desktop/TV: Split-screen layout with 16:9 aspect ratio
+            <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
+              {/* 16:9 Aspect Ratio Container */}
+              <div className="w-full h-full max-w-[177.78vh] max-h-[56.25vw] flex overflow-hidden">
+                {/* Radio Section - Left (35% width, centered content) */}
+                <div className="w-[35%] overflow-hidden relative flex items-center justify-center">
+                  <Radio radioState={radioState} />
+                </div>
 
-              {/* Vertical grey divider */}
-              <div className="w-[1px] bg-white/10 flex-shrink-0" />
+                {/* Vertical grey divider */}
+                <div className="w-[1px] bg-white/10 flex-shrink-0" />
 
-              {/* News Section - Right (55% width, more space for articles) */}
-              <div className="flex-1 overflow-y-auto scrollbar-hide relative">
-                <News radioState={radioState} />
+                {/* News Section - Right (65% width, more space for articles) */}
+                <div className="flex-1 overflow-y-auto scrollbar-hide relative flex items-center justify-center">
+                  <News radioState={radioState} />
+                </div>
               </div>
             </div>
           ) : (
