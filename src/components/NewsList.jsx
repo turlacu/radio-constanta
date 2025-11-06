@@ -164,7 +164,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             tabIndex={0}
             className={
               isSplitScreen
-                ? "relative max-w-xs mx-auto font-semibold overflow-hidden disabled:opacity-50 group tv-focusable py-3 rounded-xl text-sm" // Normal button size in split-screen
+                ? "relative max-w-sm mx-auto font-semibold overflow-hidden disabled:opacity-50 group tv-focusable py-3 rounded-xl text-sm" // Normal button size in split-screen
                 : "relative w-full font-semibold overflow-hidden disabled:opacity-50 group tv-focusable py-3 rounded-xl text-sm md:py-4 md:rounded-2xl md:text-base tv:py-6 tv:text-xl"
             }
           >
