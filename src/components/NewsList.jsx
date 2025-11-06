@@ -78,7 +78,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               {article.image && (
                 <div className={
                   isSplitScreen
-                    ? "relative bg-dark-surface overflow-hidden w-32 h-full flex-shrink-0 rounded-l-lg" // Full height to fill article card
+                    ? "relative bg-dark-surface overflow-hidden w-48 h-full flex-shrink-0 rounded-l-lg" // Wider image (192px instead of 128px)
                     : "relative w-full bg-dark-surface overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72"
                 }>
                   <motion.img
