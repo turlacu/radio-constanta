@@ -391,13 +391,13 @@ function App() {
           {showSplitScreen ? (
             // Desktop/TV: Split-screen layout (both pages visible)
             <div className="flex h-screen overflow-hidden">
-              {/* Radio Section - Left (35% width, compact) */}
-              <div className="w-[35%] overflow-y-auto scrollbar-hide border-r border-white/10">
+              {/* Radio Section - Left (45% width, centered content) */}
+              <div className="w-[45%] overflow-hidden relative">
                 <Radio radioState={radioState} />
               </div>
 
-              {/* News Section - Right (65% width, more space for articles) */}
-              <div className="w-[65%] overflow-y-auto scrollbar-hide">
+              {/* News Section - Right (55% width, more space for articles) */}
+              <div className="w-[55%] overflow-y-auto scrollbar-hide relative">
                 <News radioState={radioState} />
               </div>
             </div>

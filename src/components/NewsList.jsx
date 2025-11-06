@@ -30,7 +30,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
     <div className={isSplitScreen ? "pb-6" : "pb-20 md:pb-24 tv:pb-16"}>
       <div className={
         isSplitScreen
-          ? "px-4 pt-6 flex flex-col gap-3" // Split-screen: single column, horizontal items
+          ? "px-4 pt-2 flex flex-col gap-3" // Split-screen: reduced top padding for alignment with cover
           : `
             px-4 pt-6
             md:px-6 md:pt-8

@@ -120,32 +120,45 @@ export default function News({ radioState }) {
         ? "h-full relative" // Split-screen: fill container, allow scrolling
         : "min-h-screen relative overflow-hidden" // Single page: full screen
     }>
-      {/* Background gradient effect */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
-      </div>
+      {/* Background gradient effect - blurred in split-screen */}
+      {isSplitScreen ? (
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg opacity-90" />
+          <div className="absolute inset-0 backdrop-blur-xl" />
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50" />
+          <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl opacity-50" />
+        </div>
+      ) : (
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/30 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+        </div>
+      )}
 
       {/* Header */}
-      <div className="
+      <div className={`
         sticky top-0 z-10
-        px-4 py-4
-        md:px-6 md:py-5
-        lg:px-8
-        tv:px-12 tv:py-8
-      ">
+        ${isSplitScreen
+          ? 'px-4 py-4' // Keep mobile size in split-screen
+          : 'px-4 py-4 md:px-6 md:py-5 lg:px-8 tv:px-12 tv:py-8'
+        }
+      `}>
         {/* Glassmorphic header background */}
-        <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-xl border-b border-white/10" />
+        <div className={`absolute inset-0 border-b border-white/10 ${
+          isSplitScreen
+            ? 'bg-dark-bg/60 backdrop-blur-md' // More subtle in split-screen
+            : 'bg-dark-bg/80 backdrop-blur-xl'
+        }`} />
 
         <div className="relative">
-          <h1 className="
+          <h1 className={`
             font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent
-            text-2xl md:text-3xl lg:text-4xl tv:text-5xl
-          ">Știri</h1>
-          <p className="
+            ${isSplitScreen ? 'text-2xl' : 'text-2xl md:text-3xl lg:text-4xl tv:text-5xl'}
+          `}>Știri</h1>
+          <p className={`
             text-white/60 font-medium mt-1
-            text-sm md:text-base tv:text-xl
-          ">Ultimele noutăți din Constanța</p>
+            ${isSplitScreen ? 'text-sm' : 'text-sm md:text-base tv:text-xl'}
+          `}>Ultimele noutăți din Constanța</p>
         </div>
       </div>
 
