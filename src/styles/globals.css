@@ -6,6 +6,78 @@
   * {
     box-sizing: border-box;
   }
+
+  :root {
+    /* Responsive font size scaling - CSS variables */
+    --font-scale: 1;
+    --spacing-scale: 1;
+    --container-max-width: 480px;
+
+    /* Mobile (default) */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+  }
+
+  /* Tablet scaling */
+  @media (min-width: 768px) {
+    :root {
+      --font-scale: 1.15;
+      --spacing-scale: 1.2;
+      --container-max-width: 768px;
+
+      --text-xs: 0.8125rem;
+      --text-sm: 0.9375rem;
+      --text-base: 1.0625rem;
+      --text-lg: 1.25rem;
+      --text-xl: 1.5rem;
+      --text-2xl: 1.75rem;
+      --text-3xl: 2.125rem;
+      --text-4xl: 2.5rem;
+    }
+  }
+
+  /* Desktop scaling */
+  @media (min-width: 1024px) {
+    :root {
+      --font-scale: 1.25;
+      --spacing-scale: 1.4;
+      --container-max-width: 1280px;
+
+      --text-xs: 0.875rem;
+      --text-sm: 1rem;
+      --text-base: 1.125rem;
+      --text-lg: 1.375rem;
+      --text-xl: 1.625rem;
+      --text-2xl: 2rem;
+      --text-3xl: 2.5rem;
+      --text-4xl: 3rem;
+    }
+  }
+
+  /* TV scaling - much larger fonts and spacing */
+  @media (min-width: 1920px) {
+    :root {
+      --font-scale: 1.8;
+      --spacing-scale: 2;
+      --container-max-width: 1920px;
+
+      --text-xs: 1.125rem;
+      --text-sm: 1.375rem;
+      --text-base: 1.625rem;
+      --text-lg: 2rem;
+      --text-xl: 2.5rem;
+      --text-2xl: 3rem;
+      --text-3xl: 3.75rem;
+      --text-4xl: 4.5rem;
+    }
+  }
+
   body {
     @apply bg-gradient-to-b from-dark-bg to-dark-surface text-white/90;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -15,8 +87,18 @@
     padding: 0;
     overflow-x: hidden;
   }
+
   #root {
-    @apply min-h-screen max-w-mobile mx-auto relative;
+    @apply min-h-screen relative;
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+  }
+
+  /* TV-specific styles */
+  @media (min-width: 1920px) {
+    #root {
+      max-width: 100%;
+    }
   }
 }
 
@@ -43,6 +125,49 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* TV Focus Navigation Styles */
+  .tv-focusable {
+    transition: all 0.2s ease-out;
+  }
+
+  .tv-focusable:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(0, 191, 255, 0.6), 0 0 20px rgba(0, 191, 255, 0.4);
+    transform: scale(1.05);
+    z-index: 10;
+  }
+
+  .tv-focusable:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(0, 191, 255, 0.6), 0 0 20px rgba(0, 191, 255, 0.4);
+    transform: scale(1.05);
+    z-index: 10;
+  }
+
+  /* TV-specific larger focus areas */
+  @media (min-width: 1920px) {
+    .tv-focusable {
+      min-height: 80px;
+      min-width: 120px;
+    }
+
+    .tv-focusable:focus,
+    .tv-focusable:focus-visible {
+      box-shadow: 0 0 0 6px rgba(0, 191, 255, 0.7), 0 0 30px rgba(0, 191, 255, 0.5);
+      transform: scale(1.08);
+    }
+  }
+
+  /* Responsive text utilities using CSS variables */
+  .text-responsive-xs { font-size: var(--text-xs); }
+  .text-responsive-sm { font-size: var(--text-sm); }
+  .text-responsive-base { font-size: var(--text-base); }
+  .text-responsive-lg { font-size: var(--text-lg); }
+  .text-responsive-xl { font-size: var(--text-xl); }
+  .text-responsive-2xl { font-size: var(--text-2xl); }
+  .text-responsive-3xl { font-size: var(--text-3xl); }
+  .text-responsive-4xl { font-size: var(--text-4xl); }
 }
 
 /* Custom audio player styles */

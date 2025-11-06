@@ -49,7 +49,12 @@ export default function News({ radioState }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
+      <div className="
+        flex items-center justify-center
+        min-h-[calc(100vh-80px)]
+        md:min-h-[calc(100vh-100px)]
+        tv:min-h-screen
+      ">
         <Loader size="large" text="Se încarcă știrile..." />
       </div>
     );
@@ -57,15 +62,37 @@ export default function News({ radioState }) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 text-center">
-        <svg className="w-16 h-16 text-white/30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="
+        flex flex-col items-center justify-center text-center
+        min-h-[calc(100vh-80px)]
+        md:min-h-[calc(100vh-100px)]
+        tv:min-h-screen
+        px-6 md:px-8 tv:px-12
+      ">
+        <svg className="
+          w-16 h-16 mb-4 text-white/30
+          md:w-20 md:h-20
+          tv:w-28 tv:h-28
+        " fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h2 className="text-xl font-semibold mb-2">Oops!</h2>
-        <p className="text-white/60 mb-6">{error}</p>
+        <h2 className="
+          font-semibold mb-2
+          text-xl md:text-2xl tv:text-4xl
+        ">Oops!</h2>
+        <p className="
+          text-white/60 mb-6
+          text-base md:text-lg tv:text-2xl
+        ">{error}</p>
         <button
           onClick={loadInitialNews}
-          className="px-6 py-3 bg-primary hover:bg-primary/90 rounded-2xl font-medium transition-colors"
+          className="
+            bg-primary hover:bg-primary/90 rounded-2xl font-medium transition-colors tv-focusable
+            px-6 py-3 text-base
+            md:px-8 md:py-4 md:text-lg
+            tv:px-12 tv:py-6 tv:text-2xl
+          "
+          tabIndex={0}
         >
           Încearcă din nou
         </button>
@@ -92,13 +119,25 @@ export default function News({ radioState }) {
       </div>
 
       {/* Header */}
-      <div className="sticky top-0 z-10 px-4 py-4">
+      <div className="
+        sticky top-0 z-10
+        px-4 py-4
+        md:px-6 md:py-5
+        lg:px-8
+        tv:px-12 tv:py-8
+      ">
         {/* Glassmorphic header background */}
         <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-xl border-b border-white/10" />
 
         <div className="relative">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">Știri</h1>
-          <p className="text-white/60 text-sm mt-1 font-medium">Ultimele noutăți din Constanța</p>
+          <h1 className="
+            font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent
+            text-2xl md:text-3xl lg:text-4xl tv:text-5xl
+          ">Știri</h1>
+          <p className="
+            text-white/60 font-medium mt-1
+            text-sm md:text-base tv:text-xl
+          ">Ultimele noutăți din Constanța</p>
         </div>
       </div>
 

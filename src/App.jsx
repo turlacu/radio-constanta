@@ -1,9 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, createContext } from 'react';
 import Radio from './pages/Radio';
 import News from './pages/News';
 import BottomNav from './components/BottomNav';
+import { useDeviceDetection } from './hooks/useDeviceDetection';
+
+// Create context for device info to share across components
+export const DeviceContext = createContext(null);
 
 const STATIONS = {
   fm: {
@@ -30,6 +34,9 @@ const STATIONS = {
 };
 
 function App() {
+  // Device detection
+  const device = useDeviceDetection();
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStation, setCurrentStation] = useState(STATIONS.fm);
@@ -375,17 +382,19 @@ function App() {
   };
 
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <div className="min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route path="/" element={<Radio radioState={radioState} />} />
-            <Route path="/news" element={<News radioState={radioState} />} />
-          </Routes>
-        </AnimatePresence>
-        <BottomNav />
-      </div>
-    </Router>
+    <DeviceContext.Provider value={device}>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <div className="min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
+          <AnimatePresence mode="wait">
+            <Routes>
+              <Route path="/" element={<Radio radioState={radioState} />} />
+              <Route path="/news" element={<News radioState={radioState} />} />
+            </Routes>
+          </AnimatePresence>
+          <BottomNav />
+        </div>
+      </Router>
+    </DeviceContext.Provider>
   );
 }
 

@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion';
+import { useContext } from 'react';
+import { DeviceContext } from '../App';
 
 export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore, loading }) {
+  const device = useContext(DeviceContext);
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -24,8 +27,17 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
   };
 
   return (
-    <div className="pb-20">
-      <div className="space-y-4 px-4 pt-6">
+    <div className="pb-20 md:pb-24 tv:pb-16">
+      <div className="
+        px-4 pt-6
+        md:px-6 md:pt-8
+        lg:px-8
+        tv:px-12 tv:pt-10
+        grid gap-4
+        md:grid-cols-2 md:gap-6
+        lg:grid-cols-3
+        tv:grid-cols-3 tv:gap-8
+      ">
         {articles.map((article, index) => (
           <motion.article
             key={article.id || index}
@@ -33,7 +45,17 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05, type: "spring", stiffness: 100 }}
             onClick={() => onArticleClick(article)}
-            className="relative rounded-2xl overflow-hidden cursor-pointer group"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onArticleClick(article);
+              }
+            }}
+            className="
+              relative overflow-hidden cursor-pointer group tv-focusable
+              rounded-xl md:rounded-2xl tv:rounded-3xl
+            "
           >
             {/* Glassmorphic background */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-2xl transition-all group-hover:border-white/20 group-hover:from-white/15 group-hover:to-white/8" />
@@ -49,7 +71,10 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             <div className="relative">
               {/* Image */}
               {article.image && (
-                <div className="relative w-full h-56 bg-dark-surface overflow-hidden">
+                <div className="
+                  relative w-full bg-dark-surface overflow-hidden
+                  h-48 md:h-52 lg:h-56 tv:h-72
+                ">
                   <motion.img
                     src={article.image}
                     alt={article.title}
@@ -65,9 +90,16 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               )}
 
               {/* Content */}
-              <div className="p-5">
+              <div className="
+                p-4 md:p-5 lg:p-6 tv:p-8
+              ">
                 {/* Category & Date */}
-                <div className="flex items-center gap-2 mb-3 text-xs text-white/50 font-medium">
+                <div className="
+                  flex items-center gap-2 mb-2 font-medium
+                  text-xs md:text-sm tv:text-base
+                  text-white/50
+                  md:mb-3
+                ">
                   {article.category && (
                     <>
                       <span className="px-2 py-1 rounded-full bg-primary/20 text-primary font-semibold">
@@ -80,13 +112,19 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 </div>
 
                 {/* Title */}
-                <h3 className="text-lg font-bold mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                <h3 className="
+                  font-bold mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors
+                  text-base md:text-lg lg:text-xl tv:text-2xl
+                ">
                   {article.title}
                 </h3>
 
                 {/* Summary */}
                 {article.summary && (
-                  <p className="text-white/70 text-sm line-clamp-2 leading-relaxed">
+                  <p className="
+                    text-white/70 line-clamp-2 leading-relaxed
+                    text-sm md:text-base tv:text-lg
+                  ">
                     {article.summary}
                   </p>
                 )}
@@ -101,14 +139,24 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="px-4 mt-6"
+          className="
+            px-4 mt-6
+            md:px-6 md:mt-8
+            tv:px-12 tv:mt-10
+          "
         >
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onLoadMore}
             disabled={loading}
-            className="relative w-full py-4 rounded-2xl font-semibold overflow-hidden disabled:opacity-50 group"
+            tabIndex={0}
+            className="
+              relative w-full font-semibold overflow-hidden disabled:opacity-50 group tv-focusable
+              py-3 rounded-xl text-sm
+              md:py-4 md:rounded-2xl md:text-base
+              tv:py-6 tv:text-xl
+            "
           >
             {/* Glassmorphic background */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/10 backdrop-blur-xl border border-primary/30 rounded-2xl transition-all group-hover:from-primary/30 group-hover:to-primary/20" />

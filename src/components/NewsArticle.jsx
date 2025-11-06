@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import Loader from './Loader';
+import { DeviceContext } from '../App';
 
 export default function NewsArticle({ article, onBack, radioState }) {
+  const device = useContext(DeviceContext);
   const [fullContent, setFullContent] = useState(article.content || '');
   const [fullImage, setFullImage] = useState(article.image);
   const [loading, setLoading] = useState(false);
@@ -414,7 +416,10 @@ export default function NewsArticle({ article, onBack, radioState }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-dark-bg z-50 overflow-y-auto scrollbar-hide pb-20"
+      className="
+        fixed inset-0 bg-dark-bg z-50 overflow-y-auto scrollbar-hide
+        pb-20 md:pb-24 tv:pb-16
+      "
     >
       {/* Background gradient effect */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -427,33 +432,63 @@ export default function NewsArticle({ article, onBack, radioState }) {
         {/* Glassmorphic header background */}
         <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-xl border-b border-white/10" />
 
-        <div className="relative flex items-center gap-4 px-6 py-4">
+        <div className="
+          relative flex items-center gap-3
+          px-4 py-3
+          md:px-6 md:py-4 md:gap-4
+          tv:px-12 tv:py-6 tv:gap-6
+        ">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onBack}
-            className="relative w-10 h-10 rounded-full overflow-hidden group flex items-center justify-center"
+            tabIndex={0}
+            className="
+              relative rounded-full overflow-hidden group flex items-center justify-center tv-focusable
+              w-10 h-10
+              md:w-12 md:h-12
+              tv:w-16 tv:h-16
+            "
           >
             {/* Glassmorphic background */}
             <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-full transition-all group-hover:bg-white/15 group-hover:border-white/30" />
 
-            <svg className="relative w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="
+              relative
+              w-5 h-5 md:w-6 md:h-6 tv:w-8 tv:h-8
+            " fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </motion.button>
-          <h1 className="text-sm font-semibold text-white/90">Înapoi la știri</h1>
+          <h1 className="
+            font-semibold text-white/90
+            text-sm md:text-base tv:text-2xl
+          ">Înapoi la știri</h1>
         </div>
       </div>
 
       {/* Article Content */}
-      <article className="relative px-6 py-6 max-w-2xl mx-auto">
+      <article className="
+        relative mx-auto
+        px-4 py-4
+        md:px-6 md:py-6
+        lg:px-8
+        tv:px-12 tv:py-10
+        max-w-2xl lg:max-w-4xl tv:max-w-6xl
+      ">
         {/* Featured Image */}
         {fullImage && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative w-full h-72 rounded-lg overflow-hidden mb-6 shadow-2xl"
+            className="
+              relative w-full overflow-hidden shadow-2xl
+              h-56 rounded-lg mb-4
+              md:h-72 md:mb-6
+              lg:h-80 lg:rounded-xl
+              tv:h-96 tv:rounded-2xl tv:mb-10
+            "
           >
             {/* Glassmorphic border effect */}
             <div className="absolute inset-0 border-2 border-white/10 rounded-lg z-10 pointer-events-none" />
@@ -478,7 +513,10 @@ export default function NewsArticle({ article, onBack, radioState }) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center gap-2 mb-4 text-xs text-white/50 font-medium"
+          className="
+            flex items-center gap-2 mb-3 font-medium text-white/50
+            text-xs md:text-sm md:mb-4 tv:text-lg tv:gap-3
+          "
         >
           {article.category && (
             <>
@@ -496,29 +534,47 @@ export default function NewsArticle({ article, onBack, radioState }) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-3xl font-bold mb-4 leading-tight bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent"
+          className="
+            font-bold mb-3 leading-tight bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent
+            text-2xl md:text-3xl md:mb-4 lg:text-4xl tv:text-5xl tv:mb-6
+          "
         >
           {article.title}
         </motion.h1>
 
         {/* Summary - only show if full content hasn't loaded yet */}
         {article.summary && !fullContent && !loading && (
-          <p className="text-lg text-white/70 mb-6 leading-relaxed">
+          <p className="
+            text-white/70 mb-5 leading-relaxed
+            text-base md:text-lg md:mb-6 tv:text-2xl tv:mb-8
+          ">
             {article.summary}
           </p>
         )}
 
         {/* Content */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-12">
+          <div className="
+            flex flex-col items-center justify-center
+            py-10 md:py-12 tv:py-16
+          ">
             <Loader size="medium" />
-            <p className="text-white/60 text-sm mt-4">Se încarcă articolul complet...</p>
+            <p className="
+              text-white/60 mt-4
+              text-sm md:text-base tv:text-xl
+            ">Se încarcă articolul complet...</p>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="
+            bg-red-500/10 border border-red-500/30 rounded-xl mb-5
+            p-4 md:p-5 md:mb-6 tv:p-8 tv:mb-8
+          ">
+            <p className="
+              text-red-400
+              text-sm md:text-base tv:text-lg
+            ">{error}</p>
             <a
               href={article.link}
               target="_blank"
@@ -533,7 +589,10 @@ export default function NewsArticle({ article, onBack, radioState }) {
         {!loading && fullContent && (
           <div className="prose prose-invert max-w-none overflow-x-hidden">
             <div
-              className="text-white/80 text-base leading-relaxed space-y-4 text-justify"
+              className="
+                text-white/80 leading-relaxed space-y-4 text-justify
+                text-sm md:text-base lg:text-lg tv:text-xl
+              "
               dangerouslySetInnerHTML={{ __html: fullContent }}
             />
           </div>
@@ -541,18 +600,31 @@ export default function NewsArticle({ article, onBack, radioState }) {
 
         {/* Link to original - only show for articles older than 3 days */}
         {article.link && isOlderThanThreeDays() && (
-          <div className="mt-8 pt-6 border-t border-white/10">
-            <p className="text-white/60 text-sm mb-3">
+          <div className="
+            mt-6 pt-5 border-t border-white/10
+            md:mt-8 md:pt-6
+            tv:mt-12 tv:pt-10
+          ">
+            <p className="
+              text-white/60 mb-3
+              text-sm md:text-base tv:text-lg
+            ">
               Acest articol are mai mult de 3 zile. Pentru informații actualizate, vizitează:
             </p>
             <a
               href={article.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
+              tabIndex={0}
+              className="
+                inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium tv-focusable
+                text-base md:text-lg tv:text-xl
+              "
             >
               radioconstanta.ro
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="
+                w-4 h-4 md:w-5 md:h-5 tv:w-6 tv:h-6
+              " fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </a>

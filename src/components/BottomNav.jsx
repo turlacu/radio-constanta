@@ -1,8 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useContext } from 'react';
+import { DeviceContext } from '../App';
 
 export default function BottomNav() {
   const location = useLocation();
+  const device = useContext(DeviceContext);
 
   const tabs = [
     {
@@ -25,15 +28,29 @@ export default function BottomNav() {
     }
   ];
 
+  // Hide bottom nav on TV (we'll use keyboard/remote navigation instead)
+  if (device?.isTV) {
+    return null;
+  }
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40">
+    <nav className="
+      fixed bottom-0 left-0 right-0 z-40
+      md:h-20
+      tv:hidden
+    ">
       {/* Glassmorphic background */}
       <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/95 to-dark-bg/80 backdrop-blur-2xl border-t border-white/10" />
 
       {/* Glow effect at top */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
-      <div className="relative max-w-mobile mx-auto flex items-center justify-around px-6 py-3">
+      <div className="
+        relative mx-auto flex items-center justify-around
+        px-4 py-2
+        md:px-8 md:py-4
+        lg:max-w-desktop
+      ">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path;
 
@@ -41,7 +58,12 @@ export default function BottomNav() {
             <Link
               key={tab.path}
               to={tab.path}
-              className="relative flex flex-col items-center gap-1 py-2 px-6"
+              className="
+                relative flex flex-col items-center gap-1
+                py-2 px-4
+                md:py-3 md:px-8
+                lg:px-10
+              "
             >
               {isActive && (
                 <>
@@ -67,9 +89,15 @@ export default function BottomNav() {
                 whileTap={{ scale: 0.95 }}
                 className={`relative z-10 transition-colors ${isActive ? 'text-primary' : 'text-white/50'}`}
               >
-                {tab.icon(isActive)}
+                <div className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8">
+                  {tab.icon(isActive)}
+                </div>
               </motion.div>
-              <span className={`relative z-10 text-xs font-semibold transition-colors ${isActive ? 'text-primary' : 'text-white/50'}`}>
+              <span className={`
+                relative z-10 font-semibold transition-colors
+                text-xs md:text-sm lg:text-base
+                ${isActive ? 'text-primary' : 'text-white/50'}
+              `}>
                 {tab.name}
               </span>
             </Link>
