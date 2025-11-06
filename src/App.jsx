@@ -392,7 +392,7 @@ function App() {
             // Desktop/TV: Split-screen layout with 16:9 aspect ratio
             <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
               {/* 16:9 Aspect Ratio Container */}
-              <div className="w-full h-full max-w-[177.78vh] max-h-[56.25vw] flex overflow-hidden">
+              <div className="w-full h-screen max-w-[177.78vh] flex overflow-hidden">
                 {/* Radio Section - Left (35% width, centered content) */}
                 <div className="w-[35%] overflow-hidden relative flex items-center justify-center">
                   <Radio radioState={radioState} />

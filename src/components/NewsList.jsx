@@ -58,7 +58,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             }}
             className={
               isSplitScreen
-                ? "relative overflow-hidden cursor-pointer group tv-focusable rounded-lg" // Smaller radius for horizontal
+                ? "relative overflow-hidden cursor-pointer group tv-focusable rounded-lg max-w-[850px] mx-auto" // Limit width to 2.5x radio cover (340px × 2.5) and center
                 : "relative overflow-hidden cursor-pointer group tv-focusable rounded-xl md:rounded-2xl tv:rounded-3xl"
             }
           >
@@ -100,18 +100,18 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               {/* Content */}
               <div className={
                 isSplitScreen
-                  ? "p-4 flex-1 flex flex-col justify-center" // More padding for horizontal layout
+                  ? "p-3 flex-1 flex flex-col justify-center" // Compact padding for horizontal layout
                   : "p-4 md:p-5 lg:p-6 tv:p-8"
               }>
                 {/* Category & Date */}
                 <div className={
                   isSplitScreen
-                    ? "flex items-center gap-2 mb-2 font-medium text-xs text-white/50" // Slightly larger for horizontal
+                    ? "flex items-center gap-2 mb-1 font-medium text-[10px] text-white/50" // Smaller and more compact
                     : "flex items-center gap-2 mb-2 font-medium text-xs md:text-sm tv:text-base text-white/50 md:mb-3"
                 }>
                   {article.category && (
                     <>
-                      <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary font-semibold">
+                      <span className={isSplitScreen ? "px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-semibold" : "px-2 py-0.5 rounded-full bg-primary/20 text-primary font-semibold"}>
                         {article.category}
                       </span>
                       <span className="w-0.5 h-0.5 bg-white/30 rounded-full" />
@@ -123,15 +123,19 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 {/* Title */}
                 <h3 className={
                   isSplitScreen
-                    ? "font-bold mb-1 line-clamp-2 leading-tight group-hover:text-primary transition-colors text-base" // Larger for horizontal
+                    ? "font-semibold mb-1 line-clamp-2 leading-tight group-hover:text-primary transition-colors text-sm" // Smaller and less bold
                     : "font-bold mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-base md:text-lg lg:text-xl tv:text-2xl"
                 }>
                   {article.title}
                 </h3>
 
-                {/* Summary - hide in split-screen for compact layout */}
-                {article.summary && !isSplitScreen && (
-                  <p className="text-white/70 line-clamp-2 leading-relaxed text-sm md:text-base tv:text-lg">
+                {/* Summary */}
+                {article.summary && (
+                  <p className={
+                    isSplitScreen
+                      ? "text-white/70 line-clamp-2 leading-relaxed text-xs mt-1" // Show in split-screen with smaller text
+                      : "text-white/70 line-clamp-2 leading-relaxed text-sm md:text-base tv:text-lg"
+                  }>
                     {article.summary}
                   </p>
                 )}
