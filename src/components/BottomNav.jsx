@@ -6,6 +6,7 @@ import { DeviceContext } from '../App';
 export default function BottomNav() {
   const location = useLocation();
   const device = useContext(DeviceContext);
+  const isSplitScreen = device?.screenWidth >= 768;
 
   const tabs = [
     {
@@ -28,8 +29,8 @@ export default function BottomNav() {
     }
   ];
 
-  // Hide bottom nav on TV (we'll use keyboard/remote navigation instead)
-  if (device?.isTV) {
+  // Hide bottom nav on split-screen (both pages visible) or TV (keyboard/remote navigation)
+  if (isSplitScreen || device?.isTV) {
     return null;
   }
 

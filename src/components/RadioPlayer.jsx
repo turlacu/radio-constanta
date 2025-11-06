@@ -7,15 +7,18 @@ export default function RadioPlayer({ radioState }) {
   const { isPlaying, isLoading, currentStation, metadata, streamInfo, stations, selectedQuality, availableQualities, togglePlay, switchStation, switchQuality } = radioState;
   const device = useContext(DeviceContext);
 
+  // Check if we're in split-screen mode (768px+)
+  const isSplitScreen = device?.screenWidth >= 768;
+
   // Responsive layout classes based on device type
   const containerClasses = `
     flex items-center justify-center relative overflow-hidden
     px-4 py-6
     md:px-8 md:py-10
-    lg:px-12 lg:py-12
-    tv:px-20 tv:py-16
-    ${device?.isTV ? 'flex-row gap-16' : 'flex-col'}
-    ${device?.isTablet || device?.isDesktop ? 'min-h-[calc(100vh-100px)]' : 'min-h-[calc(100vh-80px)]'}
+    lg:px-8 lg:py-8
+    tv:px-12 tv:py-12
+    ${device?.isTV && !isSplitScreen ? 'flex-row gap-16' : 'flex-col'}
+    ${isSplitScreen ? 'h-full' : device?.isTablet || device?.isDesktop ? 'min-h-[calc(100vh-100px)]' : 'min-h-[calc(100vh-80px)]'}
   `;
 
   return (

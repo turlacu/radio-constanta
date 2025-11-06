@@ -381,17 +381,38 @@ function App() {
     restoreRadio
   };
 
+  // Split-screen layout for screens larger than small tablet portrait (768px+)
+  const showSplitScreen = device.screenWidth >= 768;
+
   return (
     <DeviceContext.Provider value={device}>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/" element={<Radio radioState={radioState} />} />
-              <Route path="/news" element={<News radioState={radioState} />} />
-            </Routes>
-          </AnimatePresence>
-          <BottomNav />
+          {showSplitScreen ? (
+            // Desktop/TV: Split-screen layout (both pages visible)
+            <div className="flex h-screen overflow-hidden">
+              {/* Radio Section - Left */}
+              <div className="w-1/2 overflow-y-auto scrollbar-hide border-r border-white/10">
+                <Radio radioState={radioState} />
+              </div>
+
+              {/* News Section - Right */}
+              <div className="w-1/2 overflow-y-auto scrollbar-hide">
+                <News radioState={radioState} />
+              </div>
+            </div>
+          ) : (
+            // Mobile/Tablet: Single page with routing
+            <>
+              <AnimatePresence mode="wait">
+                <Routes>
+                  <Route path="/" element={<Radio radioState={radioState} />} />
+                  <Route path="/news" element={<News radioState={radioState} />} />
+                </Routes>
+              </AnimatePresence>
+              <BottomNav />
+            </>
+          )}
         </div>
       </Router>
     </DeviceContext.Provider>

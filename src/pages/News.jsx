@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import NewsList from '../components/NewsList';
 import NewsArticle from '../components/NewsArticle';
 import Loader from '../components/Loader';
 import { fetchNews } from '../utils/fetchNews';
+import { DeviceContext } from '../App';
 
 export default function News({ radioState }) {
+  const device = useContext(DeviceContext);
+  const isSplitScreen = device?.screenWidth >= 768;
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -106,12 +109,17 @@ export default function News({ radioState }) {
         article={selectedArticle}
         onBack={() => setSelectedArticle(null)}
         radioState={radioState}
+        isSplitScreen={isSplitScreen}
       />
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className={
+      isSplitScreen
+        ? "h-full relative overflow-hidden" // Split-screen: fill container
+        : "min-h-screen relative overflow-hidden" // Single page: full screen
+    }>
       {/* Background gradient effect */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/30 rounded-full blur-3xl" />
@@ -149,6 +157,7 @@ export default function News({ radioState }) {
           onLoadMore={loadMoreNews}
           hasMore={hasMore}
           loading={loadingMore}
+          isSplitScreen={isSplitScreen}
         />
       </div>
     </div>

@@ -3,7 +3,7 @@ import { useState, useEffect, useContext } from 'react';
 import Loader from './Loader';
 import { DeviceContext } from '../App';
 
-export default function NewsArticle({ article, onBack, radioState }) {
+export default function NewsArticle({ article, onBack, radioState, isSplitScreen }) {
   const device = useContext(DeviceContext);
   const [fullContent, setFullContent] = useState(article.content || '');
   const [fullImage, setFullImage] = useState(article.image);
@@ -416,10 +416,11 @@ export default function NewsArticle({ article, onBack, radioState }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="
-        fixed inset-0 bg-dark-bg z-50 overflow-y-auto scrollbar-hide
-        pb-20 md:pb-24 tv:pb-16
-      "
+      className={
+        isSplitScreen
+          ? "h-full bg-dark-bg overflow-y-auto scrollbar-hide pb-6" // Split-screen: stay in container
+          : "fixed inset-0 bg-dark-bg z-50 overflow-y-auto scrollbar-hide pb-20 md:pb-24 tv:pb-16" // Full-screen overlay
+      }
     >
       {/* Background gradient effect */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">

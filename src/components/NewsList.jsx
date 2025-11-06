@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useContext } from 'react';
 import { DeviceContext } from '../App';
 
-export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore, loading }) {
+export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore, loading, isSplitScreen }) {
   const device = useContext(DeviceContext);
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -27,17 +27,21 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
   };
 
   return (
-    <div className="pb-20 md:pb-24 tv:pb-16">
-      <div className="
-        px-4 pt-6
-        md:px-6 md:pt-8
-        lg:px-8
-        tv:px-12 tv:pt-10
-        grid gap-4
-        md:grid-cols-2 md:gap-6
-        lg:grid-cols-3
-        tv:grid-cols-3 tv:gap-8
-      ">
+    <div className={isSplitScreen ? "pb-6" : "pb-20 md:pb-24 tv:pb-16"}>
+      <div className={
+        isSplitScreen
+          ? "px-4 pt-6 grid gap-4 grid-cols-1" // Split-screen: single column
+          : `
+            px-4 pt-6
+            md:px-6 md:pt-8
+            lg:px-8
+            tv:px-12 tv:pt-10
+            grid gap-4
+            md:grid-cols-2 md:gap-6
+            lg:grid-cols-3
+            tv:grid-cols-3 tv:gap-8
+          `
+      }>
         {articles.map((article, index) => (
           <motion.article
             key={article.id || index}
