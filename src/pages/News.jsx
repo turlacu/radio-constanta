@@ -139,7 +139,7 @@ export default function News({ radioState }) {
       <div className={`
         sticky top-0 z-10
         ${isSplitScreen
-          ? 'px-8 py-6' // More padding in split-screen to match wider layout
+          ? 'px-4 py-6' // Padding for full-width background
           : 'px-4 py-4 md:px-6 md:py-5 lg:px-8 tv:px-12 tv:py-8'
         }
       `}>
@@ -150,7 +150,8 @@ export default function News({ radioState }) {
             : 'bg-dark-bg/80 backdrop-blur-xl'
         }`} />
 
-        <div className="relative">
+        {/* Content wrapper - centered to match articles */}
+        <div className={isSplitScreen ? "relative max-w-[850px] mx-auto" : "relative"}>
           <h1 className={`
             font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent
             ${isSplitScreen ? 'text-2xl' : 'text-2xl md:text-3xl lg:text-4xl tv:text-5xl'}
