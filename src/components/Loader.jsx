@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
+import { memo } from 'react';
 
-export default function Loader({ size = 'medium', text = '' }) {
+const Loader = memo(function Loader({ size = 'medium', text = '' }) {
   const sizes = {
     small: 'w-6 h-6',
     medium: 'w-12 h-12',
@@ -26,4 +27,6 @@ export default function Loader({ size = 'medium', text = '' }) {
       )}
     </div>
   );
-}
+});
+
+export default Loader;

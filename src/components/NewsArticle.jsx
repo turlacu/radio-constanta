@@ -1,18 +1,19 @@
 import { motion } from 'framer-motion';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Loader from './Loader';
-import { DeviceContext } from '../App';
+import { Heading, Body, Caption, Button } from './ui';
+import { useArticleMedia } from '../hooks/useArticleMedia';
 
 export default function NewsArticle({ article, onBack, radioState, isSplitScreen }) {
-  const device = useContext(DeviceContext);
   const [fullContent, setFullContent] = useState(article.content || '');
   const [fullImage, setFullImage] = useState(article.image);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [radioPausedByArticle, setRadioPausedByArticle] = useState(false);
-  const [savedRadioSrc, setSavedRadioSrc] = useState(null);
 
   if (!article) return null;
+
+  // Use custom hook for media handling
+  useArticleMedia(fullContent, radioState);
 
   // Fetch full article content when component mounts
   useEffect(() => {
@@ -20,8 +21,6 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
       try {
         setLoading(true);
         setError(null);
-
-        console.log('Fetching full article from:', article.link);
 
         const response = await fetch(`/api/article?url=${encodeURIComponent(article.link)}`);
 
@@ -31,13 +30,8 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
 
         const data = await response.json();
 
-        console.log('Article data received:', data);
-
         if (data.content) {
           setFullContent(data.content);
-          console.log('Full content set, length:', data.content.length);
-        } else {
-          console.warn('No content in response');
         }
 
         if (data.image) {
@@ -45,7 +39,9 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         }
       } catch (err) {
         console.error('Error fetching full article:', err);
-        setError('Nu s-a putut încărca articolul complet. Click pe linkul de mai jos pentru a citi pe site.');
+        setError(
+          'Nu s-a putut încărca articolul complet. Click pe linkul de mai jos pentru a citi pe site.'
+        );
       } finally {
         setLoading(false);
       }
@@ -54,362 +50,25 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
     fetchFullArticle();
   }, [article.link]);
 
-  // Handle article audio and video players - pause radio when playing, resume when done
-  useEffect(() => {
-    if (!radioState || !fullContent) return;
-
-    // Wait a bit for content to be rendered
-    const timer = setTimeout(() => {
-      // Find all audio and video elements in the article content
-      const audioElements = document.querySelectorAll('article audio.wp-audio-shortcode');
-      const videoElements = document.querySelectorAll('article video');
-      const mediaElements = [...audioElements, ...videoElements];
-
-      if (mediaElements.length === 0) return;
-
-      const cleanupFunctions = [];
-
-      mediaElements.forEach((media) => {
-        // Add custom controls for videos (no native controls)
-        if (media.tagName === 'VIDEO') {
-          // Skip if already configured (prevent duplicate setup on re-renders)
-          if (media.getAttribute('data-video-configured') === 'true') {
-            console.log('✓ Video already configured, skipping');
-            return;
-          }
-          // iOS/mobile playback attributes (NO CONTROLS)
-          media.setAttribute('playsinline', 'true');
-          media.setAttribute('webkit-playsinline', 'true');
-          media.setAttribute('x-webkit-airplay', 'allow');
-          media.setAttribute('preload', 'metadata');
-          media.removeAttribute('controls'); // Remove native controls
-
-          // Remove any width/height attributes that might interfere
-          media.removeAttribute('width');
-          media.removeAttribute('height');
-
-          // Extract video source - might be in <source> child elements
-          let videoSrc = media.src || media.currentSrc;
-
-          if (!videoSrc) {
-            // Check for <source> child elements (WordPress style)
-            const sourceElements = media.querySelectorAll('source');
-            if (sourceElements.length > 0) {
-              videoSrc = sourceElements[0].src;
-              console.log('Found video src in <source> element:', videoSrc);
-            }
-          }
-
-          if (!videoSrc) {
-            console.error('✗ Cannot setup video controls - no source found!');
-            return; // Skip this video
-          }
-
-          // IMPORTANT: Set src directly on video element and force it to stay
-          media.src = videoSrc;
-          media.setAttribute('src', videoSrc); // Also set as attribute
-          media.setAttribute('data-video-src', videoSrc); // Store as data attribute for recovery
-
-          // Remove source elements to prevent conflicts
-          media.querySelectorAll('source').forEach(s => s.remove());
-
-          // Force reload with new attributes
-          media.load();
-
-          // Mark as configured to prevent duplicate setup
-          media.setAttribute('data-video-configured', 'true');
-
-          console.log('✓ Video configured with custom controls. src:', media.src);
-
-          // Create wrapper container for video + overlay
-          const wrapper = document.createElement('div');
-          wrapper.style.cssText = `
-            position: relative;
-            width: 100%;
-            display: block;
-            margin: 1rem 0;
-          `;
-
-          // Move video into wrapper
-          media.parentElement.insertBefore(wrapper, media);
-          wrapper.appendChild(media);
-
-          // Style video
-          media.style.display = 'block';
-          media.style.width = '100%';
-          media.style.height = 'auto';
-
-          // Create custom controls overlay
-          const controlsOverlay = document.createElement('div');
-          controlsOverlay.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            transition: opacity 0.3s;
-            z-index: 10;
-          `;
-
-          // Create play button
-          const playButton = document.createElement('div');
-          playButton.style.cssText = `
-            width: 80px;
-            height: 80px;
-            background: rgba(0, 191, 255, 0.9);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            transition: transform 0.2s, background 0.2s;
-            pointer-events: auto;
-          `;
-          playButton.innerHTML = `
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-          `;
-
-          controlsOverlay.appendChild(playButton);
-
-          // Add overlay to wrapper
-          wrapper.appendChild(controlsOverlay);
-
-          // Track video state
-          let isVideoPlaying = false;
-
-          // Hide controls when video is playing
-          const updateControlsVisibility = () => {
-            if (isVideoPlaying) {
-              controlsOverlay.style.opacity = '0';
-              controlsOverlay.style.pointerEvents = 'none';
-            } else {
-              controlsOverlay.style.opacity = '1';
-              controlsOverlay.style.pointerEvents = 'auto';
-            }
-          };
-
-          // Handle play/pause button click
-          const handlePlayPause = async (e) => {
-            console.log('=== handlePlayPause called ===');
-            console.log('media.paused:', media.paused);
-            console.log('media.src:', media.src);
-            console.log('radioState.isPlaying:', radioState.isPlaying);
-
-            if (media.paused) {
-              // Check if video has a source - recover from data attribute if needed
-              if (!media.src && !media.currentSrc) {
-                console.warn('⚠ Video src missing at play time - attempting recovery');
-                const storedSrc = media.getAttribute('data-video-src');
-                if (storedSrc) {
-                  media.src = storedSrc;
-                  media.setAttribute('src', storedSrc);
-                  media.load();
-                  console.log('→ Recovered src from data attribute:', media.src);
-                } else {
-                  console.error('✗✗✗ Cannot play video - no source URL found anywhere!');
-                  return;
-                }
-              }
-
-              console.log('✓ Custom play button clicked - attempting video play');
-
-              // If radio is playing, use muted video strategy for mobile
-              if (radioState.isPlaying) {
-                console.log('→ Radio is playing - using MUTED video strategy for mobile');
-
-                // STEP 1: Mute video (no audio focus needed)
-                media.muted = true;
-                console.log('→ Video muted');
-
-                // STEP 2: Play muted video immediately (user gesture preserved)
-                try {
-                  await media.play();
-                  console.log('→ Muted video playing!');
-                  isVideoPlaying = true;
-                  playButton.innerHTML = `
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                    </svg>
-                  `;
-                  updateControlsVisibility();
-
-                  // STEP 3: Stop radio now that video is playing
-                  const radioSrc = radioState.stopRadio();
-                  console.log('→ Radio stopped, src was:', radioSrc);
-                  setSavedRadioSrc(radioSrc);
-                  setRadioPausedByArticle(true);
-
-                  // STEP 4: Wait for audio context to settle, then unmute
-                  setTimeout(() => {
-                    media.muted = false;
-                    console.log('✓✓✓ Video UNMUTED - now playing with sound!');
-                  }, 200);
-
-                } catch (err) {
-                  console.error('✗✗✗ Even muted video failed:', err.name, err.message);
-                  media.muted = false;
-                }
-
-              } else {
-                // Radio not playing - play video normally
-                console.log('→ Radio not playing, proceeding directly');
-
-                try {
-                  await media.play();
-                  console.log('✓✓✓ Video is NOW PLAYING via custom controls!');
-                  isVideoPlaying = true;
-                  playButton.innerHTML = `
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                    </svg>
-                  `;
-                  updateControlsVisibility();
-                } catch (err) {
-                  console.error('✗✗✗ Video play FAILED:', err.name, err.message);
-                  console.error('Full error:', err);
-                }
-              }
-            } else {
-              console.log('→ Pausing video');
-              media.pause();
-              isVideoPlaying = false;
-              playButton.innerHTML = `
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              `;
-              updateControlsVisibility();
-            }
-          };
-
-          // Click on overlay or video triggers play/pause
-          controlsOverlay.addEventListener('click', handlePlayPause);
-          media.addEventListener('click', handlePlayPause);
-
-          // Update button when video ends
-          media.addEventListener('ended', () => {
-            isVideoPlaying = false;
-            playButton.innerHTML = `
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-            `;
-            updateControlsVisibility();
-          });
-
-          // Show controls on hover (desktop)
-          media.addEventListener('mouseenter', () => {
-            if (isVideoPlaying) {
-              controlsOverlay.style.opacity = '0.7';
-            }
-          });
-
-          media.addEventListener('mouseleave', () => {
-            if (isVideoPlaying) {
-              controlsOverlay.style.opacity = '0';
-            }
-          });
-
-          cleanupFunctions.push(() => {
-            controlsOverlay.remove();
-          });
-        }
-
-        // When article media starts playing
-        const handlePlay = () => {
-          console.log('Article media playing - pausing radio');
-          const wasPaused = radioState.pauseRadio();
-          if (wasPaused) {
-            setRadioPausedByArticle(true);
-          }
-        };
-
-        // When article media ends or pauses
-        const handleEnded = () => {
-          console.log('Article media ended - resuming radio');
-          if (radioPausedByArticle) {
-            // Restore radio src if it was cleared for video playback
-            if (savedRadioSrc) {
-              radioState.restoreRadio(savedRadioSrc);
-              setSavedRadioSrc(null);
-              // Wait a moment then resume playback
-              setTimeout(() => {
-                radioState.resumeRadio();
-              }, 100);
-            } else {
-              radioState.resumeRadio();
-            }
-            setRadioPausedByArticle(false);
-          }
-        };
-
-        const handlePause = () => {
-          console.log('Article media paused - resuming radio');
-          if (radioPausedByArticle) {
-            // Restore radio src if it was cleared for video playback
-            if (savedRadioSrc) {
-              radioState.restoreRadio(savedRadioSrc);
-              setSavedRadioSrc(null);
-              // Wait a moment then resume playback
-              setTimeout(() => {
-                radioState.resumeRadio();
-              }, 100);
-            } else {
-              radioState.resumeRadio();
-            }
-            setRadioPausedByArticle(false);
-          }
-        };
-
-        media.addEventListener('play', handlePlay);
-        media.addEventListener('ended', handleEnded);
-        media.addEventListener('pause', handlePause);
-
-        // Store cleanup function
-        cleanupFunctions.push(() => {
-          media.removeEventListener('play', handlePlay);
-          media.removeEventListener('ended', handleEnded);
-          media.removeEventListener('pause', handlePause);
-          if (handleVideoClick) {
-            media.removeEventListener('click', handleVideoClick);
-          }
-        });
-      });
-
-      // Return cleanup function that cleans up all media elements
-      return () => {
-        cleanupFunctions.forEach(cleanup => cleanup());
-      };
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [fullContent, radioState]);
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
+  // Format date
+  const formattedDate = useMemo(() => {
+    const date = new Date(article.date);
     return date.toLocaleDateString('ro-RO', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
-  };
+  }, [article.date]);
 
   // Check if article is older than 3 days
-  const isOlderThanThreeDays = () => {
+  const isOlderThanThreeDays = useMemo(() => {
     const articleDate = new Date(article.date);
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     return articleDate < threeDaysAgo;
-  };
+  }, [article.date]);
 
   return (
     <motion.div
@@ -418,8 +77,8 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
       exit={{ opacity: 0 }}
       className={
         isSplitScreen
-          ? "h-full bg-dark-bg overflow-y-auto scrollbar-hide pb-6" // Split-screen: stay in container
-          : "fixed inset-0 bg-dark-bg z-50 overflow-y-auto scrollbar-hide pb-20 md:pb-24 tv:pb-16" // Full-screen overlay
+          ? 'h-full bg-dark-bg overflow-y-auto scrollbar-hide pb-6'
+          : 'fixed inset-0 bg-dark-bg z-50 overflow-y-auto scrollbar-hide pb-20 md:pb-24 tv:pb-16'
       }
     >
       {/* Background gradient effect */}
@@ -433,78 +92,56 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {/* Glassmorphic header background */}
         <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-xl border-b border-white/10" />
 
-        <div className="
-          relative flex items-center gap-3
-          px-4 py-3
-          md:px-6 md:py-4 md:gap-4
-          tv:px-12 tv:py-6 tv:gap-6
-        ">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+        <div className="relative flex items-center gap-3 px-4 py-3 md:px-6 md:py-4 md:gap-4 tv:px-12 tv:py-6 tv:gap-6">
+          <Button
+            variant="ghost"
+            icon
+            size="md"
             onClick={onBack}
-            tabIndex={0}
-            className="
-              relative rounded-full overflow-hidden group flex items-center justify-center tv-focusable
-              w-10 h-10
-              md:w-12 md:h-12
-              tv:w-16 tv:h-16
-            "
+            aria-label="Go back to news list"
           >
-            {/* Glassmorphic background */}
-            <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-full transition-all group-hover:bg-white/15 group-hover:border-white/30" />
-
-            <svg className="
-              relative
-              w-5 h-5 md:w-6 md:h-6 tv:w-8 tv:h-8
-            " fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-5 h-5 md:w-6 md:h-6 tv:w-8 tv:h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
-          </motion.button>
-          <h1 className="
-            font-semibold text-white/90
-            text-sm md:text-base tv:text-2xl
-          ">Înapoi la știri</h1>
+          </Button>
+          <Heading level={4} className="text-white/90 font-semibold">
+            Înapoi la știri
+          </Heading>
         </div>
       </div>
 
       {/* Article Content */}
-      <article className="
-        relative mx-auto
-        px-4 py-4
-        md:px-6 md:py-6
-        lg:px-8
-        tv:px-12 tv:py-10
-        max-w-2xl lg:max-w-4xl tv:max-w-6xl
-      ">
+      <article className="relative mx-auto px-4 py-4 md:px-6 md:py-6 lg:px-8 tv:px-12 tv:py-10 max-w-2xl lg:max-w-4xl tv:max-w-6xl">
         {/* Featured Image */}
         {fullImage && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="
-              relative w-full overflow-hidden shadow-2xl
-              h-56 rounded-lg mb-4
-              md:h-72 md:mb-6
-              lg:h-80 lg:rounded-xl
-              tv:h-96 tv:rounded-2xl tv:mb-10
-            "
+            className="relative w-full overflow-hidden shadow-2xl h-56 rounded-lg mb-4 md:h-72 md:mb-6 lg:h-80 lg:rounded-xl tv:h-96 tv:rounded-2xl tv:mb-10"
           >
-            {/* Glassmorphic border effect */}
             <div className="absolute inset-0 border-2 border-white/10 rounded-lg z-10 pointer-events-none" />
-
             <img
               src={fullImage}
               alt={article.title}
               className="w-full h-full object-cover"
               style={{ imageRendering: 'auto' }}
               onError={(e) => {
-                e.target.src = 'https://via.placeholder.com/800x450/1A1A1A/00BFFF?text=Radio+Constanta';
+                e.target.src =
+                  'https://via.placeholder.com/800x450/1A1A1A/00BFFF?text=Radio+Constanta';
               }}
             />
-
-            {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/60 via-transparent to-transparent" />
           </motion.div>
         )}
@@ -514,119 +151,106 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="
-            flex items-center gap-2 mb-3 font-medium text-white/50
-            text-xs md:text-sm md:mb-4 tv:text-lg tv:gap-3
-          "
+          className="flex items-center gap-2 mb-3 font-medium text-white/50 text-responsive-xs md:mb-4"
         >
           {article.category && (
             <>
-              <span className="px-3 py-1.5 rounded-md bg-gradient-to-r from-primary/20 to-primary/10 text-primary font-semibold border border-primary/20">
+              <Caption
+                weight="semibold"
+                className="px-3 py-1.5 rounded-md bg-gradient-to-r from-primary/20 to-primary/10 text-primary border border-primary/20"
+              >
                 {article.category}
-              </span>
-              <span className="w-1 h-1 bg-white/30 rounded-full" />
+              </Caption>
+              <span className="w-1 h-1 bg-white/30 rounded-full" aria-hidden="true" />
             </>
           )}
-          <time>{formatDate(article.date)}</time>
+          <time>{formattedDate}</time>
         </motion.div>
 
         {/* Title */}
-        <motion.h1
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="
-            font-bold mb-3 leading-tight bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent
-            text-2xl md:text-3xl md:mb-4 lg:text-4xl tv:text-5xl tv:mb-6
-          "
         >
-          {article.title}
-        </motion.h1>
+          <Heading level={1} gradient className="mb-3 md:mb-4 tv:mb-6">
+            {article.title}
+          </Heading>
+        </motion.div>
 
         {/* Summary - only show if full content hasn't loaded yet */}
         {article.summary && !fullContent && !loading && (
-          <p className="
-            text-white/70 mb-5 leading-relaxed
-            text-base md:text-lg md:mb-6 tv:text-2xl tv:mb-8
-          ">
+          <Body size="lg" opacity="secondary" className="mb-5 md:mb-6 tv:mb-8">
             {article.summary}
-          </p>
+          </Body>
         )}
 
-        {/* Content */}
+        {/* Loading State */}
         {loading && (
-          <div className="
-            flex flex-col items-center justify-center
-            py-10 md:py-12 tv:py-16
-          ">
+          <div className="flex flex-col items-center justify-center py-10 md:py-12 tv:py-16">
             <Loader size="medium" />
-            <p className="
-              text-white/60 mt-4
-              text-sm md:text-base tv:text-xl
-            ">Se încarcă articolul complet...</p>
+            <Body size="sm" opacity="tertiary" className="mt-4">
+              Se încarcă articolul complet...
+            </Body>
           </div>
         )}
 
+        {/* Error State */}
         {error && (
-          <div className="
-            bg-red-500/10 border border-red-500/30 rounded-xl mb-5
-            p-4 md:p-5 md:mb-6 tv:p-8 tv:mb-8
-          ">
-            <p className="
-              text-red-400
-              text-sm md:text-base tv:text-lg
-            ">{error}</p>
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl mb-5 p-4 md:p-5 md:mb-6 tv:p-8 tv:mb-8">
+            <Body size="sm" className="text-red-400 mb-2">
+              {error}
+            </Body>
             <a
               href={article.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 text-sm underline mt-2 inline-block"
+              className="text-primary hover:text-primary/80 text-sm underline inline-block tv-focusable"
+              aria-label="Read full article on Radio Constanta website"
             >
               Citește pe radioconstanta.ro
             </a>
           </div>
         )}
 
+        {/* Content */}
         {!loading && fullContent && (
           <div className="prose prose-invert max-w-none overflow-x-hidden">
             <div
-              className="
-                text-white/80 leading-relaxed space-y-4 text-justify
-                text-sm md:text-base lg:text-lg tv:text-xl
-              "
+              className="text-white/80 leading-relaxed space-y-4 text-justify text-responsive-sm md:text-responsive-base lg:text-responsive-lg"
               dangerouslySetInnerHTML={{ __html: fullContent }}
             />
           </div>
         )}
 
         {/* Link to original - only show for articles older than 3 days */}
-        {article.link && isOlderThanThreeDays() && (
-          <div className="
-            mt-6 pt-5 border-t border-white/10
-            md:mt-8 md:pt-6
-            tv:mt-12 tv:pt-10
-          ">
-            <p className="
-              text-white/60 mb-3
-              text-sm md:text-base tv:text-lg
-            ">
+        {article.link && isOlderThanThreeDays && (
+          <div className="mt-6 pt-5 border-t border-white/10 md:mt-8 md:pt-6 tv:mt-12 tv:pt-10">
+            <Body size="sm" opacity="tertiary" className="mb-3">
               Acest articol are mai mult de 3 zile. Pentru informații actualizate, vizitează:
-            </p>
+            </Body>
             <a
               href={article.link}
               target="_blank"
               rel="noopener noreferrer"
               tabIndex={0}
-              className="
-                inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium tv-focusable
-                text-base md:text-lg tv:text-xl
-              "
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium tv-focusable text-responsive-base md:text-responsive-lg"
+              aria-label="Visit Radio Constanta website for updated information"
             >
               radioconstanta.ro
-              <svg className="
-                w-4 h-4 md:w-5 md:h-5 tv:w-6 tv:h-6
-              " fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              <svg
+                className="w-4 h-4 md:w-5 md:h-5 tv:w-6 tv:h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
               </svg>
             </a>
           </div>
