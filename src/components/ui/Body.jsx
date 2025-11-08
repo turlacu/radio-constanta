@@ -1,5 +1,6 @@
 import { cva } from 'class-variance-authority';
 import { clsx } from 'clsx';
+import { memo } from 'react';
 
 /**
  * Body text component with responsive sizing using CSS variables
@@ -54,7 +55,7 @@ const bodyVariants = cva('leading-normal', {
   },
 });
 
-export default function Body({
+const Body = memo(function Body({
   size = 'base',
   weight = 'regular',
   opacity = 'primary',
@@ -73,4 +74,6 @@ export default function Body({
       {children}
     </Component>
   );
-}
+});
+
+export default Body;

@@ -1,5 +1,6 @@
 import { cva } from 'class-variance-authority';
 import { clsx } from 'clsx';
+import { memo } from 'react';
 
 /**
  * Heading component with responsive sizing using CSS variables
@@ -37,7 +38,7 @@ const headingVariants = cva('font-bold leading-tight', {
   },
 });
 
-export default function Heading({
+const Heading = memo(function Heading({
   level = 2,
   className,
   gradient = false,
@@ -55,4 +56,6 @@ export default function Heading({
       {children}
     </Tag>
   );
-}
+});
+
+export default Heading;

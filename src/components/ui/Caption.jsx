@@ -1,5 +1,6 @@
 import { cva } from 'class-variance-authority';
 import { clsx } from 'clsx';
+import { memo } from 'react';
 
 /**
  * Caption component for metadata, labels, and small text
@@ -42,7 +43,7 @@ const captionVariants = cva('text-responsive-xs leading-snug', {
   },
 });
 
-export default function Caption({
+const Caption = memo(function Caption({
   weight = 'medium',
   opacity = 'tertiary',
   uppercase = false,
@@ -60,4 +61,6 @@ export default function Caption({
       {children}
     </Component>
   );
-}
+});
+
+export default Caption;
