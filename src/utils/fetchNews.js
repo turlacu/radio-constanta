@@ -1,8 +1,7 @@
-// API URL - will use Vercel API once deployed
-// For local development, you can test with the deployed Vercel URL
+// API URL - uses the server's /api/news endpoint
 const API_URL = import.meta.env.VITE_API_URL || '/api/news';
 
-// Function to fetch news from Vercel API
+// Function to fetch news from API
 export const fetchNews = async (page = 1, limit = 20, category = null) => {
   try {
     console.log('Fetching news from API...');

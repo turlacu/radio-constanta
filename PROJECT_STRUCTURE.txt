@@ -203,10 +203,9 @@ npm run preview    │ Preview production build
 ═══════════════════════════════════════════════════════════════
 
 Web Deployment:
-  ✓ Vercel          │ Zero-config deployment
+  ✓ Docker/Coolify  │ Container-based deployment
   ✓ Netlify         │ Drag & drop dist/ folder
-  ✓ GitHub Pages    │ Free static hosting
-  ✓ Traditional     │ Any web server
+  ✓ Traditional     │ Any web server (Apache/Nginx)
 
 Android App:
   ✓ Bubblewrap (TWA)│ Trusted Web Activity

@@ -83,16 +83,16 @@ Use this checklist to ensure everything is configured before deploying to produc
     ```
 
 - [ ] **Choose Deployment Method**
-  - [ ] Web hosting (Vercel, Netlify, etc.)
+  - [ ] Web hosting (Netlify, Docker, etc.)
   - [ ] Android app (Bubblewrap, Capacitor, etc.)
   - [ ] Both
 
 ### 🌐 Web Deployment
 
-#### Option 1: Vercel (Recommended)
-- [ ] Install Vercel CLI: `npm i -g vercel`
-- [ ] Run: `vercel`
-- [ ] Follow prompts
+#### Option 1: Docker/Coolify (Recommended)
+- [ ] Build Docker image
+- [ ] Deploy via Coolify or Docker Compose
+- [ ] Configure environment variables
 - [ ] Get deployment URL
 - [ ] Test deployed app
 
@@ -102,13 +102,7 @@ Use this checklist to ensure everything is configured before deploying to produc
 - [ ] Get deployment URL
 - [ ] Test deployed app
 
-#### Option 3: GitHub Pages
-- [ ] Push code to GitHub
-- [ ] Enable GitHub Pages
-- [ ] Set build directory to `dist/`
-- [ ] Get deployment URL
-
-#### Option 4: Traditional Hosting
+#### Option 3: Traditional Hosting
 - [ ] Upload `dist/` folder to server
 - [ ] Configure web server (Apache/Nginx)
 - [ ] Set up SSL certificate

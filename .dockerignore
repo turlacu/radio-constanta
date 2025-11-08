@@ -7,7 +7,6 @@ pnpm-debug.log*
 
 # Build outputs
 dist
-.vercel
 
 # Environment files
 .env
