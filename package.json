@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "node server/index.js",
-    "dev:vercel": "vercel dev",
     "build": "vite build",
     "start": "NODE_ENV=production node server/index.js",
     "preview": "vite preview"
