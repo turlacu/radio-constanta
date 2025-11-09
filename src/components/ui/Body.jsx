@@ -18,10 +18,10 @@ import { memo } from 'react';
 const bodyVariants = cva('', {
   variants: {
     size: {
-      small: 'text-[12px] leading-[18px]',    // Small - 12px, line-height: 1.5 × 12 = 18px
-      normal: 'text-[14px] leading-[21px]',   // Normal - 14px, line-height: 1.5 × 14 = 21px
-      medium: 'text-[16px] leading-[24px]',   // Medium - 16px, line-height: 1.5 × 16 = 24px
-      large: 'text-[18px] leading-[27px]',    // Large - 18px, line-height: 1.5 × 18 = 27px
+      small: 'text-[12px] leading-[18px]',    // Small
+      normal: 'text-[14px] leading-[21px]',   // Normal
+      medium: 'text-[16px] leading-[24px]',   // Medium
+      large: 'text-[18px] leading-[27px]',    // Large
     },
     weight: {
       light: 'font-light',
@@ -31,10 +31,10 @@ const bodyVariants = cva('', {
       bold: 'font-bold',
     },
     opacity: {
-      primary: 'text-white/90',
-      secondary: 'text-white/70',
-      tertiary: 'text-white/50',
-      disabled: 'text-white/30',
+      primary: 'text-text-primary',
+      secondary: 'text-text-secondary',
+      tertiary: 'text-text-tertiary',
+      disabled: 'text-text-tertiary/50',
     },
     align: {
       left: 'text-left',

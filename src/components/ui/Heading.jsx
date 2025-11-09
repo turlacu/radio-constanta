@@ -15,18 +15,18 @@ import { memo } from 'react';
  * @param {React.ReactNode} children - Content
  */
 
-const headingVariants = cva('font-bold', {
+const headingVariants = cva('font-bold text-text-primary', {
   variants: {
     level: {
-      1: 'text-[36px] leading-[43.2px]', // H1 - 36px, line-height: 1.2 × 36 = 43.2px
-      2: 'text-[28px] leading-[33.6px]', // H2 - 28px, line-height: 1.2 × 28 = 33.6px
-      3: 'text-[24px] leading-[28.8px]', // H3 - 24px, line-height: 1.2 × 24 = 28.8px
-      4: 'text-[20px] leading-[24px]',   // H4 - 20px, line-height: 1.2 × 20 = 24px
-      5: 'text-[18px] leading-[21.6px]', // H5 - 18px, line-height: 1.2 × 18 = 21.6px
-      6: 'text-[16px] leading-[19.2px]', // H6 - 16px, line-height: 1.2 × 16 = 19.2px
+      1: 'text-[36px] leading-[43.2px]', // H1 - 36px
+      2: 'text-[28px] leading-[33.6px]', // H2 - 28px
+      3: 'text-[24px] leading-[28.8px]', // H3 - 24px
+      4: 'text-[20px] leading-[24px]',   // H4 - 20px
+      5: 'text-[18px] leading-[21.6px]', // H5 - 18px
+      6: 'text-[16px] leading-[19.2px]', // H6 - 16px
     },
     gradient: {
-      true: 'bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent',
+      true: 'bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent',
       false: '',
     },
     align: {

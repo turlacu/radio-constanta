@@ -10,31 +10,39 @@ export default {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
-        // Brand colors
-        primary: '#092C4C',
-        secondary: '#F2994A',
+        // Pastel brand colors
+        primary: '#6B9BD1',
+        'primary-dark': '#5A88BD',
+        secondary: '#F5A77B',
+        'secondary-dark': '#E39668',
+
+        // Background colors
+        'bg-primary': '#FAFBFC',
+        'bg-secondary': '#F5F7FA',
+        'bg-tertiary': '#EEF2F7',
+
+        // Text colors
+        'text-primary': '#1F2937',
+        'text-secondary': '#6B7280',
+        'text-tertiary': '#9CA3AF',
+
+        // Accent colors
+        'accent-pink': '#F4C4D0',
+        'accent-mint': '#B8E6D5',
+        'accent-lavender': '#D4C5F9',
+        'accent-peach': '#FFD5C2',
 
         // State colors
-        success: '#27AE60',
-        warning: '#E2B93B',
-        error: '#EB5757',
-        info: '#2F80ED',
+        success: '#7BC67E',
+        warning: '#F9C97C',
+        error: '#F28B82',
+        info: '#81C7E8',
 
-        // Grayscale palette
-        black1: '#000000',
-        black2: '#1D1D1D',
-        black3: '#282828',
-        gray1: '#333333',
-        gray2: '#4F4F4F',
-        gray3: '#828282',
-        gray4: '#BDBDBD',
-        gray5: '#E0E0E0',
+        // Borders
+        border: '#E5E7EB',
+        'border-dark': '#D1D5DB',
+
         white: '#FFFFFF',
-
-        // Background colors (using grayscale)
-        'dark-bg': '#000000',
-        'dark-surface': '#1D1D1D',
-        'dark-card': '#282828',
       },
       // Custom breakpoints for different device types
       screens: {
