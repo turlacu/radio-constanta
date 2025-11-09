@@ -45,23 +45,23 @@
     --container-max-width: 480px;
 
     /* ===== TYPOGRAPHY SCALE (Mobile - Default) ===== */
-    /* Headings (line-height: 1.1× font size) */
-    --text-h1: 3.5rem;       /* 56px */
-    --text-h2: 3rem;         /* 48px */
-    --text-h3: 2.5rem;       /* 40px */
-    --text-h4: 2rem;         /* 32px */
-    --text-h5: 1.5rem;       /* 24px */
-    --text-h6: 1.25rem;      /* 20px */
+    /* Headings (line-height: 1.2× font size - web-optimized) */
+    --text-h1: 2.25rem;      /* 36px */
+    --text-h2: 1.75rem;      /* 28px */
+    --text-h3: 1.5rem;       /* 24px */
+    --text-h4: 1.25rem;      /* 20px */
+    --text-h5: 1.125rem;     /* 18px */
+    --text-h6: 1rem;         /* 16px */
 
-    /* Body text (line-height: 1.4× font size) */
-    --text-large: 1.25rem;   /* 20px */
-    --text-medium: 1.125rem; /* 18px */
-    --text-normal: 1rem;     /* 16px */
-    --text-small: 0.875rem;  /* 14px */
+    /* Body text (line-height: 1.5× font size - web-optimized) */
+    --text-large: 1.125rem;  /* 18px */
+    --text-medium: 1rem;     /* 16px */
+    --text-normal: 0.875rem; /* 14px */
+    --text-small: 0.75rem;   /* 12px */
 
     /* Line heights */
-    --line-height-heading: 1.1;
-    --line-height-body: 1.4;
+    --line-height-heading: 1.2;
+    --line-height-body: 1.5;
 
     /* ===== SPACING SCALE (8px-based system) ===== */
     --spacing-8: calc(0.5rem * var(--spacing-scale));     /* 8px */

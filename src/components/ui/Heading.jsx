@@ -3,11 +3,11 @@ import { clsx } from 'clsx';
 import { memo } from 'react';
 
 /**
- * Heading component following design system specifications
+ * Heading component with web-optimized typography
  *
- * Typography specs:
- * - H1: 56px, H2: 48px, H3: 40px, H4: 32px, H5: 24px, H6: 20px
- * - Line height: 1.1× font size for all headings
+ * Typography specs (web-scaled for readability):
+ * - H1: 36px, H2: 28px, H3: 24px, H4: 20px, H5: 18px, H6: 16px
+ * - Line height: 1.2× font size for better readability
  * - Font weight: Bold
  *
  * @param {1|2|3|4|5|6} level - Heading level (1-6)
@@ -18,12 +18,12 @@ import { memo } from 'react';
 const headingVariants = cva('font-bold', {
   variants: {
     level: {
-      1: 'text-[56px] leading-[61.6px]', // H1 - 56px, line-height: 1.1 × 56 = 61.6px
-      2: 'text-[48px] leading-[52.8px]', // H2 - 48px, line-height: 1.1 × 48 = 52.8px
-      3: 'text-[40px] leading-[44px]',   // H3 - 40px, line-height: 1.1 × 40 = 44px
-      4: 'text-[32px] leading-[35.2px]', // H4 - 32px, line-height: 1.1 × 32 = 35.2px
-      5: 'text-[24px] leading-[26.4px]', // H5 - 24px, line-height: 1.1 × 24 = 26.4px
-      6: 'text-[20px] leading-[22px]',   // H6 - 20px, line-height: 1.1 × 20 = 22px
+      1: 'text-[36px] leading-[43.2px]', // H1 - 36px, line-height: 1.2 × 36 = 43.2px
+      2: 'text-[28px] leading-[33.6px]', // H2 - 28px, line-height: 1.2 × 28 = 33.6px
+      3: 'text-[24px] leading-[28.8px]', // H3 - 24px, line-height: 1.2 × 24 = 28.8px
+      4: 'text-[20px] leading-[24px]',   // H4 - 20px, line-height: 1.2 × 20 = 24px
+      5: 'text-[18px] leading-[21.6px]', // H5 - 18px, line-height: 1.2 × 18 = 21.6px
+      6: 'text-[16px] leading-[19.2px]', // H6 - 16px, line-height: 1.2 × 16 = 19.2px
     },
     gradient: {
       true: 'bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent',
