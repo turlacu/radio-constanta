@@ -36,11 +36,10 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
         {articles.map((article, index) => (
           <Card
             key={article.id || index}
-            variant="glass"
+            variant="default"
             radius="large"
             padding="none"
             interactive
-            focusable
             onClick={() => onArticleClick(article)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -61,24 +60,23 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 <div
                   className={
                     isSplitScreen
-                      ? 'relative bg-dark-surface overflow-hidden w-48 h-full flex-shrink-0 rounded-l-lg'
-                      : 'relative w-full bg-dark-surface overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72'
+                      ? 'relative bg-bg-tertiary overflow-hidden w-48 h-full flex-shrink-0 rounded-l-[12px]'
+                      : 'relative w-full bg-bg-tertiary overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72 rounded-t-[12px]'
                   }
                 >
                   <motion.img
                     src={article.image}
                     alt={article.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
                     loading="lazy"
                     style={{ imageRendering: 'auto' }}
                     onError={(e) => {
                       e.target.src =
-                        'https://via.placeholder.com/800x400/1A1A1A/00BFFF?text=Radio+Constanta';
+                        'https://via.placeholder.com/800x400/EEF2F7/6B9BD1?text=Radio+Constanta';
                     }}
                   />
-                  {!isSplitScreen && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/80 via-dark-bg/20 to-transparent" />
-                  )}
                 </div>
               )}
 
@@ -94,8 +92,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 <div
                   className={
                     isSplitScreen
-                      ? 'flex items-center gap-2 mb-1 font-medium text-[10px] text-white/50'
-                      : 'flex items-center gap-2 mb-2 font-medium text-responsive-xs text-white/50 md:mb-3'
+                      ? 'flex items-center gap-2 mb-1.5 font-medium text-[10px] text-text-tertiary'
+                      : 'flex items-center gap-2 mb-2 font-medium text-[12px] text-text-tertiary md:mb-3'
                   }
                 >
                   {article.category && (
@@ -104,13 +102,13 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                         weight="semibold"
                         className={
                           isSplitScreen
-                            ? 'px-1.5 py-0.5 rounded-full bg-primary/20 text-primary'
-                            : 'px-2 py-0.5 rounded-full bg-primary/20 text-primary'
+                            ? 'px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px]'
+                            : 'px-2 py-0.5 rounded-full bg-primary/10 text-primary'
                         }
                       >
                         {article.category}
                       </Caption>
-                      <span className="w-0.5 h-0.5 bg-white/30 rounded-full" aria-hidden="true" />
+                      <span className="w-1 h-1 bg-border rounded-full" aria-hidden="true" />
                     </>
                   )}
                   <time>{formatDate(article.date)}</time>
@@ -121,7 +119,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                   level={4}
                   className={
                     isSplitScreen
-                      ? 'mb-1 line-clamp-2 leading-tight group-hover:text-primary transition-colors text-responsive-sm font-semibold'
+                      ? 'mb-1 line-clamp-2 leading-tight group-hover:text-primary transition-colors text-[14px] font-semibold'
                       : 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors'
                   }
                 >
@@ -131,12 +129,12 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 {/* Summary */}
                 {article.summary && (
                   <Body
-                    size="sm"
+                    size="small"
                     opacity="secondary"
                     clamp={2}
                     className={
                       isSplitScreen
-                        ? 'leading-relaxed text-responsive-xs mt-1'
+                        ? 'leading-relaxed text-[12px] mt-1'
                         : 'leading-relaxed'
                     }
                   >
@@ -152,7 +150,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
       {/* Load More Button */}
       {hasMore && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className={
             isSplitScreen
@@ -162,7 +160,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
         >
           <Button
             variant="secondary"
-            size="md"
+            size="normal"
             fullWidth={!isSplitScreen}
             onClick={onLoadMore}
             disabled={loading}
@@ -176,15 +174,15 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
 
       {/* Link to website */}
       {!hasMore && articles.length > 0 && (
-        <div className="px-4 mt-6 text-center">
-          <Body size="sm" opacity="tertiary" className="mb-3">
+        <div className="px-4 mt-8 text-center">
+          <Body size="small" opacity="tertiary" className="mb-3">
             Pentru știri mai vechi, vizitează
           </Body>
           <a
             href="https://www.radioconstanta.ro/articole/stiri/actualitate/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium tv-focusable"
+            className="inline-flex items-center gap-2 text-primary hover:text-primary-dark transition-colors font-medium focusable rounded-lg px-3 py-1"
             aria-label="Visit Radio Constanta website for more articles"
           >
             radioconstanta.ro

@@ -59,16 +59,10 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 md:h-20 tv:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 md:h-20 tv:hidden bg-white border-t border-border shadow-lg"
       role="navigation"
       aria-label="Main navigation"
     >
-      {/* Glassmorphic background */}
-      <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/95 to-dark-bg/80 backdrop-blur-2xl border-t border-white/10" />
-
-      {/* Glow effect at top */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-
       <div className="relative mx-auto flex items-center justify-around px-4 py-2 md:px-8 md:py-4 lg:max-w-desktop">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path;
@@ -77,44 +71,34 @@ export default function BottomNav() {
             <Link
               key={tab.path}
               to={tab.path}
-              className="relative flex flex-col items-center gap-1 py-2 px-4 md:py-3 md:px-8 lg:px-10"
+              className="relative flex flex-col items-center gap-1 py-2 px-6 md:py-3 md:px-8 lg:px-10"
               aria-label={`Navigate to ${tab.name}`}
               aria-current={isActive ? 'page' : undefined}
             >
+              {/* Active indicator - solid background */}
               {isActive && (
-                <>
-                  {/* Glassmorphic active background */}
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/10 backdrop-blur-md rounded-2xl border border-primary/30"
-                    initial={false}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  />
-
-                  {/* Glow effect */}
-                  <motion.div
-                    layoutId="activeGlow"
-                    animate={{ opacity: [0.4, 0.6, 0.4] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent blur-lg rounded-2xl"
-                    initial={false}
-                    aria-hidden="true"
-                  />
-                </>
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-bg-tertiary rounded-[10px] border border-primary/20"
+                  initial={false}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
               )}
+
               <motion.div
                 whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.05 }}
                 className={`relative z-10 transition-colors ${
-                  isActive ? 'text-primary' : 'text-white/50'
+                  isActive ? 'text-primary' : 'text-text-tertiary'
                 }`}
               >
                 <div className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8">{tab.icon(isActive)}</div>
               </motion.div>
+
               <Caption
                 weight="semibold"
-                opacity={isActive ? 'primary' : 'tertiary'}
                 className={`relative z-10 transition-colors ${
-                  isActive ? 'text-primary' : 'text-white/50'
+                  isActive ? 'text-primary' : 'text-text-tertiary'
                 }`}
               >
                 {tab.name}
