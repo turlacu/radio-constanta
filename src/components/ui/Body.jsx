@@ -3,22 +3,25 @@ import { clsx } from 'clsx';
 import { memo } from 'react';
 
 /**
- * Body text component with responsive sizing using CSS variables
+ * Body text component following design system specifications
  *
- * Uses the design system typography scale that automatically
- * adjusts across mobile, tablet, desktop, and TV.
+ * Typography specs:
+ * - Large: 20px, Medium: 18px, Normal: 16px, Small: 14px
+ * - Line height: 1.4× font size for all body text
+ * - Available in Regular/Bold
  *
- * @param {'sm'|'base'|'lg'} size - Text size variant
+ * @param {'small'|'normal'|'medium'|'large'} size - Text size variant
  * @param {string} className - Additional CSS classes
  * @param {React.ReactNode} children - Content
  */
 
-const bodyVariants = cva('leading-normal', {
+const bodyVariants = cva('', {
   variants: {
     size: {
-      sm: 'text-responsive-sm',     // Small body text
-      base: 'text-responsive-base', // Default body text
-      lg: 'text-responsive-lg',     // Large body text
+      small: 'text-[14px] leading-[19.6px]',   // Small - 14px, line-height: 1.4 × 14 = 19.6px
+      normal: 'text-[16px] leading-[22.4px]',  // Normal - 16px, line-height: 1.4 × 16 = 22.4px
+      medium: 'text-[18px] leading-[25.2px]',  // Medium - 18px, line-height: 1.4 × 18 = 25.2px
+      large: 'text-[20px] leading-[28px]',     // Large - 20px, line-height: 1.4 × 20 = 28px
     },
     weight: {
       light: 'font-light',
@@ -47,7 +50,7 @@ const bodyVariants = cva('leading-normal', {
     },
   },
   defaultVariants: {
-    size: 'base',
+    size: 'normal',
     weight: 'regular',
     opacity: 'primary',
     align: 'left',
@@ -56,7 +59,7 @@ const bodyVariants = cva('leading-normal', {
 });
 
 const Body = memo(function Body({
-  size = 'base',
+  size = 'normal',
   weight = 'regular',
   opacity = 'primary',
   align = 'left',

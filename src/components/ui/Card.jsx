@@ -4,10 +4,12 @@ import { clsx } from 'clsx';
 import { forwardRef } from 'react';
 
 /**
- * Card component with glassmorphic styling
+ * Card component following design system specifications
  *
- * Uses design system tokens for consistent styling and spacing.
- * Supports different variants and interactive states.
+ * Design specs:
+ * - Uses 8px-based spacing system (8, 16, 24, 32px padding options)
+ * - Consistent border radius, shadow, and typography
+ * - Supports interactive states with proper hover/focus
  *
  * @param {'glass'|'elevated'|'flat'} variant - Visual style
  * @param {boolean} interactive - Add hover effects for clickable cards
@@ -29,10 +31,10 @@ const cardVariants = cva('relative overflow-hidden', {
     },
     padding: {
       none: '',
-      sm: 'p-3',
-      md: 'p-4',
-      lg: 'p-6',
-      responsive: 'p-4 md:p-5 lg:p-6 tv:p-8',
+      '8': 'p-[8px]',      // 8px
+      '16': 'p-[16px]',    // 16px
+      '24': 'p-[24px]',    // 24px
+      '32': 'p-[32px]',    // 32px
     },
     interactive: {
       true: 'cursor-pointer group',
@@ -46,7 +48,7 @@ const cardVariants = cva('relative overflow-hidden', {
   defaultVariants: {
     variant: 'glass',
     radius: 'large',
-    padding: 'md',
+    padding: '16',
     interactive: false,
     focusable: false,
   },
@@ -57,7 +59,7 @@ const Card = forwardRef(
     {
       variant = 'glass',
       radius = 'large',
-      padding = 'md',
+      padding = '16',
       interactive = false,
       focusable = false,
       className,
@@ -69,17 +71,17 @@ const Card = forwardRef(
     },
     ref
   ) => {
-    // Background styles based on variant
+    // Background styles based on variant (using new color scheme)
     const backgroundClass = {
-      glass: 'bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10',
+      glass: 'bg-gradient-to-br from-gray3/20 to-gray2/10 backdrop-blur-xl border border-gray4/20',
       elevated:
-        'bg-gradient-to-br from-white/15 to-white/8 backdrop-blur-xl border border-white/15',
-      flat: 'bg-white/5 border border-white/5',
+        'bg-gradient-to-br from-gray3/30 to-gray2/15 backdrop-blur-xl border border-gray4/30',
+      flat: 'bg-gray2/20 border border-gray3/20',
     }[variant];
 
-    // Hover effects for interactive cards
+    // Hover effects for interactive cards (using primary color)
     const hoverClass = interactive
-      ? 'transition-all hover:border-white/20 hover:from-white/15 hover:to-white/8'
+      ? 'transition-all hover:border-[#092C4C]/40 hover:shadow-[0_0_20px_rgba(9,44,76,0.3)]'
       : '';
 
     // Radius mapping
@@ -122,14 +124,14 @@ const Card = forwardRef(
           )}
         />
 
-        {/* Glow effect on hover for interactive cards */}
+        {/* Glow effect on hover for interactive cards (using primary color) */}
         {interactive && (
           <motion.div
             initial={{ opacity: 0 }}
             whileHover={{ opacity: 0.5 }}
             transition={{ duration: 0.3 }}
             className={clsx(
-              'absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent blur-xl',
+              'absolute inset-0 bg-gradient-to-br from-[#092C4C]/20 to-transparent blur-xl',
               radiusClass
             )}
           />

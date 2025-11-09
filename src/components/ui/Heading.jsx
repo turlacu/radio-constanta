@@ -3,23 +3,27 @@ import { clsx } from 'clsx';
 import { memo } from 'react';
 
 /**
- * Heading component with responsive sizing using CSS variables
+ * Heading component following design system specifications
  *
- * Uses the design system typography scale that automatically
- * adjusts across mobile, tablet, desktop, and TV.
+ * Typography specs:
+ * - H1: 56px, H2: 48px, H3: 40px, H4: 32px, H5: 24px, H6: 20px
+ * - Line height: 1.1× font size for all headings
+ * - Font weight: Bold
  *
- * @param {1|2|3|4} level - Heading level (1-4)
+ * @param {1|2|3|4|5|6} level - Heading level (1-6)
  * @param {string} className - Additional CSS classes
  * @param {React.ReactNode} children - Content
  */
 
-const headingVariants = cva('font-bold leading-tight', {
+const headingVariants = cva('font-bold', {
   variants: {
     level: {
-      1: 'text-responsive-4xl', // H1 - Page titles
-      2: 'text-responsive-3xl', // H2 - Section titles
-      3: 'text-responsive-2xl', // H3 - Subsection titles
-      4: 'text-responsive-xl',  // H4 - Card titles
+      1: 'text-[56px] leading-[61.6px]', // H1 - 56px, line-height: 1.1 × 56 = 61.6px
+      2: 'text-[48px] leading-[52.8px]', // H2 - 48px, line-height: 1.1 × 48 = 52.8px
+      3: 'text-[40px] leading-[44px]',   // H3 - 40px, line-height: 1.1 × 40 = 44px
+      4: 'text-[32px] leading-[35.2px]', // H4 - 32px, line-height: 1.1 × 32 = 35.2px
+      5: 'text-[24px] leading-[26.4px]', // H5 - 24px, line-height: 1.1 × 24 = 26.4px
+      6: 'text-[20px] leading-[22px]',   // H6 - 20px, line-height: 1.1 × 20 = 22px
     },
     gradient: {
       true: 'bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent',

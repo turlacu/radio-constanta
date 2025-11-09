@@ -10,10 +10,31 @@ export default {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
-        primary: '#00BFFF',
-        'dark-bg': '#0C0C0C',
-        'dark-surface': '#1A1A1A',
-        'dark-card': '#1F1F1F',
+        // Brand colors
+        primary: '#092C4C',
+        secondary: '#F2994A',
+
+        // State colors
+        success: '#27AE60',
+        warning: '#E2B93B',
+        error: '#EB5757',
+        info: '#2F80ED',
+
+        // Grayscale palette
+        black1: '#000000',
+        black2: '#1D1D1D',
+        black3: '#282828',
+        gray1: '#333333',
+        gray2: '#4F4F4F',
+        gray3: '#828282',
+        gray4: '#BDBDBD',
+        gray5: '#E0E0E0',
+        white: '#FFFFFF',
+
+        // Background colors (using grayscale)
+        'dark-bg': '#000000',
+        'dark-surface': '#1D1D1D',
+        'dark-card': '#282828',
       },
       // Custom breakpoints for different device types
       screens: {
@@ -38,6 +59,17 @@ export default {
       },
       spacing: {
         'safe-bottom': 'env(safe-area-inset-bottom)',
+        // Custom spacing scale from guidelines: 8, 16, 24, 32, 40, 56, 72, 80, 96, 120
+        '8': '0.5rem',     // 8px
+        '16': '1rem',      // 16px
+        '24': '1.5rem',    // 24px
+        '32': '2rem',      // 32px
+        '40': '2.5rem',    // 40px
+        '56': '3.5rem',    // 56px
+        '72': '4.5rem',    // 72px
+        '80': '5rem',      // 80px
+        '96': '6rem',      // 96px
+        '120': '7.5rem',   // 120px
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in',
@@ -55,8 +87,8 @@ export default {
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
         focusRing: {
-          '0%': { boxShadow: '0 0 0 0 rgba(0, 191, 255, 0.7)' },
-          '100%': { boxShadow: '0 0 0 8px rgba(0, 191, 255, 0)' },
+          '0%': { boxShadow: '0 0 0 0 rgba(9, 44, 76, 0.7)' },
+          '100%': { boxShadow: '0 0 0 8px rgba(9, 44, 76, 0)' },
         },
       },
     },

@@ -9,9 +9,30 @@
 
   :root {
     /* ===== THEME COLORS ===== */
-    /* Dark theme (default) */
-    --bg-from: #0C0C0C;
-    --bg-to: #1A1A1A;
+    /* Brand colors */
+    --color-primary: #092C4C;
+    --color-secondary: #F2994A;
+
+    /* State colors */
+    --color-success: #27AE60;
+    --color-warning: #E2B93B;
+    --color-error: #EB5757;
+    --color-info: #2F80ED;
+
+    /* Grayscale palette */
+    --color-black1: #000000;
+    --color-black2: #1D1D1D;
+    --color-black3: #282828;
+    --color-gray1: #333333;
+    --color-gray2: #4F4F4F;
+    --color-gray3: #828282;
+    --color-gray4: #BDBDBD;
+    --color-gray5: #E0E0E0;
+    --color-white: #FFFFFF;
+
+    /* Dark theme (default) - using grayscale */
+    --bg-from: #000000;
+    --bg-to: #1D1D1D;
     --text-primary: rgba(255, 255, 255, 0.9);
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-tertiary: rgba(255, 255, 255, 0.5);
@@ -24,23 +45,35 @@
     --container-max-width: 480px;
 
     /* ===== TYPOGRAPHY SCALE (Mobile - Default) ===== */
-    --text-xs: 0.75rem;      /* 12px */
-    --text-sm: 0.875rem;     /* 14px */
-    --text-base: 1rem;       /* 16px */
-    --text-lg: 1.125rem;     /* 18px */
-    --text-xl: 1.25rem;      /* 20px */
-    --text-2xl: 1.5rem;      /* 24px */
-    --text-3xl: 1.875rem;    /* 30px */
-    --text-4xl: 2.25rem;     /* 36px */
+    /* Headings (line-height: 1.1× font size) */
+    --text-h1: 3.5rem;       /* 56px */
+    --text-h2: 3rem;         /* 48px */
+    --text-h3: 2.5rem;       /* 40px */
+    --text-h4: 2rem;         /* 32px */
+    --text-h5: 1.5rem;       /* 24px */
+    --text-h6: 1.25rem;      /* 20px */
 
-    /* ===== SPACING SCALE ===== */
-    --spacing-xs: calc(0.25rem * var(--spacing-scale));   /* 4px */
-    --spacing-sm: calc(0.5rem * var(--spacing-scale));    /* 8px */
-    --spacing-md: calc(1rem * var(--spacing-scale));      /* 16px */
-    --spacing-lg: calc(1.5rem * var(--spacing-scale));    /* 24px */
-    --spacing-xl: calc(2rem * var(--spacing-scale));      /* 32px */
-    --spacing-2xl: calc(3rem * var(--spacing-scale));     /* 48px */
-    --spacing-3xl: calc(4rem * var(--spacing-scale));     /* 64px */
+    /* Body text (line-height: 1.4× font size) */
+    --text-large: 1.25rem;   /* 20px */
+    --text-medium: 1.125rem; /* 18px */
+    --text-normal: 1rem;     /* 16px */
+    --text-small: 0.875rem;  /* 14px */
+
+    /* Line heights */
+    --line-height-heading: 1.1;
+    --line-height-body: 1.4;
+
+    /* ===== SPACING SCALE (8px-based system) ===== */
+    --spacing-8: calc(0.5rem * var(--spacing-scale));     /* 8px */
+    --spacing-16: calc(1rem * var(--spacing-scale));      /* 16px */
+    --spacing-24: calc(1.5rem * var(--spacing-scale));    /* 24px */
+    --spacing-32: calc(2rem * var(--spacing-scale));      /* 32px */
+    --spacing-40: calc(2.5rem * var(--spacing-scale));    /* 40px */
+    --spacing-56: calc(3.5rem * var(--spacing-scale));    /* 56px */
+    --spacing-72: calc(4.5rem * var(--spacing-scale));    /* 72px */
+    --spacing-80: calc(5rem * var(--spacing-scale));      /* 80px */
+    --spacing-96: calc(6rem * var(--spacing-scale));      /* 96px */
+    --spacing-120: calc(7.5rem * var(--spacing-scale));   /* 120px */
 
     /* ===== COMPONENT SPACING ===== */
     --container-px: 1rem;     /* 16px */
@@ -251,11 +284,11 @@
 
   /* ===== SHADOW UTILITIES ===== */
   .shadow-glow-primary {
-    box-shadow: 0 0 20px rgba(0, 191, 255, 0.4);
+    box-shadow: 0 0 20px rgba(9, 44, 76, 0.4);
   }
 
   .shadow-glow-secondary {
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.4);
+    box-shadow: 0 0 20px rgba(242, 153, 74, 0.4);
   }
 
   .card-shadow {
@@ -279,14 +312,14 @@
 
   .tv-focusable:focus {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(0, 191, 255, 0.6), 0 0 20px rgba(0, 191, 255, 0.4);
+    box-shadow: 0 0 0 4px rgba(9, 44, 76, 0.6), 0 0 20px rgba(9, 44, 76, 0.4);
     transform: scale(1.05);
     z-index: 10;
   }
 
   .tv-focusable:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(0, 191, 255, 0.6), 0 0 20px rgba(0, 191, 255, 0.4);
+    box-shadow: 0 0 0 4px rgba(9, 44, 76, 0.6), 0 0 20px rgba(9, 44, 76, 0.4);
     transform: scale(1.05);
     z-index: 10;
   }
@@ -300,7 +333,7 @@
 
     .tv-focusable:focus,
     .tv-focusable:focus-visible {
-      box-shadow: 0 0 0 6px rgba(0, 191, 255, 0.7), 0 0 30px rgba(0, 191, 255, 0.5);
+      box-shadow: 0 0 0 6px rgba(9, 44, 76, 0.7), 0 0 30px rgba(9, 44, 76, 0.5);
       transform: scale(1.08);
     }
   }
