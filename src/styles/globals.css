@@ -8,36 +8,41 @@
   }
 
   :root {
-    /* ===== THEME COLORS ===== */
-    /* Brand colors */
-    --color-primary: #092C4C;
-    --color-secondary: #F2994A;
+    /* ===== PASTEL COLOR PALETTE ===== */
+    /* Primary brand colors (soft, calm tones) */
+    --color-primary: #6B9BD1;
+    --color-primary-dark: #5A88BD;
+    --color-secondary: #F5A77B;
+    --color-secondary-dark: #E39668;
 
-    /* State colors */
-    --color-success: #27AE60;
-    --color-warning: #E2B93B;
-    --color-error: #EB5757;
-    --color-info: #2F80ED;
+    /* Background colors (light, airy) */
+    --bg-primary: #FAFBFC;
+    --bg-secondary: #F5F7FA;
+    --bg-tertiary: #EEF2F7;
 
-    /* Grayscale palette */
-    --color-black1: #000000;
-    --color-black2: #1D1D1D;
-    --color-black3: #282828;
-    --color-gray1: #333333;
-    --color-gray2: #4F4F4F;
-    --color-gray3: #828282;
-    --color-gray4: #BDBDBD;
-    --color-gray5: #E0E0E0;
+    /* Text colors (high contrast on light backgrounds) */
+    --text-primary: #1F2937;
+    --text-secondary: #6B7280;
+    --text-tertiary: #9CA3AF;
+
+    /* Accent colors (pastel, soft) */
+    --accent-pink: #F4C4D0;
+    --accent-mint: #B8E6D5;
+    --accent-lavender: #D4C5F9;
+    --accent-peach: #FFD5C2;
+
+    /* State colors (pastel versions) */
+    --color-success: #7BC67E;
+    --color-warning: #F9C97C;
+    --color-error: #F28B82;
+    --color-info: #81C7E8;
+
+    /* Borders and dividers */
+    --border: #E5E7EB;
+    --border-dark: #D1D5DB;
+
+    /* White */
     --color-white: #FFFFFF;
-
-    /* Dark theme (default) - using grayscale */
-    --bg-from: #000000;
-    --bg-to: #1D1D1D;
-    --text-primary: rgba(255, 255, 255, 0.9);
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-tertiary: rgba(255, 255, 255, 0.5);
-    --surface-glass: rgba(255, 255, 255, 0.10);
-    --surface-border: rgba(255, 255, 255, 0.10);
 
     /* ===== RESPONSIVE SCALING ===== */
     --font-scale: 1;
@@ -170,19 +175,8 @@
     }
   }
 
-  /* ===== LIGHT THEME ===== */
-  [data-theme='light'] {
-    --bg-from: #F5F5F7;
-    --bg-to: #FFFFFF;
-    --text-primary: rgba(0, 0, 0, 0.9);
-    --text-secondary: rgba(0, 0, 0, 0.7);
-    --text-tertiary: rgba(0, 0, 0, 0.5);
-    --surface-glass: rgba(0, 0, 0, 0.08);
-    --surface-border: rgba(0, 0, 0, 0.12);
-  }
-
   body {
-    background: linear-gradient(to bottom, var(--bg-from), var(--bg-to));
+    background: var(--bg-primary);
     color: var(--text-primary);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -246,53 +240,46 @@
     overflow: hidden;
   }
 
-  /* ===== GLASSMORPHISM UTILITIES ===== */
-  .glass-subtle {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+  /* ===== CLEAN SURFACE UTILITIES ===== */
+  .surface-base {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
   }
 
-  .glass {
-    background: rgba(255, 255, 255, 0.10);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+  .surface-card {
+    background: var(--color-white);
+    border: 1px solid var(--border);
   }
 
-  .glass-strong {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.20);
-  }
-
-  .glass-intense {
-    background: rgba(255, 255, 255, 0.20);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.30);
-  }
-
-  /* Legacy glass for backwards compatibility */
-  .glass-legacy {
-    background: rgba(31, 31, 31, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+  .surface-elevated {
+    background: var(--color-white);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
   }
 
   /* ===== SHADOW UTILITIES ===== */
-  .shadow-glow-primary {
-    box-shadow: 0 0 20px rgba(9, 44, 76, 0.4);
+  .shadow-xs {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
   }
 
-  .shadow-glow-secondary {
-    box-shadow: 0 0 20px rgba(242, 153, 74, 0.4);
+  .shadow-sm {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
   }
 
-  .card-shadow {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  .shadow-base {
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  .shadow-md {
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-lg {
+    box-shadow: 0 8px 12px 0 rgba(0, 0, 0, 0.12);
+  }
+
+  .shadow-xl {
+    box-shadow: 0 12px 24px 0 rgba(0, 0, 0, 0.15);
   }
 
   /* ===== SCROLLBAR UTILITIES ===== */
@@ -305,37 +292,21 @@
     scrollbar-width: none;
   }
 
-  /* ===== TV FOCUS NAVIGATION ===== */
-  .tv-focusable {
-    transition: all 0.2s ease-out;
+  /* ===== FOCUS STATES ===== */
+  .focusable {
+    transition: all 0.15s ease-out;
   }
 
-  .tv-focusable:focus {
+  .focusable:focus {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(9, 44, 76, 0.6), 0 0 20px rgba(9, 44, 76, 0.4);
-    transform: scale(1.05);
+    box-shadow: 0 0 0 3px rgba(107, 155, 209, 0.3);
     z-index: 10;
   }
 
-  .tv-focusable:focus-visible {
+  .focusable:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(9, 44, 76, 0.6), 0 0 20px rgba(9, 44, 76, 0.4);
-    transform: scale(1.05);
+    box-shadow: 0 0 0 3px rgba(107, 155, 209, 0.3);
     z-index: 10;
-  }
-
-  /* TV-specific larger focus areas and effects */
-  @media (min-width: 1920px) {
-    .tv-focusable {
-      min-height: 80px;
-      min-width: 120px;
-    }
-
-    .tv-focusable:focus,
-    .tv-focusable:focus-visible {
-      box-shadow: 0 0 0 6px rgba(9, 44, 76, 0.7), 0 0 30px rgba(9, 44, 76, 0.5);
-      transform: scale(1.08);
-    }
   }
 }
 

@@ -387,22 +387,21 @@ function App() {
   return (
     <DeviceContext.Provider value={device}>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div className="min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
+        <div className="min-h-screen bg-bg-primary">
           {showSplitScreen ? (
             // Desktop/TV: Split-screen layout with 16:9 aspect ratio
-            <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-dark-bg to-dark-surface">
+            <div className="flex items-center justify-center min-h-screen bg-bg-secondary">
               {/* 16:9 Aspect Ratio Container */}
-              <div className="w-full h-screen max-w-[177.78vh] flex overflow-hidden">
+              <div className="w-full h-screen max-w-[177.78vh] flex overflow-hidden border-x border-border shadow-2xl">
                 {/* Radio Section - Left (35% width, centered content) */}
-                <div className="w-[35%] overflow-hidden relative flex items-center justify-center">
+                <div className="w-[35%] overflow-hidden relative flex items-center justify-center bg-white border-r border-border">
                   <Radio radioState={radioState} />
                 </div>
 
-                {/* Vertical grey divider */}
-                <div className="w-[1px] bg-white/10 flex-shrink-0" />
+                {/* Vertical divider is now integrated in the border */}
 
                 {/* News Section - Right (65% width, more space for articles) */}
-                <div className="flex-1 overflow-y-auto scrollbar-hide relative flex items-center justify-center">
+                <div className="flex-1 overflow-y-auto scrollbar-hide relative flex items-center justify-center bg-bg-secondary">
                   <News radioState={radioState} />
                 </div>
               </div>

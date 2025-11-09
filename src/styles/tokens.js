@@ -6,31 +6,46 @@
  */
 
 export const colors = {
-  // Brand colors
-  primary: '#092C4C',
-  secondary: '#F2994A',
+  // Pastel color palette - minimalist and modern
+  // Primary brand colors (soft, calm tones)
+  primary: '#6B9BD1',        // Soft blue - main brand color
+  primaryDark: '#5A88BD',    // Darker blue for hover states
+  secondary: '#F5A77B',      // Soft coral/peach
+  secondaryDark: '#E39668',  // Darker coral for hover
 
-  // State colors
-  success: '#27AE60',
-  warning: '#E2B93B',
-  error: '#EB5757',
-  info: '#2F80ED',
+  // Background colors (light, airy)
+  bgPrimary: '#FAFBFC',      // Off-white main background
+  bgSecondary: '#F5F7FA',    // Slightly darker for surfaces
+  bgTertiary: '#EEF2F7',     // Card backgrounds
 
-  // Grayscale palette
-  black1: '#000000',
-  black2: '#1D1D1D',
-  black3: '#282828',
-  gray1: '#333333',
-  gray2: '#4F4F4F',
-  gray3: '#828282',
-  gray4: '#BDBDBD',
-  gray5: '#E0E0E0',
+  // Text colors (high contrast on light backgrounds)
+  textPrimary: '#1F2937',    // Near-black for main text
+  textSecondary: '#6B7280',  // Medium gray for secondary text
+  textTertiary: '#9CA3AF',   // Light gray for tertiary text
+
+  // Accent colors (pastel, soft)
+  accentPink: '#F4C4D0',     // Soft pink
+  accentMint: '#B8E6D5',     // Soft mint
+  accentLavender: '#D4C5F9', // Soft lavender
+  accentPeach: '#FFD5C2',    // Soft peach
+
+  // State colors (pastel versions)
+  success: '#7BC67E',        // Soft green
+  warning: '#F9C97C',        // Soft yellow
+  error: '#F28B82',          // Soft red
+  info: '#81C7E8',           // Soft blue
+
+  // Borders and dividers
+  border: '#E5E7EB',         // Subtle border
+  borderDark: '#D1D5DB',     // Slightly darker border
+
+  // Shadows (for layering)
+  shadowLight: 'rgba(0, 0, 0, 0.04)',
+  shadowMedium: 'rgba(0, 0, 0, 0.08)',
+  shadowStrong: 'rgba(0, 0, 0, 0.12)',
+
+  // White
   white: '#FFFFFF',
-
-  // Background colors (using grayscale)
-  darkBg: '#000000',
-  darkSurface: '#1D1D1D',
-  darkCard: '#282828',
 };
 
 export const spacing = {
@@ -47,26 +62,25 @@ export const spacing = {
 };
 
 export const borderRadius = {
-  sm: '0.25rem',    // 4px
-  base: '0.5rem',   // 8px
-  lg: '0.75rem',    // 12px
-  xl: '1rem',       // 16px
-  '2xl': '1.5rem',  // 24px
-  full: '9999px',
+  sm: '0.375rem',   // 6px - subtle rounding
+  base: '0.5rem',   // 8px - standard rounding
+  lg: '0.625rem',   // 10px - medium rounding
+  xl: '0.75rem',    // 12px - larger rounding
+  '2xl': '1rem',    // 16px - for special cases
+  full: '9999px',   // for circular elements
 };
 
 export const shadows = {
-  sm: '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
-  base: '0 2px 4px -1px rgba(0, 0, 0, 0.3)',
-  md: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)',
-  lg: '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)',
-  xl: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
-  '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
+  // Subtle shadows for depth (no blur layers, just soft elevation)
+  xs: '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+  sm: '0 1px 3px 0 rgba(0, 0, 0, 0.08)',
+  base: '0 2px 4px 0 rgba(0, 0, 0, 0.08)',
+  md: '0 4px 6px 0 rgba(0, 0, 0, 0.1)',
+  lg: '0 8px 12px 0 rgba(0, 0, 0, 0.12)',
+  xl: '0 12px 24px 0 rgba(0, 0, 0, 0.15)',
 
-  // Glow effects (updated with new primary color)
-  glowPrimary: '0 0 20px rgba(9, 44, 76, 0.4)',
-  glowSecondary: '0 0 20px rgba(242, 153, 74, 0.4)',
-  glowFocus: '0 0 0 4px rgba(9, 44, 76, 0.6)',
+  // Focus ring (subtle, using primary color)
+  focus: '0 0 0 3px rgba(107, 155, 209, 0.3)',
 };
 
 export const typography = {
@@ -119,41 +133,21 @@ export const breakpoints = {
 };
 
 export const animation = {
+  // Micro-interaction timings (subtle and quick)
   duration: {
-    fast: '150ms',
-    base: '300ms',
-    slow: '500ms',
-    slower: '700ms',
+    fastest: '100ms',  // For immediate feedback
+    fast: '150ms',     // Quick transitions
+    base: '200ms',     // Standard micro-interactions
+    slow: '300ms',     // Smooth transitions
+    slower: '400ms',   // More pronounced animations
   },
 
   easing: {
+    // Smooth, natural easing functions
     in: 'cubic-bezier(0.4, 0, 1, 1)',
     out: 'cubic-bezier(0, 0, 0.2, 1)',
     inOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
-  },
-};
-
-export const glassmorphism = {
-  // Intensity levels for glassmorphic effects
-  subtle: {
-    background: 'rgba(255, 255, 255, 0.05)',
-    blur: '5px',
-    border: 'rgba(255, 255, 255, 0.05)',
-  },
-  base: {
-    background: 'rgba(255, 255, 255, 0.10)',
-    blur: '10px',
-    border: 'rgba(255, 255, 255, 0.10)',
-  },
-  strong: {
-    background: 'rgba(255, 255, 255, 0.15)',
-    blur: '15px',
-    border: 'rgba(255, 255, 255, 0.20)',
-  },
-  intense: {
-    background: 'rgba(255, 255, 255, 0.20)',
-    blur: '20px',
-    border: 'rgba(255, 255, 255, 0.30)',
+    spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)', // Subtle bounce
   },
 };
 
@@ -179,7 +173,6 @@ export default {
   typography,
   breakpoints,
   animation,
-  glassmorphism,
   opacity,
   touchTargets,
 };
