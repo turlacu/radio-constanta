@@ -60,9 +60,9 @@ export default function RadioPlayer({ radioState }) {
             className="absolute -inset-4 rounded-lg opacity-40"
             style={{
               background: `conic-gradient(from 0deg, ${
-                currentStation.color.includes('blue') ? '#00BFFF' : '#9333EA'
+                currentStation.color.includes('blue') ? '#092C4C' : '#F2994A'
               }, transparent, ${
-                currentStation.color.includes('blue') ? '#00BFFF' : '#9333EA'
+                currentStation.color.includes('blue') ? '#092C4C' : '#F2994A'
               })`,
               filter: 'blur(10px)',
             }}

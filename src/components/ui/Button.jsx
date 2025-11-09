@@ -4,13 +4,16 @@ import { clsx } from 'clsx';
 import { forwardRef } from 'react';
 
 /**
- * Button component with glassmorphic styling and variants
+ * Button component following design system specifications
  *
- * Uses design system tokens for consistent sizing and spacing
- * across all device types (mobile, tablet, desktop, TV).
+ * Design specs:
+ * - Padding L/R: 5× font size
+ * - Padding T/B: 1× font size
+ * - Sizes: small (14px), normal (16px), medium (18px), large (20px)
+ * - Colors: Primary, Secondary, Default, Outline variants
  *
- * @param {'primary'|'secondary'|'ghost'|'danger'} variant - Visual style
- * @param {'sm'|'md'|'lg'|'xl'} size - Button size (scales with device)
+ * @param {'primary'|'secondary'|'default'|'outline'} variant - Visual style
+ * @param {'small'|'normal'|'medium'|'large'} size - Button size
  * @param {boolean} fullWidth - Expand to full container width
  * @param {boolean} icon - Icon-only button (circular)
  * @param {React.ReactNode} children - Button content
@@ -23,14 +26,14 @@ const buttonVariants = cva(
       variant: {
         primary: '',
         secondary: '',
-        ghost: '',
-        danger: '',
+        default: '',
+        outline: '',
       },
       size: {
-        sm: 'text-responsive-sm',
-        md: 'text-responsive-base',
-        lg: 'text-responsive-lg',
-        xl: 'text-responsive-xl',
+        small: 'text-[14px]',    // 14px - Small
+        normal: 'text-[16px]',   // 16px - Normal
+        medium: 'text-[18px]',   // 18px - Medium
+        large: 'text-[20px]',    // 20px - Large
       },
       radius: {
         base: 'rounded-lg',
@@ -47,52 +50,52 @@ const buttonVariants = cva(
       },
     },
     compoundVariants: [
-      // Padding for non-icon buttons based on size
+      // Padding for non-icon buttons: 5× font size L/R, 1× T/B
       {
         icon: false,
-        size: 'sm',
-        className: 'px-4 py-2',
+        size: 'small',
+        className: 'px-[70px] py-[14px]',  // 5×14px L/R, 1×14px T/B
       },
       {
         icon: false,
-        size: 'md',
-        className: 'px-6 py-3',
+        size: 'normal',
+        className: 'px-[80px] py-[16px]',  // 5×16px L/R, 1×16px T/B
       },
       {
         icon: false,
-        size: 'lg',
-        className: 'px-8 py-4',
+        size: 'medium',
+        className: 'px-[90px] py-[18px]',  // 5×18px L/R, 1×18px T/B
       },
       {
         icon: false,
-        size: 'xl',
-        className: 'px-10 py-5',
+        size: 'large',
+        className: 'px-[100px] py-[20px]', // 5×20px L/R, 1×20px T/B
       },
       // Size for icon buttons
       {
         icon: true,
-        size: 'sm',
-        className: 'w-10 h-10',
+        size: 'small',
+        className: 'w-[44px] h-[44px]',   // 44px touch target
       },
       {
         icon: true,
-        size: 'md',
-        className: 'w-12 h-12',
+        size: 'normal',
+        className: 'w-[48px] h-[48px]',
       },
       {
         icon: true,
-        size: 'lg',
-        className: 'w-16 h-16',
+        size: 'medium',
+        className: 'w-[56px] h-[56px]',
       },
       {
         icon: true,
-        size: 'xl',
-        className: 'w-20 h-20',
+        size: 'large',
+        className: 'w-[64px] h-[64px]',
       },
     ],
     defaultVariants: {
       variant: 'primary',
-      size: 'md',
+      size: 'normal',
       radius: 'large',
       fullWidth: false,
       icon: false,
@@ -104,7 +107,7 @@ const Button = forwardRef(
   (
     {
       variant = 'primary',
-      size = 'md',
+      size = 'normal',
       radius = 'large',
       fullWidth = false,
       icon = false,
@@ -117,36 +120,36 @@ const Button = forwardRef(
     },
     ref
   ) => {
-    // Background styles based on variant
+    // Background styles based on variant (using new color scheme)
     const backgroundClass = {
-      primary: 'bg-gradient-to-br from-primary/90 to-primary/70',
-      secondary: 'bg-gradient-to-br from-white/20 to-white/10',
-      ghost: 'bg-transparent hover:bg-white/10',
-      danger: 'bg-gradient-to-br from-red-500/90 to-red-600/70',
+      primary: 'bg-[#092C4C]',              // Primary brand color
+      secondary: 'bg-[#F2994A]',            // Secondary brand color
+      default: 'bg-gray2',                  // Gray from palette
+      outline: 'bg-transparent',            // Transparent for outline
     }[variant];
 
     // Border styles based on variant
     const borderClass = {
-      primary: 'border-2 border-white/30',
-      secondary: 'border border-white/30',
-      ghost: 'border border-white/10 hover:border-white/30',
-      danger: 'border-2 border-red-400/30',
+      primary: 'border-2 border-white/20',
+      secondary: 'border-2 border-white/20',
+      default: 'border border-gray4',
+      outline: 'border-2 border-primary',
     }[variant];
 
     // Text color based on variant
     const textClass = {
       primary: 'text-white',
       secondary: 'text-white',
-      ghost: 'text-white/70 hover:text-white',
-      danger: 'text-white',
+      default: 'text-white',
+      outline: 'text-primary',
     }[variant];
 
-    // Glow color for variant
-    const glowClass = {
-      primary: 'from-primary/20 to-transparent',
-      secondary: 'from-primary/10 to-transparent',
-      ghost: '',
-      danger: 'from-red-500/20 to-transparent',
+    // Hover states
+    const hoverClass = {
+      primary: 'hover:bg-[#0a3a5f]',
+      secondary: 'hover:bg-[#f5a461]',
+      default: 'hover:bg-gray3',
+      outline: 'hover:bg-primary/10',
     }[variant];
 
     return (
@@ -159,35 +162,17 @@ const Button = forwardRef(
         disabled={disabled}
         className={clsx(
           buttonVariants({ variant, size, radius, fullWidth, icon }),
+          backgroundClass,
+          borderClass,
+          textClass,
+          hoverClass,
+          'transition-colors duration-300',
           className
         )}
         {...props}
       >
-        {/* Glassmorphic background */}
-        <div
-          className={clsx(
-            'absolute inset-0 backdrop-blur-xl transition-all',
-            backgroundClass,
-            borderClass,
-            radius === 'full' ? 'rounded-full' : radius === 'large' ? 'rounded-xl' : 'rounded-lg'
-          )}
-        />
-
-        {/* Glow effect (not for ghost) */}
-        {variant !== 'ghost' && glowClass && (
-          <motion.div
-            animate={{ opacity: [0.3, 0.5, 0.3] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className={clsx(
-              'absolute inset-0 bg-gradient-to-br blur-lg',
-              glowClass,
-              radius === 'full' ? 'rounded-full' : radius === 'large' ? 'rounded-xl' : 'rounded-lg'
-            )}
-          />
-        )}
-
         {/* Content */}
-        <span className={clsx('relative z-10 flex items-center justify-center gap-2', textClass)}>
+        <span className="relative z-10 flex items-center justify-center gap-2">
           {children}
         </span>
       </motion.button>

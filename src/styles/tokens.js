@@ -6,30 +6,44 @@
  */
 
 export const colors = {
-  // Primary colors
-  primary: '#00BFFF',
-  secondary: '#9333EA',
+  // Brand colors
+  primary: '#092C4C',
+  secondary: '#F2994A',
 
-  // Background colors
-  darkBg: '#0C0C0C',
-  darkSurface: '#1A1A1A',
-  darkCard: '#1F1F1F',
+  // State colors
+  success: '#27AE60',
+  warning: '#E2B93B',
+  error: '#EB5757',
+  info: '#2F80ED',
 
-  // Semantic colors
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
+  // Grayscale palette
+  black1: '#000000',
+  black2: '#1D1D1D',
+  black3: '#282828',
+  gray1: '#333333',
+  gray2: '#4F4F4F',
+  gray3: '#828282',
+  gray4: '#BDBDBD',
+  gray5: '#E0E0E0',
+  white: '#FFFFFF',
+
+  // Background colors (using grayscale)
+  darkBg: '#000000',
+  darkSurface: '#1D1D1D',
+  darkCard: '#282828',
 };
 
 export const spacing = {
-  xs: '0.25rem',    // 4px
-  sm: '0.5rem',     // 8px
-  md: '1rem',       // 16px
-  lg: '1.5rem',     // 24px
-  xl: '2rem',       // 32px
-  '2xl': '3rem',    // 48px
-  '3xl': '4rem',    // 64px
+  '8': '0.5rem',     // 8px
+  '16': '1rem',      // 16px
+  '24': '1.5rem',    // 24px
+  '32': '2rem',      // 32px
+  '40': '2.5rem',    // 40px
+  '56': '3.5rem',    // 56px
+  '72': '4.5rem',    // 72px
+  '80': '5rem',      // 80px
+  '96': '6rem',      // 96px
+  '120': '7.5rem',   // 120px
 };
 
 export const borderRadius = {
@@ -49,10 +63,10 @@ export const shadows = {
   xl: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
   '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
 
-  // Glow effects
-  glowPrimary: '0 0 20px rgba(0, 191, 255, 0.4)',
-  glowSecondary: '0 0 20px rgba(147, 51, 234, 0.4)',
-  glowFocus: '0 0 0 4px rgba(0, 191, 255, 0.6)',
+  // Glow effects (updated with new primary color)
+  glowPrimary: '0 0 20px rgba(9, 44, 76, 0.4)',
+  glowSecondary: '0 0 20px rgba(242, 153, 74, 0.4)',
+  glowFocus: '0 0 0 4px rgba(9, 44, 76, 0.6)',
 };
 
 export const typography = {
@@ -70,24 +84,25 @@ export const typography = {
     bold: 700,
   },
 
-  // Line heights
-  lineHeight: {
-    tight: 1.25,
-    snug: 1.375,
-    normal: 1.5,
-    relaxed: 1.625,
+  // Font sizes - Heading sizes (line height 1.1× font size)
+  fontSize: {
+    h1: '56px',      // H1
+    h2: '48px',      // H2
+    h3: '40px',      // H3
+    h4: '32px',      // H4
+    h5: '24px',      // H5
+    h6: '20px',      // H6
+    // Body text (line height 1.4× font size)
+    large: '20px',   // Body Large
+    medium: '18px',  // Body Medium
+    normal: '16px',  // Body Normal
+    small: '14px',   // Body Small
   },
 
-  // Font sizes (these map to CSS variables)
-  fontSize: {
-    xs: 'var(--text-xs)',
-    sm: 'var(--text-sm)',
-    base: 'var(--text-base)',
-    lg: 'var(--text-lg)',
-    xl: 'var(--text-xl)',
-    '2xl': 'var(--text-2xl)',
-    '3xl': 'var(--text-3xl)',
-    '4xl': 'var(--text-4xl)',
+  // Line heights (as per guidelines)
+  lineHeight: {
+    heading: 1.1,   // Headings: 1.1× font size
+    body: 1.4,      // Body text: 1.4× font size
   },
 };
 
