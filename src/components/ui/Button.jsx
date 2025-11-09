@@ -4,12 +4,12 @@ import { clsx } from 'clsx';
 import { forwardRef } from 'react';
 
 /**
- * Button component following design system specifications
+ * Button component with web-optimized sizing
  *
- * Design specs:
- * - Padding L/R: 5× font size
- * - Padding T/B: 1× font size
- * - Sizes: small (14px), normal (16px), medium (18px), large (20px)
+ * Design specs (web-scaled):
+ * - Padding L/R: 2× font size (web standard)
+ * - Padding T/B: 0.75× font size
+ * - Sizes: small (12px), normal (14px), medium (16px), large (18px)
  * - Colors: Primary, Secondary, Default, Outline variants
  *
  * @param {'primary'|'secondary'|'default'|'outline'} variant - Visual style
@@ -30,10 +30,10 @@ const buttonVariants = cva(
         outline: '',
       },
       size: {
-        small: 'text-[14px]',    // 14px - Small
-        normal: 'text-[16px]',   // 16px - Normal
-        medium: 'text-[18px]',   // 18px - Medium
-        large: 'text-[20px]',    // 20px - Large
+        small: 'text-[12px]',    // 12px - Small
+        normal: 'text-[14px]',   // 14px - Normal
+        medium: 'text-[16px]',   // 16px - Medium
+        large: 'text-[18px]',    // 18px - Large
       },
       radius: {
         base: 'rounded-lg',
@@ -50,26 +50,26 @@ const buttonVariants = cva(
       },
     },
     compoundVariants: [
-      // Padding for non-icon buttons: 5× font size L/R, 1× T/B
+      // Padding for non-icon buttons: 2× font size L/R, 0.75× T/B (web standard)
       {
         icon: false,
         size: 'small',
-        className: 'px-[70px] py-[14px]',  // 5×14px L/R, 1×14px T/B
+        className: 'px-[24px] py-[9px]',   // 2×12px L/R, 0.75×12px T/B
       },
       {
         icon: false,
         size: 'normal',
-        className: 'px-[80px] py-[16px]',  // 5×16px L/R, 1×16px T/B
+        className: 'px-[28px] py-[10px]',  // 2×14px L/R, 0.75×14px T/B
       },
       {
         icon: false,
         size: 'medium',
-        className: 'px-[90px] py-[18px]',  // 5×18px L/R, 1×18px T/B
+        className: 'px-[32px] py-[12px]',  // 2×16px L/R, 0.75×16px T/B
       },
       {
         icon: false,
         size: 'large',
-        className: 'px-[100px] py-[20px]', // 5×20px L/R, 1×20px T/B
+        className: 'px-[36px] py-[14px]',  // 2×18px L/R, 0.75×18px T/B
       },
       // Size for icon buttons
       {

@@ -84,25 +84,26 @@ export const typography = {
     bold: 700,
   },
 
-  // Font sizes - Heading sizes (line height 1.1× font size)
+  // Font sizes - Web-optimized for readability
   fontSize: {
-    h1: '56px',      // H1
-    h2: '48px',      // H2
-    h3: '40px',      // H3
-    h4: '32px',      // H4
-    h5: '24px',      // H5
-    h6: '20px',      // H6
-    // Body text (line height 1.4× font size)
-    large: '20px',   // Body Large
-    medium: '18px',  // Body Medium
-    normal: '16px',  // Body Normal
-    small: '14px',   // Body Small
+    // Headings (line height 1.2× font size)
+    h1: '36px',      // H1
+    h2: '28px',      // H2
+    h3: '24px',      // H3
+    h4: '20px',      // H4
+    h5: '18px',      // H5
+    h6: '16px',      // H6
+    // Body text (line height 1.5× font size)
+    large: '18px',   // Body Large
+    medium: '16px',  // Body Medium
+    normal: '14px',  // Body Normal
+    small: '12px',   // Body Small
   },
 
-  // Line heights (as per guidelines)
+  // Line heights (web-optimized)
   lineHeight: {
-    heading: 1.1,   // Headings: 1.1× font size
-    body: 1.4,      // Body text: 1.4× font size
+    heading: 1.2,   // Headings: 1.2× font size (better readability)
+    body: 1.5,      // Body text: 1.5× font size (better readability)
   },
 };
 
