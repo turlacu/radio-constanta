@@ -4,10 +4,10 @@ import { clsx } from 'clsx';
 import { forwardRef } from 'react';
 
 /**
- * Card component - Clean minimalist design
+ * Card component - Clean minimalist dark mode design
  *
  * Design specs:
- * - Solid white background (no glassmorphism or blur)
+ * - Solid dark background (no glassmorphism or blur)
  * - Subtle shadows for depth
  * - Border radius: 10-12px
  * - Clean borders
@@ -21,8 +21,8 @@ import { forwardRef } from 'react';
 const cardVariants = cva('relative overflow-hidden transition-all', {
   variants: {
     variant: {
-      default: 'bg-white border border-border shadow-sm',
-      elevated: 'bg-white border border-border shadow-md',
+      default: 'bg-bg-tertiary border border-border shadow-sm',
+      elevated: 'bg-bg-tertiary border border-border shadow-md',
       flat: 'bg-bg-tertiary border border-transparent',
     },
     radius: {

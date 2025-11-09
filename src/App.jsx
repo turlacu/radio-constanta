@@ -394,7 +394,7 @@ function App() {
               {/* 16:9 Aspect Ratio Container */}
               <div className="w-full h-screen max-w-[177.78vh] flex overflow-hidden border-x border-border shadow-2xl">
                 {/* Radio Section - Left (35% width, centered content) */}
-                <div className="w-[35%] overflow-hidden relative flex items-center justify-center bg-white border-r border-border">
+                <div className="w-[35%] overflow-hidden relative flex items-center justify-center bg-bg-secondary border-r border-border">
                   <Radio radioState={radioState} />
                 </div>
 
