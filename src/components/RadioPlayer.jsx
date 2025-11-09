@@ -39,8 +39,8 @@ export default function RadioPlayer({ radioState }) {
           />
         )}
 
-        {/* Main cover art card - clean white with shadow */}
-        <div className="relative w-full aspect-square rounded-[16px] overflow-hidden bg-white shadow-xl border border-border">
+        {/* Main cover art card - clean dark card with shadow */}
+        <div className="relative w-full aspect-square rounded-[16px] overflow-hidden bg-bg-tertiary shadow-xl border border-border">
           <motion.img
             src={currentStation.coverArt}
             alt={`${currentStation.name} cover art`}
@@ -158,7 +158,7 @@ export default function RadioPlayer({ radioState }) {
                 className={`relative flex-1 rounded-[10px] font-semibold transition-all py-3 px-4 text-[14px] shadow-sm focusable ${
                   isActive
                     ? 'bg-primary text-white hover:bg-primary-dark shadow-md'
-                    : 'bg-white text-text-secondary hover:bg-bg-tertiary border border-border'
+                    : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary border border-border'
                 }`}
                 aria-pressed={isActive}
                 aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
@@ -193,7 +193,7 @@ export default function RadioPlayer({ radioState }) {
                 className={`relative flex-1 rounded-lg font-medium transition-all py-2 px-3 text-[12px] focusable ${
                   isActive
                     ? 'bg-bg-tertiary text-text-primary border-2 border-primary'
-                    : 'bg-white text-text-tertiary hover:bg-bg-secondary border border-border'
+                    : 'bg-bg-secondary text-text-tertiary hover:bg-bg-tertiary border border-border'
                 }`}
                 aria-pressed={isActive}
                 aria-label={`Switch to ${quality.label} quality`}

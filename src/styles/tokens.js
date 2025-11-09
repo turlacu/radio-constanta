@@ -6,43 +6,43 @@
  */
 
 export const colors = {
-  // Pastel color palette - minimalist and modern
-  // Primary brand colors (soft, calm tones)
-  primary: '#6B9BD1',        // Soft blue - main brand color
-  primaryDark: '#5A88BD',    // Darker blue for hover states
+  // Dark mode pastel palette - minimalist and modern
+  // Primary brand colors (pastel adjusted for dark backgrounds)
+  primary: '#7CA9DB',        // Soft blue - brighter for dark mode
+  primaryDark: '#6B9BD1',    // Slightly darker blue for hover
   secondary: '#F5A77B',      // Soft coral/peach
   secondaryDark: '#E39668',  // Darker coral for hover
 
-  // Background colors (light, airy)
-  bgPrimary: '#FAFBFC',      // Off-white main background
-  bgSecondary: '#F5F7FA',    // Slightly darker for surfaces
-  bgTertiary: '#EEF2F7',     // Card backgrounds
+  // Dark background colors
+  bgPrimary: '#0F1419',      // Deep dark blue-gray - main background
+  bgSecondary: '#1A1F2E',    // Slightly lighter for surfaces
+  bgTertiary: '#242B3D',     // Card backgrounds
 
-  // Text colors (high contrast on light backgrounds)
-  textPrimary: '#1F2937',    // Near-black for main text
-  textSecondary: '#6B7280',  // Medium gray for secondary text
-  textTertiary: '#9CA3AF',   // Light gray for tertiary text
+  // Text colors (light on dark backgrounds)
+  textPrimary: 'rgba(255, 255, 255, 0.95)',    // Near-white for main text
+  textSecondary: 'rgba(255, 255, 255, 0.7)',   // Medium opacity for secondary text
+  textTertiary: 'rgba(255, 255, 255, 0.5)',    // Light opacity for tertiary text
 
-  // Accent colors (pastel, soft)
+  // Accent colors (pastel, adjusted for dark mode)
   accentPink: '#F4C4D0',     // Soft pink
   accentMint: '#B8E6D5',     // Soft mint
   accentLavender: '#D4C5F9', // Soft lavender
   accentPeach: '#FFD5C2',    // Soft peach
 
-  // State colors (pastel versions)
+  // State colors (pastel, brighter for dark mode)
   success: '#7BC67E',        // Soft green
   warning: '#F9C97C',        // Soft yellow
   error: '#F28B82',          // Soft red
   info: '#81C7E8',           // Soft blue
 
-  // Borders and dividers
-  border: '#E5E7EB',         // Subtle border
-  borderDark: '#D1D5DB',     // Slightly darker border
+  // Borders and dividers (subtle on dark)
+  border: 'rgba(255, 255, 255, 0.1)',      // Subtle border
+  borderDark: 'rgba(255, 255, 255, 0.15)',  // Slightly brighter border
 
-  // Shadows (for layering)
-  shadowLight: 'rgba(0, 0, 0, 0.04)',
-  shadowMedium: 'rgba(0, 0, 0, 0.08)',
-  shadowStrong: 'rgba(0, 0, 0, 0.12)',
+  // Shadows (for layering on dark)
+  shadowLight: 'rgba(0, 0, 0, 0.2)',
+  shadowMedium: 'rgba(0, 0, 0, 0.3)',
+  shadowStrong: 'rgba(0, 0, 0, 0.4)',
 
   // White
   white: '#FFFFFF',
@@ -71,16 +71,16 @@ export const borderRadius = {
 };
 
 export const shadows = {
-  // Subtle shadows for depth (no blur layers, just soft elevation)
-  xs: '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
-  sm: '0 1px 3px 0 rgba(0, 0, 0, 0.08)',
-  base: '0 2px 4px 0 rgba(0, 0, 0, 0.08)',
-  md: '0 4px 6px 0 rgba(0, 0, 0, 0.1)',
-  lg: '0 8px 12px 0 rgba(0, 0, 0, 0.12)',
-  xl: '0 12px 24px 0 rgba(0, 0, 0, 0.15)',
+  // Shadows for depth on dark backgrounds
+  xs: '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
+  sm: '0 1px 3px 0 rgba(0, 0, 0, 0.4)',
+  base: '0 2px 4px 0 rgba(0, 0, 0, 0.4)',
+  md: '0 4px 6px 0 rgba(0, 0, 0, 0.5)',
+  lg: '0 8px 12px 0 rgba(0, 0, 0, 0.6)',
+  xl: '0 12px 24px 0 rgba(0, 0, 0, 0.7)',
 
-  // Focus ring (subtle, using primary color)
-  focus: '0 0 0 3px rgba(107, 155, 209, 0.3)',
+  // Focus ring (using primary color)
+  focus: '0 0 0 3px rgba(124, 169, 219, 0.4)',
 };
 
 export const typography = {

@@ -10,21 +10,21 @@ export default {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
-        // Pastel brand colors
-        primary: '#6B9BD1',
-        'primary-dark': '#5A88BD',
+        // Dark mode pastel colors
+        primary: '#7CA9DB',
+        'primary-dark': '#6B9BD1',
         secondary: '#F5A77B',
         'secondary-dark': '#E39668',
 
-        // Background colors
-        'bg-primary': '#FAFBFC',
-        'bg-secondary': '#F5F7FA',
-        'bg-tertiary': '#EEF2F7',
+        // Dark background colors
+        'bg-primary': '#0F1419',
+        'bg-secondary': '#1A1F2E',
+        'bg-tertiary': '#242B3D',
 
-        // Text colors
-        'text-primary': '#1F2937',
-        'text-secondary': '#6B7280',
-        'text-tertiary': '#9CA3AF',
+        // Text colors (light on dark)
+        'text-primary': 'rgba(255, 255, 255, 0.95)',
+        'text-secondary': 'rgba(255, 255, 255, 0.7)',
+        'text-tertiary': 'rgba(255, 255, 255, 0.5)',
 
         // Accent colors
         'accent-pink': '#F4C4D0',
@@ -38,9 +38,9 @@ export default {
         error: '#F28B82',
         info: '#81C7E8',
 
-        // Borders
-        border: '#E5E7EB',
-        'border-dark': '#D1D5DB',
+        // Borders (subtle on dark)
+        border: 'rgba(255, 255, 255, 0.1)',
+        'border-dark': 'rgba(255, 255, 255, 0.15)',
 
         white: '#FFFFFF',
       },
