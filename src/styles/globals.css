@@ -382,6 +382,47 @@ img {
   animation: gradient 15s ease infinite;
 }
 
+/* ===== FLOATING PARTICLES ===== */
+
+@keyframes particle-fade {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes particle-scale {
+  0% {
+    transform: scale3d(0.4, 0.4, 1);
+  }
+  50% {
+    transform: scale3d(2.2, 2.2, 1);
+  }
+  100% {
+    transform: scale3d(0.4, 0.4, 1);
+  }
+}
+
+.floating-particle {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  background-image: radial-gradient(
+    hsl(200, 100%, 70%),
+    hsl(200, 100%, 70%) 10%,
+    hsla(200, 100%, 70%, 0) 56%
+  );
+  animation: particle-fade 200ms infinite, particle-scale 2s infinite;
+  animation-timing-function: linear;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -398,5 +439,9 @@ img {
 
   .animated-gradient {
     animation: none;
+  }
+
+  .floating-particle {
+    display: none;
   }
 }
