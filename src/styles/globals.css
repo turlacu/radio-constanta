@@ -366,6 +366,97 @@ img {
   @apply animate-fade-in;
 }
 
+/* ===== ANIMATED BACKGROUND PARTICLES & AURORA ===== */
+
+/* Aurora gradient animation - smooth shifting background */
+@keyframes aurora-shift {
+  0% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 0.15;
+  }
+  33% {
+    transform: translate(-45%, -55%) scale(1.1) rotate(120deg);
+    opacity: 0.2;
+  }
+  66% {
+    transform: translate(-55%, -45%) scale(1.05) rotate(240deg);
+    opacity: 0.18;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(360deg);
+    opacity: 0.15;
+  }
+}
+
+/* Particle floating upward */
+@keyframes float-up {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.25;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(20px) scale(1.1);
+    opacity: 0;
+  }
+}
+
+/* Particle floating diagonally */
+@keyframes float-diagonal {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.22;
+  }
+  100% {
+    transform: translate(-80px, -100vh) scale(1.15);
+    opacity: 0;
+  }
+}
+
+/* Aurora base layer */
+.aurora-layer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(139, 92, 246, 0.15) 0%,
+    rgba(59, 130, 246, 0.12) 25%,
+    rgba(6, 182, 212, 0.08) 50%,
+    transparent 70%
+  );
+  filter: blur(80px);
+  animation: aurora-shift 40s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Particle base styling */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Apply float-up animation */
+.particle.float-up {
+  animation: float-up var(--particle-duration) ease-in-out infinite;
+  animation-delay: var(--particle-delay);
+}
+
+/* Apply float-diagonal animation */
+.particle.float-diagonal {
+  animation: float-diagonal var(--particle-duration) ease-in-out infinite;
+  animation-delay: var(--particle-delay);
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -378,5 +469,12 @@ img {
 
   html {
     scroll-behavior: auto;
+  }
+
+  /* Disable animated background for reduced motion */
+  .aurora-layer,
+  .particle {
+    animation: none !important;
+    opacity: 0.05 !important;
   }
 }

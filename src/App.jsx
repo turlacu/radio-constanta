@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, useRef, useEffect, createContext } from 'react';
+import { useState, useRef, useEffect, createContext, useMemo } from 'react';
 import Radio from './pages/Radio';
 import News from './pages/News';
 import BottomNav from './components/BottomNav';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
+import { createParticles, getParticleCount } from './utils/createParticles';
 
 // Create context for device info to share across components
 export const DeviceContext = createContext(null);
@@ -52,6 +53,12 @@ function App() {
 
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
+
+  // Generate particles for animated background
+  const particles = useMemo(() => {
+    const count = getParticleCount(device.screenWidth, device.isMobile, device.isTV);
+    return createParticles(count);
+  }, [device.screenWidth, device.isMobile, device.isTV]);
 
   // Helper to log debug info
   const logDebug = (message) => {
@@ -431,32 +438,28 @@ function App() {
                 >
                   {/* Animated background when playing (only visible when news is hidden) */}
                   {!showNews && isPlaying && (
-                    <>
-                      <motion.div
-                        animate={{
-                          scale: [1, 1.1, 1],
-                          opacity: [0.1, 0.15, 0.1],
-                        }}
-                        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                        className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/20 rounded-full blur-3xl"
-                      />
-                      <motion.div
-                        animate={{
-                          scale: [1, 1.15, 1],
-                          opacity: [0.08, 0.12, 0.08],
-                        }}
-                        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                        className="absolute bottom-1/4 right-1/4 w-[700px] h-[700px] bg-secondary/15 rounded-full blur-3xl"
-                      />
-                      <motion.div
-                        animate={{
-                          scale: [1, 1.08, 1],
-                          rotate: [0, 180, 360],
-                        }}
-                        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl"
-                      />
-                    </>
+                    <div id="animated-bg" className="absolute inset-0 overflow-hidden pointer-events-none">
+                      {/* Aurora gradient layer */}
+                      <div className="aurora-layer" />
+
+                      {/* Floating particles */}
+                      {particles.map((particle) => (
+                        <div
+                          key={particle.id}
+                          className={`particle ${particle.animationType}`}
+                          style={{
+                            left: `${particle.left}%`,
+                            top: `${particle.top}%`,
+                            width: `${particle.size}px`,
+                            height: `${particle.size}px`,
+                            backgroundColor: particle.color,
+                            filter: `blur(${particle.blur}px)`,
+                            '--particle-duration': `${particle.duration}s`,
+                            '--particle-delay': `${particle.delay}s`,
+                          }}
+                        />
+                      ))}
+                    </div>
                   )}
                   <Radio radioState={radioState} />
                 </div>
