@@ -53,10 +53,6 @@ function App() {
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
 
-  // Vanta.js background effect reference
-  const vantaRef = useRef(null);
-  const vantaEffect = useRef(null);
-
   // Helper to log debug info
   const logDebug = (message) => {
     console.log(message);
@@ -397,49 +393,6 @@ function App() {
   // Split-screen layout for screens larger than small tablet portrait (768px+)
   const showSplitScreen = device.screenWidth >= 768;
 
-  // Initialize Vanta.js RINGS effect when playing and news is hidden
-  useEffect(() => {
-    if (!showNews && isPlaying && vantaRef.current && !vantaEffect.current) {
-      // Dynamically import Three.js and Vanta
-      Promise.all([
-        import('three'),
-        import('vanta/dist/vanta.rings.min')
-      ]).then(([THREE, VANTA]) => {
-        // Make THREE available globally for Vanta
-        if (!window.THREE) window.THREE = THREE;
-
-        vantaEffect.current = VANTA.default({
-          el: vantaRef.current,
-          THREE: THREE,
-          mouseControls: true,
-          touchControls: true,
-          gyroControls: false,
-          minHeight: 200.00,
-          minWidth: 200.00,
-          scale: 1.00,
-          scaleMobile: 1.00,
-          backgroundColor: 0x1a1f2e, // Match bg-bg-secondary
-          color: 0x7ca9db, // Primary color
-        });
-      }).catch((error) => {
-        console.error('Failed to load Vanta effect:', error);
-      });
-    }
-
-    // Cleanup when news is shown or playback stops
-    if ((showNews || !isPlaying) && vantaEffect.current) {
-      vantaEffect.current.destroy();
-      vantaEffect.current = null;
-    }
-
-    return () => {
-      if (vantaEffect.current) {
-        vantaEffect.current.destroy();
-        vantaEffect.current = null;
-      }
-    };
-  }, [showNews, isPlaying]);
-
   return (
     <DeviceContext.Provider value={device}>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -472,7 +425,6 @@ function App() {
               <div className="w-full h-screen flex overflow-hidden transition-all duration-500 max-w-[177.78vh]">
                 {/* Radio Section */}
                 <div
-                  ref={vantaRef}
                   className={`overflow-hidden relative flex items-center justify-center bg-bg-secondary transition-all duration-500 ${
                     showNews ? 'w-[35%] border-r border-border' : 'w-full'
                   }`}
