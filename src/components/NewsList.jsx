@@ -29,121 +29,136 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
       <div
         className={
           isSplitScreen
-            ? 'px-4 pt-0 flex flex-col gap-3 max-w-full'
+            ? 'px-4 pt-0 flex flex-col gap-4 max-w-full'
             : `px-4 pt-6 md:px-6 md:pt-8 lg:px-8 tv:px-12 tv:pt-10 grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 tv:grid-cols-3 tv:gap-8`
         }
       >
         {articles.map((article, index) => (
-          <Card
+          <motion.div
             key={article.id || index}
-            variant="default"
-            radius="large"
-            padding="none"
-            interactive
-            onClick={() => onArticleClick(article)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onArticleClick(article);
-              }
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.4,
+              delay: index * 0.05,
+              ease: [0.25, 0.46, 0.45, 0.94]
             }}
-            className={
-              isSplitScreen
-                ? 'max-w-[850px] mx-auto h-32'
-                : ''
-            }
-            aria-label={`Read article: ${article.title}`}
+            className={isSplitScreen ? 'max-w-[850px] mx-auto w-full' : ''}
           >
-            <div className={isSplitScreen ? 'flex flex-row h-full' : ''}>
-              {/* Image */}
-              {article.image && (
-                <div
-                  className={
-                    isSplitScreen
-                      ? 'relative bg-bg-tertiary overflow-hidden w-48 h-full flex-shrink-0 rounded-l-[12px]'
-                      : 'relative w-full bg-bg-tertiary overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72 rounded-t-[12px]'
-                  }
-                >
-                  <motion.img
-                    src={article.image}
-                    alt={article.title}
-                    className="w-full h-full object-cover"
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.3 }}
-                    loading="lazy"
-                    style={{ imageRendering: 'auto' }}
-                    onError={(e) => {
-                      e.target.src =
-                        'https://via.placeholder.com/800x400/EEF2F7/6B9BD1?text=Radio+Constanta';
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Content */}
-              <div
-                className={
-                  isSplitScreen
-                    ? 'p-3 flex-1 flex flex-col justify-start'
-                    : 'p-4 md:p-5 lg:p-6 tv:p-8'
+            <Card
+              variant="default"
+              radius="large"
+              padding="none"
+              interactive
+              onClick={() => onArticleClick(article)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onArticleClick(article);
                 }
+              }}
+              className={
+                isSplitScreen
+                  ? 'overflow-hidden group hover:shadow-lg transition-shadow duration-300'
+                  : 'overflow-hidden group'
+              }
+              aria-label={`Read article: ${article.title}`}
+            >
+              <motion.div
+                className={isSplitScreen ? 'flex flex-row h-full min-h-[160px]' : ''}
+                whileHover={isSplitScreen ? { scale: 1.01 } : {}}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
               >
-                {/* Category & Date */}
-                <div
-                  className={
-                    isSplitScreen
-                      ? 'flex items-center gap-2 mb-1.5 font-medium text-[10px] text-text-tertiary'
-                      : 'flex items-center gap-2 mb-2 font-medium text-[12px] text-text-tertiary md:mb-3'
-                  }
-                >
-                  {article.category && (
-                    <>
-                      <Caption
-                        weight="semibold"
-                        className={
-                          isSplitScreen
-                            ? 'px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px]'
-                            : 'px-2 py-0.5 rounded-full bg-primary/10 text-primary'
-                        }
-                      >
-                        {article.category}
-                      </Caption>
-                      <span className="w-1 h-1 bg-border rounded-full" aria-hidden="true" />
-                    </>
-                  )}
-                  <time>{formatDate(article.date)}</time>
-                </div>
-
-                {/* Title */}
-                <Heading
-                  level={4}
-                  className={
-                    isSplitScreen
-                      ? 'mb-1 line-clamp-2 leading-tight group-hover:text-primary transition-colors text-[14px] font-semibold'
-                      : 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors'
-                  }
-                >
-                  {article.title}
-                </Heading>
-
-                {/* Summary */}
-                {article.summary && (
-                  <Body
-                    size="small"
-                    opacity="secondary"
-                    clamp={2}
+                {/* Image */}
+                {article.image && (
+                  <div
                     className={
                       isSplitScreen
-                        ? 'leading-relaxed text-[12px] mt-1'
-                        : 'leading-relaxed'
+                        ? 'relative bg-bg-secondary overflow-hidden w-56 flex-shrink-0 rounded-l-[12px]'
+                        : 'relative w-full bg-bg-secondary overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72 rounded-t-[12px]'
                     }
                   >
-                    {article.summary}
-                  </Body>
+                    <motion.img
+                      src={article.image}
+                      alt={article.title}
+                      className="w-full h-full object-cover"
+                      whileHover={{ scale: 1.08 }}
+                      transition={{ duration: 0.4, ease: 'easeOut' }}
+                      loading="lazy"
+                      style={{ imageRendering: 'auto' }}
+                      onError={(e) => {
+                        e.target.src =
+                          'https://via.placeholder.com/800x400/1A1F2E/7CA9DB?text=Radio+Constanta';
+                      }}
+                    />
+                  </div>
                 )}
-              </div>
-            </div>
-          </Card>
+
+                {/* Content */}
+                <div
+                  className={
+                    isSplitScreen
+                      ? 'p-5 flex-1 flex flex-col justify-start'
+                      : 'p-4 md:p-5 lg:p-6 tv:p-8'
+                  }
+                >
+                  {/* Category & Date */}
+                  <div
+                    className={
+                      isSplitScreen
+                        ? 'flex items-center gap-2 mb-2 font-medium text-[11px] text-text-tertiary'
+                        : 'flex items-center gap-2 mb-2 font-medium text-[12px] text-text-tertiary md:mb-3'
+                    }
+                  >
+                    {article.category && (
+                      <>
+                        <Caption
+                          weight="semibold"
+                          className={
+                            isSplitScreen
+                              ? 'px-2.5 py-1 rounded-[8px] bg-primary/15 text-primary text-[11px] transition-colors group-hover:bg-primary/20'
+                              : 'px-2 py-0.5 rounded-full bg-primary/10 text-primary'
+                          }
+                        >
+                          {article.category}
+                        </Caption>
+                        <span className="w-1 h-1 bg-border rounded-full" aria-hidden="true" />
+                      </>
+                    )}
+                    <time>{formatDate(article.date)}</time>
+                  </div>
+
+                  {/* Title */}
+                  <Heading
+                    level={4}
+                    className={
+                      isSplitScreen
+                        ? 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-[16px] font-bold'
+                        : 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors'
+                    }
+                  >
+                    {article.title}
+                  </Heading>
+
+                  {/* Summary */}
+                  {article.summary && (
+                    <Body
+                      size="small"
+                      opacity="secondary"
+                      clamp={isSplitScreen ? 2 : 2}
+                      className={
+                        isSplitScreen
+                          ? 'leading-relaxed text-[13px]'
+                          : 'leading-relaxed'
+                      }
+                    >
+                      {article.summary}
+                    </Body>
+                  )}
+                </div>
+              </motion.div>
+            </Card>
+          </motion.div>
         ))}
       </div>
 
