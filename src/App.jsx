@@ -400,10 +400,17 @@ function App() {
   // Initialize Vanta.js RINGS effect when playing and news is hidden
   useEffect(() => {
     if (!showNews && isPlaying && vantaRef.current && !vantaEffect.current) {
-      // Dynamically import Vanta to avoid SSR issues
-      import('vanta/dist/vanta.rings.min').then((VANTA) => {
+      // Dynamically import Three.js and Vanta
+      Promise.all([
+        import('three'),
+        import('vanta/dist/vanta.rings.min')
+      ]).then(([THREE, VANTA]) => {
+        // Make THREE available globally for Vanta
+        if (!window.THREE) window.THREE = THREE;
+
         vantaEffect.current = VANTA.default({
           el: vantaRef.current,
+          THREE: THREE,
           mouseControls: true,
           touchControls: true,
           gyroControls: false,
@@ -414,6 +421,8 @@ function App() {
           backgroundColor: 0x1a1f2e, // Match bg-bg-secondary
           color: 0x7ca9db, // Primary color
         });
+      }).catch((error) => {
+        console.error('Failed to load Vanta effect:', error);
       });
     }
 
