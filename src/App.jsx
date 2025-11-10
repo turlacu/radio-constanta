@@ -406,7 +406,9 @@ function App() {
         <div className="min-h-screen bg-bg-primary">
           {showSplitScreen ? (
             // Desktop/TV: Radio-focused layout with optional news
-            <div className="flex items-center justify-center min-h-screen bg-bg-secondary relative overflow-hidden">
+            <div className={`flex items-center justify-center min-h-screen relative overflow-hidden ${
+              !showNews && isPlaying ? 'animated-gradient' : 'bg-bg-secondary'
+            }`}>
               {/* Toggle News Button - Minimalistic Hamburger */}
               <motion.button
                 onClick={() => setShowNews(!showNews)}
@@ -433,8 +435,8 @@ function App() {
                 {/* Radio Section */}
                 <div
                   className={`overflow-hidden relative flex items-center justify-center transition-all duration-500 ${
-                    showNews ? 'w-[35%] border-r border-border bg-bg-secondary' : 'w-full'
-                  } ${!showNews && isPlaying ? 'animated-gradient' : 'bg-bg-secondary'}`}
+                    showNews ? 'w-[35%] border-r border-border' : 'w-full'
+                  }`}
                 >
                   {/* Floating particles animation */}
                   {!showNews && isPlaying && (
