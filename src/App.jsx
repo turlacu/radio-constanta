@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect, createContext } from 'react';
 import Radio from './pages/Radio';
 import News from './pages/News';
