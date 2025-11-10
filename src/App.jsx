@@ -459,6 +459,7 @@ function App() {
                             style={{
                               width: `${particle.size}px`,
                               height: `${particle.size}px`,
+                              transform: `translate3d(${particle.startX}vw, ${particle.startY}vh, 0)`,
                               animation: `particle-move-${particle.id} ${particle.duration}s linear ${particle.delay}s infinite`,
                             }}
                           >
