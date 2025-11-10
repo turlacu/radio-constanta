@@ -50,6 +50,9 @@ function App() {
   const isSwitchingRef = useRef(false);
   const isSwitchingQualityRef = useRef(false);
 
+  // News visibility toggle for wide screen
+  const [showNews, setShowNews] = useState(false);
+
   // Helper to log debug info
   const logDebug = (message) => {
     console.log(message);
@@ -389,21 +392,88 @@ function App() {
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <div className="min-h-screen bg-bg-primary">
           {showSplitScreen ? (
-            // Desktop/TV: Split-screen layout with 16:9 aspect ratio
-            <div className="flex items-center justify-center min-h-screen bg-bg-secondary">
-              {/* 16:9 Aspect Ratio Container */}
-              <div className="w-full h-screen max-w-[177.78vh] flex overflow-hidden border-x border-border shadow-2xl">
-                {/* Radio Section - Left (35% width, centered content) */}
-                <div className="w-[35%] overflow-hidden relative flex items-center justify-center bg-bg-secondary border-r border-border">
-                  <Radio radioState={radioState} />
-                </div>
+            // Desktop/TV: Radio-focused layout with optional news
+            <div className="flex items-center justify-center min-h-screen bg-bg-secondary relative overflow-hidden">
+              {/* Animated background when playing (only visible when news is hidden) */}
+              {!showNews && isPlaying && (
+                <>
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      opacity: [0.1, 0.15, 0.1],
+                    }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/20 rounded-full blur-3xl"
+                  />
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.15, 1],
+                      opacity: [0.08, 0.12, 0.08],
+                    }}
+                    transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                    className="absolute bottom-1/4 right-1/4 w-[700px] h-[700px] bg-secondary/15 rounded-full blur-3xl"
+                  />
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.08, 1],
+                      rotate: [0, 180, 360],
+                    }}
+                    transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl"
+                  />
+                </>
+              )}
 
-                {/* Vertical divider is now integrated in the border */}
+              {/* Toggle News Button */}
+              <motion.button
+                onClick={() => setShowNews(!showNews)}
+                className="absolute top-8 right-8 z-50 px-6 py-3 rounded-xl bg-bg-tertiary hover:bg-bg-secondary border border-border shadow-lg hover:shadow-xl transition-all font-semibold text-text-primary text-sm flex items-center gap-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {showNews ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Ascunde Știrile
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                    </svg>
+                    Arată Știrile
+                  </>
+                )}
+              </motion.button>
 
-                {/* News Section - Right (65% width, more space for articles) */}
-                <div className="flex-1 overflow-y-auto scrollbar-hide relative flex items-center justify-center bg-bg-secondary">
-                  <News radioState={radioState} />
-                </div>
+              {/* Content Container */}
+              <div className={`w-full h-screen flex overflow-hidden transition-all duration-500 ${
+                showNews ? 'max-w-[177.78vh]' : 'max-w-[56.25vh]'
+              }`}>
+                {/* Radio Section */}
+                <motion.div
+                  className={`overflow-hidden relative flex items-center justify-center bg-bg-secondary transition-all duration-500 ${
+                    showNews ? 'w-[35%] border-r border-border' : 'w-full'
+                  }`}
+                  layout
+                >
+                  <Radio radioState={radioState} showNews={showNews} />
+                </motion.div>
+
+                {/* News Section - Slide in from right */}
+                {showNews && (
+                  <motion.div
+                    initial={{ x: '100%', opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+                    className="flex-1 overflow-y-auto scrollbar-hide relative flex items-center justify-center bg-bg-secondary"
+                  >
+                    <News radioState={radioState} />
+                  </motion.div>
+                )}
               </div>
             </div>
           ) : (
