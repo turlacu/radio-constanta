@@ -54,18 +54,18 @@ export default function RadioPlayer({ radioState }) {
             <motion.div
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-error/90 backdrop-blur-sm flex items-center gap-2 4k:top-6 4k:right-6 4k:px-5 4k:py-2.5 4k:rounded-xl"
+              className="absolute top-4 right-4 px-2 py-1 rounded-lg bg-error/90 backdrop-blur-sm flex items-center gap-1.5 4k:top-6 4k:right-6 4k:px-3 4k:py-1.5 4k:rounded-xl"
             >
               <motion.span
                 animate={{ opacity: [1, 0.5, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
-                className="w-1.5 h-1.5 bg-white rounded-full"
+                className="w-1 h-1 bg-white rounded-full 4k:w-1.5 4k:h-1.5"
                 aria-hidden="true"
               />
               <Caption
                 uppercase
                 weight="semibold"
-                className="text-white text-[10px] 4k:text-[16px]"
+                className="text-white text-[8px] 4k:text-[12px]"
               >
                 Live
               </Caption>
