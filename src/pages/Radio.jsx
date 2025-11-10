@@ -9,8 +9,8 @@ export default function Radio({ radioState }) {
   return (
     <div className={
       isSplitScreen
-        ? "h-full w-full flex items-center justify-center" // Split-screen mode: fill entire container and center content
-        : "min-h-screen md:min-h-[calc(100vh-100px)] tv:min-h-screen" // Single page mode
+        ? "h-full w-full flex items-center justify-center relative z-10" // Split-screen mode: fill entire container and center content, layer above background
+        : "min-h-screen md:min-h-[calc(100vh-100px)] tv:min-h-screen relative z-10" // Single page mode, layer above background
     }>
       <RadioPlayer radioState={radioState} />
     </div>
