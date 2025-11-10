@@ -53,7 +53,7 @@ export default {
         'xl': '1280px',       // Desktop
         '2xl': '1536px',      // Large desktop
         '3xl': '1920px',      // TV / Ultra-wide
-        '4k': '2560px',       // 4K TV
+        '4k': '3840px',       // 4K UHD (3840x2160)
         // Custom device-specific breakpoints
         'tablet': '768px',
         'desktop': '1024px',
@@ -64,6 +64,7 @@ export default {
         'tablet': '768px',
         'desktop': '1280px',
         'tv': '1920px',
+        '4k': '3840px',
       },
       spacing: {
         'safe-bottom': 'env(safe-area-inset-bottom)',
