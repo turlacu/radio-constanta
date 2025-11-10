@@ -65,7 +65,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               aria-label={`Read article: ${article.title}`}
             >
               <motion.div
-                className={isSplitScreen ? 'flex flex-row h-full min-h-[140px] 4k:min-h-[200px]' : ''}
+                className={isSplitScreen ? 'flex flex-row h-[140px] 4k:h-[200px]' : ''}
                 whileHover={isSplitScreen ? { scale: 1.01 } : {}}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
               >
@@ -98,7 +98,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 <div
                   className={
                     isSplitScreen
-                      ? 'p-4 flex-1 flex flex-col justify-start 4k:p-6'
+                      ? 'p-4 flex-1 flex flex-col justify-start overflow-hidden 4k:p-6'
                       : 'p-4 md:p-5 lg:p-6 tv:p-8 4k:p-12'
                   }
                 >
