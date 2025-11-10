@@ -453,27 +453,28 @@ function App() {
                 showNews ? 'max-w-[177.78vh]' : 'max-w-[56.25vh]'
               }`}>
                 {/* Radio Section */}
-                <motion.div
+                <div
                   className={`overflow-hidden relative flex items-center justify-center bg-bg-secondary transition-all duration-500 ${
                     showNews ? 'w-[35%] border-r border-border' : 'w-full'
                   }`}
-                  layout
                 >
-                  <Radio radioState={radioState} showNews={showNews} />
-                </motion.div>
+                  <Radio radioState={radioState} />
+                </div>
 
                 {/* News Section - Slide in from right */}
-                {showNews && (
-                  <motion.div
-                    initial={{ x: '100%', opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: '100%', opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-                    className="flex-1 overflow-y-auto scrollbar-hide relative flex items-center justify-center bg-bg-secondary"
-                  >
-                    <News radioState={radioState} />
-                  </motion.div>
-                )}
+                <AnimatePresence>
+                  {showNews && (
+                    <motion.div
+                      initial={{ x: '100%', opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: '100%', opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+                      className="flex-1 overflow-y-auto scrollbar-hide relative flex items-center justify-center bg-bg-secondary"
+                    >
+                      <News radioState={radioState} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           ) : (
