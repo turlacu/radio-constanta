@@ -368,8 +368,14 @@ img {
   0% {
     background-position: 0% 50%;
   }
+  15% {
+    background-position: 0% 50%;
+  }
   50% {
     background-position: 100% 50%;
+  }
+  85% {
+    background-position: 0% 50%;
   }
   100% {
     background-position: 0% 50%;
@@ -377,10 +383,19 @@ img {
 }
 
 .animated-gradient {
-  background: linear-gradient(-45deg, #1a1f2e, #1e3a52, #1a4f5e, #1f3a4f, #1a2f42, #1a1f2e);
+  background: linear-gradient(
+    -45deg,
+    #1a1f2e,
+    #1c2330,
+    #1e2732,
+    #1f2a34,
+    #1e2732,
+    #1c2330,
+    #1a1f2e
+  );
   background-size: 400% 400%;
   background-position: 0% 50%;
-  animation: gradient 20s ease infinite 3s;
+  animation: gradient 20s ease infinite;
 }
 
 /* ===== FLOATING PARTICLES ===== */
