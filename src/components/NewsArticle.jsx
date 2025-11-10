@@ -77,20 +77,20 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
       exit={{ opacity: 0 }}
       className={
         isSplitScreen
-          ? 'h-full bg-dark-bg overflow-y-auto scrollbar-hide pb-6'
-          : 'fixed inset-0 bg-dark-bg z-50 overflow-y-auto scrollbar-hide pb-20 md:pb-24 tv:pb-16'
+          ? 'h-full bg-bg-secondary overflow-y-auto scrollbar-hide pb-6'
+          : 'fixed inset-0 bg-bg-primary z-50 overflow-y-auto scrollbar-hide pb-20 md:pb-24 tv:pb-16'
       }
     >
-      {/* Background gradient effect */}
+      {/* Subtle ambient glow accents */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 left-1/3 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 left-1/3 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
       </div>
 
       {/* Header */}
       <div className="sticky top-0 z-10">
-        {/* Glassmorphic header background */}
-        <div className="absolute inset-0 bg-dark-bg/80 backdrop-blur-xl border-b border-white/10" />
+        {/* Clean solid header background */}
+        <div className="absolute inset-0 bg-bg-primary border-b border-border" />
 
         <div className="relative flex items-center gap-3 px-4 py-3 md:px-6 md:py-4 md:gap-4 tv:px-12 tv:py-6 tv:gap-6">
           <Button
