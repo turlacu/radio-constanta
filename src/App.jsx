@@ -425,9 +425,9 @@ function App() {
               <div className="w-full h-screen flex overflow-hidden transition-all duration-500 max-w-[177.78vh]">
                 {/* Radio Section */}
                 <div
-                  className={`overflow-hidden relative flex items-center justify-center bg-bg-secondary transition-all duration-500 ${
-                    showNews ? 'w-[35%] border-r border-border' : 'w-full'
-                  }`}
+                  className={`overflow-hidden relative flex items-center justify-center transition-all duration-500 ${
+                    showNews ? 'w-[35%] border-r border-border bg-bg-secondary' : 'w-full'
+                  } ${!showNews && isPlaying ? 'animated-gradient' : 'bg-bg-secondary'}`}
                 >
                   <Radio radioState={radioState} />
                 </div>
