@@ -83,7 +83,7 @@ export default function RadioPlayer({ radioState }) {
           transition={{ delay: 0.1 }}
           className="text-center mb-6 4k:mb-10"
         >
-          <Heading level={2} className="mb-2">
+          <Heading level={3} className="mb-2">
             {currentStation.name}
           </Heading>
           {metadata && (

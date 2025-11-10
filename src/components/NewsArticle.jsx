@@ -101,7 +101,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
             aria-label="Go back to news list"
           >
             <svg
-              className="w-5 h-5 md:w-6 md:h-6 tv:w-8 tv:h-8"
+              className="w-5 h-5 md:w-6 md:h-6 tv:w-7 tv:h-7"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -115,7 +115,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
               />
             </svg>
           </Button>
-          <Heading level={4} className="text-white/90 font-semibold">
+          <Heading level={5} className="text-white/90 font-semibold">
             Înapoi la știri
           </Heading>
         </div>
@@ -129,7 +129,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative w-full overflow-hidden shadow-2xl h-56 rounded-lg mb-4 md:h-72 md:mb-6 lg:h-80 lg:rounded-xl tv:h-96 tv:rounded-2xl tv:mb-10"
+            className="relative w-full overflow-hidden shadow-2xl h-[280px] rounded-lg mb-4 md:h-[360px] md:mb-6 lg:h-[400px] lg:rounded-xl tv:h-[480px] tv:rounded-2xl tv:mb-10 4k:h-[600px]"
           >
             <div className="absolute inset-0 border-2 border-white/10 rounded-lg z-10 pointer-events-none" />
             <img
@@ -173,14 +173,14 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Heading level={1} gradient className="mb-3 md:mb-4 tv:mb-6">
+          <Heading level={2} gradient className="mb-3 md:mb-4 tv:mb-6">
             {article.title}
           </Heading>
         </motion.div>
 
         {/* Summary - only show if full content hasn't loaded yet */}
         {article.summary && !fullContent && !loading && (
-          <Body size="lg" opacity="secondary" className="mb-5 md:mb-6 tv:mb-8">
+          <Body size="medium" opacity="secondary" className="mb-5 md:mb-6 tv:mb-8">
             {article.summary}
           </Body>
         )}
@@ -217,7 +217,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {!loading && fullContent && (
           <div className="prose prose-invert max-w-none overflow-x-hidden">
             <div
-              className="text-white/80 leading-relaxed space-y-4 text-justify text-responsive-sm md:text-responsive-base lg:text-responsive-lg"
+              className="text-white/80 leading-relaxed space-y-4 text-justify text-[13px] md:text-[14px] lg:text-[15px] tv:text-[16px] 4k:text-[18px]"
               dangerouslySetInnerHTML={{ __html: fullContent }}
             />
           </div>
