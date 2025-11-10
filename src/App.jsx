@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, useRef, useEffect, createContext } from 'react';
+import { useState, useRef, useEffect, createContext, useMemo } from 'react';
 import Radio from './pages/Radio';
 import News from './pages/News';
 import BottomNav from './components/BottomNav';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
+import { createFloatingParticles } from './utils/createFloatingParticles';
 
 // Create context for device info to share across components
 export const DeviceContext = createContext(null);
@@ -52,6 +53,12 @@ function App() {
 
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
+
+  // Generate floating particles for background animation
+  const floatingParticles = useMemo(() => {
+    // Fewer particles for better performance, they're subtle anyway
+    return createFloatingParticles(60);
+  }, []);
 
   // Helper to log debug info
   const logDebug = (message) => {
@@ -429,6 +436,36 @@ function App() {
                     showNews ? 'w-[35%] border-r border-border bg-bg-secondary' : 'w-full'
                   } ${!showNews && isPlaying ? 'animated-gradient' : 'bg-bg-secondary'}`}
                 >
+                  {/* Floating particles animation */}
+                  {!showNews && isPlaying && (
+                    <>
+                      <style dangerouslySetInnerHTML={{
+                        __html: floatingParticles.map((particle) => `
+                          @keyframes particle-move-${particle.id} {
+                            from {
+                              transform: translate3d(${particle.startX}vw, ${particle.startY}vh, 0);
+                            }
+                            to {
+                              transform: translate3d(${particle.endX}vw, ${particle.endY}vh, 0);
+                            }
+                          }
+                        `).join('\n')
+                      }} />
+                      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        {floatingParticles.map((particle) => (
+                          <div
+                            key={particle.id}
+                            className="floating-particle"
+                            style={{
+                              width: `${particle.size}px`,
+                              height: `${particle.size}px`,
+                              animation: `particle-fade 200ms infinite, particle-scale 2s infinite ${particle.scaleDelay}s, particle-move-${particle.id} ${particle.duration}s linear ${particle.delay}s infinite`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
                   <Radio radioState={radioState} />
                 </div>
 
