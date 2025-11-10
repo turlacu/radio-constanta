@@ -372,19 +372,19 @@ img {
 @keyframes aurora-shift {
   0% {
     transform: translate(-50%, -50%) scale(1) rotate(0deg);
-    opacity: 0.35;
+    opacity: 0.25;
   }
   33% {
     transform: translate(-45%, -55%) scale(1.1) rotate(120deg);
-    opacity: 0.45;
+    opacity: 0.35;
   }
   66% {
     transform: translate(-55%, -45%) scale(1.05) rotate(240deg);
-    opacity: 0.40;
+    opacity: 0.30;
   }
   100% {
     transform: translate(-50%, -50%) scale(1) rotate(360deg);
-    opacity: 0.35;
+    opacity: 0.25;
   }
 }
 
@@ -392,10 +392,16 @@ img {
 @keyframes float-up {
   0% {
     transform: translateY(0) translateX(0) scale(1);
-    opacity: 0.35;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.25;
   }
   50% {
-    opacity: 0.50;
+    opacity: 0.40;
+  }
+  80% {
+    opacity: 0.30;
   }
   100% {
     transform: translateY(-100vh) translateX(20px) scale(1.1);
@@ -407,10 +413,16 @@ img {
 @keyframes float-diagonal {
   0% {
     transform: translate(0, 0) scale(1);
-    opacity: 0.30;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.20;
   }
   50% {
-    opacity: 0.45;
+    opacity: 0.35;
+  }
+  80% {
+    opacity: 0.25;
   }
   100% {
     transform: translate(-80px, -100vh) scale(1.15);
@@ -427,12 +439,12 @@ img {
   height: 150%;
   background: radial-gradient(
     ellipse at center,
-    rgba(139, 92, 246, 0.35) 0%,
-    rgba(59, 130, 246, 0.30) 25%,
-    rgba(6, 182, 212, 0.25) 50%,
+    rgba(139, 92, 246, 0.28) 0%,
+    rgba(59, 130, 246, 0.24) 25%,
+    rgba(6, 182, 212, 0.20) 50%,
     transparent 70%
   );
-  filter: blur(60px);
+  filter: blur(100px);
   animation: aurora-shift 40s ease-in-out infinite;
   will-change: transform;
 }
