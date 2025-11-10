@@ -455,13 +455,20 @@ function App() {
                         {floatingParticles.map((particle) => (
                           <div
                             key={particle.id}
-                            className="floating-particle"
+                            className="floating-particle-container"
                             style={{
                               width: `${particle.size}px`,
                               height: `${particle.size}px`,
-                              animation: `particle-fade 200ms infinite, particle-scale 2s infinite ${particle.scaleDelay}s, particle-move-${particle.id} ${particle.duration}s linear ${particle.delay}s infinite`,
+                              animation: `particle-move-${particle.id} ${particle.duration}s linear ${particle.delay}s infinite`,
                             }}
-                          />
+                          >
+                            <div
+                              className="floating-particle"
+                              style={{
+                                animationDelay: `${particle.scaleDelay}s`,
+                              }}
+                            />
+                          </div>
                         ))}
                       </div>
                     </>
