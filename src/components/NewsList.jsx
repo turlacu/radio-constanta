@@ -29,7 +29,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
       <div
         className={
           isSplitScreen
-            ? 'px-4 pt-0 flex flex-col gap-4 max-w-full 4k:px-8 4k:gap-6'
+            ? 'px-4 pt-4 flex flex-col gap-4 max-w-full 4k:px-8 4k:pt-6 4k:gap-6'
             : `px-4 pt-6 md:px-6 md:pt-8 lg:px-8 tv:px-12 tv:pt-10 grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 tv:grid-cols-3 tv:gap-8 4k:px-16 4k:pt-16 4k:gap-12`
         }
       >
@@ -74,7 +74,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                   <div
                     className={
                       isSplitScreen
-                        ? 'relative bg-bg-secondary overflow-hidden w-[35%] flex-shrink-0 rounded-l-[12px] 4k:w-[35%]'
+                        ? 'relative bg-bg-secondary overflow-hidden w-[20%] flex-shrink-0 rounded-l-[12px] 4k:w-[20%]'
                         : 'relative w-full bg-bg-secondary overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72 4k:h-96 rounded-t-[12px]'
                     }
                   >
