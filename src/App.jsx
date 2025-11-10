@@ -1,11 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, useRef, useEffect, createContext, useMemo } from 'react';
+import { useState, useRef, useEffect, createContext } from 'react';
 import Radio from './pages/Radio';
 import News from './pages/News';
 import BottomNav from './components/BottomNav';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
-import { createParticles, getParticleCount } from './utils/createParticles';
 
 // Create context for device info to share across components
 export const DeviceContext = createContext(null);
@@ -54,11 +53,9 @@ function App() {
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
 
-  // Generate particles for animated background
-  const particles = useMemo(() => {
-    const count = getParticleCount(device.screenWidth, device.isMobile, device.isTV);
-    return createParticles(count);
-  }, [device.screenWidth, device.isMobile, device.isTV]);
+  // Vanta.js background effect reference
+  const vantaRef = useRef(null);
+  const vantaEffect = useRef(null);
 
   // Helper to log debug info
   const logDebug = (message) => {
@@ -400,6 +397,40 @@ function App() {
   // Split-screen layout for screens larger than small tablet portrait (768px+)
   const showSplitScreen = device.screenWidth >= 768;
 
+  // Initialize Vanta.js RINGS effect when playing and news is hidden
+  useEffect(() => {
+    if (!showNews && isPlaying && vantaRef.current && !vantaEffect.current) {
+      // Dynamically import Vanta to avoid SSR issues
+      import('vanta/dist/vanta.rings.min').then((VANTA) => {
+        vantaEffect.current = VANTA.default({
+          el: vantaRef.current,
+          mouseControls: true,
+          touchControls: true,
+          gyroControls: false,
+          minHeight: 200.00,
+          minWidth: 200.00,
+          scale: 1.00,
+          scaleMobile: 1.00,
+          backgroundColor: 0x1a1f2e, // Match bg-bg-secondary
+          color: 0x7ca9db, // Primary color
+        });
+      });
+    }
+
+    // Cleanup when news is shown or playback stops
+    if ((showNews || !isPlaying) && vantaEffect.current) {
+      vantaEffect.current.destroy();
+      vantaEffect.current = null;
+    }
+
+    return () => {
+      if (vantaEffect.current) {
+        vantaEffect.current.destroy();
+        vantaEffect.current = null;
+      }
+    };
+  }, [showNews, isPlaying]);
+
   return (
     <DeviceContext.Provider value={device}>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -432,35 +463,11 @@ function App() {
               <div className="w-full h-screen flex overflow-hidden transition-all duration-500 max-w-[177.78vh]">
                 {/* Radio Section */}
                 <div
+                  ref={vantaRef}
                   className={`overflow-hidden relative flex items-center justify-center bg-bg-secondary transition-all duration-500 ${
                     showNews ? 'w-[35%] border-r border-border' : 'w-full'
                   }`}
                 >
-                  {/* Animated background when playing (only visible when news is hidden) */}
-                  {!showNews && isPlaying && (
-                    <div id="animated-bg" className="absolute inset-0 overflow-hidden pointer-events-none">
-                      {/* Aurora gradient layer */}
-                      <div className="aurora-layer" />
-
-                      {/* Floating particles */}
-                      {particles.map((particle) => (
-                        <div
-                          key={particle.id}
-                          className={`particle ${particle.animationType}`}
-                          style={{
-                            left: `${particle.left}%`,
-                            top: `${particle.top}%`,
-                            width: `${particle.size}px`,
-                            height: `${particle.size}px`,
-                            backgroundColor: particle.color,
-                            filter: `blur(${particle.blur}px)`,
-                            '--particle-duration': `${particle.duration}s`,
-                            '--particle-delay': `${particle.delay}s`,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  )}
                   <Radio radioState={radioState} />
                 </div>
 
