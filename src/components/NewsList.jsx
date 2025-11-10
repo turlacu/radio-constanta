@@ -29,8 +29,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
       <div
         className={
           isSplitScreen
-            ? 'px-4 pt-0 flex flex-col gap-4 max-w-full'
-            : `px-4 pt-6 md:px-6 md:pt-8 lg:px-8 tv:px-12 tv:pt-10 grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 tv:grid-cols-3 tv:gap-8`
+            ? 'px-4 pt-0 flex flex-col gap-4 max-w-full 4k:px-8 4k:gap-6'
+            : `px-4 pt-6 md:px-6 md:pt-8 lg:px-8 tv:px-12 tv:pt-10 grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 tv:grid-cols-3 tv:gap-8 4k:px-16 4k:pt-16 4k:gap-12`
         }
       >
         {articles.map((article, index) => (
@@ -43,7 +43,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               delay: index * 0.05,
               ease: [0.25, 0.46, 0.45, 0.94]
             }}
-            className={isSplitScreen ? 'max-w-[850px] mx-auto w-full' : ''}
+            className={isSplitScreen ? 'max-w-[850px] mx-auto w-full 4k:max-w-[1400px]' : ''}
           >
             <Card
               variant="default"
@@ -65,7 +65,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               aria-label={`Read article: ${article.title}`}
             >
               <motion.div
-                className={isSplitScreen ? 'flex flex-row h-full min-h-[160px]' : ''}
+                className={isSplitScreen ? 'flex flex-row h-full min-h-[160px] 4k:min-h-[240px]' : ''}
                 whileHover={isSplitScreen ? { scale: 1.01 } : {}}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
               >
@@ -74,8 +74,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                   <div
                     className={
                       isSplitScreen
-                        ? 'relative bg-bg-secondary overflow-hidden w-56 flex-shrink-0 rounded-l-[12px]'
-                        : 'relative w-full bg-bg-secondary overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72 rounded-t-[12px]'
+                        ? 'relative bg-bg-secondary overflow-hidden w-72 flex-shrink-0 rounded-l-[12px] 4k:w-96'
+                        : 'relative w-full bg-bg-secondary overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72 4k:h-96 rounded-t-[12px]'
                     }
                   >
                     <motion.img
@@ -98,16 +98,16 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 <div
                   className={
                     isSplitScreen
-                      ? 'p-5 flex-1 flex flex-col justify-start'
-                      : 'p-4 md:p-5 lg:p-6 tv:p-8'
+                      ? 'p-5 flex-1 flex flex-col justify-start 4k:p-8'
+                      : 'p-4 md:p-5 lg:p-6 tv:p-8 4k:p-12'
                   }
                 >
                   {/* Category & Date */}
                   <div
                     className={
                       isSplitScreen
-                        ? 'flex items-center gap-2 mb-2 font-medium text-[11px] text-text-tertiary'
-                        : 'flex items-center gap-2 mb-2 font-medium text-[12px] text-text-tertiary md:mb-3'
+                        ? 'flex items-center gap-2 mb-2 font-medium text-[11px] text-text-tertiary 4k:text-[16px] 4k:mb-3'
+                        : 'flex items-center gap-2 mb-2 font-medium text-[12px] text-text-tertiary md:mb-3 4k:text-[18px] 4k:mb-4'
                     }
                   >
                     {article.category && (
@@ -116,8 +116,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                           weight="semibold"
                           className={
                             isSplitScreen
-                              ? 'px-2.5 py-1 rounded-[8px] bg-primary/15 text-primary text-[11px] transition-colors group-hover:bg-primary/20'
-                              : 'px-2 py-0.5 rounded-full bg-primary/10 text-primary'
+                              ? 'px-2.5 py-1 rounded-[8px] bg-primary/15 text-primary text-[11px] transition-colors group-hover:bg-primary/20 4k:text-[16px] 4k:px-4 4k:py-1.5 4k:rounded-[10px]'
+                              : 'px-2 py-0.5 rounded-full bg-primary/10 text-primary 4k:text-[18px] 4k:px-4 4k:py-1'
                           }
                         >
                           {article.category}
@@ -133,8 +133,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                     level={4}
                     className={
                       isSplitScreen
-                        ? 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-[16px] font-bold'
-                        : 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors'
+                        ? 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-[16px] font-bold 4k:text-[24px] 4k:mb-3'
+                        : 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors 4k:text-[28px] 4k:mb-4'
                     }
                   >
                     {article.title}
@@ -148,8 +148,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                       clamp={isSplitScreen ? 2 : 2}
                       className={
                         isSplitScreen
-                          ? 'leading-relaxed text-[13px]'
-                          : 'leading-relaxed'
+                          ? 'leading-relaxed text-[13px] 4k:text-[18px]'
+                          : 'leading-relaxed 4k:text-[20px]'
                       }
                     >
                       {article.summary}
@@ -169,8 +169,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
           animate={{ opacity: 1, y: 0 }}
           className={
             isSplitScreen
-              ? 'px-4 mt-6 max-w-[850px] mx-auto'
-              : 'px-4 mt-6 md:px-6 md:mt-8 tv:px-12 tv:mt-10'
+              ? 'px-4 mt-6 max-w-[850px] mx-auto 4k:px-8 4k:mt-10 4k:max-w-[1400px]'
+              : 'px-4 mt-6 md:px-6 md:mt-8 tv:px-12 tv:mt-10 4k:px-16 4k:mt-16'
           }
         >
           <Button

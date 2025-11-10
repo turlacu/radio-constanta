@@ -24,7 +24,7 @@ export default function RadioPlayer({ radioState }) {
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
-        className="relative w-full mb-8 max-w-[360px]"
+        className="relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12"
       >
         {/* Subtle accent glow behind cover (only when playing) */}
         {isPlaying && (
@@ -40,7 +40,7 @@ export default function RadioPlayer({ radioState }) {
         )}
 
         {/* Main cover art card - clean dark card with shadow */}
-        <div className="relative w-full aspect-square rounded-[16px] overflow-hidden bg-bg-tertiary shadow-xl border border-border">
+        <div className="relative w-full aspect-square rounded-[16px] overflow-hidden bg-bg-tertiary shadow-xl border border-border 4k:rounded-[24px]">
           <motion.img
             src={currentStation.coverArt}
             alt={`${currentStation.name} cover art`}
@@ -54,7 +54,7 @@ export default function RadioPlayer({ radioState }) {
             <motion.div
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-error/90 backdrop-blur-sm flex items-center gap-2 shadow-md"
+              className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-error/90 backdrop-blur-sm flex items-center gap-2 shadow-md 4k:top-6 4k:right-6 4k:px-5 4k:py-2.5 4k:rounded-xl"
             >
               <motion.span
                 animate={{ opacity: [1, 0.5, 1] }}
@@ -65,7 +65,7 @@ export default function RadioPlayer({ radioState }) {
               <Caption
                 uppercase
                 weight="semibold"
-                className="text-white text-[10px]"
+                className="text-white text-[10px] 4k:text-[16px]"
               >
                 Live
               </Caption>
@@ -81,7 +81,7 @@ export default function RadioPlayer({ radioState }) {
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="text-center mb-6"
+          className="text-center mb-6 4k:mb-10"
         >
           <Heading level={2} className="mb-2">
             {currentStation.name}
@@ -106,7 +106,7 @@ export default function RadioPlayer({ radioState }) {
           onClick={togglePlay}
           disabled={isLoading}
           tabIndex={0}
-          className="relative rounded-full disabled:opacity-40 group focusable mb-8 w-20 h-20 bg-primary hover:bg-primary-dark shadow-lg hover:shadow-xl transition-all"
+          className="relative rounded-full disabled:opacity-40 group focusable mb-8 w-20 h-20 bg-primary hover:bg-primary-dark shadow-lg hover:shadow-xl transition-all 4k:w-32 4k:h-32 4k:mb-12"
           aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
         >
           <div className="w-full h-full flex items-center justify-center">
@@ -114,7 +114,7 @@ export default function RadioPlayer({ radioState }) {
               <Loader size="small" />
             ) : isPlaying ? (
               <svg
-                className="w-9 h-9 text-white"
+                className="w-9 h-9 text-white 4k:w-14 4k:h-14"
                 fill="currentColor"
                 viewBox="0 0 24 24"
                 aria-hidden="true"
@@ -123,7 +123,7 @@ export default function RadioPlayer({ radioState }) {
               </svg>
             ) : (
               <svg
-                className="w-9 h-9 text-white ml-1"
+                className="w-9 h-9 text-white ml-1 4k:w-14 4k:h-14"
                 fill="currentColor"
                 viewBox="0 0 24 24"
                 aria-hidden="true"
@@ -139,7 +139,7 @@ export default function RadioPlayer({ radioState }) {
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.15 }}
-          className="flex gap-2 w-full max-w-xs mb-5"
+          className="flex gap-2 w-full max-w-xs mb-5 4k:max-w-md 4k:gap-3 4k:mb-8"
           role="group"
           aria-label="Station selection"
         >
@@ -155,7 +155,7 @@ export default function RadioPlayer({ radioState }) {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.2 + index * 0.05 }}
                 tabIndex={0}
-                className={`relative flex-1 rounded-[10px] font-semibold transition-all py-3 px-4 text-[14px] shadow-sm focusable ${
+                className={`relative flex-1 rounded-[10px] font-semibold transition-all py-3 px-4 text-[14px] shadow-sm focusable 4k:py-5 4k:px-6 4k:text-[20px] 4k:rounded-[14px] ${
                   isActive
                     ? 'bg-primary text-white hover:bg-primary-dark shadow-md'
                     : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary border border-border'
@@ -174,7 +174,7 @@ export default function RadioPlayer({ radioState }) {
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex gap-2 w-full max-w-xs mb-6"
+          className="flex gap-2 w-full max-w-xs mb-6 4k:max-w-md 4k:gap-3 4k:mb-10"
           role="group"
           aria-label="Quality selection"
         >
@@ -190,7 +190,7 @@ export default function RadioPlayer({ radioState }) {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.25 + index * 0.03 }}
                 tabIndex={0}
-                className={`relative flex-1 rounded-lg font-medium transition-all py-2 px-3 text-[12px] focusable ${
+                className={`relative flex-1 rounded-lg font-medium transition-all py-2 px-3 text-[12px] focusable 4k:py-3 4k:px-5 4k:text-[18px] 4k:rounded-xl ${
                   isActive
                     ? 'bg-bg-tertiary text-text-primary border-2 border-primary'
                     : 'bg-bg-secondary text-text-tertiary hover:bg-bg-tertiary border border-border'
@@ -210,7 +210,7 @@ export default function RadioPlayer({ radioState }) {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center justify-center gap-2 text-text-tertiary text-[12px] font-medium"
+            className="flex items-center justify-center gap-2 text-text-tertiary text-[12px] font-medium 4k:text-[18px] 4k:gap-3"
             role="status"
             aria-label="Stream information"
           >

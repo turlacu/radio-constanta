@@ -137,8 +137,8 @@ export default function News({ radioState }) {
       <div className={`
         sticky top-0 z-10
         ${isSplitScreen
-          ? 'px-4 py-6' // Padding for full-width background
-          : 'px-4 py-4 md:px-6 md:py-5 lg:px-8 tv:px-12 tv:py-8'
+          ? 'px-4 py-6 4k:px-8 4k:py-10' // Padding for full-width background
+          : 'px-4 py-4 md:px-6 md:py-5 lg:px-8 tv:px-12 tv:py-8 4k:px-16 4k:py-12'
         }
       `}>
         {/* Clean solid header background */}
@@ -149,14 +149,14 @@ export default function News({ radioState }) {
         }`} />
 
         {/* Content wrapper - centered to match articles */}
-        <div className={isSplitScreen ? "relative max-w-[850px] mx-auto" : "relative"}>
+        <div className={isSplitScreen ? "relative max-w-[850px] mx-auto 4k:max-w-[1400px]" : "relative"}>
           <h1 className={`
             font-bold text-text-primary
-            ${isSplitScreen ? 'text-2xl' : 'text-2xl md:text-3xl lg:text-4xl tv:text-5xl'}
+            ${isSplitScreen ? 'text-2xl 4k:text-4xl' : 'text-2xl md:text-3xl lg:text-4xl tv:text-5xl 4k:text-7xl'}
           `}>Știri</h1>
           <p className={`
             text-text-tertiary font-medium mt-1
-            ${isSplitScreen ? 'text-sm' : 'text-sm md:text-base tv:text-xl'}
+            ${isSplitScreen ? 'text-sm 4k:text-xl' : 'text-sm md:text-base tv:text-xl 4k:text-3xl'}
           `}>Ultimele noutăți din Constanța</p>
         </div>
       </div>
