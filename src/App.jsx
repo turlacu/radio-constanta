@@ -236,8 +236,8 @@ function App() {
         audio.src = ''; // Clear old stream to prevent decode errors
         audio.load(); // Flush decoder pipeline
 
-        // Wait for decoder to fully flush (FLAC needs more time than MP3)
-        await new Promise(resolve => setTimeout(resolve, 150));
+        // Wait longer for decoder to fully flush (especially for format changes)
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
       // Update station
@@ -249,6 +249,9 @@ function App() {
       // Autoplay if was playing before
       if (wasPlaying && audio) {
         logDebug('Autoplay after station switch');
+
+        // Wait a bit more before starting new stream
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         // Get URL for the new station's selected quality
         const qualityId = selectedQuality[station.id];
@@ -308,13 +311,16 @@ function App() {
           audio.src = '';
           audio.load();
 
-          // Wait for decoder to fully flush (FLAC needs more time than MP3)
-          await new Promise(resolve => setTimeout(resolve, 150));
+          // Wait longer for decoder to fully flush (format changes need more time)
+          await new Promise(resolve => setTimeout(resolve, 300));
 
           // Now set new quality stream
           audio.src = quality.url;
           audio.load();
           setIsLoading(true);
+
+          // Wait a bit before playing
+          await new Promise(resolve => setTimeout(resolve, 100));
 
           try {
             await audio.play();
@@ -424,27 +430,24 @@ function App() {
                 </>
               )}
 
-              {/* Toggle News Button */}
+              {/* Toggle News Button - Minimalistic Hamburger */}
               <motion.button
                 onClick={() => setShowNews(!showNews)}
-                className="absolute top-8 right-8 z-50 px-6 py-3 rounded-xl bg-bg-tertiary hover:bg-bg-secondary border border-border shadow-lg hover:shadow-xl transition-all font-semibold text-text-primary text-sm flex items-center gap-2"
+                className="absolute top-6 right-6 z-50 w-12 h-12 rounded-lg bg-bg-tertiary/80 hover:bg-bg-tertiary border border-border/50 shadow-md hover:shadow-lg transition-all flex items-center justify-center backdrop-blur-sm"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                aria-label={showNews ? 'Hide news' : 'Show news'}
               >
                 {showNews ? (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Ascunde Știrile
-                  </>
+                  // X icon
+                  <svg className="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                    </svg>
-                    Arată Știrile
-                  </>
+                  // Hamburger icon
+                  <svg className="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
                 )}
               </motion.button>
 
