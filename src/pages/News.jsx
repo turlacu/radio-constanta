@@ -120,13 +120,11 @@ export default function News({ radioState }) {
         ? "h-full w-full relative flex flex-col" // Split-screen: fill entire section with background and use flex layout
         : "min-h-screen relative overflow-hidden" // Single page: full screen
     }>
-      {/* Background gradient effect - blurred in split-screen */}
+      {/* Subtle ambient glow accents */}
       {isSplitScreen ? (
         <div className="absolute inset-x-0 top-0 bottom-0 min-h-[300vh] pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-br from-dark-bg via-dark-surface to-dark-bg opacity-90" />
-          <div className="absolute inset-0 backdrop-blur-xl" />
-          <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50" />
-          <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl opacity-50" />
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl opacity-60" />
+          <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-3xl opacity-60" />
         </div>
       ) : (
         <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -135,7 +133,7 @@ export default function News({ radioState }) {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header - Clean solid with border */}
       <div className={`
         sticky top-0 z-10
         ${isSplitScreen
@@ -143,21 +141,21 @@ export default function News({ radioState }) {
           : 'px-4 py-4 md:px-6 md:py-5 lg:px-8 tv:px-12 tv:py-8'
         }
       `}>
-        {/* Glassmorphic header background */}
-        <div className={`absolute inset-0 border-b border-white/10 ${
+        {/* Clean solid header background */}
+        <div className={`absolute inset-0 border-b border-border ${
           isSplitScreen
-            ? 'bg-dark-bg/60 backdrop-blur-md' // More subtle in split-screen
-            : 'bg-dark-bg/80 backdrop-blur-xl'
+            ? 'bg-bg-secondary' // Solid background
+            : 'bg-bg-primary'
         }`} />
 
         {/* Content wrapper - centered to match articles */}
         <div className={isSplitScreen ? "relative max-w-[850px] mx-auto" : "relative"}>
           <h1 className={`
-            font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent
+            font-bold text-text-primary
             ${isSplitScreen ? 'text-2xl' : 'text-2xl md:text-3xl lg:text-4xl tv:text-5xl'}
           `}>Știri</h1>
           <p className={`
-            text-white/60 font-medium mt-1
+            text-text-tertiary font-medium mt-1
             ${isSplitScreen ? 'text-sm' : 'text-sm md:text-base tv:text-xl'}
           `}>Ultimele noutăți din Constanța</p>
         </div>
