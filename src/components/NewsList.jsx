@@ -116,8 +116,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                           weight="semibold"
                           className={
                             isSplitScreen
-                              ? 'px-1 py-0.5 rounded-[2px] bg-primary/15 text-primary text-[6px] transition-colors group-hover:bg-primary/20 4k:text-[8px] 4k:px-1.5 4k:py-0.5 4k:rounded-[3px]'
-                              : 'px-1.5 py-0.5 rounded-[3px] bg-primary/10 text-primary text-[7px] 4k:text-[10px] 4k:px-2 4k:py-0.5'
+                              ? 'px-1 py-0.5 rounded-[2px] bg-primary/15 text-primary text-[5px] transition-colors group-hover:bg-primary/20 4k:text-[7px] 4k:px-1 4k:py-0.5 4k:rounded-[2px]'
+                              : 'px-1 py-0.5 rounded-[2px] bg-primary/10 text-primary text-[6px] 4k:text-[9px] 4k:px-1.5 4k:py-0.5'
                           }
                         >
                           {article.category}
@@ -133,8 +133,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                     level={4}
                     className={
                       isSplitScreen
-                        ? 'mb-1.5 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-[9px] font-bold 4k:text-[14px] 4k:mb-2'
-                        : 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-[13px] 4k:text-[18px] 4k:mb-4'
+                        ? 'mb-1.5 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-[12px] font-bold 4k:text-[16px] 4k:mb-2'
+                        : 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-[14px] 4k:text-[20px] 4k:mb-4'
                     }
                   >
                     {article.title}
@@ -148,7 +148,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                       clamp={isSplitScreen ? 2 : 2}
                       className={
                         isSplitScreen
-                          ? 'leading-relaxed text-[11px] 4k:text-[16px]'
+                          ? 'leading-relaxed text-[10px] 4k:text-[14px]'
                           : 'leading-relaxed 4k:text-[20px]'
                       }
                     >
