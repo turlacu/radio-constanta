@@ -112,16 +112,15 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                   >
                     {article.category && (
                       <>
-                        <Caption
-                          weight="semibold"
+                        <span
                           className={
                             isSplitScreen
-                              ? 'px-1 py-0.5 rounded-[2px] bg-primary/15 text-primary text-[5px] transition-colors group-hover:bg-primary/20 4k:text-[7px] 4k:px-1 4k:py-0.5 4k:rounded-[2px]'
-                              : 'px-1 py-0.5 rounded-[2px] bg-primary/10 text-primary text-[6px] 4k:text-[9px] 4k:px-1.5 4k:py-0.5'
+                              ? 'font-bold text-primary text-[9px] 4k:text-[14px]'
+                              : 'font-bold text-primary text-[12px] 4k:text-[18px]'
                           }
                         >
                           {article.category}
-                        </Caption>
+                        </span>
                         <span className="w-1 h-1 bg-border rounded-full" aria-hidden="true" />
                       </>
                     )}
