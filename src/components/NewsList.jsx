@@ -116,8 +116,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                           weight="semibold"
                           className={
                             isSplitScreen
-                              ? 'px-2 py-0.5 rounded-[6px] bg-primary/15 text-primary text-[9px] transition-colors group-hover:bg-primary/20 4k:text-[14px] 4k:px-3 4k:py-1 4k:rounded-[8px]'
-                              : 'px-2 py-0.5 rounded-full bg-primary/10 text-primary 4k:text-[18px] 4k:px-4 4k:py-1'
+                              ? 'px-1.5 py-0.5 rounded-[4px] bg-primary/15 text-primary text-[8px] transition-colors group-hover:bg-primary/20 4k:text-[12px] 4k:px-2.5 4k:py-0.5 4k:rounded-[6px]'
+                              : 'px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] 4k:text-[14px] 4k:px-3 4k:py-0.5'
                           }
                         >
                           {article.category}
