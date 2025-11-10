@@ -6,23 +6,23 @@ export const createParticles = (count) => {
   const particles = [];
 
   const colors = [
-    'rgba(139, 92, 246, 0.15)',   // Purple
-    'rgba(59, 130, 246, 0.15)',   // Blue
-    'rgba(6, 182, 212, 0.15)',    // Cyan
-    'rgba(168, 85, 247, 0.12)',   // Light purple
-    'rgba(147, 197, 253, 0.12)',  // Light blue
+    'rgba(139, 92, 246, 0.35)',   // Purple
+    'rgba(59, 130, 246, 0.35)',   // Blue
+    'rgba(6, 182, 212, 0.35)',    // Cyan
+    'rgba(168, 85, 247, 0.30)',   // Light purple
+    'rgba(147, 197, 253, 0.30)',  // Light blue
   ];
 
   for (let i = 0; i < count; i++) {
     particles.push({
       id: i,
-      size: Math.random() * 200 + 100, // 100-300px
+      size: Math.random() * 250 + 150, // 150-400px (larger particles)
       left: Math.random() * 100, // 0-100%
       top: Math.random() * 100, // 0-100%
       color: colors[Math.floor(Math.random() * colors.length)],
       duration: Math.random() * 20 + 15, // 15-35s
       delay: Math.random() * 10, // 0-10s
-      blur: Math.random() * 40 + 60, // 60-100px blur
+      blur: Math.random() * 30 + 40, // 40-70px blur (less blur = more visible)
       animationType: Math.random() > 0.5 ? 'float-up' : 'float-diagonal',
     });
   }
