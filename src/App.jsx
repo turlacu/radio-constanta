@@ -400,40 +400,10 @@ function App() {
           {showSplitScreen ? (
             // Desktop/TV: Radio-focused layout with optional news
             <div className="flex items-center justify-center min-h-screen bg-bg-secondary relative overflow-hidden">
-              {/* Animated background when playing (only visible when news is hidden) */}
-              {!showNews && isPlaying && (
-                <>
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      opacity: [0.1, 0.15, 0.1],
-                    }}
-                    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/20 rounded-full blur-3xl"
-                  />
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.15, 1],
-                      opacity: [0.08, 0.12, 0.08],
-                    }}
-                    transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                    className="absolute bottom-1/4 right-1/4 w-[700px] h-[700px] bg-secondary/15 rounded-full blur-3xl"
-                  />
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.08, 1],
-                      rotate: [0, 180, 360],
-                    }}
-                    transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl"
-                  />
-                </>
-              )}
-
               {/* Toggle News Button - Minimalistic Hamburger */}
               <motion.button
                 onClick={() => setShowNews(!showNews)}
-                className="absolute top-6 right-6 z-50 w-12 h-12 rounded-lg bg-bg-tertiary/80 hover:bg-bg-tertiary border border-border/50 shadow-md hover:shadow-lg transition-all flex items-center justify-center backdrop-blur-sm"
+                className="absolute top-6 right-6 z-50 w-12 h-12 rounded-lg bg-bg-tertiary/80 hover:bg-bg-tertiary border border-bg-primary shadow-md hover:shadow-lg transition-all flex items-center justify-center backdrop-blur-sm"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 aria-label={showNews ? 'Hide news' : 'Show news'}
@@ -451,16 +421,43 @@ function App() {
                 )}
               </motion.button>
 
-              {/* Content Container */}
-              <div className={`w-full h-screen flex overflow-hidden transition-all duration-500 ${
-                showNews ? 'max-w-[177.78vh]' : 'max-w-[56.25vh]'
-              }`}>
+              {/* Content Container - Always 16:9 aspect ratio */}
+              <div className="w-full h-screen flex overflow-hidden transition-all duration-500 max-w-[177.78vh]">
                 {/* Radio Section */}
                 <div
                   className={`overflow-hidden relative flex items-center justify-center bg-bg-secondary transition-all duration-500 ${
                     showNews ? 'w-[35%] border-r border-border' : 'w-full'
                   }`}
                 >
+                  {/* Animated background when playing (only visible when news is hidden) */}
+                  {!showNews && isPlaying && (
+                    <>
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.1, 1],
+                          opacity: [0.1, 0.15, 0.1],
+                        }}
+                        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+                        className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/20 rounded-full blur-3xl"
+                      />
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.15, 1],
+                          opacity: [0.08, 0.12, 0.08],
+                        }}
+                        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                        className="absolute bottom-1/4 right-1/4 w-[700px] h-[700px] bg-secondary/15 rounded-full blur-3xl"
+                      />
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.08, 1],
+                          rotate: [0, 180, 360],
+                        }}
+                        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl"
+                      />
+                    </>
+                  )}
                   <Radio radioState={radioState} />
                 </div>
 
