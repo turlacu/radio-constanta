@@ -90,7 +90,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
       {/* Header */}
       <div className="sticky top-0 z-10">
         {/* Clean solid header background */}
-        <div className="absolute inset-0 bg-bg-primary border-b border-border" />
+        <div className="absolute inset-0 bg-bg-secondary border-b border-border" />
 
         <div className="relative flex items-center gap-3 px-4 py-3 md:px-6 md:py-4 md:gap-4 tv:px-12 tv:py-6 tv:gap-6">
           <Button
