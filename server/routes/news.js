@@ -46,6 +46,21 @@ const truncateAtWord = (text, maxLength) => {
   return text.substring(0, cutoff).trim() + '...';
 };
 
+// Helper to proxy external image URLs through our server
+// This prevents tracking prevention errors from third-party CDNs
+const proxyImageUrl = (imageUrl) => {
+  if (!imageUrl || imageUrl.includes('placeholder')) {
+    return imageUrl;
+  }
+
+  // Only proxy external images (WordPress CDN, etc.)
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+  }
+
+  return imageUrl;
+};
+
 // Fetch articles from WordPress REST API
 const fetchFromWordPressAPI = async (limit = 20) => {
   try {
@@ -111,7 +126,7 @@ const fetchFromWordPressAPI = async (limit = 20) => {
           id: id,
           title: stripHtml(title),
           summary: summary,
-          image: image,
+          image: proxyImageUrl(image),
           category: stripHtml(categoryName),
           date: date,
           link: link,
