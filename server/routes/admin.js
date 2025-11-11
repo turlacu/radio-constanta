@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 const router = express.Router();
 
 // Admin password from environment variable
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2a$10$XQV3wJHKvPYNqE8zJZ5FZuoKlNQHJN8MQ0c7V0kGqxqD4dZ9xXC2W'; // default: "admin123"
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$10$K2wPm5W9ZMUoWo8HPVCnMORGDjANxJNcKUK4v5FMb8q2TvjM5rIom'; // default: "admin123"
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const SETTINGS_FILE = path.join(__dirname, '../data/admin-settings.json');
