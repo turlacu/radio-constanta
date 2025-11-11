@@ -12,11 +12,22 @@ export default function SettingsModal({ isOpen, onClose }) {
     weatherLocation,
     setWeatherLocation,
     weatherPerformance,
-    setWeatherPerformance
+    setWeatherPerformance,
+    manualWeatherState,
+    setManualWeatherState
   } = useSettings();
 
   const [activeTab, setActiveTab] = useState('background');
   const [locationInput, setLocationInput] = useState('');
+
+  const weatherTypes = [
+    { id: 'sunny', label: 'Sunny', icon: '☀️' },
+    { id: 'cloudy', label: 'Cloudy', icon: '☁️' },
+    { id: 'rain', label: 'Rain', icon: '🌧️' },
+    { id: 'storm', label: 'Storm', icon: '⛈️' },
+    { id: 'snow', label: 'Snow', icon: '❄️' },
+    { id: 'fog', label: 'Fog', icon: '🌫️' }
+  ];
 
   if (!isOpen) return null;
 
@@ -268,6 +279,58 @@ export default function SettingsModal({ isOpen, onClose }) {
                       >
                         Use Current Location
                       </Button>
+                    </div>
+                  )}
+
+                  {weatherMode === 'manual' && (
+                    <div>
+                      <Heading level={5} className="mb-3">
+                        Time of Day
+                      </Heading>
+                      <div className="flex gap-3 mb-6">
+                        <button
+                          onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'day' })}
+                          className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                            manualWeatherState.timeOfDay === 'day'
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="text-2xl mb-1">☀️</div>
+                          <div className="font-medium text-text-primary text-sm">Day</div>
+                        </button>
+                        <button
+                          onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'night' })}
+                          className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                            manualWeatherState.timeOfDay === 'night'
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="text-2xl mb-1">🌙</div>
+                          <div className="font-medium text-text-primary text-sm">Night</div>
+                        </button>
+                      </div>
+
+                      <Heading level={5} className="mb-3">
+                        Weather Type
+                      </Heading>
+                      <div className="grid grid-cols-3 gap-3">
+                        {weatherTypes.map((type) => (
+                          <button
+                            key={type.id}
+                            onClick={() => setManualWeatherState({ ...manualWeatherState, weatherType: type.id })}
+                            className={`p-4 rounded-lg border-2 transition-all ${
+                              manualWeatherState.weatherType === type.id
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <div className="text-3xl mb-2">{type.icon}</div>
+                            <div className="font-medium text-text-primary text-sm">{type.label}</div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

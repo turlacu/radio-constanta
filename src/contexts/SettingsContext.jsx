@@ -34,6 +34,14 @@ export const SettingsProvider = ({ children }) => {
     return localStorage.getItem('weatherPerformance') || 'medium';
   });
 
+  const [manualWeatherState, setManualWeatherState] = useState(() => {
+    const saved = localStorage.getItem('manualWeatherState');
+    return saved ? JSON.parse(saved) : {
+      weatherType: 'sunny',
+      timeOfDay: 'day'
+    };
+  });
+
   // Persist settings to localStorage
   useEffect(() => {
     localStorage.setItem('backgroundAnimation', backgroundAnimation);
@@ -51,6 +59,10 @@ export const SettingsProvider = ({ children }) => {
     localStorage.setItem('weatherPerformance', weatherPerformance);
   }, [weatherPerformance]);
 
+  useEffect(() => {
+    localStorage.setItem('manualWeatherState', JSON.stringify(manualWeatherState));
+  }, [manualWeatherState]);
+
   const value = {
     backgroundAnimation,
     setBackgroundAnimation,
@@ -59,7 +71,9 @@ export const SettingsProvider = ({ children }) => {
     weatherLocation,
     setWeatherLocation,
     weatherPerformance,
-    setWeatherPerformance
+    setWeatherPerformance,
+    manualWeatherState,
+    setManualWeatherState
   };
 
   return (
