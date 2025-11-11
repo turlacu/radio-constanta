@@ -4,8 +4,10 @@ import { useState, useRef, useEffect, createContext, useMemo } from 'react';
 import Radio from './pages/Radio';
 import News from './pages/News';
 import BottomNav from './components/BottomNav';
+import SettingsModal from './components/SettingsModal';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { createFloatingParticles } from './utils/createFloatingParticles';
+import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 
 // Create context for device info to share across components
 export const DeviceContext = createContext(null);
@@ -34,9 +36,13 @@ const STATIONS = {
   }
 };
 
-function App() {
+function AppContent() {
   // Device detection
   const device = useDeviceDetection();
+
+  // Settings
+  const settings = useSettings();
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -407,28 +413,45 @@ function App() {
           {showSplitScreen ? (
             // Desktop/TV: Radio-focused layout with optional news
             <div className={`flex items-center justify-center min-h-screen relative overflow-hidden ${
-              !showNews && isPlaying ? 'animated-gradient' : 'bg-bg-secondary'
+              !showNews && isPlaying && settings.backgroundAnimation === 'minimal' ? 'animated-gradient' : 'bg-bg-secondary'
             }`}>
-              {/* Toggle News Button - Minimalistic Hamburger */}
-              <motion.button
-                onClick={() => setShowNews(!showNews)}
-                className="absolute top-6 right-6 z-50 w-12 h-12 rounded-lg bg-bg-tertiary/80 hover:bg-bg-tertiary border border-bg-primary transition-all flex items-center justify-center backdrop-blur-sm"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                aria-label={showNews ? 'Hide news' : 'Show news'}
-              >
-                {showNews ? (
-                  // X icon
+              {/* Top Right Buttons */}
+              <div className="absolute top-6 right-6 z-50 flex gap-3">
+                {/* Settings Button */}
+                <motion.button
+                  onClick={() => setShowSettingsModal(true)}
+                  className="w-12 h-12 rounded-lg bg-bg-tertiary/80 hover:bg-bg-tertiary border border-bg-primary transition-all flex items-center justify-center backdrop-blur-sm"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label="Settings"
+                >
                   <svg className="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                ) : (
-                  // Hamburger icon
-                  <svg className="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                )}
-              </motion.button>
+                </motion.button>
+
+                {/* Toggle News Button - Minimalistic Hamburger */}
+                <motion.button
+                  onClick={() => setShowNews(!showNews)}
+                  className="w-12 h-12 rounded-lg bg-bg-tertiary/80 hover:bg-bg-tertiary border border-bg-primary transition-all flex items-center justify-center backdrop-blur-sm"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label={showNews ? 'Hide news' : 'Show news'}
+                >
+                  {showNews ? (
+                    // X icon
+                    <svg className="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  ) : (
+                    // Hamburger icon
+                    <svg className="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  )}
+                </motion.button>
+              </div>
 
               {/* Content Container - Always 16:9 aspect ratio */}
               <div className="w-full h-screen flex overflow-hidden transition-all duration-500 max-w-[177.78vh]">
@@ -438,8 +461,8 @@ function App() {
                     showNews ? 'w-[35%] border-r border-border' : 'w-full'
                   }`}
                 >
-                  {/* Floating particles animation */}
-                  {!showNews && isPlaying && (
+                  {/* Floating particles animation - only show for minimal background */}
+                  {!showNews && isPlaying && settings.backgroundAnimation === 'minimal' && (
                     <>
                       <style dangerouslySetInnerHTML={{
                         __html: floatingParticles.map((particle) => `
@@ -508,8 +531,23 @@ function App() {
             </>
           )}
         </div>
+
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+        />
       </Router>
     </DeviceContext.Provider>
+  );
+}
+
+// Wrap with SettingsProvider
+function App() {
+  return (
+    <SettingsProvider>
+      <AppContent />
+    </SettingsProvider>
   );
 }
 
