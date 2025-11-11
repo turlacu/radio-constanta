@@ -38,16 +38,18 @@ const STATIONS = {
   }
 };
 
-function AppContent() {
-  // Check if we're on the admin route
+// Inner component that checks for admin route (must be inside Router)
+function RouteHandler({ children }) {
   const location = useLocation();
-  const isAdminRoute = location.pathname === '/admin';
 
-  // If admin route, render Admin component directly
-  if (isAdminRoute) {
+  if (location.pathname === '/admin') {
     return <Admin />;
   }
 
+  return children;
+}
+
+function AppContent() {
   // Device detection
   const device = useDeviceDetection();
 
@@ -420,7 +422,8 @@ function AppContent() {
   return (
     <DeviceContext.Provider value={device}>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div className="min-h-screen bg-bg-primary">
+        <RouteHandler>
+          <div className="min-h-screen bg-bg-primary">
           {showSplitScreen ? (
             // Desktop/TV: Radio-focused layout with optional news
             <div className={`flex items-center justify-center min-h-screen relative overflow-hidden ${
@@ -553,6 +556,7 @@ function AppContent() {
           isOpen={showSettingsModal}
           onClose={() => setShowSettingsModal(false)}
         />
+        </RouteHandler>
       </Router>
     </DeviceContext.Provider>
   );
