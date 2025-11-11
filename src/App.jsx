@@ -5,6 +5,7 @@ import Radio from './pages/Radio';
 import News from './pages/News';
 import BottomNav from './components/BottomNav';
 import SettingsModal from './components/SettingsModal';
+import WeatherBackground from './components/WeatherBackground';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { createFloatingParticles } from './utils/createFloatingParticles';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
@@ -413,8 +414,13 @@ function AppContent() {
           {showSplitScreen ? (
             // Desktop/TV: Radio-focused layout with optional news
             <div className={`flex items-center justify-center min-h-screen relative overflow-hidden ${
-              !showNews && isPlaying && settings.backgroundAnimation === 'minimal' ? 'animated-gradient' : 'bg-bg-secondary'
+              !showNews && isPlaying && settings.backgroundAnimation === 'minimal' ? 'animated-gradient' :
+              settings.backgroundAnimation === 'none' ? 'bg-bg-primary' : 'bg-bg-secondary'
             }`}>
+              {/* Weather Background - Full screen behind everything */}
+              {settings.backgroundAnimation === 'weather' && !showNews && (
+                <WeatherBackground />
+              )}
               {/* Top Right Buttons */}
               <div className="absolute top-6 right-6 z-50 flex gap-3">
                 {/* Settings Button */}
