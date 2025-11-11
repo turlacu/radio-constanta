@@ -29,6 +29,25 @@ export class WeatherManager {
     this.setupOnlineListener();
   }
 
+  /**
+   * Fetch weather API key from admin settings
+   */
+  async fetchApiKeyFromSettings() {
+    try {
+      const response = await fetch('/api/admin/public-settings');
+      if (response.ok) {
+        const settings = await response.json();
+        // Use admin API key if it exists and is not empty
+        if (settings.weatherApiKey && settings.weatherApiKey !== '') {
+          this.apiKey = settings.weatherApiKey;
+          console.log('Using weather API key from admin settings');
+        }
+      }
+    } catch (error) {
+      console.warn('Could not fetch API key from admin settings:', error);
+    }
+  }
+
   setupOnlineListener() {
     window.addEventListener('online', () => {
       this.isOnline = true;
@@ -49,6 +68,9 @@ export class WeatherManager {
   async initialize(skipGeolocation = false) {
     // Set placeholder weather immediately so we always have a state
     this.setPlaceholderWeather();
+
+    // Try to fetch API key from admin settings first
+    await this.fetchApiKeyFromSettings();
 
     // Only try geolocation if not explicitly skipped (e.g., when location set from settings)
     if (!skipGeolocation) {

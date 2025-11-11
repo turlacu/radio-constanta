@@ -1,0 +1,36 @@
+{
+  "weatherApiKey": "",
+  "radioStreams": {
+    "fm": [
+      {
+        "id": "320",
+        "label": "320 kbps",
+        "format": "AAC",
+        "bitrate": "320 kbps",
+        "url": "https://live.radioconstanta.ro/stream-aac"
+      },
+      {
+        "id": "128",
+        "label": "128 kbps",
+        "format": "MP3",
+        "bitrate": "128 kbps",
+        "url": "https://live.radioconstanta.ro/stream"
+      }
+    ],
+    "folclor": [
+      {
+        "id": "128",
+        "label": "128 kbps",
+        "format": "MP3",
+        "bitrate": "128 kbps",
+        "url": "https://stream4.srr.ro:8443/radio-constanta-am"
+      }
+    ]
+  },
+  "defaultLocation": {
+    "lat": 44.1598,
+    "lon": 28.6348,
+    "name": "Constanța, România"
+  },
+  "apiBaseUrl": ""
+}

@@ -1,8 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect, createContext, useMemo } from 'react';
 import Radio from './pages/Radio';
 import News from './pages/News';
+import Admin from './pages/Admin';
 import BottomNav from './components/BottomNav';
 import SettingsModal from './components/SettingsModal';
 import WeatherBackground from './components/WeatherBackground';
@@ -38,6 +39,15 @@ const STATIONS = {
 };
 
 function AppContent() {
+  // Check if we're on the admin route
+  const location = useLocation();
+  const isAdminRoute = location.pathname === '/admin';
+
+  // If admin route, render Admin component directly
+  if (isAdminRoute) {
+    return <Admin />;
+  }
+
   // Device detection
   const device = useDeviceDetection();
 
