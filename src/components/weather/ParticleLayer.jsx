@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { PERFORMANCE_CONFIG } from '../config/visualStates';
+import { PERFORMANCE_CONFIG } from '../../config/weather/visualStates';
 
 export const ParticleLayer = ({ visualState, performanceLevel }) => {
   const canvasRef = useRef(null);
