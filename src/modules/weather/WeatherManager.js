@@ -189,8 +189,9 @@ export class WeatherManager {
   updateVisualState() {
     const weather = this.currentWeather;
 
-    // Determine time of day
-    const isNight = this.isNightTime(weather.timestamp, weather.sunrise, weather.sunset, weather.timezone);
+    // Determine time of day - use current time, not weather data timestamp
+    const currentTime = Math.floor(Date.now() / 1000);
+    const isNight = this.isNightTime(currentTime, weather.sunrise, weather.sunset, weather.timezone);
 
     // Map weather condition to base weather type
     const weatherType = WEATHER_CODE_MAP[weather.conditionCode] || 'sunny';
@@ -230,8 +231,12 @@ export class WeatherManager {
 
   /**
    * Determine if it's night time
+   * @param {number} currentTime - Current Unix timestamp in seconds
+   * @param {number} sunrise - Sunrise Unix timestamp in seconds (UTC)
+   * @param {number} sunset - Sunset Unix timestamp in seconds (UTC)
+   * @param {number} timezone - Timezone offset in seconds from UTC
    */
-  isNightTime(timestamp, sunrise, sunset, timezone) {
+  isNightTime(currentTime, sunrise, sunset, timezone) {
     // If we don't have sunrise/sunset data, use time-based logic
     if (!sunrise || !sunset) {
       const hour = new Date().getHours();
@@ -239,7 +244,17 @@ export class WeatherManager {
     }
 
     // Use actual sunrise/sunset times
-    return timestamp < sunrise || timestamp >= sunset;
+    // All times from API are in UTC, so comparison is straightforward
+    const isNight = currentTime < sunrise || currentTime >= sunset;
+
+    console.log('Night detection:', {
+      currentTime: new Date(currentTime * 1000).toISOString(),
+      sunrise: new Date(sunrise * 1000).toISOString(),
+      sunset: new Date(sunset * 1000).toISOString(),
+      isNight
+    });
+
+    return isNight;
   }
 
   /**
