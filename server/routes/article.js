@@ -3,6 +3,35 @@ import * as cheerio from 'cheerio';
 
 const router = express.Router();
 
+// Helper to proxy external image URLs through our server
+// This prevents tracking prevention errors from third-party CDNs
+const proxyImageUrl = (imageUrl) => {
+  if (!imageUrl || imageUrl.includes('placeholder')) {
+    return imageUrl;
+  }
+
+  // Only proxy external images (WordPress CDN, etc.)
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+  }
+
+  return imageUrl;
+};
+
+// Helper to rewrite image URLs in HTML content to use our proxy
+const proxyImagesInHtml = (html) => {
+  if (!html) return html;
+
+  // Replace src attributes in img tags
+  return html.replace(
+    /<img([^>]*?)src=["']([^"']+)["']([^>]*?)>/gi,
+    (match, before, src, after) => {
+      const proxiedSrc = proxyImageUrl(src);
+      return `<img${before}src="${proxiedSrc}"${after}>`;
+    }
+  );
+};
+
 // GET /api/article?url=...
 router.get('/', async (req, res) => {
   try {
@@ -108,11 +137,15 @@ router.get('/', async (req, res) => {
       featuredImage = `${baseUrl}?w=768&quality=85`;
     }
 
+    // Proxy all images to prevent tracking prevention errors
+    const proxiedContent = proxyImagesInHtml(articleContent);
+    const proxiedImage = proxyImageUrl(featuredImage);
+
     console.log('Successfully extracted article content');
 
     res.json({
-      content: articleContent,
-      image: featuredImage,
+      content: proxiedContent,
+      image: proxiedImage,
       success: true
     });
 
