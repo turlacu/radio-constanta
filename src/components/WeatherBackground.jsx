@@ -36,14 +36,15 @@ export default function WeatherBackground() {
     // Initialize weather manager
     const initWeather = async () => {
       try {
-        // Set location from settings
+        // Set location from settings BEFORE initializing
         weatherManager.location = {
           lat: settings.weatherLocation.lat,
           lon: settings.weatherLocation.lon,
           name: settings.weatherLocation.name
         };
 
-        await weatherManager.initialize();
+        // Initialize with skipGeolocation=true since we already have location from settings
+        await weatherManager.initialize(true);
         setIsLoading(false);
       } catch (error) {
         console.error('Failed to initialize weather:', error);
@@ -61,7 +62,8 @@ export default function WeatherBackground() {
 
     // Set mode based on settings
     if (settings.weatherMode === 'auto') {
-      weatherManager.enableAutoMode();
+      // Skip geolocation since we already set location from settings
+      weatherManager.enableAutoMode(true);
     } else if (settings.weatherMode === 'manual') {
       // Set manual weather state
       const isNight = settings.manualWeatherState.timeOfDay === 'night';

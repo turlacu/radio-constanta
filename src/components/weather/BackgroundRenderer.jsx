@@ -17,7 +17,8 @@ export const BackgroundRenderer = ({ visualState, performanceLevel }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d', { alpha: false });
+    // willReadFrequently is needed for dithering (getImageData operations)
+    const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
 
     // Set canvas size to match container
     const resizeCanvas = () => {

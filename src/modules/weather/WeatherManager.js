@@ -46,15 +46,18 @@ export class WeatherManager {
    * Initialize weather manager
    * Gets user location and fetches initial weather
    */
-  async initialize() {
+  async initialize(skipGeolocation = false) {
     // Set placeholder weather immediately so we always have a state
     this.setPlaceholderWeather();
 
-    try {
-      // Try to get user's location
-      await this.getUserLocation();
-    } catch (error) {
-      console.warn('Could not get user location, using default:', error);
+    // Only try geolocation if not explicitly skipped (e.g., when location set from settings)
+    if (!skipGeolocation) {
+      try {
+        // Try to get user's location
+        await this.getUserLocation();
+      } catch (error) {
+        console.warn('Could not get user location, using default:', error);
+      }
     }
 
     // Fetch initial weather
@@ -307,9 +310,9 @@ export class WeatherManager {
   /**
    * Enable auto mode (real weather)
    */
-  enableAutoMode() {
+  enableAutoMode(skipGeolocation = false) {
     this.isAutoMode = true;
-    this.initialize();
+    this.initialize(skipGeolocation);
   }
 
   /**
