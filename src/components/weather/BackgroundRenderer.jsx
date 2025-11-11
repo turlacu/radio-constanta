@@ -22,10 +22,22 @@ export const BackgroundRenderer = ({ visualState, performanceLevel }) => {
     // Set canvas size to match container
     const resizeCanvas = () => {
       const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
+
+      // Get parent element size instead of canvas rect to avoid sizing issues
+      const parent = canvas.parentElement;
+      if (!parent) return;
+
+      const width = parent.clientWidth;
+      const height = parent.clientHeight;
+
+      // Set canvas size
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+
+      // Reset context after resize
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
+
       drawGradient();
     };
 
@@ -58,10 +70,15 @@ export const BackgroundRenderer = ({ visualState, performanceLevel }) => {
       }
     };
 
-    resizeCanvas();
+    // Initial resize with slight delay to ensure parent is rendered
+    const timer = setTimeout(() => {
+      resizeCanvas();
+    }, 50);
+
     window.addEventListener('resize', resizeCanvas);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('resize', resizeCanvas);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -77,12 +94,16 @@ export const BackgroundRenderer = ({ visualState, performanceLevel }) => {
   }
 
   return (
-    <div className="bg-layer" style={{ position: 'relative', overflow: 'hidden' }}>
+    <div className="bg-layer" style={{ position: 'relative', overflow: 'hidden', width: '100%', height: '100%' }}>
       {/* Canvas-based gradient */}
       <canvas
         ref={canvasRef}
-        className="bg-layer"
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
           imageRendering: 'high-quality',
           willChange: 'opacity'
         }}

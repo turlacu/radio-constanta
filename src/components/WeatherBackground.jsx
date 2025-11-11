@@ -62,13 +62,17 @@ export default function WeatherBackground() {
     // Set mode based on settings
     if (settings.weatherMode === 'auto') {
       weatherManager.enableAutoMode();
+    } else if (settings.weatherMode === 'manual') {
+      // Set manual weather state
+      const isNight = settings.manualWeatherState.timeOfDay === 'night';
+      weatherManager.setManualWeather(settings.manualWeatherState.weatherType, isNight);
     }
 
     // Cleanup
     return () => {
       unsubscribe();
     };
-  }, [settings.backgroundAnimation, settings.weatherMode, settings.weatherLocation]);
+  }, [settings.backgroundAnimation, settings.weatherMode, settings.weatherLocation, settings.manualWeatherState]);
 
   // Don't render if not using weather animation
   if (settings.backgroundAnimation !== 'weather') {
