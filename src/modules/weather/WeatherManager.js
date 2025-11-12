@@ -4,12 +4,16 @@
  * Supports both auto mode (real weather) and manual mode (for testing)
  */
 
-import { VISUAL_STATES, WEATHER_CODE_MAP, TIME_CONFIG } from '../../config/weather/visualStates';
+import { VISUAL_STATES, WEATHER_CODE_MAP, WMO_CODE_MAP, TIME_CONFIG } from '../../config/weather/visualStates';
 
 export class WeatherManager {
   constructor() {
+    this.weatherProvider = 'openmeteo'; // Default to Open-Meteo (free, no key needed)
     this.apiKey = import.meta.env.VITE_WEATHER_API_KEY || 'demo';
-    this.apiUrl = 'https://api.openweathermap.org/data/2.5/weather';
+
+    // API URLs for different providers
+    this.openWeatherMapUrl = 'https://api.openweathermap.org/data/2.5/weather';
+    this.openMeteoUrl = 'https://api.open-meteo.com/v1/forecast';
 
     this.currentWeather = null;
     this.currentVisualState = null;
@@ -30,21 +34,28 @@ export class WeatherManager {
   }
 
   /**
-   * Fetch weather API key from admin settings
+   * Fetch weather provider and API key from admin settings
    */
   async fetchApiKeyFromSettings() {
     try {
       const response = await fetch('/api/admin/public-settings');
       if (response.ok) {
         const settings = await response.json();
-        // Use admin API key if it exists and is not empty
+
+        // Set weather provider
+        if (settings.weatherProvider) {
+          this.weatherProvider = settings.weatherProvider;
+          console.log('Using weather provider from admin settings:', this.weatherProvider);
+        }
+
+        // Use admin API key if it exists and is not empty (for OpenWeatherMap)
         if (settings.weatherApiKey && settings.weatherApiKey !== '') {
           this.apiKey = settings.weatherApiKey;
           console.log('Using weather API key from admin settings');
         }
       }
     } catch (error) {
-      console.warn('Could not fetch API key from admin settings:', error);
+      console.warn('Could not fetch settings from admin:', error);
     }
   }
 
@@ -83,7 +94,10 @@ export class WeatherManager {
     }
 
     // Fetch initial weather
-    if (this.isAutoMode && this.apiKey !== 'demo') {
+    // Open-Meteo doesn't need an API key, OpenWeatherMap does
+    const canFetchWeather = this.isAutoMode && (this.weatherProvider === 'openmeteo' || this.apiKey !== 'demo');
+
+    if (canFetchWeather) {
       try {
         await this.fetchWeather();
       } catch (error) {
@@ -130,7 +144,7 @@ export class WeatherManager {
   }
 
   /**
-   * Fetch weather data from OpenWeatherMap API
+   * Fetch weather data from configured provider
    */
   async fetchWeather() {
     if (!this.isOnline) {
@@ -139,16 +153,14 @@ export class WeatherManager {
     }
 
     try {
-      const url = `${this.apiUrl}?lat=${this.location.lat}&lon=${this.location.lon}&appid=${this.apiKey}&units=metric`;
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Weather API error: ${response.status}`);
+      if (this.weatherProvider === 'openmeteo') {
+        await this.fetchWeatherOpenMeteo();
+      } else if (this.weatherProvider === 'openweathermap') {
+        await this.fetchWeatherOpenWeatherMap();
+      } else {
+        // Default to Open-Meteo
+        await this.fetchWeatherOpenMeteo();
       }
-
-      const data = await response.json();
-      this.processWeatherData(data);
     } catch (error) {
       console.error('Failed to fetch weather:', error);
       this.setPlaceholderWeather();
@@ -156,9 +168,56 @@ export class WeatherManager {
   }
 
   /**
-   * Process weather data and determine visual state
+   * Fetch weather data from OpenWeatherMap API
    */
-  processWeatherData(data) {
+  async fetchWeatherOpenWeatherMap() {
+    if (this.apiKey === 'demo') {
+      console.warn('OpenWeatherMap requires an API key');
+      this.setPlaceholderWeather();
+      return;
+    }
+
+    const url = `${this.openWeatherMapUrl}?lat=${this.location.lat}&lon=${this.location.lon}&appid=${this.apiKey}&units=metric`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`OpenWeatherMap API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    this.processOpenWeatherMapData(data);
+  }
+
+  /**
+   * Fetch weather data from Open-Meteo API (free, no key required)
+   */
+  async fetchWeatherOpenMeteo() {
+    // Open-Meteo API: https://api.open-meteo.com/v1/forecast
+    // Parameters: latitude, longitude, current weather variables, timezone
+    const params = new URLSearchParams({
+      latitude: this.location.lat,
+      longitude: this.location.lon,
+      current: 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,cloud_cover',
+      daily: 'sunrise,sunset',
+      timezone: 'auto',
+      forecast_days: 1
+    });
+
+    const url = `${this.openMeteoUrl}?${params.toString()}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Open-Meteo API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    this.processOpenMeteoData(data);
+  }
+
+  /**
+   * Process OpenWeatherMap data
+   */
+  processOpenWeatherMapData(data) {
     // Extract relevant weather information
     this.currentWeather = {
       condition: data.weather[0].main.toLowerCase(),
@@ -180,6 +239,78 @@ export class WeatherManager {
 
     // Determine visual state
     this.updateVisualState();
+  }
+
+  /**
+   * Process Open-Meteo data
+   */
+  processOpenMeteoData(data) {
+    const current = data.current;
+    const daily = data.daily;
+
+    // Convert ISO 8601 sunrise/sunset times to Unix timestamps
+    const sunriseTime = new Date(daily.sunrise[0]).getTime() / 1000;
+    const sunsetTime = new Date(daily.sunset[0]).getTime() / 1000;
+
+    // Extract relevant weather information
+    this.currentWeather = {
+      condition: this.getWmoConditionName(current.weather_code),
+      conditionCode: current.weather_code,
+      description: this.getWmoConditionDescription(current.weather_code),
+      temp: Math.round(current.temperature_2m),
+      humidity: current.relative_humidity_2m,
+      windSpeed: current.wind_speed_10m,
+      clouds: current.cloud_cover,
+      timestamp: Math.floor(new Date(current.time).getTime() / 1000),
+      sunrise: Math.floor(sunriseTime),
+      sunset: Math.floor(sunsetTime),
+      timezone: data.utc_offset_seconds,
+      cityName: this.location.name,
+      isPlaceholder: false
+    };
+
+    console.log('Open-Meteo weather data:', this.currentWeather);
+
+    // Determine visual state
+    this.updateVisualState();
+  }
+
+  /**
+   * Get condition name from WMO code
+   */
+  getWmoConditionName(code) {
+    const map = {
+      0: 'clear',
+      1: 'cloudy', 2: 'cloudy', 3: 'cloudy',
+      45: 'fog', 48: 'fog',
+      51: 'rain', 53: 'rain', 55: 'rain', 56: 'rain', 57: 'rain',
+      61: 'rain', 63: 'rain', 65: 'rain', 66: 'rain', 67: 'rain',
+      71: 'snow', 73: 'snow', 75: 'snow', 77: 'snow',
+      80: 'rain', 81: 'rain', 82: 'rain',
+      85: 'snow', 86: 'snow',
+      95: 'storm', 96: 'storm', 99: 'storm'
+    };
+    return map[code] || 'clear';
+  }
+
+  /**
+   * Get human-readable description from WMO code
+   */
+  getWmoConditionDescription(code) {
+    const descriptions = {
+      0: 'clear sky',
+      1: 'mainly clear', 2: 'partly cloudy', 3: 'overcast',
+      45: 'fog', 48: 'depositing rime fog',
+      51: 'light drizzle', 53: 'moderate drizzle', 55: 'dense drizzle',
+      56: 'light freezing drizzle', 57: 'dense freezing drizzle',
+      61: 'slight rain', 63: 'moderate rain', 65: 'heavy rain',
+      66: 'light freezing rain', 67: 'heavy freezing rain',
+      71: 'slight snow', 73: 'moderate snow', 75: 'heavy snow', 77: 'snow grains',
+      80: 'slight rain showers', 81: 'moderate rain showers', 82: 'violent rain showers',
+      85: 'slight snow showers', 86: 'heavy snow showers',
+      95: 'thunderstorm', 96: 'thunderstorm with slight hail', 99: 'thunderstorm with heavy hail'
+    };
+    return descriptions[code] || 'unknown';
   }
 
   /**
@@ -218,8 +349,13 @@ export class WeatherManager {
     const currentTime = Math.floor(Date.now() / 1000);
     const isNight = this.isNightTime(currentTime, weather.sunrise, weather.sunset, weather.timezone);
 
-    // Map weather condition to base weather type
-    const weatherType = WEATHER_CODE_MAP[weather.conditionCode] || 'sunny';
+    // Map weather condition to base weather type based on provider
+    let weatherType;
+    if (this.weatherProvider === 'openmeteo') {
+      weatherType = WMO_CODE_MAP[weather.conditionCode] || 'sunny';
+    } else {
+      weatherType = WEATHER_CODE_MAP[weather.conditionCode] || 'sunny';
+    }
 
     // Combine weather and time to get visual state key
     let stateKey;

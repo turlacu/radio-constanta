@@ -363,6 +363,7 @@ export const VISUAL_STATES = {
 /**
  * Maps OpenWeatherMap condition codes to visual states
  */
+// OpenWeatherMap weather code mapping
 export const WEATHER_CODE_MAP = {
   // Thunderstorm
   200: 'storm', 201: 'storm', 202: 'storm',
@@ -395,6 +396,38 @@ export const WEATHER_CODE_MAP = {
 
   // Clouds
   801: 'cloudy', 802: 'cloudy', 803: 'cloudy', 804: 'cloudy'
+};
+
+// Open-Meteo WMO weather code mapping
+export const WMO_CODE_MAP = {
+  // Clear sky
+  0: 'sunny',
+
+  // Partly cloudy
+  1: 'cloudy', 2: 'cloudy', 3: 'cloudy',
+
+  // Fog
+  45: 'fog', 48: 'fog',
+
+  // Drizzle
+  51: 'rain', 53: 'rain', 55: 'rain',
+  56: 'rain', 57: 'rain',
+
+  // Rain
+  61: 'rain', 63: 'rain', 65: 'rain',
+  66: 'rain', 67: 'rain',
+
+  // Snow
+  71: 'snow', 73: 'snow', 75: 'snow', 77: 'snow',
+
+  // Rain showers
+  80: 'rain', 81: 'rain', 82: 'rain',
+
+  // Snow showers
+  85: 'snow', 86: 'snow',
+
+  // Thunderstorm
+  95: 'storm', 96: 'storm', 99: 'storm'
 };
 
 /**
