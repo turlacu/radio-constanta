@@ -157,7 +157,7 @@ export default function News({ radioState }) {
           <p className={`
             text-text-tertiary font-medium mt-1
             ${isSplitScreen ? 'text-sm 4k:text-xl' : 'text-sm md:text-base tv:text-xl 4k:text-3xl'}
-          `}>Ultimele noutăți din Constanța</p>
+          `}>Ultimele noutăți din Dobrogea</p>
         </div>
       </div>
 
