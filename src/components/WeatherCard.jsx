@@ -195,7 +195,12 @@ export default function WeatherCard() {
   const getCurrentDate = () => {
     const date = new Date();
     const options = { weekday: 'long', day: 'numeric', month: 'long' };
-    return date.toLocaleDateString('ro-RO', options);
+    const dateString = date.toLocaleDateString('ro-RO', options);
+
+    // Capitalize first letter of each word
+    return dateString.split(' ').map(word =>
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
   };
 
   return (
