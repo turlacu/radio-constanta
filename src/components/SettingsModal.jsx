@@ -19,6 +19,8 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   const [activeTab, setActiveTab] = useState('background');
   const [locationInput, setLocationInput] = useState('');
+  const [locationError, setLocationError] = useState('');
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
 
   const weatherTypes = [
     { id: 'sunny', label: 'Sunny', icon: '☀️' },
@@ -43,14 +45,50 @@ export default function SettingsModal({ isOpen, onClose }) {
     { value: 'high', label: 'High', description: 'Full effects, for powerful devices' }
   ];
 
-  const handleLocationChange = () => {
-    if (locationInput.trim()) {
-      // For now, just store the name - you could integrate geocoding API later
+  const handleLocationChange = async () => {
+    if (!locationInput.trim()) return;
+
+    setIsSearchingLocation(true);
+    setLocationError('');
+
+    try {
+      // Use OpenStreetMap Nominatim API for geocoding (free, no API key required)
+      const query = encodeURIComponent(locationInput.trim());
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
+        {
+          headers: {
+            'User-Agent': 'RadioConstanta/1.0' // Required by Nominatim
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to search location');
+      }
+
+      const data = await response.json();
+
+      if (data.length === 0) {
+        setLocationError('Location not found. Please try a different search.');
+        setIsSearchingLocation(false);
+        return;
+      }
+
+      const result = data[0];
       setWeatherLocation({
-        ...weatherLocation,
-        name: locationInput.trim()
+        lat: parseFloat(result.lat),
+        lon: parseFloat(result.lon),
+        name: result.display_name.split(',')[0] // Use first part of display name
       });
+
       setLocationInput('');
+      setLocationError('');
+    } catch (error) {
+      console.error('Error geocoding location:', error);
+      setLocationError('Failed to search location. Please try again.');
+    } finally {
+      setIsSearchingLocation(false);
     }
   };
 
@@ -255,22 +293,29 @@ export default function SettingsModal({ isOpen, onClose }) {
                       <div className="flex gap-2 mb-3">
                         <input
                           type="text"
-                          placeholder="Enter city name..."
+                          placeholder="Enter city name (e.g., Paris, New York)..."
                           value={locationInput}
                           onChange={(e) => setLocationInput(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleLocationChange();
+                            if (e.key === 'Enter' && !isSearchingLocation) handleLocationChange();
                           }}
-                          className="flex-1 px-4 py-2 rounded-lg bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                          disabled={isSearchingLocation}
+                          className="flex-1 px-4 py-2 rounded-lg bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50"
                         />
                         <Button
                           variant="primary"
                           size="normal"
                           onClick={handleLocationChange}
+                          disabled={isSearchingLocation || !locationInput.trim()}
                         >
-                          Set
+                          {isSearchingLocation ? 'Searching...' : 'Set'}
                         </Button>
                       </div>
+                      {locationError && (
+                        <Body size="small" className="text-red-500 mb-3">
+                          {locationError}
+                        </Body>
+                      )}
                       <Button
                         variant="secondary"
                         size="normal"
