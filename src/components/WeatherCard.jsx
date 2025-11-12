@@ -175,28 +175,28 @@ export default function WeatherCard() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="flex items-center gap-3 text-white drop-shadow-lg"
+      className="flex items-center gap-4 text-white drop-shadow-2xl"
     >
       {/* Temperature */}
-      <div className="text-4xl font-bold leading-none">
+      <div className="text-6xl font-light leading-none tracking-tight">
         {weatherData.temperature}°
       </div>
 
       {/* Icon */}
-      <div className="text-3xl leading-none">
+      <div className="text-5xl leading-none">
         {weatherData.icon}
       </div>
 
       {/* Divider */}
-      <div className="w-px h-8 bg-white/30"></div>
+      <div className="w-px h-12 bg-white/30"></div>
 
       {/* Date and Location */}
-      <div className="flex flex-col gap-1">
-        <div className="text-[11px] font-medium opacity-90">
+      <div className="flex flex-col gap-1.5">
+        <div className="text-sm font-medium opacity-95 tracking-wide">
           {getCurrentDate()}
         </div>
-        <div className="text-[11px] font-medium opacity-90 flex items-center gap-1">
-          <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <div className="text-sm font-medium opacity-95 flex items-center gap-1.5 tracking-wide">
+          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
           </svg>
           <span>{weatherData.condition}, {weatherData.location}</span>
