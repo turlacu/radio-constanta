@@ -65,7 +65,7 @@ export default function WeatherCard() {
           feelsLike: Math.round(data.main.feels_like),
           humidity: data.main.humidity,
           windSpeed: Math.round(data.wind.speed * 3.6), // m/s to km/h
-          condition: data.weather[0].main,
+          condition: translateOWMCondition(data.weather[0].main),
           icon: getWeatherIconOWM(data.weather[0].icon)
         });
       }
@@ -79,17 +79,38 @@ export default function WeatherCard() {
 
   const getConditionFromWMO = (code) => {
     const wmoMap = {
-      0: 'Clear',
-      1: 'Mainly Clear', 2: 'Partly Cloudy', 3: 'Cloudy',
-      45: 'Foggy', 48: 'Foggy',
-      51: 'Light Drizzle', 53: 'Drizzle', 55: 'Heavy Drizzle',
-      61: 'Light Rain', 63: 'Rain', 65: 'Heavy Rain',
-      71: 'Light Snow', 73: 'Snow', 75: 'Heavy Snow', 77: 'Snow',
-      80: 'Rain Showers', 81: 'Rain Showers', 82: 'Heavy Showers',
-      85: 'Snow Showers', 86: 'Snow Showers',
-      95: 'Thunderstorm', 96: 'Thunderstorm', 99: 'Thunderstorm'
+      0: 'Senin',
+      1: 'Predominant Senin', 2: 'Parțial Noros', 3: 'Înnorat',
+      45: 'Ceață', 48: 'Ceață',
+      51: 'Burniță Ușoară', 53: 'Burniță', 55: 'Burniță Abundentă',
+      61: 'Ploaie Ușoară', 63: 'Ploaie', 65: 'Ploaie Torențială',
+      71: 'Ninsoare Ușoară', 73: 'Ninsoare', 75: 'Ninsoare Abundentă', 77: 'Ninsoare',
+      80: 'Averse de Ploaie', 81: 'Averse de Ploaie', 82: 'Averse Puternice',
+      85: 'Lapoviță', 86: 'Lapoviță',
+      95: 'Furtună', 96: 'Furtună', 99: 'Furtună'
     };
-    return wmoMap[code] || 'Unknown';
+    return wmoMap[code] || 'Necunoscut';
+  };
+
+  const translateOWMCondition = (condition) => {
+    const translations = {
+      'Clear': 'Senin',
+      'Clouds': 'Înnorat',
+      'Rain': 'Ploaie',
+      'Drizzle': 'Burniță',
+      'Thunderstorm': 'Furtună',
+      'Snow': 'Ninsoare',
+      'Mist': 'Ceață',
+      'Smoke': 'Fum',
+      'Haze': 'Ceață',
+      'Dust': 'Praf',
+      'Fog': 'Ceață',
+      'Sand': 'Nisip',
+      'Ash': 'Cenușă',
+      'Squall': 'Vijelie',
+      'Tornado': 'Tornadă'
+    };
+    return translations[condition] || condition;
   };
 
   const getWeatherIcon = (code) => {
@@ -142,11 +163,11 @@ export default function WeatherCard() {
     return null;
   }
 
-  // Get current date formatted like "Tuesday, 23 December"
+  // Get current date formatted like "Miercuri, 12 Noiembrie"
   const getCurrentDate = () => {
     const date = new Date();
     const options = { weekday: 'long', day: 'numeric', month: 'long' };
-    return date.toLocaleDateString('en-US', options);
+    return date.toLocaleDateString('ro-RO', options);
   };
 
   return (
