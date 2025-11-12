@@ -43,13 +43,23 @@ export default function WeatherBackground() {
           name: settings.weatherLocation.name
         };
 
-        // If already initialized, just fetch new weather for the new location
-        if (weatherManager.currentWeather) {
-          console.log('Location changed, fetching weather for new location:', settings.weatherLocation.name);
-          await weatherManager.fetchWeather();
+        // Handle mode changes
+        if (settings.weatherMode === 'manual') {
+          // Manual mode - set specific weather
+          const isNight = settings.manualWeatherState.timeOfDay === 'night';
+          weatherManager.setManualWeather(settings.manualWeatherState.weatherType, isNight);
         } else {
-          // First time initialization
-          await weatherManager.initialize(true);
+          // Auto mode - fetch real weather
+          weatherManager.isAutoMode = true;
+
+          // If already initialized, just fetch new weather for the new location
+          if (weatherManager.currentWeather) {
+            console.log('Location changed, fetching weather for new location:', settings.weatherLocation.name);
+            await weatherManager.fetchWeather();
+          } else {
+            // First time initialization
+            await weatherManager.initialize(true);
+          }
         }
 
         setIsLoading(false);
@@ -66,16 +76,6 @@ export default function WeatherBackground() {
       console.log('Weather visual state updated:', newState);
       setVisualState(newState);
     });
-
-    // Set mode based on settings
-    if (settings.weatherMode === 'auto') {
-      // Skip geolocation since we already set location from settings
-      weatherManager.enableAutoMode(true);
-    } else if (settings.weatherMode === 'manual') {
-      // Set manual weather state
-      const isNight = settings.manualWeatherState.timeOfDay === 'night';
-      weatherManager.setManualWeather(settings.manualWeatherState.weatherType, isNight);
-    }
 
     // Cleanup
     return () => {

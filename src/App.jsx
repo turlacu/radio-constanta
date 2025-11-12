@@ -431,7 +431,7 @@ function AppContent() {
               settings.backgroundAnimation === 'none' ? 'bg-bg-primary' : 'bg-bg-secondary'
             }`}>
               {/* Weather Background - Full screen behind everything */}
-              {settings.backgroundAnimation === 'weather' && !showNews && (
+              {settings.backgroundAnimation === 'weather' && !showNews && isPlaying && (
                 <WeatherBackground />
               )}
               {/* Top Right Buttons */}
