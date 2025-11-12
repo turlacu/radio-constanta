@@ -429,7 +429,7 @@ function AppContent() {
             // Desktop/TV: Radio-focused layout with optional news
             <div className={`flex items-center justify-center min-h-screen relative overflow-hidden ${
               !showNews && isPlaying && settings.backgroundAnimation === 'minimal' ? 'animated-gradient' :
-              settings.backgroundAnimation === 'none' ? 'bg-bg-primary' : 'bg-bg-secondary'
+              settings.backgroundAnimation === 'none' ? 'bg-bg-secondary' : 'bg-bg-secondary'
             }`}>
               {/* Weather Background - Full screen behind everything */}
               {settings.backgroundAnimation === 'weather' && !showNews && isPlaying && (
