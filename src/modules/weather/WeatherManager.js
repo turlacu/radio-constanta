@@ -351,10 +351,16 @@ export class WeatherManager {
 
     // Map weather condition to base weather type based on provider
     let weatherType;
-    if (this.weatherProvider === 'openmeteo') {
+
+    // In manual mode, the condition field already contains the weather type directly
+    if (!this.isAutoMode) {
+      weatherType = weather.condition;
+    } else if (this.weatherProvider === 'openmeteo') {
       weatherType = WMO_CODE_MAP[weather.conditionCode] || 'sunny';
+      console.log('Open-Meteo code:', weather.conditionCode, '-> weather type:', weatherType);
     } else {
       weatherType = WEATHER_CODE_MAP[weather.conditionCode] || 'sunny';
+      console.log('OpenWeatherMap code:', weather.conditionCode, '-> weather type:', weatherType);
     }
 
     // Combine weather and time to get visual state key
@@ -364,6 +370,8 @@ export class WeatherManager {
     } else {
       stateKey = weatherType === 'sunny' ? 'sunny_day' : `${weatherType}_day`;
     }
+
+    console.log('Visual state key:', stateKey, 'isNight:', isNight, 'weatherType:', weatherType);
 
     // Get visual state from configuration
     const visualState = VISUAL_STATES[stateKey];
@@ -385,6 +393,8 @@ export class WeatherManager {
         }
       };
     }
+
+    console.log('Updated visual state to:', this.currentVisualState.stateKey);
 
     // Notify listeners
     this.notifyListeners();
