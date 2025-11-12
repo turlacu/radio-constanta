@@ -43,8 +43,15 @@ export default function WeatherBackground() {
           name: settings.weatherLocation.name
         };
 
-        // Initialize with skipGeolocation=true since we already have location from settings
-        await weatherManager.initialize(true);
+        // If already initialized, just fetch new weather for the new location
+        if (weatherManager.currentWeather) {
+          console.log('Location changed, fetching weather for new location:', settings.weatherLocation.name);
+          await weatherManager.fetchWeather();
+        } else {
+          // First time initialization
+          await weatherManager.initialize(true);
+        }
+
         setIsLoading(false);
       } catch (error) {
         console.error('Failed to initialize weather:', error);
