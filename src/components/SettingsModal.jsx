@@ -21,6 +21,7 @@ export default function SettingsModal({ isOpen, onClose }) {
   const [locationInput, setLocationInput] = useState('');
   const [locationError, setLocationError] = useState('');
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [isGettingCurrentLocation, setIsGettingCurrentLocation] = useState(false);
 
   const weatherTypes = [
     { id: 'sunny', label: 'Sunny', icon: '☀️' },
@@ -92,20 +93,87 @@ export default function SettingsModal({ isOpen, onClose }) {
     }
   };
 
-  const handleUseCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
+  const handleUseCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      return;
+    }
+
+    setIsGettingCurrentLocation(true);
+    setLocationError('');
+
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 10000,
+          enableHighAccuracy: true
+        });
+      });
+
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      // Try to get city name via reverse geocoding
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+          {
+            headers: {
+              'User-Agent': 'RadioConstanta/1.0'
+            }
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const cityName = data.address?.city ||
+                          data.address?.town ||
+                          data.address?.village ||
+                          data.address?.county ||
+                          'Your Location';
+
           setWeatherLocation({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
+            lat,
+            lon,
+            name: cityName
+          });
+        } else {
+          // Fallback if reverse geocoding fails
+          setWeatherLocation({
+            lat,
+            lon,
             name: 'Your Location'
           });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
         }
-      );
+      } catch (geocodeError) {
+        // Fallback if reverse geocoding fails
+        console.warn('Reverse geocoding failed:', geocodeError);
+        setWeatherLocation({
+          lat,
+          lon,
+          name: 'Your Location'
+        });
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+
+      let errorMessage = 'Failed to get your location. ';
+      switch (error.code) {
+        case 1: // PERMISSION_DENIED
+          errorMessage += 'Please allow location access in your browser.';
+          break;
+        case 2: // POSITION_UNAVAILABLE
+          errorMessage += 'Location information is unavailable.';
+          break;
+        case 3: // TIMEOUT
+          errorMessage += 'Location request timed out.';
+          break;
+        default:
+          errorMessage += 'Please try again.';
+      }
+      setLocationError(errorMessage);
+    } finally {
+      setIsGettingCurrentLocation(false);
     }
   };
 
@@ -321,8 +389,9 @@ export default function SettingsModal({ isOpen, onClose }) {
                         size="normal"
                         fullWidth
                         onClick={handleUseCurrentLocation}
+                        disabled={isGettingCurrentLocation}
                       >
-                        Use Current Location
+                        {isGettingCurrentLocation ? 'Getting location...' : 'Use Current Location'}
                       </Button>
                     </div>
                   )}
