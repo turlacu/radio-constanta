@@ -206,7 +206,7 @@ export default function WeatherCard() {
       className="flex items-center gap-4 text-white drop-shadow-2xl"
     >
       {/* Temperature */}
-      <div className="text-6xl font-light leading-none tracking-tight">
+      <div className="text-5xl font-light leading-none tracking-tight">
         {weatherData.temperature}°
       </div>
 
