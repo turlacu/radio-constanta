@@ -530,7 +530,7 @@ function AppContent() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 20 }}
                       transition={{ delay: 0.3, duration: 0.5 }}
-                      className="absolute bottom-8 left-8 z-20"
+                      className="absolute bottom-6 left-6 z-20"
                     >
                       <WeatherCard />
                     </motion.div>
