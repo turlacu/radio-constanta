@@ -154,7 +154,7 @@ export default function WeatherCard() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="bg-bg-tertiary/90 backdrop-blur-xl rounded-xl p-4 border border-border/40 shadow-lg"
+      className="bg-bg-tertiary/60 backdrop-blur-xl rounded-xl p-4 border border-border/30"
     >
       {/* Temperature & Icon */}
       <div className="flex items-start justify-between mb-2">
