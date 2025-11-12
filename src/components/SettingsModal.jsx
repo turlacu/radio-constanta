@@ -221,7 +221,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
         {/* Modal */}
         <motion.div
-          className="relative w-full max-w-md max-h-[90vh] rounded-2xl bg-bg-primary border border-border shadow-2xl overflow-hidden"
+          className="relative w-full max-w-md max-h-[90vh] rounded-2xl bg-bg-secondary border border-border shadow-2xl overflow-hidden"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -230,13 +230,6 @@ export default function SettingsModal({ isOpen, onClose }) {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border">
             <Heading level={4}>Settings</Heading>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-bg-tertiary transition-colors"
-              aria-label="Close settings"
-            >
-              <PhosphorIcons.X />
-            </button>
           </div>
 
           {/* Content - All settings in one scrollable view */}
@@ -322,7 +315,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                       <PhosphorIcons.MapPin />
                       Location
                     </Heading>
-                    <div className="p-3 rounded-lg bg-bg-secondary border border-border mb-2">
+                    <div className="p-3 rounded-lg bg-bg-tertiary border border-border mb-2">
                       <Body size="small" className="font-medium">{weatherLocation.name}</Body>
                       <Body size="small" opacity="secondary" className="mt-0.5 text-xs">
                         {weatherLocation.lat.toFixed(4)}, {weatherLocation.lon.toFixed(4)}
@@ -338,7 +331,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                           if (e.key === 'Enter' && !isSearchingLocation) handleLocationChange();
                         }}
                         disabled={isSearchingLocation}
-                        className="flex-1 px-3 py-2 text-sm rounded-lg bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50"
+                        className="flex-1 px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50"
                       />
                       <button
                         onClick={handleLocationChange}
@@ -354,7 +347,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                     <button
                       onClick={handleUseCurrentLocation}
                       disabled={isGettingCurrentLocation}
-                      className="w-full px-3 py-2 text-sm rounded-lg bg-bg-secondary border border-border text-text-primary font-medium hover:bg-bg-tertiary disabled:opacity-50 transition-colors"
+                      className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary font-medium hover:bg-bg-tertiary/80 disabled:opacity-50 transition-colors"
                     >
                       {isGettingCurrentLocation ? 'Getting location...' : 'Use Current Location'}
                     </button>
@@ -424,7 +417,7 @@ export default function SettingsModal({ isOpen, onClose }) {
           <div className="flex items-center justify-end p-4 border-t border-border">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-bg-secondary text-text-primary font-medium hover:bg-bg-tertiary transition-colors text-sm"
+              className="px-4 py-2 rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors text-sm"
             >
               Close
             </button>
