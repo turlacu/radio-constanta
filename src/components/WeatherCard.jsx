@@ -211,7 +211,7 @@ export default function WeatherCard() {
       </div>
 
       {/* Icon */}
-      <div className="text-5xl leading-none">
+      <div className="text-4xl leading-none">
         {PhosphorIcons[weatherData.icon] ? (
           PhosphorIcons[weatherData.icon]()
         ) : (
