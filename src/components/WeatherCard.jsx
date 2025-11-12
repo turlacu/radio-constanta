@@ -154,29 +154,32 @@ export default function WeatherCard() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="bg-bg-tertiary/60 backdrop-blur-xl rounded-xl p-4 border border-border/30"
+      className="flex items-center gap-3 text-white drop-shadow-lg"
     >
-      {/* Temperature & Icon */}
-      <div className="flex items-start justify-between mb-2">
-        <div className="text-4xl font-bold text-text-primary leading-none">
-          {weatherData.temperature}°
-        </div>
-        <div className="text-3xl leading-none">
-          {weatherData.icon}
-        </div>
+      {/* Temperature */}
+      <div className="text-4xl font-bold leading-none">
+        {weatherData.temperature}°
       </div>
 
-      {/* Date */}
-      <div className="text-[11px] text-text-tertiary mb-1.5 font-medium">
-        {getCurrentDate()}
+      {/* Icon */}
+      <div className="text-3xl leading-none">
+        {weatherData.icon}
       </div>
 
-      {/* Location with pin icon */}
-      <div className="text-[11px] text-text-tertiary flex items-center gap-1 font-medium">
-        <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-        </svg>
-        <span className="truncate">{weatherData.condition}, {weatherData.location}</span>
+      {/* Divider */}
+      <div className="w-px h-8 bg-white/30"></div>
+
+      {/* Date and Location */}
+      <div className="flex flex-col gap-1">
+        <div className="text-[11px] font-medium opacity-90">
+          {getCurrentDate()}
+        </div>
+        <div className="text-[11px] font-medium opacity-90 flex items-center gap-1">
+          <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+          </svg>
+          <span>{weatherData.condition}, {weatherData.location}</span>
+        </div>
       </div>
     </motion.div>
   );
