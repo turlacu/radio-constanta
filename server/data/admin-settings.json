@@ -1,4 +1,5 @@
 {
+  "weatherProvider": "openmeteo",
   "weatherApiKey": "",
   "radioStreams": {
     "fm": [

@@ -209,20 +209,45 @@ export default function Admin() {
 
         {settings && (
           <div className="space-y-6">
-            {/* Weather API Key */}
+            {/* Weather Configuration */}
             <Card variant="elevated" radius="large" padding="large">
-              <Heading level={4} className="mb-4">Weather API Key</Heading>
-              <div className="space-y-3">
-                <Body size="small" opacity="secondary">
-                  OpenWeatherMap API key for weather data
-                </Body>
-                <input
-                  type="text"
-                  value={settings.weatherApiKey || ''}
-                  onChange={(e) => setSettings({ ...settings, weatherApiKey: e.target.value })}
-                  placeholder="Enter OpenWeatherMap API key"
-                  className="w-full px-4 py-3 rounded-lg bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
-                />
+              <Heading level={4} className="mb-4">Weather Configuration</Heading>
+              <div className="space-y-4">
+                <div>
+                  <Body size="small" opacity="secondary" className="mb-2">Weather Data Provider</Body>
+                  <select
+                    value={settings.weatherProvider || 'openmeteo'}
+                    onChange={(e) => setSettings({ ...settings, weatherProvider: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
+                  >
+                    <option value="openmeteo">Open-Meteo (Free, no API key required)</option>
+                    <option value="openweathermap">OpenWeatherMap (API key required)</option>
+                  </select>
+                </div>
+
+                {settings.weatherProvider === 'openweathermap' && (
+                  <div>
+                    <Body size="small" opacity="secondary" className="mb-2">
+                      OpenWeatherMap API Key
+                    </Body>
+                    <input
+                      type="text"
+                      value={settings.weatherApiKey || ''}
+                      onChange={(e) => setSettings({ ...settings, weatherApiKey: e.target.value })}
+                      placeholder="Enter OpenWeatherMap API key"
+                      className="w-full px-4 py-3 rounded-lg bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                    />
+                    <Body size="small" opacity="secondary" className="mt-2">
+                      Get your free API key from <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">openweathermap.org</a>
+                    </Body>
+                  </div>
+                )}
+
+                {settings.weatherProvider === 'openmeteo' && (
+                  <Body size="small" opacity="secondary">
+                    Open-Meteo provides free weather data without requiring an API key. Data is sourced from national weather services.
+                  </Body>
+                )}
               </div>
             </Card>
 

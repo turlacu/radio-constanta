@@ -112,6 +112,7 @@ router.get('/public-settings', async (req, res) => {
       radioStreams: settings.radioStreams,
       defaultLocation: settings.defaultLocation,
       apiBaseUrl: settings.apiBaseUrl,
+      weatherProvider: settings.weatherProvider || 'openmeteo',
       weatherApiKey: settings.weatherApiKey || ''
     });
   } catch (error) {
