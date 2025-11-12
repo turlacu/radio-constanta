@@ -7,6 +7,7 @@ import Admin from './pages/Admin';
 import BottomNav from './components/BottomNav';
 import SettingsModal from './components/SettingsModal';
 import WeatherBackground from './components/WeatherBackground';
+import WeatherCard from './components/WeatherCard';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { createFloatingParticles } from './utils/createFloatingParticles';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
@@ -518,7 +519,22 @@ function AppContent() {
                       </div>
                     </>
                   )}
+
+                  {/* Radio Player - Always centered */}
                   <Radio radioState={radioState} />
+
+                  {/* Weather Card - Bottom left corner, only show when not in news mode */}
+                  {!showNews && isPlaying && settings.backgroundAnimation === 'weather' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      transition={{ delay: 0.3, duration: 0.5 }}
+                      className="absolute bottom-8 left-8 z-20"
+                    >
+                      <WeatherCard />
+                    </motion.div>
+                  )}
                 </div>
 
                 {/* News Section - Slide in from right */}
