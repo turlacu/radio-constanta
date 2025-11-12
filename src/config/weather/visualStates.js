@@ -13,30 +13,31 @@ export const VISUAL_STATES = {
   // ===== DAY STATES =====
   sunny_day: {
     name: 'Sunny Day',
-    // Warm orange gradient - comfortable for 4K viewing, less harsh than bright yellow
+    // Soft pastel gradient - dreamy summer landscape feel
     gradients: [
-      { color: '#F5C89B', opacity: 1, position: 0 },    // Soft peach
-      { color: '#F1C292', opacity: 1, position: 11 },   // Peachy
-      { color: '#EDBC88', opacity: 1, position: 22 },   // Light apricot
-      { color: '#E9B67F', opacity: 1, position: 33 },   // Apricot
-      { color: '#E5AF75', opacity: 1, position: 44 },   // Light orange
-      { color: '#E0A86B', opacity: 1, position: 55 },   // Warm orange
-      { color: '#DBA162', opacity: 1, position: 66 },   // Deeper orange
-      { color: '#D69A58', opacity: 1, position: 77 },   // Medium orange
-      { color: '#D1934E', opacity: 1, position: 88 },   // Burnt orange
-      { color: '#CC8C45', opacity: 1, position: 100 }   // Deep warm orange
+      { color: '#A8D5E2', opacity: 1, position: 0 },    // Soft sky blue
+      { color: '#B8DCE5', opacity: 1, position: 10 },   // Light blue
+      { color: '#C8E3E8', opacity: 1, position: 20 },   // Very light blue
+      { color: '#D8E9EB', opacity: 1, position: 30 },   // Pale blue
+      { color: '#E8EEEE', opacity: 1, position: 40 },   // Almost white blue
+      { color: '#F5E6D8', opacity: 1, position: 50 },   // Soft cream
+      { color: '#F9E5D0', opacity: 1, position: 60 },   // Light peach cream
+      { color: '#FDE4C8', opacity: 1, position: 70 },   // Pastel peach
+      { color: '#FFE3C0', opacity: 1, position: 80 },   // Soft warm peach
+      { color: '#FFE5BC', opacity: 1, position: 90 },   // Light peachy yellow
+      { color: '#FFE8B8', opacity: 1, position: 100 }   // Soft pastel yellow
     ],
     particles: {
       type: 'dust',
-      count: 30,
-      speed: 0.3,
-      size: { min: 1, max: 3 },
-      opacity: { min: 0.2, max: 0.5 },
+      count: 25,
+      speed: 0.25,
+      size: { min: 1, max: 2 },
+      opacity: { min: 0.15, max: 0.35 },
       direction: 'float'
     },
     aurora: false,
-    overlayColor: 'rgba(0, 0, 0, 0.05)', // Slight darkening for eye comfort
-    animationSpeed: 0.5
+    overlayColor: null, // No overlay needed for soft pastels
+    animationSpeed: 0.4
   },
 
   cloudy_day: {
