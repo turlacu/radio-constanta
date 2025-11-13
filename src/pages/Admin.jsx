@@ -816,10 +816,45 @@ export default function Admin() {
                         <input
                           type="checkbox"
                           checked={settings.coverScheduling[selectedStation].enabled || false}
-                          onChange={(e) => {
-                            const newSettings = { ...settings };
-                            newSettings.coverScheduling[selectedStation].enabled = e.target.checked;
-                            setSettings(newSettings);
+                          onChange={async (e) => {
+                            const enabled = e.target.checked;
+                            const updatedSettings = {
+                              ...settings,
+                              coverScheduling: {
+                                ...settings.coverScheduling,
+                                [selectedStation]: {
+                                  ...settings.coverScheduling[selectedStation],
+                                  enabled
+                                }
+                              }
+                            };
+                            setSettings(updatedSettings);
+
+                            // Auto-save to server
+                            setIsSaving(true);
+                            try {
+                              const token = localStorage.getItem('adminToken');
+                              const response = await fetch('/api/admin/settings', {
+                                method: 'PUT',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify(updatedSettings)
+                              });
+
+                              if (response.ok) {
+                                setSaveMessage(`Cover scheduling ${enabled ? 'enabled' : 'disabled'} successfully!`);
+                                setTimeout(() => setSaveMessage(''), 3000);
+                              } else {
+                                setSaveMessage('Failed to save settings');
+                              }
+                            } catch (error) {
+                              setSaveMessage('Error saving settings');
+                              console.error('Save error:', error);
+                            } finally {
+                              setIsSaving(false);
+                            }
                           }}
                           className="sr-only peer"
                         />
