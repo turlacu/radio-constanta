@@ -184,16 +184,17 @@ export default function Admin() {
       if (response.ok) {
         const data = await response.json();
 
-        // Update settings with new cover
-        const newSettings = { ...settings };
-        if (!newSettings.coverScheduling) {
-          newSettings.coverScheduling = { fm: { covers: [] }, folclor: { covers: [] } };
-        }
-        if (!newSettings.coverScheduling[station].covers) {
-          newSettings.coverScheduling[station].covers = [];
-        }
-        newSettings.coverScheduling[station].covers.push(data.cover);
-        setSettings(newSettings);
+        // Update settings with new cover - create proper deep copy
+        setSettings(prevSettings => ({
+          ...prevSettings,
+          coverScheduling: {
+            ...prevSettings.coverScheduling,
+            [station]: {
+              ...prevSettings.coverScheduling[station],
+              covers: [...(prevSettings.coverScheduling[station].covers || []), data.cover]
+            }
+          }
+        }));
 
         setSaveMessage('Cover uploaded successfully!');
         setTimeout(() => setSaveMessage(''), 3000);
@@ -221,11 +222,17 @@ export default function Admin() {
       });
 
       if (response.ok) {
-        // Update settings to remove cover
-        const newSettings = { ...settings };
-        newSettings.coverScheduling[station].covers =
-          newSettings.coverScheduling[station].covers.filter(c => c.id !== coverId);
-        setSettings(newSettings);
+        // Update settings to remove cover - create proper deep copy
+        setSettings(prevSettings => ({
+          ...prevSettings,
+          coverScheduling: {
+            ...prevSettings.coverScheduling,
+            [station]: {
+              ...prevSettings.coverScheduling[station],
+              covers: prevSettings.coverScheduling[station].covers.filter(c => c.id !== coverId)
+            }
+          }
+        }));
 
         setSaveMessage('Cover deleted successfully!');
         setTimeout(() => setSaveMessage(''), 3000);
@@ -238,7 +245,7 @@ export default function Admin() {
     }
   };
 
-  const handleAddSchedule = () => {
+  const handleAddSchedule = async () => {
     // Validate form
     if (!scheduleForm.name.trim()) {
       setSaveMessage('Schedule name is required');
@@ -253,11 +260,6 @@ export default function Admin() {
       return;
     }
 
-    const newSettings = { ...settings };
-    if (!newSettings.coverScheduling[selectedStation].schedules) {
-      newSettings.coverScheduling[selectedStation].schedules = [];
-    }
-
     const scheduleData = {
       name: scheduleForm.name,
       coverPath: scheduleForm.coverPath,
@@ -267,39 +269,111 @@ export default function Admin() {
       priority: scheduleForm.priority
     };
 
+    let updatedSettings;
+
     if (editingSchedule) {
       // Update existing schedule
-      const index = newSettings.coverScheduling[selectedStation].schedules.findIndex(
-        s => s.id === editingSchedule.id
-      );
-      if (index !== -1) {
-        newSettings.coverScheduling[selectedStation].schedules[index] = {
-          ...scheduleData,
-          id: editingSchedule.id
-        };
-      }
+      updatedSettings = {
+        ...settings,
+        coverScheduling: {
+          ...settings.coverScheduling,
+          [selectedStation]: {
+            ...settings.coverScheduling[selectedStation],
+            schedules: settings.coverScheduling[selectedStation].schedules.map(s =>
+              s.id === editingSchedule.id ? { ...scheduleData, id: s.id } : s
+            )
+          }
+        }
+      };
     } else {
       // Add new schedule
-      newSettings.coverScheduling[selectedStation].schedules.push({
-        ...scheduleData,
-        id: `schedule-${Date.now()}`
-      });
+      updatedSettings = {
+        ...settings,
+        coverScheduling: {
+          ...settings.coverScheduling,
+          [selectedStation]: {
+            ...settings.coverScheduling[selectedStation],
+            schedules: [
+              ...(settings.coverScheduling[selectedStation].schedules || []),
+              { ...scheduleData, id: `schedule-${Date.now()}` }
+            ]
+          }
+        }
+      };
     }
 
-    setSettings(newSettings);
+    setSettings(updatedSettings);
     setShowScheduleModal(false);
     setEditingSchedule(null);
-    setSaveMessage('Schedule saved! Remember to click "Save All Settings" to persist changes.');
-    setTimeout(() => setSaveMessage(''), 5000);
+
+    // Auto-save to server
+    setIsSaving(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedSettings)
+      });
+
+      if (response.ok) {
+        setSaveMessage('Schedule saved successfully!');
+        setTimeout(() => setSaveMessage(''), 3000);
+      } else {
+        setSaveMessage('Failed to save schedule');
+      }
+    } catch (error) {
+      setSaveMessage('Error saving schedule');
+      console.error('Save error:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDeleteSchedule = (station, scheduleId) => {
+  const handleDeleteSchedule = async (station, scheduleId) => {
     if (!confirm('Are you sure you want to delete this schedule?')) return;
 
-    const newSettings = { ...settings };
-    newSettings.coverScheduling[station].schedules =
-      newSettings.coverScheduling[station].schedules.filter(s => s.id !== scheduleId);
-    setSettings(newSettings);
+    const updatedSettings = {
+      ...settings,
+      coverScheduling: {
+        ...settings.coverScheduling,
+        [station]: {
+          ...settings.coverScheduling[station],
+          schedules: settings.coverScheduling[station].schedules.filter(s => s.id !== scheduleId)
+        }
+      }
+    };
+
+    setSettings(updatedSettings);
+
+    // Auto-save to server
+    setIsSaving(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedSettings)
+      });
+
+      if (response.ok) {
+        setSaveMessage('Schedule deleted successfully!');
+        setTimeout(() => setSaveMessage(''), 3000);
+      } else {
+        setSaveMessage('Failed to delete schedule');
+      }
+    } catch (error) {
+      setSaveMessage('Error deleting schedule');
+      console.error('Save error:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Login screen
