@@ -18,6 +18,9 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Serve uploaded cover images
+app.use('/covers', express.static(path.join(__dirname, '../public/covers')));
+
 // API Routes
 app.use('/api/news', newsRouter);
 app.use('/api/article', articleRouter);
