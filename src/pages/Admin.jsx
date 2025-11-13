@@ -29,6 +29,9 @@ export default function Admin() {
     priority: 0
   });
 
+  // Active tab state
+  const [activeTab, setActiveTab] = useState('weather');
+
   // Check for existing token on mount
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -346,126 +349,221 @@ export default function Admin() {
     );
   }
 
+  // Tab definitions
+  const tabs = [
+    { id: 'weather', name: 'Weather', icon: 'CloudSun' },
+    { id: 'streams', name: 'Radio Streams', icon: 'Radio' },
+    { id: 'covers', name: 'Cover Scheduling', icon: 'Images' },
+    { id: 'api', name: 'API Settings', icon: 'Database' }
+  ];
+
+  // Phosphor icons (inline SVG for simplicity)
+  const PhosphorIcons = {
+    CloudSun: () => (
+      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M120,56V16a8,8,0,0,1,16,0V56a8,8,0,0,1-16,0Zm80,72a72,72,0,0,1-72,72H88A64,64,0,1,1,75.42,80.62a72,72,0,0,1,124.73,31.34A71.68,71.68,0,0,1,200,128Zm-16,0a56.06,56.06,0,0,0-56-56,57.27,57.27,0,0,0-9.6.84,8,8,0,0,1-9.4-9.4A56.06,56.06,0,0,0,72,8a56,56,0,0,0,0,112h56A56.06,56.06,0,0,0,184,128ZM69.17,64.59a71.88,71.88,0,0,1,42.07-35.5,72.75,72.75,0,0,1,8.48-1.84,72.36,72.36,0,0,1,11.51-.93,8,8,0,0,1,0,16,56.44,56.44,0,0,0-9.17.76,56.84,56.84,0,0,0-48.15,61.71A56,56,0,1,0,88,184h40a56,56,0,0,0,0-112,57.27,57.27,0,0,0-9.6.84,8,8,0,0,1-9.4-9.4,56.24,56.24,0,0,0-.84-9.17ZM216.49,111.51a8,8,0,0,0-11.31,0L192,124.69l-13.17-13.18a8,8,0,0,0-11.31,11.31L180.69,136l-13.18,13.17a8,8,0,0,0,11.31,11.31L192,147.31l13.17,13.18a8,8,0,0,0,11.31-11.31L203.31,136l13.18-13.17A8,8,0,0,0,216.49,111.51ZM88,56a8,8,0,0,0,5.66-2.34l8-8a8,8,0,0,0-11.32-11.32l-8,8A8,8,0,0,0,88,56Zm-.49,96.49a8,8,0,0,0-11.31,0l-8,8a8,8,0,0,0,11.31,11.31l8-8A8,8,0,0,0,87.51,152.49ZM40,120H16a8,8,0,0,0,0,16H40a8,8,0,0,0,0-16Z"/>
+      </svg>
+    ),
+    Radio: () => (
+      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M104,72a8,8,0,0,1,8-8h32a8,8,0,0,1,0,16H112A8,8,0,0,1,104,72Zm128,56A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128ZM128,176a48,48,0,1,1,48-48A48.05,48.05,0,0,1,128,176Zm0-80a32,32,0,1,0,32,32A32,32,0,0,0,128,96Zm0,48a16,16,0,1,1,16-16A16,16,0,0,1,128,144Z"/>
+      </svg>
+    ),
+    Images: () => (
+      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M216,40H72A16,16,0,0,0,56,56V72H40A16,16,0,0,0,24,88V200a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V184h16a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM72,56H216v62.75l-10.07-10.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L72,109.37ZM184,200H40V88H56v80a16,16,0,0,0,16,16H184Zm32-32H72V132l36-36,49.66,49.66a8,8,0,0,0,11.31,0L194.63,120,216,141.38V168ZM160,84a12,12,0,1,1,12,12A12,12,0,0,1,160,84Z"/>
+      </svg>
+    ),
+    Database: () => (
+      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M128,24C74.17,24,32,48.6,32,80v96c0,31.4,42.17,56,96,56s96-24.6,96-56V80C224,48.6,181.83,24,128,24Zm80,104c0,9.62-7.88,19.43-21.61,26.92C170.93,163.35,150.19,168,128,168s-42.93-4.65-58.39-13.08C55.88,147.43,48,137.62,48,128V111.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64ZM69.61,53.08C85.07,44.65,105.81,40,128,40s42.93,4.65,58.39,13.08C200.12,60.57,208,70.38,208,80s-7.88,19.43-21.61,26.92C170.93,115.35,150.19,120,128,120s-42.93-4.65-58.39-13.08C55.88,99.43,48,89.62,48,80S55.88,60.57,69.61,53.08ZM186.39,202.92C170.93,211.35,150.19,216,128,216s-42.93-4.65-58.39-13.08C55.88,195.43,48,185.62,48,176V159.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64V176C208,185.62,200.12,195.43,186.39,202.92Z"/>
+      </svg>
+    ),
+    SignOut: () => (
+      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z"/>
+      </svg>
+    )
+  };
+
   // Admin panel
   return (
-    <div className="min-h-screen bg-bg-secondary p-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <Heading level={4}>Admin Panel</Heading>
-            <Body size="small" opacity="secondary" className="mt-1 text-xs">
-              Manage app settings and configuration
-            </Body>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors text-sm"
-          >
-            Logout
-          </button>
+    <div className="min-h-screen bg-bg-primary flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-bg-secondary border-r border-border flex flex-col">
+        {/* Header */}
+        <div className="p-6 border-b border-border">
+          <Heading level={5} className="text-lg">Admin Panel</Heading>
+          <Body size="small" opacity="secondary" className="mt-1 text-xs">
+            Radio Constanța
+          </Body>
         </div>
 
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-1">
+          {tabs.map((tab) => {
+            const Icon = PhosphorIcons[tab.icon];
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-primary text-white'
+                    : 'text-text-secondary hover:bg-bg-tertiary hover:text-text-primary'
+                }`}
+              >
+                <Icon />
+                <span>{tab.name}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Logout Button */}
+        <div className="p-4 border-t border-border">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary hover:bg-bg-tertiary hover:text-error transition-colors"
+          >
+            <PhosphorIcons.SignOut />
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-8 max-w-5xl mx-auto">
+
         {settings && (
-          <div className="space-y-4">
-            {/* Weather Configuration */}
-            <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-4">
-              <Heading level={6} className="mb-3 text-sm">Weather Configuration</Heading>
-              <div className="space-y-3">
-                <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Weather Data Provider</Body>
-                  <select
-                    value={settings.weatherProvider || 'openmeteo'}
-                    onChange={(e) => setSettings({ ...settings, weatherProvider: e.target.value })}
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
-                  >
-                    <option value="openmeteo">Open-Meteo (Free, no API key required)</option>
-                    <option value="openweathermap">OpenWeatherMap (API key required)</option>
-                  </select>
-                </div>
-
-                {settings.weatherProvider === 'openweathermap' && (
-                  <div>
-                    <Body size="small" opacity="secondary" className="mb-2 text-xs">
-                      OpenWeatherMap API Key
-                    </Body>
-                    <input
-                      type="text"
-                      value={settings.weatherApiKey || ''}
-                      onChange={(e) => setSettings({ ...settings, weatherApiKey: e.target.value })}
-                      placeholder="Enter OpenWeatherMap API key"
-                      className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
-                    />
-                    <Body size="small" opacity="secondary" className="mt-2 text-xs">
-                      Get your free API key from <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">openweathermap.org</a>
-                    </Body>
-                  </div>
-                )}
-
-                {settings.weatherProvider === 'openmeteo' && (
-                  <Body size="small" opacity="secondary" className="text-xs">
-                    Open-Meteo provides free weather data without requiring an API key. Data is sourced from national weather services.
+          <div className="space-y-6">
+            {/* Weather Tab */}
+            {activeTab === 'weather' && (
+              <div>
+                <div className="mb-6">
+                  <Heading level={3} className="text-2xl">Weather Configuration</Heading>
+                  <Body size="small" opacity="secondary" className="mt-2">
+                    Configure weather data provider and location settings
                   </Body>
-                )}
-              </div>
-            </div>
+                </div>
 
-            {/* Default Location */}
-            <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-4">
-              <Heading level={6} className="mb-3 text-sm">Default Location</Heading>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">City Name</Body>
-                  <input
-                    type="text"
-                    value={settings.defaultLocation?.name || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      defaultLocation: { ...settings.defaultLocation, name: e.target.value }
-                    })}
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Latitude</Body>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={settings.defaultLocation?.lat || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      defaultLocation: { ...settings.defaultLocation, lat: parseFloat(e.target.value) }
-                    })}
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Longitude</Body>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={settings.defaultLocation?.lon || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      defaultLocation: { ...settings.defaultLocation, lon: parseFloat(e.target.value) }
-                    })}
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
-                  />
-                </div>
-              </div>
-            </div>
+                <div className="space-y-6">
+                  {/* Weather Configuration */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <Heading level={6} className="mb-4 text-base">Weather Data Provider</Heading>
+                    <div className="space-y-4">
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2">Provider</Body>
+                        <select
+                          value={settings.weatherProvider || 'openmeteo'}
+                          onChange={(e) => setSettings({ ...settings, weatherProvider: e.target.value })}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        >
+                          <option value="openmeteo">Open-Meteo (Free, no API key required)</option>
+                          <option value="openweathermap">OpenWeatherMap (API key required)</option>
+                        </select>
+                      </div>
 
-            {/* Radio Streams - FM */}
-            <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <Heading level={6} className="text-sm">Radio Constanța FM Streams</Heading>
-                <button
-                  onClick={() => addStreamQuality('fm')}
-                  className="px-3 py-1.5 text-xs rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors"
-                >
-                  + Add Quality
-                </button>
+                      {settings.weatherProvider === 'openweathermap' && (
+                        <div>
+                          <Body size="small" opacity="secondary" className="mb-2">
+                            OpenWeatherMap API Key
+                          </Body>
+                          <input
+                            type="text"
+                            value={settings.weatherApiKey || ''}
+                            onChange={(e) => setSettings({ ...settings, weatherApiKey: e.target.value })}
+                            placeholder="Enter OpenWeatherMap API key"
+                            className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                          />
+                          <Body size="small" opacity="secondary" className="mt-2 text-xs">
+                            Get your free API key from <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">openweathermap.org</a>
+                          </Body>
+                        </div>
+                      )}
+
+                      {settings.weatherProvider === 'openmeteo' && (
+                        <Body size="small" opacity="secondary" className="text-xs">
+                          Open-Meteo provides free weather data without requiring an API key. Data is sourced from national weather services.
+                        </Body>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                  {/* Default Location */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <Heading level={6} className="mb-4 text-base">Default Location</Heading>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">City Name</Body>
+                        <input
+                          type="text"
+                          value={settings.defaultLocation?.name || ''}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            defaultLocation: { ...settings.defaultLocation, name: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">Latitude</Body>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={settings.defaultLocation?.lat || ''}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            defaultLocation: { ...settings.defaultLocation, lat: parseFloat(e.target.value) }
+                          })}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">Longitude</Body>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={settings.defaultLocation?.lon || ''}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            defaultLocation: { ...settings.defaultLocation, lon: parseFloat(e.target.value) }
+                          })}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-3">
+            )}
+
+            {/* Streams Tab */}
+            {activeTab === 'streams' && (
+              <div>
+                <div className="mb-6">
+                  <Heading level={3} className="text-2xl">Radio Streams</Heading>
+                  <Body size="small" opacity="secondary" className="mt-2">
+                    Manage stream quality options for FM and Folclor stations
+                  </Body>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Radio Streams - FM */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <Heading level={6} className="text-base">Radio Constanța FM Streams</Heading>
+                      <button
+                        onClick={() => addStreamQuality('fm')}
+                        className="px-3 py-2 text-sm rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition-colors"
+                      >
+                        + Add Quality
+                      </button>
+                    </div>
+                    <div className="space-y-3">
                 {settings.radioStreams?.fm?.map((stream, index) => (
                   <div key={index} className="p-3 rounded-lg bg-bg-tertiary border border-border space-y-2">
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
@@ -510,23 +608,23 @@ export default function Admin() {
                       onChange={(e) => updateStreamQuality('fm', index, 'url', e.target.value)}
                       placeholder="Stream URL"
                       className="w-full px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
-                    />
+                        />
+                      </div>
+                    ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Radio Streams - Folclor */}
-            <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <Heading level={6} className="text-sm">Radio Constanța Folclor Streams</Heading>
-                <button
-                  onClick={() => addStreamQuality('folclor')}
-                  className="px-3 py-1.5 text-xs rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors"
-                >
-                  + Add Quality
-                </button>
-              </div>
+                  {/* Radio Streams - Folclor */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <Heading level={6} className="text-base">Radio Constanța Folclor Streams</Heading>
+                      <button
+                        onClick={() => addStreamQuality('folclor')}
+                        className="px-3 py-2 text-sm rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition-colors"
+                      >
+                        + Add Quality
+                      </button>
+                    </div>
               <div className="space-y-3">
                 {settings.radioStreams?.folclor?.map((stream, index) => (
                   <div key={index} className="p-3 rounded-lg bg-bg-tertiary border border-border space-y-2">
@@ -572,16 +670,27 @@ export default function Admin() {
                       onChange={(e) => updateStreamQuality('folclor', index, 'url', e.target.value)}
                       placeholder="Stream URL"
                       className="w-full px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
-                    />
+                        />
+                      </div>
+                    ))}
+                    </div>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Cover Scheduling */}
-            {settings.coverScheduling && (
-              <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-4">
-                <Heading level={6} className="mb-3 text-sm">Cover Scheduling</Heading>
+            {/* Cover Scheduling Tab */}
+            {activeTab === 'covers' && settings.coverScheduling && (
+              <div>
+                <div className="mb-6">
+                  <Heading level={3} className="text-2xl">Cover Scheduling</Heading>
+                  <Body size="small" opacity="secondary" className="mt-2">
+                    Schedule different cover arts for each station based on day and time
+                  </Body>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
 
                 {/* Station Tabs */}
                 <div className="flex gap-2 mb-4">
@@ -816,30 +925,46 @@ export default function Admin() {
                         )}
                       </div>
                     </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             )}
 
-            {/* API Base URL */}
-            <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-4">
-              <Heading level={6} className="mb-3 text-sm">API Base URL</Heading>
-              <div className="space-y-3">
-                <Body size="small" opacity="secondary" className="text-xs">
-                  Optional base URL for API endpoints (leave empty for relative paths)
-                </Body>
-                <input
-                  type="text"
-                  value={settings.apiBaseUrl || ''}
-                  onChange={(e) => setSettings({ ...settings, apiBaseUrl: e.target.value })}
-                  placeholder="https://your-domain.com or leave empty"
-                  className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
-                />
-              </div>
-            </div>
+            {/* API Settings Tab */}
+            {activeTab === 'api' && (
+              <div>
+                <div className="mb-6">
+                  <Heading level={3} className="text-2xl">API Settings</Heading>
+                  <Body size="small" opacity="secondary" className="mt-2">
+                    Configure API endpoints and external integrations
+                  </Body>
+                </div>
 
-            {/* Save Button */}
-            <div className="flex items-center gap-3 pt-2">
+                <div className="space-y-6">
+                  {/* API Base URL */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <Heading level={6} className="mb-4 text-base">API Base URL</Heading>
+                    <div className="space-y-4">
+                      <Body size="small" opacity="secondary">
+                        Optional base URL for API endpoints (leave empty for relative paths)
+                      </Body>
+                      <input
+                        type="text"
+                        value={settings.apiBaseUrl || ''}
+                        onChange={(e) => setSettings({ ...settings, apiBaseUrl: e.target.value })}
+                        placeholder="https://your-domain.com or leave empty"
+                        className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Save Button - Always visible */}
+            <div className="sticky bottom-0 bg-bg-primary border-t border-border p-6 flex items-center gap-3 -mx-8 -mb-8">
               <button
                 onClick={handleSaveSettings}
                 disabled={isSaving}
@@ -855,9 +980,11 @@ export default function Admin() {
             </div>
           </div>
         )}
+        </div>
+      </div>
 
-        {/* Schedule Modal */}
-        {showScheduleModal && (
+      {/* Schedule Modal */}
+      {showScheduleModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" onClick={() => setShowScheduleModal(false)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -1017,7 +1144,6 @@ export default function Admin() {
             </motion.div>
           </div>
         )}
-      </div>
     </div>
   );
 }
