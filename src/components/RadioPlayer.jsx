@@ -42,11 +42,15 @@ export default function RadioPlayer({ radioState }) {
         {/* Main cover art card - clean dark card */}
         <div className="relative w-full aspect-square rounded-[16px] overflow-hidden bg-bg-tertiary border border-border 4k:rounded-[24px]">
           <motion.img
+            key={currentStation.coverArt} // Force re-animation when cover changes
             src={currentStation.coverArt}
             alt={`${currentStation.name} cover art`}
             className="w-full h-full object-cover"
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
             whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.3 }}
           />
 
           {/* Live indicator - clean badge */}

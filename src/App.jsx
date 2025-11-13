@@ -71,6 +71,12 @@ function AppContent() {
   const isSwitchingRef = useRef(false);
   const isSwitchingQualityRef = useRef(false);
 
+  // Dynamic cover art state
+  const [dynamicCovers, setDynamicCovers] = useState({
+    fm: '/rcfm.png',
+    folclor: '/rcf.png'
+  });
+
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
 
@@ -79,6 +85,54 @@ function AppContent() {
     // Fewer particles for better performance, they're subtle anyway
     return createFloatingParticles(60);
   }, []);
+
+  // Fetch dynamic covers from API
+  const fetchCurrentCovers = async () => {
+    try {
+      const fmResponse = await fetch('/api/admin/covers/current/fm');
+      const folclorResponse = await fetch('/api/admin/covers/current/folclor');
+
+      if (fmResponse.ok && folclorResponse.ok) {
+        const fmData = await fmResponse.json();
+        const folclorData = await folclorResponse.json();
+
+        setDynamicCovers({
+          fm: fmData.coverPath || '/rcfm.png',
+          folclor: folclorData.coverPath || '/rcf.png'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching covers:', error);
+    }
+  };
+
+  // Fetch covers on mount and poll every 30 seconds
+  useEffect(() => {
+    fetchCurrentCovers();
+
+    const interval = setInterval(fetchCurrentCovers, 30000); // Poll every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Create station objects with dynamic covers
+  const stationsWithDynamicCovers = useMemo(() => ({
+    fm: {
+      ...STATIONS.fm,
+      coverArt: dynamicCovers.fm
+    },
+    folclor: {
+      ...STATIONS.folclor,
+      coverArt: dynamicCovers.folclor
+    }
+  }), [dynamicCovers]);
+
+  // Update current station when covers change
+  useEffect(() => {
+    setCurrentStation(prevStation =>
+      stationsWithDynamicCovers[prevStation.id]
+    );
+  }, [stationsWithDynamicCovers]);
 
   // Helper to log debug info
   const logDebug = (message) => {
@@ -405,7 +459,7 @@ function AppContent() {
     currentStation,
     metadata,
     streamInfo,
-    stations: Object.values(STATIONS), // Convert to array for compatibility
+    stations: Object.values(stationsWithDynamicCovers), // Convert to array with dynamic covers
     selectedQuality: selectedQuality[currentStation.id],
     availableQualities: currentStation.qualities,
     togglePlay,
