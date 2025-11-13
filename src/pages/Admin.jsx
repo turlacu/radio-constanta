@@ -457,88 +457,88 @@ export default function Admin() {
                       <div>
                         <Body size="small" opacity="secondary" className="mb-2">Provider</Body>
                         <select
-                    value={settings.weatherProvider || 'openmeteo'}
-                    onChange={(e) => setSettings({ ...settings, weatherProvider: e.target.value })}
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
-                  >
-                    <option value="openmeteo">Open-Meteo (Free, no API key required)</option>
-                    <option value="openweathermap">OpenWeatherMap (API key required)</option>
-                  </select>
-                </div>
-
-                        {settings.weatherProvider === 'openweathermap' && (
-                          <div>
-                            <Body size="small" opacity="secondary" className="mb-2">
-                              OpenWeatherMap API Key
-                            </Body>
-                            <input
-                              type="text"
-                              value={settings.weatherApiKey || ''}
-                              onChange={(e) => setSettings({ ...settings, weatherApiKey: e.target.value })}
-                              placeholder="Enter OpenWeatherMap API key"
-                              className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
-                            />
-                            <Body size="small" opacity="secondary" className="mt-2 text-xs">
-                              Get your free API key from <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">openweathermap.org</a>
-                            </Body>
-                          </div>
-                        )}
-
-                        {settings.weatherProvider === 'openmeteo' && (
-                          <Body size="small" opacity="secondary" className="text-xs">
-                            Open-Meteo provides free weather data without requiring an API key. Data is sourced from national weather services.
-                          </Body>
-                        )}
+                          value={settings.weatherProvider || 'openmeteo'}
+                          onChange={(e) => setSettings({ ...settings, weatherProvider: e.target.value })}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        >
+                          <option value="openmeteo">Open-Meteo (Free, no API key required)</option>
+                          <option value="openweathermap">OpenWeatherMap (API key required)</option>
+                        </select>
                       </div>
+
+                      {settings.weatherProvider === 'openweathermap' && (
+                        <div>
+                          <Body size="small" opacity="secondary" className="mb-2">
+                            OpenWeatherMap API Key
+                          </Body>
+                          <input
+                            type="text"
+                            value={settings.weatherApiKey || ''}
+                            onChange={(e) => setSettings({ ...settings, weatherApiKey: e.target.value })}
+                            placeholder="Enter OpenWeatherMap API key"
+                            className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                          />
+                          <Body size="small" opacity="secondary" className="mt-2 text-xs">
+                            Get your free API key from <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">openweathermap.org</a>
+                          </Body>
+                        </div>
+                      )}
+
+                      {settings.weatherProvider === 'openmeteo' && (
+                        <Body size="small" opacity="secondary" className="text-xs">
+                          Open-Meteo provides free weather data without requiring an API key. Data is sourced from national weather services.
+                        </Body>
+                      )}
                     </div>
                   </div>
+                </div>
 
                   {/* Default Location */}
                   <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
                     <Heading level={6} className="mb-4 text-base">Default Location</Heading>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">City Name</Body>
-                  <input
-                    type="text"
-                    value={settings.defaultLocation?.name || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      defaultLocation: { ...settings.defaultLocation, name: e.target.value }
-                    })}
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Latitude</Body>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={settings.defaultLocation?.lat || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      defaultLocation: { ...settings.defaultLocation, lat: parseFloat(e.target.value) }
-                    })}
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Longitude</Body>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    value={settings.defaultLocation?.lon || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      defaultLocation: { ...settings.defaultLocation, lon: parseFloat(e.target.value) }
-                        })}
-                        className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
-                      />
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">City Name</Body>
+                        <input
+                          type="text"
+                          value={settings.defaultLocation?.name || ''}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            defaultLocation: { ...settings.defaultLocation, name: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">Latitude</Body>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={settings.defaultLocation?.lat || ''}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            defaultLocation: { ...settings.defaultLocation, lat: parseFloat(e.target.value) }
+                          })}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">Longitude</Body>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={settings.defaultLocation?.lon || ''}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            defaultLocation: { ...settings.defaultLocation, lon: parseFloat(e.target.value) }
+                          })}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
             )}
 
             {/* Streams Tab */}
