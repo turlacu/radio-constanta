@@ -491,7 +491,6 @@ export default function Admin() {
                       )}
                     </div>
                   </div>
-                </div>
 
                   {/* Default Location */}
                   <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
