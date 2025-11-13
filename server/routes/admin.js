@@ -292,7 +292,9 @@ router.get('/covers/current/:station', async (req, res) => {
     // Find active schedule based on current day/time
     const now = new Date();
     const currentDay = now.getDay(); // 0 = Sunday
-    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const currentHour = now.getHours();
+    const currentMinutes = now.getMinutes();
+    const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
 
     const activeSchedules = (config.schedules || [])
       .filter(schedule => {
@@ -301,7 +303,18 @@ router.get('/covers/current/:station', async (req, res) => {
           return false;
         }
 
-        // Check if current time is within schedule range
+        // Handle news schedules (hour-based with duration)
+        if (schedule.type === 'news') {
+          // Check if current hour is in newsHours array
+          if (!schedule.newsHours || !schedule.newsHours.includes(currentHour)) {
+            return false;
+          }
+          // Check if current minutes are within duration (starts at :00)
+          const duration = schedule.duration || 3; // Default 3 minutes
+          return currentMinutes >= 0 && currentMinutes < duration;
+        }
+
+        // Handle regular schedules (time range)
         return currentTime >= schedule.startTime && currentTime <= schedule.endTime;
       })
       .sort((a, b) => (b.priority || 0) - (a.priority || 0)); // Sort by priority descending
