@@ -33,5 +33,23 @@
     "lon": 28.6348,
     "name": "Constanța, România"
   },
-  "apiBaseUrl": ""
+  "apiBaseUrl": "",
+  "coverScheduling": {
+    "fm": {
+      "enabled": false,
+      "defaultCover": "/rcfm.png",
+      "transitionEffect": "fade",
+      "transitionDuration": 500,
+      "covers": [],
+      "schedules": []
+    },
+    "folclor": {
+      "enabled": false,
+      "defaultCover": "/rcf.png",
+      "transitionEffect": "fade",
+      "transitionDuration": 500,
+      "covers": [],
+      "schedules": []
+    }
+  }
 }
