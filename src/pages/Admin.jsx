@@ -26,7 +26,10 @@ export default function Admin() {
     days: [],
     startTime: '09:00',
     endTime: '17:00',
-    priority: 0
+    priority: 0,
+    type: 'regular', // 'regular' or 'news'
+    newsHours: [], // For news type: array of hours when news airs (e.g., [7, 9, 12, 18])
+    duration: 3 // For news type: duration in minutes
   });
 
   // Active tab state
@@ -259,14 +262,24 @@ export default function Admin() {
       setSaveMessage('Please select at least one day');
       return;
     }
+    if (scheduleForm.type === 'news' && scheduleForm.newsHours.length === 0) {
+      setSaveMessage('Please select at least one hour for news');
+      return;
+    }
 
     const scheduleData = {
       name: scheduleForm.name,
       coverPath: scheduleForm.coverPath,
       days: scheduleForm.days,
-      startTime: scheduleForm.startTime,
-      endTime: scheduleForm.endTime,
-      priority: scheduleForm.priority
+      type: scheduleForm.type,
+      priority: scheduleForm.type === 'news' ? 100 : scheduleForm.priority, // News always has highest priority
+      ...(scheduleForm.type === 'news' ? {
+        newsHours: scheduleForm.newsHours,
+        duration: scheduleForm.duration
+      } : {
+        startTime: scheduleForm.startTime,
+        endTime: scheduleForm.endTime
+      })
     };
 
     let updatedSettings;
@@ -937,7 +950,10 @@ export default function Admin() {
                               days: [],
                               startTime: '09:00',
                               endTime: '17:00',
-                              priority: 0
+                              priority: 0,
+                              type: 'regular',
+                              newsHours: [],
+                              duration: 3
                             });
                             setShowScheduleModal(true);
                           }}
@@ -952,9 +968,21 @@ export default function Admin() {
                           <div key={schedule.id} className="p-3 rounded-lg bg-bg-tertiary border border-border">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="font-medium text-xs text-text-primary">{schedule.name}</div>
+                                <div className="flex items-center gap-2">
+                                  <div className="font-medium text-xs text-text-primary">{schedule.name}</div>
+                                  {schedule.type === 'news' && (
+                                    <span className="px-2 py-0.5 text-xs rounded-full bg-blue-500/20 text-blue-400 font-medium">
+                                      📰 News
+                                    </span>
+                                  )}
+                                </div>
                                 <div className="text-xs text-text-tertiary mt-1">
-                                  {schedule.days?.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')} | {schedule.startTime} - {schedule.endTime}
+                                  {schedule.days?.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')}
+                                  {schedule.type === 'news' ? (
+                                    <> | Hours: {schedule.newsHours?.map(h => `${String(h).padStart(2, '0')}:00`).join(', ')} ({schedule.duration || 3}min)</>
+                                  ) : (
+                                    <> | {schedule.startTime} - {schedule.endTime}</>
+                                  )}
                                 </div>
                                 {schedule.coverPath && (
                                   <div className="mt-2">
@@ -972,7 +1000,10 @@ export default function Admin() {
                                       days: schedule.days || [],
                                       startTime: schedule.startTime || '09:00',
                                       endTime: schedule.endTime || '17:00',
-                                      priority: schedule.priority || 0
+                                      priority: schedule.priority || 0,
+                                      type: schedule.type || 'regular',
+                                      newsHours: schedule.newsHours || [],
+                                      duration: schedule.duration || 3
                                     });
                                     setShowScheduleModal(true);
                                   }}
@@ -1080,6 +1111,35 @@ export default function Admin() {
               </div>
 
               <div className="space-y-4">
+                {/* Schedule Type */}
+                <div>
+                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Schedule Type</Body>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setScheduleForm({ ...scheduleForm, type: 'regular' })}
+                      className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
+                        scheduleForm.type === 'regular'
+                          ? 'bg-primary text-white'
+                          : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
+                      }`}
+                    >
+                      Regular Schedule
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setScheduleForm({ ...scheduleForm, type: 'news' })}
+                      className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
+                        scheduleForm.type === 'news'
+                          ? 'bg-primary text-white'
+                          : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
+                      }`}
+                    >
+                      📰 News Bulletin
+                    </button>
+                  </div>
+                </div>
+
                 {/* Schedule Name */}
                 <div>
                   <Body size="small" opacity="secondary" className="mb-2 text-xs">Schedule Name</Body>
@@ -1087,7 +1147,7 @@ export default function Admin() {
                     type="text"
                     value={scheduleForm.name}
                     onChange={(e) => setScheduleForm({ ...scheduleForm, name: e.target.value })}
-                    placeholder="e.g., Morning Show, Weekend Special"
+                    placeholder={scheduleForm.type === 'news' ? 'e.g., Morning News, Evening News' : 'e.g., Morning Show, Weekend Special'}
                     className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
                   />
                 </div>
@@ -1130,73 +1190,147 @@ export default function Admin() {
                   </div>
                 </div>
 
-                {/* Days of Week */}
+                {/* Days of Week - Starting with Monday */}
                 <div>
                   <Body size="small" opacity="secondary" className="mb-2 text-xs">Active Days</Body>
                   <div className="grid grid-cols-7 gap-2">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => {
-                          const newDays = scheduleForm.days.includes(index)
-                            ? scheduleForm.days.filter(d => d !== index)
-                            : [...scheduleForm.days, index].sort();
-                          setScheduleForm({ ...scheduleForm, days: newDays });
-                        }}
-                        className={`px-2 py-2 text-xs rounded-lg font-medium transition-colors ${
-                          scheduleForm.days.includes(index)
-                            ? 'bg-primary text-white'
-                            : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
-                        }`}
-                      >
-                        {day}
-                      </button>
-                    ))}
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => {
+                      // Map to JS day numbers: Mon=1, Tue=2, ..., Sun=0
+                      const dayNum = idx === 6 ? 0 : idx + 1;
+                      return (
+                        <button
+                          key={dayNum}
+                          type="button"
+                          onClick={() => {
+                            const newDays = scheduleForm.days.includes(dayNum)
+                              ? scheduleForm.days.filter(d => d !== dayNum)
+                              : [...scheduleForm.days, dayNum].sort();
+                            setScheduleForm({ ...scheduleForm, days: newDays });
+                          }}
+                          className={`px-2 py-2 text-xs rounded-lg font-medium transition-colors ${
+                            scheduleForm.days.includes(dayNum)
+                              ? 'bg-primary text-white'
+                              : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Time Range */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Body size="small" opacity="secondary" className="mb-2 text-xs">Start Time</Body>
-                    <input
-                      type="time"
-                      value={scheduleForm.startTime}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, startTime: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
-                    />
-                  </div>
-                  <div>
-                    <Body size="small" opacity="secondary" className="mb-2 text-xs">End Time</Body>
-                    <input
-                      type="time"
-                      value={scheduleForm.endTime}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, endTime: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
-                    />
-                  </div>
-                </div>
+                {/* Regular Schedule: Time Range */}
+                {scheduleForm.type === 'regular' && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">Start Time</Body>
+                        <input
+                          type="time"
+                          value={scheduleForm.startTime}
+                          onChange={(e) => setScheduleForm({ ...scheduleForm, startTime: e.target.value })}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">End Time</Body>
+                        <input
+                          type="time"
+                          value={scheduleForm.endTime}
+                          onChange={(e) => setScheduleForm({ ...scheduleForm, endTime: e.target.value })}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                    </div>
 
-                {/* Priority */}
-                <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">
-                    Priority (higher numbers take precedence when schedules overlap)
-                  </Body>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min="0"
-                      max="10"
-                      value={scheduleForm.priority}
-                      onChange={(e) => setScheduleForm({ ...scheduleForm, priority: parseInt(e.target.value) })}
-                      className="flex-1"
-                    />
-                    <span className="text-sm font-medium text-text-primary w-8 text-center">
-                      {scheduleForm.priority}
-                    </span>
-                  </div>
-                </div>
+                    {/* Priority */}
+                    <div>
+                      <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                        Priority (higher numbers take precedence when schedules overlap)
+                      </Body>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min="0"
+                          max="10"
+                          value={scheduleForm.priority}
+                          onChange={(e) => setScheduleForm({ ...scheduleForm, priority: parseInt(e.target.value) })}
+                          className="flex-1"
+                        />
+                        <span className="text-sm font-medium text-text-primary w-8 text-center">
+                          {scheduleForm.priority}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* News Bulletin: Hour Selection */}
+                {scheduleForm.type === 'news' && (
+                  <>
+                    <div>
+                      <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                        News Hours (select hours when news airs - starts at :00)
+                      </Body>
+                      <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto p-2 bg-bg-tertiary rounded-lg">
+                        {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                          <button
+                            key={hour}
+                            type="button"
+                            onClick={() => {
+                              const newHours = scheduleForm.newsHours.includes(hour)
+                                ? scheduleForm.newsHours.filter(h => h !== hour)
+                                : [...scheduleForm.newsHours, hour].sort((a, b) => a - b);
+                              setScheduleForm({ ...scheduleForm, newsHours: newHours });
+                            }}
+                            className={`px-3 py-2 text-xs rounded-lg font-medium transition-colors ${
+                              scheduleForm.newsHours.includes(hour)
+                                ? 'bg-primary text-white'
+                                : 'bg-bg-secondary text-text-primary hover:bg-bg-primary/80'
+                            }`}
+                          >
+                            {String(hour).padStart(2, '0')}:00
+                          </button>
+                        ))}
+                      </div>
+                      {scheduleForm.newsHours.length > 0 && (
+                        <div className="mt-2 text-xs text-text-secondary">
+                          Selected: {scheduleForm.newsHours.map(h => `${String(h).padStart(2, '0')}:00`).join(', ')}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Duration */}
+                    <div>
+                      <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                        Duration (minutes)
+                      </Body>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min="1"
+                          max="10"
+                          value={scheduleForm.duration}
+                          onChange={(e) => setScheduleForm({ ...scheduleForm, duration: parseInt(e.target.value) })}
+                          className="flex-1"
+                        />
+                        <span className="text-sm font-medium text-text-primary w-16 text-center">
+                          {scheduleForm.duration} min
+                        </span>
+                      </div>
+                      <Body size="small" opacity="secondary" className="mt-1 text-xs">
+                        News bulletin will show from :00 to :{String(scheduleForm.duration).padStart(2, '0')}
+                      </Body>
+                    </div>
+
+                    <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                      <Body size="small" className="text-xs text-blue-400">
+                        ℹ️ News bulletins automatically have the highest priority and will override any other schedules during the selected hours.
+                      </Body>
+                    </div>
+                  </>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-4">
