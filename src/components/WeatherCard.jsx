@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSettings } from '../contexts/SettingsContext';
 import { Heading, Body } from './ui';
+import { getWeatherManager } from '../modules/weather/WeatherManager';
 
 // Phosphor Icons
 const PhosphorIcons = {
@@ -42,67 +43,75 @@ export default function WeatherCard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchWeatherData();
+    // Get shared singleton WeatherManager instance (same one used by WeatherBackground)
+    const weatherManager = getWeatherManager();
 
-    // Refresh weather every 10 minutes
-    const interval = setInterval(fetchWeatherData, 10 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [settings.weatherLocation]);
-
-  const fetchWeatherData = async () => {
-    try {
-      const { lat, lon, name } = settings.weatherLocation;
-
-      // Fetch from admin settings
-      const settingsResponse = await fetch('/api/admin/public-settings');
-      const adminSettings = await settingsResponse.json();
-
-      const provider = adminSettings.weatherProvider || 'openmeteo';
-
-      if (provider === 'openmeteo') {
-        // Use Open-Meteo API
-        const params = new URLSearchParams({
-          latitude: lat,
-          longitude: lon,
-          current: 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,apparent_temperature',
-          timezone: 'auto'
-        });
-
-        const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
-        const data = await response.json();
+    // Subscribe to weather manager updates for real-time sync with background
+    const unsubscribe = weatherManager.subscribe((visualState) => {
+      if (visualState && visualState.weather) {
+        const weather = weatherManager.getWeatherData();
 
         setWeatherData({
-          location: name,
-          temperature: Math.round(data.current.temperature_2m),
-          feelsLike: Math.round(data.current.apparent_temperature),
-          humidity: data.current.relative_humidity_2m,
-          windSpeed: Math.round(data.current.wind_speed_10m),
-          condition: getConditionFromWMO(data.current.weather_code),
-          icon: getWeatherIcon(data.current.weather_code)
+          location: weather.cityName || settings.weatherLocation.name,
+          temperature: weather.temp,
+          feelsLike: weather.temp, // Open-Meteo doesn't provide feels_like in current implementation
+          humidity: weather.humidity,
+          windSpeed: Math.round(weather.windSpeed),
+          condition: getConditionFromCode(weather.conditionCode, weatherManager.weatherProvider),
+          icon: getWeatherIconFromCode(weather.conditionCode, weatherManager.weatherProvider)
         });
-      } else if (provider === 'openweathermap' && adminSettings.weatherApiKey) {
-        // Use OpenWeatherMap API
-        const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${adminSettings.weatherApiKey}&units=metric`
-        );
-        const data = await response.json();
 
-        setWeatherData({
-          location: name,
-          temperature: Math.round(data.main.temp),
-          feelsLike: Math.round(data.main.feels_like),
-          humidity: data.main.humidity,
-          windSpeed: Math.round(data.wind.speed * 3.6), // m/s to km/h
-          condition: translateOWMCondition(data.weather[0].main),
-          icon: getWeatherIconOWM(data.weather[0].icon)
-        });
+        setIsLoading(false);
       }
+    });
 
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Failed to fetch weather for card:', error);
+    // If weather manager already has data, update immediately
+    const currentWeather = weatherManager.getWeatherData();
+    if (currentWeather) {
+      setWeatherData({
+        location: currentWeather.cityName || settings.weatherLocation.name,
+        temperature: currentWeather.temp,
+        feelsLike: currentWeather.temp,
+        humidity: currentWeather.humidity,
+        windSpeed: Math.round(currentWeather.windSpeed),
+        condition: getConditionFromCode(currentWeather.conditionCode, weatherManager.weatherProvider),
+        icon: getWeatherIconFromCode(currentWeather.conditionCode, weatherManager.weatherProvider)
+      });
       setIsLoading(false);
     }
+
+    return () => {
+      unsubscribe();
+    };
+  }, [settings.weatherLocation]);
+
+  const getConditionFromCode = (code, provider) => {
+    if (provider === 'openmeteo') {
+      return getConditionFromWMO(code);
+    } else {
+      return translateOWMCondition(getOWMConditionFromCode(code));
+    }
+  };
+
+  const getWeatherIconFromCode = (code, provider) => {
+    if (provider === 'openmeteo') {
+      return getWeatherIcon(code);
+    } else {
+      // For OpenWeatherMap, use the code directly
+      return getWeatherIconOWM(code);
+    }
+  };
+
+  const getOWMConditionFromCode = (code) => {
+    // Map OpenWeatherMap condition codes to condition names
+    if (code >= 200 && code < 300) return 'Thunderstorm';
+    if (code >= 300 && code < 400) return 'Drizzle';
+    if (code >= 500 && code < 600) return 'Rain';
+    if (code >= 600 && code < 700) return 'Snow';
+    if (code >= 700 && code < 800) return 'Mist';
+    if (code === 800) return 'Clear';
+    if (code > 800) return 'Clouds';
+    return 'Clear';
   };
 
   const getConditionFromWMO = (code) => {
@@ -153,19 +162,16 @@ export default function WeatherCard() {
     return 'Cloud';
   };
 
-  const getWeatherIconOWM = (icon) => {
-    const iconMap = {
-      '01d': 'Sun', '01n': 'Moon',
-      '02d': 'Cloud', '02n': 'Cloud',
-      '03d': 'Cloud', '03n': 'Cloud',
-      '04d': 'Cloud', '04n': 'Cloud',
-      '09d': 'CloudRain', '09n': 'CloudRain',
-      '10d': 'CloudRain', '10n': 'CloudRain',
-      '11d': 'Lightning', '11n': 'Lightning',
-      '13d': 'Snowflake', '13n': 'Snowflake',
-      '50d': 'Drop', '50n': 'Drop' // fog/mist
-    };
-    return iconMap[icon] || 'Cloud';
+  const getWeatherIconOWM = (code) => {
+    // Map OpenWeatherMap condition codes to icons
+    if (code >= 200 && code < 300) return 'Lightning'; // Thunderstorm
+    if (code >= 300 && code < 400) return 'CloudRain'; // Drizzle
+    if (code >= 500 && code < 600) return 'CloudRain'; // Rain
+    if (code >= 600 && code < 700) return 'Snowflake'; // Snow
+    if (code >= 700 && code < 800) return 'Drop'; // Atmosphere (mist, fog, etc.)
+    if (code === 800) return 'Sun'; // Clear
+    if (code > 800) return 'Cloud'; // Clouds
+    return 'Cloud';
   };
 
   if (isLoading) {
