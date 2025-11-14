@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { mkdir } from 'fs/promises';
 import newsRouter from './routes/news.js';
 import articleRouter from './routes/article.js';
 import streamRouter from './routes/stream.js';
@@ -14,12 +15,33 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Initialize persistent data directories on startup
+const initializeDataDirectories = async () => {
+  const dataDir = path.join(__dirname, 'data');
+  const coversDir = path.join(dataDir, 'covers');
+  const fmCoversDir = path.join(coversDir, 'fm');
+  const folclorCoversDir = path.join(coversDir, 'folclor');
+
+  try {
+    await mkdir(dataDir, { recursive: true });
+    await mkdir(coversDir, { recursive: true });
+    await mkdir(fmCoversDir, { recursive: true });
+    await mkdir(folclorCoversDir, { recursive: true });
+    console.log('✓ Persistent data directories initialized');
+  } catch (error) {
+    console.error('Error creating data directories:', error);
+  }
+};
+
+// Initialize directories before starting server
+await initializeDataDirectories();
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Serve uploaded cover images
-app.use('/covers', express.static(path.join(__dirname, '../public/covers')));
+// Serve uploaded cover images from persistent storage
+app.use('/covers', express.static(path.join(__dirname, 'data/covers')));
 
 // API Routes
 app.use('/api/news', newsRouter);

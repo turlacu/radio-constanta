@@ -15,6 +15,11 @@ dist-ssr
 # Environment variables
 .env
 
+# Persistent data (user uploads and settings)
+# These should persist across deployments
+server/data/*
+!server/data/.gitkeep
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
