@@ -12,10 +12,11 @@ const __dirname = path.dirname(__filename);
 const router = express.Router();
 
 // Configure multer for cover uploads
+// Store in server/data/covers for persistence across deployments
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
     const station = req.params.station || 'fm';
-    const uploadPath = path.join(__dirname, '../../public/covers', station);
+    const uploadPath = path.join(__dirname, '../data/covers', station);
 
     // Create directory if it doesn't exist
     try {
