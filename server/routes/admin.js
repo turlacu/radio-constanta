@@ -307,14 +307,31 @@ router.get('/covers/current/:station', async (req, res) => {
       return res.json({ coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') });
     }
 
-    // Find active schedule based on current day/time
+    // Find active schedule based on current day/time (using Europe/Bucharest timezone)
     const now = new Date();
-    const currentDay = now.getDay(); // 0 = Sunday
-    const currentHour = now.getHours();
-    const currentMinutes = now.getMinutes();
+
+    // Get time in Romania timezone (Europe/Bucharest)
+    const romaniaTimeStr = now.toLocaleString('en-US', {
+      timeZone: 'Europe/Bucharest',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      weekday: 'short',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+
+    // Parse Romania time components
+    const romaniaDate = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Bucharest' }));
+    const currentDay = romaniaDate.getDay(); // 0 = Sunday
+    const currentHour = romaniaDate.getHours();
+    const currentMinutes = romaniaDate.getMinutes();
     const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
 
-    console.log(`[Cover API] ${station} - Current time: ${currentTime}, Day: ${currentDay} (${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][currentDay]})`);
+    console.log(`[Cover API] ${station} - Current time: ${currentTime} (Romania/Bucharest), Day: ${currentDay} (${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][currentDay]})`);
+    console.log(`[Cover API] ${station} - UTC time: ${now.getHours()}:${now.getMinutes()}`);
     console.log(`[Cover API] ${station} - Total schedules: ${config.schedules?.length || 0}`);
 
     const activeSchedules = (config.schedules || [])

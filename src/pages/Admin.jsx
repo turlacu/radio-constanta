@@ -249,23 +249,33 @@ export default function Admin() {
   };
 
   const handleAddSchedule = async () => {
+    console.log('[Admin] handleAddSchedule called');
+    console.log('[Admin] Schedule form data:', scheduleForm);
+    console.log('[Admin] Selected station:', selectedStation);
+
     // Validate form
     if (!scheduleForm.name.trim()) {
+      console.log('[Admin] ❌ Validation failed: name is required');
       setSaveMessage('Schedule name is required');
       return;
     }
     if (!scheduleForm.coverPath) {
+      console.log('[Admin] ❌ Validation failed: coverPath is required');
       setSaveMessage('Please select a cover');
       return;
     }
     if (scheduleForm.days.length === 0) {
+      console.log('[Admin] ❌ Validation failed: no days selected');
       setSaveMessage('Please select at least one day');
       return;
     }
     if (scheduleForm.type === 'news' && scheduleForm.newsHours.length === 0) {
+      console.log('[Admin] ❌ Validation failed: news type needs hours');
       setSaveMessage('Please select at least one hour for news');
       return;
     }
+
+    console.log('[Admin] ✅ Validation passed');
 
     const scheduleData = {
       name: scheduleForm.name,
@@ -282,9 +292,12 @@ export default function Admin() {
       })
     };
 
+    console.log('[Admin] Schedule data to save:', scheduleData);
+
     let updatedSettings;
 
     if (editingSchedule) {
+      console.log('[Admin] Updating existing schedule:', editingSchedule.id);
       // Update existing schedule
       updatedSettings = {
         ...settings,
@@ -299,6 +312,7 @@ export default function Admin() {
         }
       };
     } else {
+      console.log('[Admin] Adding new schedule');
       // Add new schedule
       updatedSettings = {
         ...settings,
@@ -315,14 +329,19 @@ export default function Admin() {
       };
     }
 
+    console.log('[Admin] Updated settings:', updatedSettings.coverScheduling[selectedStation]);
+
     setSettings(updatedSettings);
     setShowScheduleModal(false);
     setEditingSchedule(null);
 
     // Auto-save to server
+    console.log('[Admin] Sending settings to server...');
     setIsSaving(true);
     try {
       const token = localStorage.getItem('adminToken');
+      console.log('[Admin] Token exists:', !!token);
+
       const response = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: {
@@ -332,15 +351,21 @@ export default function Admin() {
         body: JSON.stringify(updatedSettings)
       });
 
+      console.log('[Admin] Server response status:', response.status);
+
       if (response.ok) {
+        const data = await response.json();
+        console.log('[Admin] ✅ Server response:', data);
         setSaveMessage('Schedule saved successfully!');
         setTimeout(() => setSaveMessage(''), 3000);
       } else {
+        const errorText = await response.text();
+        console.log('[Admin] ❌ Server error:', response.status, errorText);
         setSaveMessage('Failed to save schedule');
       }
     } catch (error) {
+      console.error('[Admin] ❌ Network error:', error);
       setSaveMessage('Error saving schedule');
-      console.error('Save error:', error);
     } finally {
       setIsSaving(false);
     }
