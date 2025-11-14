@@ -35,6 +35,17 @@ export default function Admin() {
   // Active tab state
   const [activeTab, setActiveTab] = useState('weather');
 
+  // Server time state (Romania timezone)
+  const [serverTime, setServerTime] = useState(new Date());
+
+  // Update server time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setServerTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Check for existing token on mount
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -798,6 +809,51 @@ export default function Admin() {
                   <Body size="small" opacity="secondary" className="mt-2">
                     Schedule different cover arts for each station based on day and time
                   </Body>
+                </div>
+
+                {/* Server Time Display */}
+                <div className="mb-6 p-4 rounded-xl bg-bg-secondary border border-border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Body size="small" className="font-medium text-xs text-text-secondary mb-1">
+                        🕐 Server Time (Europe/Bucharest)
+                      </Body>
+                      <div className="flex items-baseline gap-3">
+                        <Body className="text-2xl font-bold text-primary font-mono">
+                          {serverTime.toLocaleString('en-US', {
+                            timeZone: 'Europe/Bucharest',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                          })}
+                        </Body>
+                        <Body size="small" className="text-text-tertiary">
+                          {serverTime.toLocaleString('en-US', {
+                            timeZone: 'Europe/Bucharest',
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </Body>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Body size="small" className="text-xs text-text-tertiary mb-1">
+                        Timezone
+                      </Body>
+                      <Body size="small" className="text-xs font-medium text-text-secondary">
+                        UTC{serverTime.toLocaleString('en-US', {
+                          timeZone: 'Europe/Bucharest',
+                          timeZoneName: 'short'
+                        }).match(/UTC([+-]\d+)/)?.[1] || '+2/+3'}
+                      </Body>
+                      <Body size="small" className="text-xs text-green-500 mt-1">
+                        ✓ Auto-adjusts for DST
+                      </Body>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-6">
