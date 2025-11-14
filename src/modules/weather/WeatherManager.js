@@ -536,4 +536,14 @@ export class WeatherManager {
   }
 }
 
+// Export singleton instance
+let weatherManagerInstance = null;
+
+export const getWeatherManager = () => {
+  if (!weatherManagerInstance) {
+    weatherManagerInstance = new WeatherManager();
+  }
+  return weatherManagerInstance;
+};
+
 export default WeatherManager;

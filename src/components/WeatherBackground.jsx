@@ -5,15 +5,12 @@
 
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { WeatherManager } from '../modules/weather/WeatherManager';
+import { getWeatherManager } from '../modules/weather/WeatherManager';
 import { getCrossfadeTransition } from '../modules/weather/TransitionController';
 import BackgroundRenderer from './weather/BackgroundRenderer';
 import ParticleLayer from './weather/ParticleLayer';
 import AuroraLayer from './weather/AuroraLayer';
 import { useSettings } from '../contexts/SettingsContext';
-
-// Singleton instance
-let weatherManagerInstance = null;
 
 export default function WeatherBackground() {
   const settings = useSettings();
@@ -26,12 +23,8 @@ export default function WeatherBackground() {
       return;
     }
 
-    // Create singleton instance
-    if (!weatherManagerInstance) {
-      weatherManagerInstance = new WeatherManager();
-    }
-
-    const weatherManager = weatherManagerInstance;
+    // Get shared singleton instance
+    const weatherManager = getWeatherManager();
 
     // Initialize weather manager
     const initWeather = async () => {
