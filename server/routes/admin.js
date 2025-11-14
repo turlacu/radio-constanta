@@ -125,6 +125,21 @@ router.put('/settings', authenticateAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Invalid settings format' });
     }
 
+    // Log cover scheduling updates
+    if (newSettings.coverScheduling) {
+      Object.keys(newSettings.coverScheduling).forEach(station => {
+        const config = newSettings.coverScheduling[station];
+        console.log(`[Settings API] ${station} cover scheduling:`);
+        console.log(`[Settings API]   - Enabled: ${config.enabled}`);
+        console.log(`[Settings API]   - Schedules: ${config.schedules?.length || 0}`);
+        if (config.schedules?.length > 0) {
+          config.schedules.forEach(s => {
+            console.log(`[Settings API]     * "${s.name}" (${s.type || 'regular'}) - Days: ${s.days}, Priority: ${s.priority || 0}`);
+          });
+        }
+      });
+    }
+
     // Write settings to file
     await fs.writeFile(
       SETTINGS_FILE,
@@ -132,6 +147,7 @@ router.put('/settings', authenticateAdmin, async (req, res) => {
       'utf8'
     );
 
+    console.log('[Settings API] ✅ Settings saved successfully');
     res.json({ success: true, settings: newSettings });
   } catch (error) {
     console.error('Error writing settings:', error);
@@ -279,6 +295,7 @@ router.get('/covers/current/:station', async (req, res) => {
     const settings = JSON.parse(data);
 
     if (!settings.coverScheduling || !settings.coverScheduling[station]) {
+      console.log(`[Cover API] No cover scheduling config for station: ${station}`);
       return res.json({ coverPath: station === 'fm' ? '/rcfm.png' : '/rcf.png' });
     }
 
@@ -286,6 +303,7 @@ router.get('/covers/current/:station', async (req, res) => {
 
     // If not enabled, return default cover
     if (!config.enabled) {
+      console.log(`[Cover API] Cover scheduling disabled for ${station}, returning default: ${config.defaultCover}`);
       return res.json({ coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') });
     }
 
@@ -296,30 +314,45 @@ router.get('/covers/current/:station', async (req, res) => {
     const currentMinutes = now.getMinutes();
     const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
 
+    console.log(`[Cover API] ${station} - Current time: ${currentTime}, Day: ${currentDay} (${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][currentDay]})`);
+    console.log(`[Cover API] ${station} - Total schedules: ${config.schedules?.length || 0}`);
+
     const activeSchedules = (config.schedules || [])
       .filter(schedule => {
+        console.log(`[Cover API] Evaluating schedule: "${schedule.name}" (${schedule.type || 'regular'})`);
+        console.log(`[Cover API]   - Days: ${schedule.days} (current: ${currentDay})`);
+
         // Check if current day is in schedule
         if (!schedule.days.includes(currentDay)) {
+          console.log(`[Cover API]   - ❌ Day not matched`);
           return false;
         }
 
         // Handle news schedules (hour-based with duration)
         if (schedule.type === 'news') {
+          console.log(`[Cover API]   - News hours: ${schedule.newsHours}, current hour: ${currentHour}`);
           // Check if current hour is in newsHours array
           if (!schedule.newsHours || !schedule.newsHours.includes(currentHour)) {
+            console.log(`[Cover API]   - ❌ Hour not matched`);
             return false;
           }
           // Check if current minutes are within duration (starts at :00)
           const duration = schedule.duration || 3; // Default 3 minutes
-          return currentMinutes >= 0 && currentMinutes < duration;
+          const matched = currentMinutes >= 0 && currentMinutes < duration;
+          console.log(`[Cover API]   - Minutes ${currentMinutes} within ${duration}min? ${matched ? '✅' : '❌'}`);
+          return matched;
         }
 
         // Handle regular schedules (time range)
-        return currentTime >= schedule.startTime && currentTime <= schedule.endTime;
+        console.log(`[Cover API]   - Time range: ${schedule.startTime} - ${schedule.endTime} (current: ${currentTime})`);
+        const matched = currentTime >= schedule.startTime && currentTime <= schedule.endTime;
+        console.log(`[Cover API]   - ${matched ? '✅ MATCHED' : '❌ Not in range'}`);
+        return matched;
       })
       .sort((a, b) => (b.priority || 0) - (a.priority || 0)); // Sort by priority descending
 
     if (activeSchedules.length > 0) {
+      console.log(`[Cover API] ✅ Active schedule found: "${activeSchedules[0].name}" -> ${activeSchedules[0].coverPath}`);
       return res.json({
         coverPath: activeSchedules[0].coverPath,
         scheduleId: activeSchedules[0].id
@@ -327,6 +360,7 @@ router.get('/covers/current/:station', async (req, res) => {
     }
 
     // No active schedule, return default
+    console.log(`[Cover API] No active schedules, returning default: ${config.defaultCover}`);
     res.json({ coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') });
   } catch (error) {
     console.error('Error getting current cover:', error);
