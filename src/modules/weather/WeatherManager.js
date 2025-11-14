@@ -77,9 +77,6 @@ export class WeatherManager {
    * Gets user location and fetches initial weather
    */
   async initialize(skipGeolocation = false) {
-    // Set placeholder weather immediately so we always have a state
-    this.setPlaceholderWeather();
-
     // Try to fetch API key from admin settings first
     await this.fetchApiKeyFromSettings();
 
@@ -102,12 +99,17 @@ export class WeatherManager {
         await this.fetchWeather();
       } catch (error) {
         console.warn('Could not fetch weather, using placeholder:', error);
+        // Only set placeholder if weather fetch fails
+        this.setPlaceholderWeather();
       }
 
       // Set up auto-refresh every 10 minutes
       this.updateInterval = setInterval(() => {
         this.fetchWeather();
       }, 10 * 60 * 1000);
+    } else {
+      // If we can't fetch weather (no API key for OpenWeatherMap), use placeholder
+      this.setPlaceholderWeather();
     }
 
     return this.currentVisualState;
