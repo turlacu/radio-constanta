@@ -88,21 +88,31 @@ function AppContent() {
 
   // Fetch dynamic covers from API
   const fetchCurrentCovers = async () => {
+    console.log('[App] Fetching current covers...');
     try {
       const fmResponse = await fetch('/api/admin/covers/current/fm');
       const folclorResponse = await fetch('/api/admin/covers/current/folclor');
+
+      console.log('[App] FM response status:', fmResponse.status);
+      console.log('[App] Folclor response status:', folclorResponse.status);
 
       if (fmResponse.ok && folclorResponse.ok) {
         const fmData = await fmResponse.json();
         const folclorData = await folclorResponse.json();
 
-        setDynamicCovers({
+        console.log('[App] FM cover data:', fmData);
+        console.log('[App] Folclor cover data:', folclorData);
+
+        const newCovers = {
           fm: fmData.coverPath || '/rcfm.png',
           folclor: folclorData.coverPath || '/rcf.png'
-        });
+        };
+
+        console.log('[App] Setting dynamic covers:', newCovers);
+        setDynamicCovers(newCovers);
       }
     } catch (error) {
-      console.error('Error fetching covers:', error);
+      console.error('[App] Error fetching covers:', error);
     }
   };
 
