@@ -13,28 +13,21 @@ export const VISUAL_STATES = {
   // ===== DAY STATES =====
   sunny_day: {
     name: 'Sunny Day',
-    // Vivid clear sky gradient - summer sky transitioning to warm horizon
+    // Optimized clear sky gradient - blue-dominant with minimal stops for performance
     gradients: [
-      { color: '#5ec8ff', opacity: 1, position: 0 },    // Vivid clear-sky blue (top)
-      { color: '#6dccff', opacity: 1, position: 8 },    // Smooth transition
-      { color: '#7cd0ff', opacity: 1, position: 16 },   //
-      { color: '#8bd4ff', opacity: 1, position: 24 },   //
-      { color: '#8ee8e0', opacity: 1, position: 32 },   // Softer turquoise sky (mid)
-      { color: '#a0ead6', opacity: 1, position: 40 },   // Smooth transition
-      { color: '#b8eccc', opacity: 1, position: 48 },   //
-      { color: '#d0eec2', opacity: 1, position: 56 },   //
-      { color: '#e8f0b8', opacity: 1, position: 64 },   //
-      { color: '#f6dda4', opacity: 1, position: 72 },   // Warm horizon transition
-      { color: '#f6c28b', opacity: 1, position: 80 },   // Soft peach (horizon)
-      { color: '#f5b87d', opacity: 1, position: 88 },   // Smooth transition
-      { color: '#f5a86c', opacity: 1, position: 100 }   // Light orange (bottom)
+      { color: '#4A90E2', opacity: 1, position: 0 },    // Deep sky blue (top)
+      { color: '#5BA3E8', opacity: 1, position: 25 },   // Mid-sky blue
+      { color: '#75B8F0', opacity: 1, position: 50 },   // Lighter blue (middle)
+      { color: '#87C5F5', opacity: 1, position: 75 },   // Soft blue
+      { color: '#A4D4F8', opacity: 1, position: 90 },   // Very light blue
+      { color: '#C8E4FA', opacity: 1, position: 100 }   // Pale blue horizon
     ],
     particles: {
       type: 'bokeh',
-      count: 35,
-      speed: 0.15,
-      size: { min: 5, max: 200 },  // Large circles to small sparkling points
-      opacity: { min: 0.03, max: 0.40 },  // 3-40% opacity
+      count: 60,  // Increased from 35 for more bokeh effects
+      speed: 0.12,  // Slightly slower for smoother motion
+      size: { min: 4, max: 180 },  // Optimized size range
+      opacity: { min: 0.02, max: 0.35 },  // Subtle bokeh
       direction: 'float',
       blur: true,  // Enable blur for bokeh effect
       fadeInOut: true  // Random fade in/out
@@ -42,18 +35,16 @@ export const VISUAL_STATES = {
     aurora: false,
     sunGlow: {
       enabled: true,
-      position: { x: 20, y: 15 },  // Upper-left area (20% from left, 15% from top)
-      colors: ['#ffffff', '#ffeebc', '#ffdb99'],  // Pure white to pale yellow
-      radius: { inner: 40, outer: 180 },  // Size of sun glow
-      opacity: { inner: 0.9, outer: 0.05 },  // Fade from bright to transparent
-      halos: [  // Additional soft white halos for lens flare
-        { radius: 250, opacity: 0.03 },
-        { radius: 350, opacity: 0.02 },
-        { radius: 500, opacity: 0.01 }
+      position: { x: 20, y: 15 },  // Upper-left area
+      colors: ['#ffffdd', '#ffe8a0', '#ffd980'],  // Soft pale yellow (dialed down from pure white)
+      radius: { inner: 35, outer: 140 },  // Smaller, more subtle sun
+      opacity: { inner: 0.5, outer: 0.03 },  // Reduced brightness from 0.9 to 0.5
+      halos: [  // Single subtle halo instead of 3
+        { radius: 220, opacity: 0.015 }
       ],
       animate: true,  // Enable pulsation
-      pulseScale: 0.02,  // 1-2% scale in/out
-      pulseDuration: 4  // 4 second cycle
+      pulseScale: 0.015,  // Gentler pulse
+      pulseDuration: 5  // Slower, smoother cycle
     },
     overlayColor: null,
     animationSpeed: 0.3
