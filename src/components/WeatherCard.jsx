@@ -174,6 +174,18 @@ export default function WeatherCard() {
     return 'Cloud';
   };
 
+  const getManualWeatherLabel = (weatherType) => {
+    const weatherLabels = {
+      sunny: 'Senin',
+      cloudy: 'Înnorat',
+      rain: 'Ploaie',
+      storm: 'Furtună',
+      snow: 'Ninsoare',
+      fog: 'Ceață'
+    };
+    return `Manual ${weatherLabels[weatherType] || weatherType}`;
+  };
+
   if (isLoading) {
     return (
       <motion.div
@@ -212,6 +224,11 @@ export default function WeatherCard() {
   // Check if in manual mode
   const isManualMode = settings.weatherMode === 'manual';
 
+  // Get the display condition (Manual + weather type in manual mode)
+  const displayCondition = isManualMode
+    ? getManualWeatherLabel(settings.manualWeatherState.weatherType)
+    : weatherData.condition;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -247,7 +264,7 @@ export default function WeatherCard() {
           {/* Only show location icon and location in auto mode */}
           {!isManualMode && <PhosphorIcons.MapPin />}
           <span>
-            {weatherData.condition}
+            {displayCondition}
             {!isManualMode && `, ${weatherData.location}`}
           </span>
         </div>
