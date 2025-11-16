@@ -186,6 +186,18 @@ export default function WeatherCard() {
     return `Manual ${weatherLabels[weatherType] || weatherType}`;
   };
 
+  const getManualWeatherIcon = (weatherType, timeOfDay) => {
+    const iconMap = {
+      sunny: timeOfDay === 'night' ? 'Moon' : 'Sun',
+      cloudy: 'Cloud',
+      rain: 'CloudRain',
+      storm: 'Lightning',
+      snow: 'Snowflake',
+      fog: 'Drop'
+    };
+    return iconMap[weatherType] || 'Cloud';
+  };
+
   if (isLoading) {
     return (
       <motion.div
@@ -229,6 +241,11 @@ export default function WeatherCard() {
     ? getManualWeatherLabel(settings.manualWeatherState.weatherType)
     : weatherData.condition;
 
+  // Get the icon (use manual weather icon in manual mode)
+  const displayIcon = isManualMode
+    ? getManualWeatherIcon(settings.manualWeatherState.weatherType, settings.manualWeatherState.timeOfDay)
+    : weatherData.icon;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -245,8 +262,8 @@ export default function WeatherCard() {
 
       {/* Icon */}
       <div className="leading-none">
-        {PhosphorIcons[weatherData.icon] ? (
-          PhosphorIcons[weatherData.icon]()
+        {PhosphorIcons[displayIcon] ? (
+          PhosphorIcons[displayIcon]()
         ) : (
           <PhosphorIcons.Cloud />
         )}
