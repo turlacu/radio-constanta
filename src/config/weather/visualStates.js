@@ -13,41 +13,36 @@ export const VISUAL_STATES = {
   // ===== DAY STATES =====
   sunny_day: {
     name: 'Sunny Day',
-    // Optimized clear sky gradient - blue-dominant with minimal stops for performance
+    // Simple gradient - darker blue sky, minimal stops for performance
     gradients: [
-      { color: '#4A90E2', opacity: 1, position: 0 },    // Deep sky blue (top)
-      { color: '#5BA3E8', opacity: 1, position: 25 },   // Mid-sky blue
-      { color: '#75B8F0', opacity: 1, position: 50 },   // Lighter blue (middle)
-      { color: '#87C5F5', opacity: 1, position: 75 },   // Soft blue
-      { color: '#A4D4F8', opacity: 1, position: 90 },   // Very light blue
-      { color: '#C8E4FA', opacity: 1, position: 100 }   // Pale blue horizon
+      { color: '#2B5876', opacity: 1, position: 0 },    // Dark blue (top)
+      { color: '#4E7FA3', opacity: 1, position: 50 },   // Medium blue (middle)
+      { color: '#6FA5C8', opacity: 1, position: 100 }   // Lighter blue (bottom)
     ],
     particles: {
       type: 'bokeh',
-      count: 60,  // Increased from 35 for more bokeh effects
-      speed: 0.12,  // Slightly slower for smoother motion
-      size: { min: 4, max: 180 },  // Optimized size range
-      opacity: { min: 0.02, max: 0.35 },  // Subtle bokeh
+      count: 50,
+      speed: 0.1,
+      size: { min: 3, max: 120 },
+      opacity: { min: 0.02, max: 0.25 },
       direction: 'float',
-      blur: true,  // Enable blur for bokeh effect
-      fadeInOut: true  // Random fade in/out
+      blur: false,  // Disabled blur for better performance
+      fadeInOut: false  // Disabled for better performance
     },
     aurora: false,
     sunGlow: {
       enabled: true,
-      position: { x: 20, y: 15 },  // Upper-left area
-      colors: ['#ffffdd', '#ffe8a0', '#ffd980'],  // Soft pale yellow (dialed down from pure white)
-      radius: { inner: 35, outer: 140 },  // Smaller, more subtle sun
-      opacity: { inner: 0.5, outer: 0.03 },  // Reduced brightness from 0.9 to 0.5
-      halos: [  // Single subtle halo instead of 3
-        { radius: 220, opacity: 0.015 }
-      ],
-      animate: true,  // Enable pulsation
-      pulseScale: 0.015,  // Gentler pulse
-      pulseDuration: 5  // Slower, smoother cycle
+      position: { x: 20, y: 15 },
+      colors: ['#FFB347', '#FFA500', '#FF8C00'],  // Orange-yellow sun
+      radius: { inner: 25, outer: 100 },  // Smaller sun
+      opacity: { inner: 0.4, outer: 0.02 },  // Subtle glow
+      halos: [],  // No halos for performance
+      animate: false,  // Disabled animation for performance
+      pulseScale: 0,
+      pulseDuration: 0
     },
     overlayColor: null,
-    animationSpeed: 0.3
+    animationSpeed: 0.2
   },
 
   cloudy_day: {
