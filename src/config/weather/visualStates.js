@@ -21,8 +21,8 @@ export const VISUAL_STATES = {
     ],
     particles: {
       type: 'bokeh',
-      count: 50,
-      speed: 0.1,
+      count: 30,  // Reduced from 50 for better performance
+      speed: 0.05,  // Slower movement from 0.1
       size: { min: 3, max: 120 },
       opacity: { min: 0.02, max: 0.25 },
       direction: 'float',
