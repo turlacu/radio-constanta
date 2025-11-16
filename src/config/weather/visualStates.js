@@ -13,31 +13,50 @@ export const VISUAL_STATES = {
   // ===== DAY STATES =====
   sunny_day: {
     name: 'Sunny Day',
-    // Soft pastel gradient - dreamy summer landscape feel
+    // Vivid clear sky gradient - summer sky transitioning to warm horizon
     gradients: [
-      { color: '#A8D5E2', opacity: 1, position: 0 },    // Soft sky blue
-      { color: '#B8DCE5', opacity: 1, position: 10 },   // Light blue
-      { color: '#C8E3E8', opacity: 1, position: 20 },   // Very light blue
-      { color: '#D8E9EB', opacity: 1, position: 30 },   // Pale blue
-      { color: '#E8EEEE', opacity: 1, position: 40 },   // Almost white blue
-      { color: '#F5E6D8', opacity: 1, position: 50 },   // Soft cream
-      { color: '#F9E5D0', opacity: 1, position: 60 },   // Light peach cream
-      { color: '#FDE4C8', opacity: 1, position: 70 },   // Pastel peach
-      { color: '#FFE3C0', opacity: 1, position: 80 },   // Soft warm peach
-      { color: '#FFE5BC', opacity: 1, position: 90 },   // Light peachy yellow
-      { color: '#FFE8B8', opacity: 1, position: 100 }   // Soft pastel yellow
+      { color: '#5ec8ff', opacity: 1, position: 0 },    // Vivid clear-sky blue (top)
+      { color: '#6dccff', opacity: 1, position: 8 },    // Smooth transition
+      { color: '#7cd0ff', opacity: 1, position: 16 },   //
+      { color: '#8bd4ff', opacity: 1, position: 24 },   //
+      { color: '#8ee8e0', opacity: 1, position: 32 },   // Softer turquoise sky (mid)
+      { color: '#a0ead6', opacity: 1, position: 40 },   // Smooth transition
+      { color: '#b8eccc', opacity: 1, position: 48 },   //
+      { color: '#d0eec2', opacity: 1, position: 56 },   //
+      { color: '#e8f0b8', opacity: 1, position: 64 },   //
+      { color: '#f6dda4', opacity: 1, position: 72 },   // Warm horizon transition
+      { color: '#f6c28b', opacity: 1, position: 80 },   // Soft peach (horizon)
+      { color: '#f5b87d', opacity: 1, position: 88 },   // Smooth transition
+      { color: '#f5a86c', opacity: 1, position: 100 }   // Light orange (bottom)
     ],
     particles: {
-      type: 'dust',
-      count: 25,
-      speed: 0.25,
-      size: { min: 1, max: 2 },
-      opacity: { min: 0.15, max: 0.35 },
-      direction: 'float'
+      type: 'bokeh',
+      count: 35,
+      speed: 0.15,
+      size: { min: 5, max: 200 },  // Large circles to small sparkling points
+      opacity: { min: 0.03, max: 0.40 },  // 3-40% opacity
+      direction: 'float',
+      blur: true,  // Enable blur for bokeh effect
+      fadeInOut: true  // Random fade in/out
     },
     aurora: false,
-    overlayColor: null, // No overlay needed for soft pastels
-    animationSpeed: 0.4
+    sunGlow: {
+      enabled: true,
+      position: { x: 20, y: 15 },  // Upper-left area (20% from left, 15% from top)
+      colors: ['#ffffff', '#ffeebc', '#ffdb99'],  // Pure white to pale yellow
+      radius: { inner: 40, outer: 180 },  // Size of sun glow
+      opacity: { inner: 0.9, outer: 0.05 },  // Fade from bright to transparent
+      halos: [  // Additional soft white halos for lens flare
+        { radius: 250, opacity: 0.03 },
+        { radius: 350, opacity: 0.02 },
+        { radius: 500, opacity: 0.01 }
+      ],
+      animate: true,  // Enable pulsation
+      pulseScale: 0.02,  // 1-2% scale in/out
+      pulseDuration: 4  // 4 second cycle
+    },
+    overlayColor: null,
+    animationSpeed: 0.3
   },
 
   cloudy_day: {

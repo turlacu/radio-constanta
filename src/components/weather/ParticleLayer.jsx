@@ -148,6 +148,16 @@ function createParticle(config, width, height) {
       particle.vy = 0;
       break;
 
+    case 'bokeh':
+      // Slow, gentle floating motion with parallax depth
+      const depth = randomRange(0.3, 1);  // Depth factor for parallax
+      particle.depth = depth;
+      particle.vx = particle.speed * randomRange(-5, 5) * depth;
+      particle.vy = particle.speed * randomRange(-3, 3) * depth;
+      particle.fadePhase = Math.random() * Math.PI * 2;  // For fade in/out
+      particle.fadeDuration = randomRange(3, 8);  // Random fade duration
+      break;
+
     default:
       particle.vx = 0;
       particle.vy = particle.speed * 10;
@@ -187,6 +197,19 @@ function updateParticle(particle, config, width, height, deltaTime) {
       if (config.twinkle) {
         particle.twinklePhase += deltaTime * 2;
         particle.opacity = particle.baseOpacity * (0.5 + Math.sin(particle.twinklePhase) * 0.5);
+      }
+      break;
+
+    case 'bokeh':
+      // Slow floating with slight random vertical motion
+      particle.x += particle.vx * deltaTime;
+      particle.y += particle.vy * deltaTime + Math.sin(particle.lifetime + particle.phase) * 3 * deltaTime;
+
+      // Fade in/out effect for realism
+      if (config.fadeInOut) {
+        particle.fadePhase += deltaTime / particle.fadeDuration;
+        const fadeMultiplier = 0.5 + Math.sin(particle.fadePhase) * 0.5;
+        particle.opacity = particle.baseOpacity * fadeMultiplier;
       }
       break;
 
@@ -237,6 +260,10 @@ function drawParticle(ctx, particle, config) {
 
     case 'stars':
       drawStar(ctx, particle);
+      break;
+
+    case 'bokeh':
+      drawBokeh(ctx, particle, config);
       break;
 
     default:
@@ -334,6 +361,38 @@ function drawStar(ctx, particle) {
   ctx.beginPath();
   ctx.arc(particle.x, particle.y, particle.size * 3, 0, Math.PI * 2);
   ctx.fill();
+}
+
+/**
+ * Draw bokeh particle (soft blurred circle simulating lens flare)
+ */
+function drawBokeh(ctx, particle, config) {
+  // Apply blur if enabled
+  if (config.blur) {
+    ctx.filter = `blur(${Math.max(particle.size * 0.15, 2)}px)`;
+  }
+
+  // Create radial gradient for soft, blurred appearance
+  const gradient = ctx.createRadialGradient(
+    particle.x, particle.y, 0,
+    particle.x, particle.y, particle.size
+  );
+
+  // Pure white center fading to transparent
+  gradient.addColorStop(0, `rgba(255, 255, 255, ${particle.opacity})`);
+  gradient.addColorStop(0.4, `rgba(255, 255, 255, ${particle.opacity * 0.6})`);
+  gradient.addColorStop(0.7, `rgba(255, 255, 255, ${particle.opacity * 0.3})`);
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Reset filter
+  if (config.blur) {
+    ctx.filter = 'none';
+  }
 }
 
 /**
