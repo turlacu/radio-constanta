@@ -209,6 +209,9 @@ export default function WeatherCard() {
     ).join(' ');
   };
 
+  // Check if in manual mode
+  const isManualMode = settings.weatherMode === 'manual';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -216,10 +219,12 @@ export default function WeatherCard() {
       transition={{ delay: 0.2 }}
       className="flex items-center gap-4 text-white drop-shadow-2xl"
     >
-      {/* Temperature */}
-      <div className="text-5xl font-light leading-none tracking-tight">
-        {weatherData.temperature}°
-      </div>
+      {/* Temperature - Only show in auto mode */}
+      {!isManualMode && (
+        <div className="text-5xl font-light leading-none tracking-tight">
+          {weatherData.temperature}°
+        </div>
+      )}
 
       {/* Icon */}
       <div className="leading-none">
@@ -239,8 +244,12 @@ export default function WeatherCard() {
           {getCurrentDate()}
         </div>
         <div className="text-sm font-medium opacity-95 flex items-center gap-1.5 tracking-wide">
-          <PhosphorIcons.MapPin />
-          <span>{weatherData.condition}, {weatherData.location}</span>
+          {/* Only show location icon and location in auto mode */}
+          {!isManualMode && <PhosphorIcons.MapPin />}
+          <span>
+            {weatherData.condition}
+            {!isManualMode && `, ${weatherData.location}`}
+          </span>
         </div>
       </div>
     </motion.div>
