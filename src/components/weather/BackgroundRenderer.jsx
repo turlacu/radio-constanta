@@ -151,6 +151,11 @@ export const BackgroundRenderer = ({ visualState, performanceLevel }) => {
           transition={{ duration: 3, ease: 'easeInOut' }}
         />
       )}
+
+      {/* Sun glow effect for sunny day */}
+      {visualState.sunGlow && visualState.sunGlow.enabled && performanceLevel !== 'low' && (
+        <SunGlow config={visualState.sunGlow} />
+      )}
     </div>
   );
 };
@@ -197,6 +202,63 @@ const LightningFlash = () => {
         times: [0, 0.1, 0.12, 0.14, 0.15, 0.16, 0.18, 0.19, 0.2, 0.5, 0.7, 0.8, 0.9, 0.95, 1]
       }}
     />
+  );
+};
+
+/**
+ * Sun Glow Component
+ * Renders a soft, animated sun glow with halos for lens flare effect
+ */
+const SunGlow = ({ config }) => {
+  const { position, colors, radius, opacity, halos, animate, pulseScale, pulseDuration } = config;
+
+  // Create the main sun glow gradient
+  const mainGlowGradient = `radial-gradient(circle at ${position.x}% ${position.y}%,
+    ${colors[0]} 0%,
+    ${colors[1]} ${(radius.inner / radius.outer) * 40}%,
+    ${colors[2]} ${(radius.inner / radius.outer) * 70}%,
+    transparent 100%)`;
+
+  // Create halo gradients
+  const haloElements = halos.map((halo, index) => (
+    <div
+      key={`halo-${index}`}
+      className="absolute inset-0"
+      style={{
+        background: `radial-gradient(circle at ${position.x}% ${position.y}%,
+          rgba(255, 255, 255, ${halo.opacity}) 0%,
+          rgba(255, 255, 255, ${halo.opacity * 0.5}) 30%,
+          transparent ${(halo.radius / 500) * 100}%)`,
+        mixBlendMode: 'screen',
+        pointerEvents: 'none'
+      }}
+    />
+  ));
+
+  return (
+    <>
+      {/* Main sun glow with animation */}
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          background: mainGlowGradient,
+          mixBlendMode: 'screen',
+          pointerEvents: 'none',
+          willChange: 'transform'
+        }}
+        animate={animate ? {
+          scale: [1, 1 + pulseScale, 1]
+        } : {}}
+        transition={animate ? {
+          duration: pulseDuration,
+          repeat: Infinity,
+          ease: 'easeInOut'
+        } : {}}
+      />
+
+      {/* Halo layers */}
+      {haloElements}
+    </>
   );
 };
 
