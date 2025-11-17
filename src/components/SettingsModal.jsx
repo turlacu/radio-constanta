@@ -209,7 +209,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
         {/* Backdrop */}
         <motion.div
           className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -219,208 +219,226 @@ export default function SettingsModal({ isOpen, onClose }) {
           onClick={onClose}
         />
 
-        {/* Modal */}
+        {/* Modal - Wide TV-friendly layout */}
         <motion.div
-          className="relative w-full max-w-md max-h-[90vh] rounded-2xl bg-bg-secondary border border-border shadow-2xl overflow-hidden"
+          className="relative w-full max-w-6xl rounded-2xl bg-bg-secondary border border-border shadow-2xl overflow-hidden"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <Heading level={4}>Settings</Heading>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <Heading level={3}>Settings</Heading>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80 transition-colors"
+            >
+              <PhosphorIcons.X />
+            </button>
           </div>
 
-          {/* Content - All settings in one scrollable view */}
-          <div className="p-4 overflow-y-auto max-h-[calc(90vh-120px)] space-y-5">
-            {/* Background Animation */}
-            <div>
-              <Heading level={6} className="mb-2 text-sm">Background Animation</Heading>
-              <div className="space-y-2">
-                {backgroundOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setBackgroundAnimation(option.value)}
-                    className={`w-full p-3 rounded-lg border transition-all text-left ${
-                      backgroundAnimation === option.value
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="font-medium text-text-primary text-sm">{option.label}</div>
-                    <div className="text-xs text-text-tertiary mt-0.5">{option.description}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Performance (only show if weather is selected) */}
-            {backgroundAnimation === 'weather' && (
-              <div>
-                <Heading level={6} className="mb-2 text-sm">Performance</Heading>
-                <div className="flex gap-2">
-                  {performanceOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => setWeatherPerformance(option.value)}
-                      className={`flex-1 p-2 rounded-lg border transition-all ${
-                        weatherPerformance === option.value
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="font-medium text-text-primary text-xs">{option.label}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Weather Mode (only show if weather is selected) */}
-            {backgroundAnimation === 'weather' && (
-              <>
+          {/* Content - Grid layout, no scrolling */}
+          <div className="p-6">
+            <div className="grid grid-cols-3 gap-6">
+              {/* Column 1: Background Animation */}
+              <div className="space-y-4">
                 <div>
-                  <Heading level={6} className="mb-2 text-sm">Weather Mode</Heading>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setWeatherMode('auto')}
-                      className={`flex-1 p-3 rounded-lg border transition-all ${
-                        weatherMode === 'auto'
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="font-medium text-text-primary text-sm">Auto</div>
-                      <div className="text-xs text-text-tertiary mt-0.5">Real weather</div>
-                    </button>
-                    <button
-                      onClick={() => setWeatherMode('manual')}
-                      className={`flex-1 p-3 rounded-lg border transition-all ${
-                        weatherMode === 'manual'
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="font-medium text-text-primary text-sm">Manual</div>
-                      <div className="text-xs text-text-tertiary mt-0.5">Choose type</div>
-                    </button>
+                  <Heading level={5} className="mb-3">Background Animation</Heading>
+                  <div className="space-y-2">
+                    {backgroundOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setBackgroundAnimation(option.value)}
+                        className={`w-full p-4 rounded-xl border transition-all text-left ${
+                          backgroundAnimation === option.value
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="font-medium text-text-primary">{option.label}</div>
+                        <div className="text-xs text-text-tertiary mt-1">{option.description}</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
+              </div>
 
-                {/* Location (only show in auto mode) */}
-                {weatherMode === 'auto' && (
+              {/* Column 2: Weather Settings */}
+              <div className="space-y-4">
+                {backgroundAnimation === 'weather' && (
+                  <>
+                    <div>
+                      <Heading level={5} className="mb-3">Weather Mode</Heading>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => setWeatherMode('auto')}
+                          className={`p-4 rounded-xl border transition-all ${
+                            weatherMode === 'auto'
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="font-medium text-text-primary">Auto</div>
+                          <div className="text-xs text-text-tertiary mt-1">Real weather</div>
+                        </button>
+                        <button
+                          onClick={() => setWeatherMode('manual')}
+                          className={`p-4 rounded-xl border transition-all ${
+                            weatherMode === 'manual'
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="font-medium text-text-primary">Manual</div>
+                          <div className="text-xs text-text-tertiary mt-1">Choose type</div>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Heading level={5} className="mb-3">Performance</Heading>
+                      <div className="grid grid-cols-3 gap-2">
+                        {performanceOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            onClick={() => setWeatherPerformance(option.value)}
+                            className={`p-4 rounded-xl border transition-all ${
+                              weatherPerformance === option.value
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <div className="font-medium text-text-primary text-sm">{option.label}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {weatherMode === 'manual' && (
+                      <>
+                        <div>
+                          <Heading level={5} className="mb-3">Time of Day</Heading>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'day' })}
+                              className={`p-4 rounded-xl border transition-all flex flex-col items-center ${
+                                manualWeatherState.timeOfDay === 'day'
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <PhosphorIcons.Sun />
+                              <div className="font-medium text-text-primary text-sm mt-2">Day</div>
+                            </button>
+                            <button
+                              onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'night' })}
+                              className={`p-4 rounded-xl border transition-all flex flex-col items-center ${
+                                manualWeatherState.timeOfDay === 'night'
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <PhosphorIcons.Moon />
+                              <div className="font-medium text-text-primary text-sm mt-2">Night</div>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+
+                {backgroundAnimation !== 'weather' && (
+                  <div className="h-full flex items-center justify-center">
+                    <Body opacity="secondary" className="text-center">
+                      Select Weather Reactive animation<br />to configure weather settings
+                    </Body>
+                  </div>
+                )}
+              </div>
+
+              {/* Column 3: Location or Manual Weather Type */}
+              <div className="space-y-4">
+                {backgroundAnimation === 'weather' && weatherMode === 'auto' && (
                   <div>
-                    <Heading level={6} className="mb-2 text-sm flex items-center gap-1">
+                    <Heading level={5} className="mb-3 flex items-center gap-2">
                       <PhosphorIcons.MapPin />
                       Location
                     </Heading>
-                    <div className="p-3 rounded-lg bg-bg-tertiary border border-border mb-2">
-                      <Body size="small" className="font-medium">{weatherLocation.name}</Body>
-                      <Body size="small" opacity="secondary" className="mt-0.5 text-xs">
+                    <div className="p-4 rounded-xl bg-bg-tertiary border border-border mb-3">
+                      <Body className="font-medium">{weatherLocation.name}</Body>
+                      <Body size="small" opacity="secondary" className="mt-1">
                         {weatherLocation.lat.toFixed(4)}, {weatherLocation.lon.toFixed(4)}
                       </Body>
                     </div>
-                    <div className="flex gap-2 mb-2">
+                    <div className="space-y-2">
                       <input
                         type="text"
-                        placeholder="City name..."
+                        placeholder="Enter city name..."
                         value={locationInput}
                         onChange={(e) => setLocationInput(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !isSearchingLocation) handleLocationChange();
                         }}
                         disabled={isSearchingLocation}
-                        className="flex-1 px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50"
+                        className="w-full px-4 py-3 rounded-xl bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50"
                       />
                       <button
                         onClick={handleLocationChange}
                         disabled={isSearchingLocation || !locationInput.trim()}
-                        className="px-4 py-2 text-sm rounded-lg bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="w-full px-4 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        {isSearchingLocation ? 'Searching...' : 'Set'}
+                        {isSearchingLocation ? 'Searching...' : 'Set Location'}
+                      </button>
+                      {locationError && (
+                        <Body size="small" className="text-red-500">{locationError}</Body>
+                      )}
+                      <button
+                        onClick={handleUseCurrentLocation}
+                        disabled={isGettingCurrentLocation}
+                        className="w-full px-4 py-3 rounded-xl bg-bg-tertiary border border-border text-text-primary font-medium hover:bg-bg-tertiary/80 disabled:opacity-50 transition-colors"
+                      >
+                        {isGettingCurrentLocation ? 'Getting location...' : 'Use Current Location'}
                       </button>
                     </div>
-                    {locationError && (
-                      <Body size="small" className="text-red-500 mb-2 text-xs">{locationError}</Body>
-                    )}
-                    <button
-                      onClick={handleUseCurrentLocation}
-                      disabled={isGettingCurrentLocation}
-                      className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary font-medium hover:bg-bg-tertiary/80 disabled:opacity-50 transition-colors"
-                    >
-                      {isGettingCurrentLocation ? 'Getting location...' : 'Use Current Location'}
-                    </button>
                   </div>
                 )}
 
-                {/* Manual Weather Settings */}
-                {weatherMode === 'manual' && (
-                  <>
-                    <div>
-                      <Heading level={6} className="mb-2 text-sm">Time of Day</Heading>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'day' })}
-                          className={`flex-1 p-3 rounded-lg border transition-all flex flex-col items-center ${
-                            manualWeatherState.timeOfDay === 'day'
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <PhosphorIcons.Sun />
-                          <div className="font-medium text-text-primary text-xs mt-1">Day</div>
-                        </button>
-                        <button
-                          onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'night' })}
-                          className={`flex-1 p-3 rounded-lg border transition-all flex flex-col items-center ${
-                            manualWeatherState.timeOfDay === 'night'
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <PhosphorIcons.Moon />
-                          <div className="font-medium text-text-primary text-xs mt-1">Night</div>
-                        </button>
-                      </div>
+                {backgroundAnimation === 'weather' && weatherMode === 'manual' && (
+                  <div>
+                    <Heading level={5} className="mb-3">Weather Type</Heading>
+                    <div className="grid grid-cols-2 gap-2">
+                      {weatherTypes.map((type) => {
+                        const IconComponent = PhosphorIcons[type.icon];
+                        return (
+                          <button
+                            key={type.id}
+                            onClick={() => setManualWeatherState({ ...manualWeatherState, weatherType: type.id })}
+                            className={`p-4 rounded-xl border transition-all flex flex-col items-center ${
+                              manualWeatherState.weatherType === type.id
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <IconComponent />
+                            <div className="font-medium text-text-primary text-sm mt-2">{type.label}</div>
+                          </button>
+                        );
+                      })}
                     </div>
-
-                    <div>
-                      <Heading level={6} className="mb-2 text-sm">Weather Type</Heading>
-                      <div className="grid grid-cols-3 gap-2">
-                        {weatherTypes.map((type) => {
-                          const IconComponent = PhosphorIcons[type.icon];
-                          return (
-                            <button
-                              key={type.id}
-                              onClick={() => setManualWeatherState({ ...manualWeatherState, weatherType: type.id })}
-                              className={`p-3 rounded-lg border transition-all flex flex-col items-center ${
-                                manualWeatherState.weatherType === type.id
-                                  ? 'border-primary bg-primary/5'
-                                  : 'border-border hover:border-primary/50'
-                              }`}
-                            >
-                              <IconComponent />
-                              <div className="font-medium text-text-primary text-xs mt-1">{type.label}</div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
+                  </div>
                 )}
-              </>
-            )}
-          </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end p-4 border-t border-border">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors text-sm"
-            >
-              Close
-            </button>
+                {backgroundAnimation !== 'weather' && (
+                  <div className="h-full flex items-center justify-center">
+                    <Body opacity="secondary" className="text-center">
+                      Weather settings are only available<br />when using Weather Reactive animation
+                    </Body>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>
