@@ -283,7 +283,7 @@ export class WeatherManager {
   getWmoConditionName(code) {
     const map = {
       0: 'clear',
-      1: 'cloudy', 2: 'cloudy', 3: 'cloudy',
+      1: 'clear', 2: 'cloudy', 3: 'cloudy',
       45: 'fog', 48: 'fog',
       51: 'rain', 53: 'rain', 55: 'rain', 56: 'rain', 57: 'rain',
       61: 'rain', 63: 'rain', 65: 'rain', 66: 'rain', 67: 'rain',
