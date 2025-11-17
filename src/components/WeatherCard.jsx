@@ -58,7 +58,7 @@ export default function WeatherCard() {
           humidity: weather.humidity,
           windSpeed: Math.round(weather.windSpeed),
           condition: getConditionFromCode(weather.conditionCode, weatherManager.weatherProvider),
-          icon: getWeatherIconFromCode(weather.conditionCode, weatherManager.weatherProvider)
+          icon: getWeatherIconFromCode(weather.conditionCode, weatherManager.weatherProvider, visualState.isNight)
         });
 
         setIsLoading(false);
@@ -67,7 +67,8 @@ export default function WeatherCard() {
 
     // If weather manager already has data, update immediately
     const currentWeather = weatherManager.getWeatherData();
-    if (currentWeather) {
+    const currentVisualState = weatherManager.getVisualState();
+    if (currentWeather && currentVisualState) {
       setWeatherData({
         location: currentWeather.cityName || settings.weatherLocation.name,
         temperature: currentWeather.temp,
@@ -75,7 +76,7 @@ export default function WeatherCard() {
         humidity: currentWeather.humidity,
         windSpeed: Math.round(currentWeather.windSpeed),
         condition: getConditionFromCode(currentWeather.conditionCode, weatherManager.weatherProvider),
-        icon: getWeatherIconFromCode(currentWeather.conditionCode, weatherManager.weatherProvider)
+        icon: getWeatherIconFromCode(currentWeather.conditionCode, weatherManager.weatherProvider, currentVisualState.isNight)
       });
       setIsLoading(false);
     }
@@ -93,12 +94,12 @@ export default function WeatherCard() {
     }
   };
 
-  const getWeatherIconFromCode = (code, provider) => {
+  const getWeatherIconFromCode = (code, provider, isNight) => {
     if (provider === 'openmeteo') {
-      return getWeatherIcon(code);
+      return getWeatherIcon(code, isNight);
     } else {
       // For OpenWeatherMap, use the code directly
-      return getWeatherIconOWM(code);
+      return getWeatherIconOWM(code, isNight);
     }
   };
 
@@ -150,8 +151,9 @@ export default function WeatherCard() {
     return translations[condition] || condition;
   };
 
-  const getWeatherIcon = (code) => {
-    if (code === 0 || code === 1) return 'Sun';
+  const getWeatherIcon = (code, isNight) => {
+    // For clear weather, use Moon at night and Sun during day
+    if (code === 0 || code === 1) return isNight ? 'Moon' : 'Sun';
     if (code === 2 || code === 3) return 'Cloud';
     if (code === 45 || code === 48) return 'Drop'; // fog/mist
     if (code >= 51 && code <= 67) return 'CloudRain';
@@ -162,14 +164,14 @@ export default function WeatherCard() {
     return 'Cloud';
   };
 
-  const getWeatherIconOWM = (code) => {
+  const getWeatherIconOWM = (code, isNight) => {
     // Map OpenWeatherMap condition codes to icons
     if (code >= 200 && code < 300) return 'Lightning'; // Thunderstorm
     if (code >= 300 && code < 400) return 'CloudRain'; // Drizzle
     if (code >= 500 && code < 600) return 'CloudRain'; // Rain
     if (code >= 600 && code < 700) return 'Snowflake'; // Snow
     if (code >= 700 && code < 800) return 'Drop'; // Atmosphere (mist, fog, etc.)
-    if (code === 800) return 'Sun'; // Clear
+    if (code === 800) return isNight ? 'Moon' : 'Sun'; // Clear - use Moon at night
     if (code > 800) return 'Cloud'; // Clouds
     return 'Cloud';
   };
