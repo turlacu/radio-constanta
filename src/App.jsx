@@ -30,7 +30,7 @@ const STATIONS = {
   },
   folclor: {
     id: 'folclor',
-    name: 'Radio Constanța',
+    name: 'Radio Constanța Folclor',
     coverArt: '/rcf.png',
     color: 'from-purple-500/20 to-pink-500/20',
     qualities: [
