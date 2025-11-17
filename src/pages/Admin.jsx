@@ -16,6 +16,7 @@ export default function Admin() {
   // Cover scheduling state
   const [selectedStation, setSelectedStation] = useState('fm');
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState('scheduling'); // 'default' or 'scheduling'
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [scheduleError, setScheduleError] = useState(''); // Error message for schedule modal
@@ -163,7 +164,7 @@ export default function Admin() {
   };
 
   // Cover scheduling functions
-  const handleCoverUpload = async (event, station) => {
+  const handleCoverUpload = async (event, station, category = 'scheduling') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -174,6 +175,7 @@ export default function Admin() {
       formData.append('cover', file);
       formData.append('name', file.name);
       formData.append('label', file.name.replace(/\.[^/.]+$/, '')); // Remove extension
+      formData.append('category', category); // Add category: 'default' or 'scheduling'
 
       const token = localStorage.getItem('adminToken');
       const response = await fetch(`/api/admin/covers/${station}/upload`, {
@@ -199,7 +201,7 @@ export default function Admin() {
           }
         }));
 
-        setSaveMessage('Cover uploaded successfully!');
+        setSaveMessage(`Cover uploaded successfully to ${category === 'default' ? 'Default Covers' : 'Covers Library'}!`);
         setTimeout(() => setSaveMessage(''), 3000);
       } else {
         setSaveMessage('Failed to upload cover');
@@ -1089,12 +1091,22 @@ export default function Admin() {
                             Select the main station cover shown when dynamic covers are disabled or no schedule matches
                           </Body>
                         </div>
+                        <label className="px-3 py-1.5 text-xs rounded-lg bg-primary text-white font-medium hover:bg-primary-dark cursor-pointer transition-colors">
+                          {uploadingCover ? 'Uploading...' : '+ Upload Default Cover'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleCoverUpload(e, selectedStation, 'default')}
+                            disabled={uploadingCover}
+                            className="hidden"
+                          />
+                        </label>
                       </div>
 
-                      {/* Default Cover Grid - Shows all covers including original defaults */}
+                      {/* Default Cover Grid - Shows original defaults + covers uploaded as 'default' category */}
                       <div className="grid grid-cols-4 gap-3">
                         {(() => {
-                          // Create array with original default cover + uploaded covers
+                          // Create array with original default cover + uploaded default covers only
                           const originalDefaultCover = {
                             id: `original-default-${selectedStation}`,
                             label: selectedStation === 'fm' ? 'Radio Constanța FM (Original)' : 'Radio Constanța Folclor (Original)',
@@ -1103,7 +1115,8 @@ export default function Admin() {
                           };
 
                           const uploadedCovers = settings.coverScheduling[selectedStation].covers || [];
-                          const allCovers = [originalDefaultCover, ...uploadedCovers];
+                          const defaultCovers = uploadedCovers.filter(c => c.category === 'default');
+                          const allCovers = [originalDefaultCover, ...defaultCovers];
 
                           return allCovers.map((cover) => {
                             const isDefault = settings.coverScheduling[selectedStation].defaultCover === cover.path;
@@ -1235,22 +1248,22 @@ export default function Admin() {
                     {/* Cover Upload */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <Body size="small" opacity="secondary" className="text-xs">Covers Library</Body>
+                        <Body size="small" opacity="secondary" className="text-xs">Covers Library (for scheduling)</Body>
                         <label className="px-3 py-1.5 text-xs rounded-lg bg-primary text-white font-medium hover:bg-primary-dark cursor-pointer transition-colors">
                           {uploadingCover ? 'Uploading...' : '+ Upload Cover'}
                           <input
                             type="file"
                             accept="image/*"
-                            onChange={(e) => handleCoverUpload(e, selectedStation)}
+                            onChange={(e) => handleCoverUpload(e, selectedStation, 'scheduling')}
                             disabled={uploadingCover}
                             className="hidden"
                           />
                         </label>
                       </div>
 
-                      {/* Covers Grid */}
+                      {/* Covers Grid - Only show scheduling covers */}
                       <div className="grid grid-cols-4 gap-2">
-                        {settings.coverScheduling[selectedStation].covers?.map((cover) => (
+                        {settings.coverScheduling[selectedStation].covers?.filter(c => c.category === 'scheduling' || !c.category).map((cover) => (
                           <div key={cover.id} className="relative group">
                             <img
                               src={cover.path}
@@ -1269,9 +1282,9 @@ export default function Admin() {
                           </div>
                         ))}
                         {(!settings.coverScheduling[selectedStation].covers ||
-                          settings.coverScheduling[selectedStation].covers.length === 0) && (
+                          settings.coverScheduling[selectedStation].covers.filter(c => c.category === 'scheduling' || !c.category).length === 0) && (
                           <div className="col-span-4 text-center py-6 text-xs text-text-tertiary">
-                            No covers uploaded yet. Upload a cover to get started.
+                            No scheduling covers uploaded yet. Upload a cover to get started.
                           </div>
                         )}
                       </div>
@@ -1496,9 +1509,9 @@ export default function Admin() {
 
                 {/* Cover Selection */}
                 <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Select Cover</Body>
+                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Select Cover (from Covers Library)</Body>
                   <div className="grid grid-cols-4 gap-2">
-                    {settings.coverScheduling[selectedStation].covers?.map((cover) => (
+                    {settings.coverScheduling[selectedStation].covers?.filter(c => c.category === 'scheduling' || !c.category).map((cover) => (
                       <div
                         key={cover.id}
                         onClick={() => setScheduleForm({ ...scheduleForm, coverPath: cover.path })}
@@ -1524,9 +1537,9 @@ export default function Admin() {
                       </div>
                     ))}
                     {(!settings.coverScheduling[selectedStation].covers ||
-                      settings.coverScheduling[selectedStation].covers.length === 0) && (
+                      settings.coverScheduling[selectedStation].covers.filter(c => c.category === 'scheduling' || !c.category).length === 0) && (
                       <div className="col-span-4 text-center py-4 text-xs text-text-tertiary border border-dashed border-border rounded">
-                        No covers available. Upload covers first.
+                        No scheduling covers available. Upload covers to the Covers Library first.
                       </div>
                     )}
                   </div>
