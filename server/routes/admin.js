@@ -197,7 +197,7 @@ router.post('/covers/:station/upload', authenticateAdmin, upload.single('cover')
     }
 
     const { station } = req.params;
-    const { name, label } = req.body;
+    const { name, label, category } = req.body; // category: 'default' or 'scheduling'
 
     // Read current settings
     const data = await fs.readFile(SETTINGS_FILE, 'utf8');
@@ -222,6 +222,7 @@ router.post('/covers/:station/upload', authenticateAdmin, upload.single('cover')
       path: `/covers/${station}/${req.file.filename}`,
       filename: req.file.filename,
       size: req.file.size,
+      category: category || 'scheduling', // Default to 'scheduling' for backwards compatibility
       uploadedAt: new Date().toISOString()
     };
 
