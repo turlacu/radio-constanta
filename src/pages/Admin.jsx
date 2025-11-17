@@ -1091,96 +1091,104 @@ export default function Admin() {
                         </div>
                       </div>
 
-                      {/* Default Cover Grid - Shows all covers with ability to select one as default */}
+                      {/* Default Cover Grid - Shows all covers including original defaults */}
                       <div className="grid grid-cols-4 gap-3">
-                        {settings.coverScheduling[selectedStation].covers?.map((cover) => {
-                          const isDefault = settings.coverScheduling[selectedStation].defaultCover === cover.path;
-                          return (
-                            <div key={cover.id} className="relative group">
-                              <div
-                                onClick={async () => {
-                                  // Set this cover as default
-                                  const updatedSettings = {
-                                    ...settings,
-                                    coverScheduling: {
-                                      ...settings.coverScheduling,
-                                      [selectedStation]: {
-                                        ...settings.coverScheduling[selectedStation],
-                                        defaultCover: cover.path
+                        {(() => {
+                          // Create array with original default cover + uploaded covers
+                          const originalDefaultCover = {
+                            id: `original-default-${selectedStation}`,
+                            label: selectedStation === 'fm' ? 'Radio Constanța FM (Original)' : 'Radio Constanța Folclor (Original)',
+                            path: selectedStation === 'fm' ? '/rcfm.png' : '/rcf.png',
+                            isOriginal: true
+                          };
+
+                          const uploadedCovers = settings.coverScheduling[selectedStation].covers || [];
+                          const allCovers = [originalDefaultCover, ...uploadedCovers];
+
+                          return allCovers.map((cover) => {
+                            const isDefault = settings.coverScheduling[selectedStation].defaultCover === cover.path;
+                            return (
+                              <div key={cover.id} className="relative group">
+                                <div
+                                  onClick={async () => {
+                                    // Set this cover as default
+                                    const updatedSettings = {
+                                      ...settings,
+                                      coverScheduling: {
+                                        ...settings.coverScheduling,
+                                        [selectedStation]: {
+                                          ...settings.coverScheduling[selectedStation],
+                                          defaultCover: cover.path
+                                        }
                                       }
-                                    }
-                                  };
-                                  setSettings(updatedSettings);
+                                    };
+                                    setSettings(updatedSettings);
 
-                                  // Auto-save to server
-                                  setIsSaving(true);
-                                  try {
-                                    const token = localStorage.getItem('adminToken');
-                                    const response = await fetch('/api/admin/settings', {
-                                      method: 'PUT',
-                                      headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': `Bearer ${token}`
-                                      },
-                                      body: JSON.stringify(updatedSettings)
-                                    });
+                                    // Auto-save to server
+                                    setIsSaving(true);
+                                    try {
+                                      const token = localStorage.getItem('adminToken');
+                                      const response = await fetch('/api/admin/settings', {
+                                        method: 'PUT',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          'Authorization': `Bearer ${token}`
+                                        },
+                                        body: JSON.stringify(updatedSettings)
+                                      });
 
-                                    if (response.ok) {
-                                      setSaveMessage('Default cover updated successfully!');
-                                      setTimeout(() => setSaveMessage(''), 3000);
-                                    } else {
-                                      setSaveMessage('Failed to update default cover');
+                                      if (response.ok) {
+                                        setSaveMessage('Default cover updated successfully!');
+                                        setTimeout(() => setSaveMessage(''), 3000);
+                                      } else {
+                                        setSaveMessage('Failed to update default cover');
+                                      }
+                                    } catch (error) {
+                                      setSaveMessage('Error updating default cover');
+                                      console.error('Save error:', error);
+                                    } finally {
+                                      setIsSaving(false);
                                     }
-                                  } catch (error) {
-                                    setSaveMessage('Error updating default cover');
-                                    console.error('Save error:', error);
-                                  } finally {
-                                    setIsSaving(false);
-                                  }
-                                }}
-                                className={`relative cursor-pointer rounded-lg border-2 transition-all overflow-hidden ${
-                                  isDefault
-                                    ? 'border-primary ring-2 ring-primary/30'
-                                    : 'border-border hover:border-primary/50'
-                                }`}
-                              >
-                                <img
-                                  src={cover.path}
-                                  alt={cover.label}
-                                  className="w-full aspect-square object-cover"
-                                />
-                                {/* Default Badge */}
-                                {isDefault && (
-                                  <div className="absolute top-0 left-0 right-0 bg-primary px-2 py-1">
-                                    <div className="text-white text-xs font-bold text-center">DEFAULT</div>
-                                  </div>
-                                )}
-                                {/* Hover overlay */}
-                                {!isDefault && (
-                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <div className="text-white text-xs font-medium text-center px-2">
-                                      Set as Default
+                                  }}
+                                  className={`relative cursor-pointer rounded-lg border-2 transition-all overflow-hidden ${
+                                    isDefault
+                                      ? 'border-primary ring-2 ring-primary/30'
+                                      : 'border-border hover:border-primary/50'
+                                  }`}
+                                >
+                                  <img
+                                    src={cover.path}
+                                    alt={cover.label}
+                                    className="w-full aspect-square object-cover"
+                                  />
+                                  {/* Default Badge */}
+                                  {isDefault && (
+                                    <div className="absolute top-0 left-0 right-0 bg-primary px-2 py-1">
+                                      <div className="text-white text-xs font-bold text-center">DEFAULT</div>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
+                                  {/* Original Badge */}
+                                  {cover.isOriginal && !isDefault && (
+                                    <div className="absolute top-0 left-0 right-0 bg-blue-500/80 px-2 py-1">
+                                      <div className="text-white text-xs font-medium text-center">ORIGINAL</div>
+                                    </div>
+                                  )}
+                                  {/* Hover overlay */}
+                                  {!isDefault && (
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                      <div className="text-white text-xs font-medium text-center px-2">
+                                        Set as Default
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="mt-1.5 text-xs text-text-secondary truncate text-center">
+                                  {cover.label}
+                                </div>
                               </div>
-                              <div className="mt-1.5 text-xs text-text-secondary truncate text-center">
-                                {cover.label}
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {(!settings.coverScheduling[selectedStation].covers ||
-                          settings.coverScheduling[selectedStation].covers.length === 0) && (
-                          <div className="col-span-4 text-center py-8 border-2 border-dashed border-border rounded-lg">
-                            <Body size="small" className="text-text-tertiary text-xs">
-                              No covers uploaded yet.
-                            </Body>
-                            <Body size="small" className="text-text-tertiary text-xs mt-1">
-                              Upload a cover in the library below to set it as default.
-                            </Body>
-                          </div>
-                        )}
+                            );
+                          });
+                        })()}
                       </div>
                     </div>
 
