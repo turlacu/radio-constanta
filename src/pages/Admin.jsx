@@ -548,9 +548,9 @@ export default function Admin() {
 
   // Admin panel
   return (
-    <div className="min-h-screen bg-bg-primary flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-bg-secondary border-r border-border flex flex-col">
+    <div className="min-h-screen bg-bg-primary">
+      {/* Sidebar - Fixed */}
+      <div className="fixed left-0 top-0 w-64 h-screen bg-bg-secondary border-r border-border flex flex-col overflow-y-auto">
         {/* Header */}
         <div className="p-6 border-b border-border">
           <Heading level={5} className="text-lg">Admin Panel</Heading>
@@ -593,8 +593,8 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Main Content - With left margin to account for fixed sidebar */}
+      <div className="ml-64 overflow-y-auto">
         <div className="p-8 max-w-5xl mx-auto">
 
         {settings && (
