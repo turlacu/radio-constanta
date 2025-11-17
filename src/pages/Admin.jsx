@@ -1024,64 +1024,6 @@ export default function Admin() {
 
                 {settings.coverScheduling[selectedStation] && (
                   <div className="space-y-4">
-                    {/* Enable Toggle */}
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-bg-tertiary border border-border">
-                      <div>
-                        <Body size="small" className="font-medium text-xs">Enable Dynamic Covers</Body>
-                        <Body size="small" opacity="secondary" className="text-xs mt-0.5">
-                          Automatically change covers based on schedule
-                        </Body>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={settings.coverScheduling[selectedStation].enabled || false}
-                          onChange={async (e) => {
-                            const enabled = e.target.checked;
-                            const updatedSettings = {
-                              ...settings,
-                              coverScheduling: {
-                                ...settings.coverScheduling,
-                                [selectedStation]: {
-                                  ...settings.coverScheduling[selectedStation],
-                                  enabled
-                                }
-                              }
-                            };
-                            setSettings(updatedSettings);
-
-                            // Auto-save to server
-                            setIsSaving(true);
-                            try {
-                              const token = localStorage.getItem('adminToken');
-                              const response = await fetch('/api/admin/settings', {
-                                method: 'PUT',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                  'Authorization': `Bearer ${token}`
-                                },
-                                body: JSON.stringify(updatedSettings)
-                              });
-
-                              if (response.ok) {
-                                setSaveMessage(`Cover scheduling ${enabled ? 'enabled' : 'disabled'} successfully!`);
-                                setTimeout(() => setSaveMessage(''), 3000);
-                              } else {
-                                setSaveMessage('Failed to save settings');
-                              }
-                            } catch (error) {
-                              setSaveMessage('Error saving settings');
-                              console.error('Save error:', error);
-                            } finally {
-                              setIsSaving(false);
-                            }
-                          }}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                      </label>
-                    </div>
-
                     {/* Default Cover */}
                     <div>
                       <div className="flex items-center justify-between mb-3">
@@ -1203,6 +1145,64 @@ export default function Admin() {
                           });
                         })()}
                       </div>
+                    </div>
+
+                    {/* Enable Toggle */}
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-bg-tertiary border border-border">
+                      <div>
+                        <Body size="small" className="font-medium text-xs">Enable Dynamic Covers</Body>
+                        <Body size="small" opacity="secondary" className="text-xs mt-0.5">
+                          Automatically change covers based on schedule
+                        </Body>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.coverScheduling[selectedStation].enabled || false}
+                          onChange={async (e) => {
+                            const enabled = e.target.checked;
+                            const updatedSettings = {
+                              ...settings,
+                              coverScheduling: {
+                                ...settings.coverScheduling,
+                                [selectedStation]: {
+                                  ...settings.coverScheduling[selectedStation],
+                                  enabled
+                                }
+                              }
+                            };
+                            setSettings(updatedSettings);
+
+                            // Auto-save to server
+                            setIsSaving(true);
+                            try {
+                              const token = localStorage.getItem('adminToken');
+                              const response = await fetch('/api/admin/settings', {
+                                method: 'PUT',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify(updatedSettings)
+                              });
+
+                              if (response.ok) {
+                                setSaveMessage(`Cover scheduling ${enabled ? 'enabled' : 'disabled'} successfully!`);
+                                setTimeout(() => setSaveMessage(''), 3000);
+                              } else {
+                                setSaveMessage('Failed to save settings');
+                              }
+                            } catch (error) {
+                              setSaveMessage('Error saving settings');
+                              console.error('Save error:', error);
+                            } finally {
+                              setIsSaving(false);
+                            }
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
                     </div>
 
                     {/* Transition Settings */}
