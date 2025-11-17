@@ -410,7 +410,7 @@ export const WMO_CODE_MAP = {
   0: 'sunny',
 
   // Partly cloudy
-  1: 'cloudy', 2: 'cloudy', 3: 'cloudy',
+  1: 'sunny', 2: 'cloudy', 3: 'cloudy',
 
   // Fog
   45: 'fog', 48: 'fog',
