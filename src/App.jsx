@@ -11,7 +11,7 @@ import WeatherCard from './components/WeatherCard';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { createFloatingParticles } from './utils/createFloatingParticles';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
-import { getLosslessStreamUrl } from './utils/osDetection';
+import { getLosslessStreamUrl, getLosslessFormatLabel } from './utils/osDetection';
 
 // Create context for device info to share across components
 export const DeviceContext = createContext(null);
@@ -24,7 +24,7 @@ const STATIONS = {
     color: 'from-blue-500/20 to-cyan-500/20',
     qualities: [
       { id: '128', label: '128 kbps', format: 'MP3', bitrate: '128 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-fm' },
-      { id: 'flac', label: 'FLAC', format: 'FLAC', bitrate: '1024 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-flac' }
+      { id: 'flac', label: 'Lossless', format: 'FLAC', bitrate: '1024 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-flac' }
     ],
     defaultQuality: '128'
   },
@@ -167,8 +167,8 @@ function AppContent() {
               if (losslessUrl) {
                 qualities.push({
                   id: 'flac',
-                  label: stationConfig.flac.label || 'FLAC/ALAC',
-                  format: 'FLAC/ALAC',
+                  label: 'Lossless',
+                  format: getLosslessFormatLabel(), // Show actual format based on OS
                   bitrate: '1024 kbps',
                   url: losslessUrl
                 });
