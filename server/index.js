@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { mkdir } from 'fs/promises';
+import { mkdir, copyFile, access } from 'fs/promises';
 import newsRouter from './routes/news.js';
 import articleRouter from './routes/article.js';
 import streamRouter from './routes/stream.js';
@@ -33,8 +33,31 @@ const initializeDataDirectories = async () => {
   }
 };
 
-// Initialize directories before starting server
+// Initialize settings file from template if it doesn't exist
+const initializeSettingsFile = async () => {
+  const dataDir = path.join(__dirname, 'data');
+  const settingsFile = path.join(dataDir, 'admin-settings.json');
+  const templateFile = path.join(dataDir, 'admin-settings.template.json');
+
+  try {
+    // Check if settings file exists
+    await access(settingsFile);
+    console.log('✓ Admin settings file exists');
+  } catch (error) {
+    // Settings file doesn't exist, copy from template
+    try {
+      await copyFile(templateFile, settingsFile);
+      console.log('✓ Admin settings file created from template');
+    } catch (copyError) {
+      console.error('Error creating settings file from template:', copyError);
+      console.error('Make sure admin-settings.template.json exists in server/data/');
+    }
+  }
+};
+
+// Initialize directories and settings before starting server
 await initializeDataDirectories();
+await initializeSettingsFile();
 
 // Middleware
 app.use(cors());
