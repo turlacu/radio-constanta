@@ -149,27 +149,15 @@ export default function Admin() {
     }
   };
 
-  const updateStreamQuality = (station, index, field, value) => {
+  const updateStreamConfig = (station, streamType, field, value) => {
     const newSettings = { ...settings };
-    newSettings.radioStreams[station][index][field] = value;
-    setSettings(newSettings);
-  };
-
-  const addStreamQuality = (station) => {
-    const newSettings = { ...settings };
-    newSettings.radioStreams[station].push({
-      id: '',
-      label: '',
-      format: 'MP3',
-      bitrate: '',
-      url: ''
-    });
-    setSettings(newSettings);
-  };
-
-  const removeStreamQuality = (station, index) => {
-    const newSettings = { ...settings };
-    newSettings.radioStreams[station].splice(index, 1);
+    if (!newSettings.radioStreams[station]) {
+      newSettings.radioStreams[station] = {};
+    }
+    if (!newSettings.radioStreams[station][streamType]) {
+      newSettings.radioStreams[station][streamType] = {};
+    }
+    newSettings.radioStreams[station][streamType][field] = value;
     setSettings(newSettings);
   };
 
@@ -667,134 +655,230 @@ export default function Admin() {
             {activeTab === 'streams' && (
               <div>
                 <div className="mb-6">
-                  <Heading level={3} className="text-2xl">Radio Streams</Heading>
+                  <Heading level={3} className="text-2xl">Radio Streams Configuration</Heading>
                   <Body size="small" opacity="secondary" className="mt-2">
-                    Manage stream quality options for FM and Folclor stations
+                    Configure stream URLs and enable/disable stream qualities. FLAC streams will automatically use ALAC format on Apple devices.
                   </Body>
                 </div>
 
                 <div className="space-y-6">
                   {/* Radio Streams - FM */}
                   <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <Heading level={6} className="text-base">Radio Constanța FM Streams</Heading>
-                      <button
-                        onClick={() => addStreamQuality('fm')}
-                        className="px-3 py-2 text-sm rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition-colors"
-                      >
-                        + Add Quality
-                      </button>
-                    </div>
-                    <div className="space-y-3">
-                {settings.radioStreams?.fm?.map((stream, index) => (
-                  <div key={index} className="p-3 rounded-lg bg-bg-tertiary border border-border space-y-2">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-                      <input
-                        type="text"
-                        value={stream.id}
-                        onChange={(e) => updateStreamQuality('fm', index, 'id', e.target.value)}
-                        placeholder="ID (e.g., 320)"
-                        className="px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
-                      />
-                      <input
-                        type="text"
-                        value={stream.label}
-                        onChange={(e) => updateStreamQuality('fm', index, 'label', e.target.value)}
-                        placeholder="Label (e.g., 320 kbps)"
-                        className="px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
-                      />
-                      <input
-                        type="text"
-                        value={stream.format}
-                        onChange={(e) => updateStreamQuality('fm', index, 'format', e.target.value)}
-                        placeholder="Format (MP3/AAC)"
-                        className="px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
-                      />
-                      <input
-                        type="text"
-                        value={stream.bitrate}
-                        onChange={(e) => updateStreamQuality('fm', index, 'bitrate', e.target.value)}
-                        placeholder="Bitrate"
-                        className="px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
-                      />
-                      <button
-                        onClick={() => removeStreamQuality('fm', index)}
-                        className="px-2 py-1.5 text-xs rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors font-medium"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      value={stream.url}
-                      onChange={(e) => updateStreamQuality('fm', index, 'url', e.target.value)}
-                      placeholder="Stream URL"
-                      className="w-full px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
+                    <Heading level={6} className="text-base mb-4">Radio Constanța FM Streams</Heading>
+
+                    <div className="space-y-4">
+                      {/* MP3 128 kbps */}
+                      <div className="p-4 rounded-lg bg-bg-tertiary border border-border">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={settings.radioStreams?.fm?.mp3_128?.enabled || false}
+                                onChange={(e) => updateStreamConfig('fm', 'mp3_128', 'enabled', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                            <div>
+                              <Body className="font-medium">MP3 128 kbps</Body>
+                              <Body size="small" opacity="secondary">Standard quality</Body>
+                            </div>
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          value={settings.radioStreams?.fm?.mp3_128?.url || ''}
+                          onChange={(e) => updateStreamConfig('fm', 'mp3_128', 'url', e.target.value)}
+                          placeholder="Stream URL (e.g., https://live.radioconstanta.ro/stream-128)"
+                          disabled={!settings.radioStreams?.fm?.mp3_128?.enabled}
+                          className="w-full px-3 py-2 text-sm rounded bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
-                    ))}
+
+                      {/* MP3 256 kbps */}
+                      <div className="p-4 rounded-lg bg-bg-tertiary border border-border">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={settings.radioStreams?.fm?.mp3_256?.enabled || false}
+                                onChange={(e) => updateStreamConfig('fm', 'mp3_256', 'enabled', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                            <div>
+                              <Body className="font-medium">MP3 256 kbps</Body>
+                              <Body size="small" opacity="secondary">High quality</Body>
+                            </div>
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          value={settings.radioStreams?.fm?.mp3_256?.url || ''}
+                          onChange={(e) => updateStreamConfig('fm', 'mp3_256', 'url', e.target.value)}
+                          placeholder="Stream URL (e.g., https://live.radioconstanta.ro/stream-256)"
+                          disabled={!settings.radioStreams?.fm?.mp3_256?.enabled}
+                          className="w-full px-3 py-2 text-sm rounded bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                      </div>
+
+                      {/* FLAC/ALAC 1024 kbps */}
+                      <div className="p-4 rounded-lg bg-bg-tertiary border border-border">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={settings.radioStreams?.fm?.flac?.enabled || false}
+                                onChange={(e) => updateStreamConfig('fm', 'flac', 'enabled', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                            <div>
+                              <Body className="font-medium">FLAC/ALAC 1024 kbps</Body>
+                              <Body size="small" opacity="secondary">Lossless quality (FLAC for most devices, ALAC for Apple)</Body>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <Body size="small" opacity="secondary" className="mb-1">FLAC Stream URL (Android, Windows, Linux)</Body>
+                            <input
+                              type="text"
+                              value={settings.radioStreams?.fm?.flac?.url || ''}
+                              onChange={(e) => updateStreamConfig('fm', 'flac', 'url', e.target.value)}
+                              placeholder="FLAC Stream URL (e.g., https://live.radioconstanta.ro/stream-flac)"
+                              disabled={!settings.radioStreams?.fm?.flac?.enabled}
+                              className="w-full px-3 py-2 text-sm rounded bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                          <div>
+                            <Body size="small" opacity="secondary" className="mb-1">ALAC Stream URL (iOS, macOS)</Body>
+                            <input
+                              type="text"
+                              value={settings.radioStreams?.fm?.flac?.alacUrl || ''}
+                              onChange={(e) => updateStreamConfig('fm', 'flac', 'alacUrl', e.target.value)}
+                              placeholder="ALAC Stream URL (e.g., https://live.radioconstanta.ro/stream-alac)"
+                              disabled={!settings.radioStreams?.fm?.flac?.enabled}
+                              className="w-full px-3 py-2 text-sm rounded bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Radio Streams - Folclor */}
                   <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <Heading level={6} className="text-base">Radio Constanța Folclor Streams</Heading>
-                      <button
-                        onClick={() => addStreamQuality('folclor')}
-                        className="px-3 py-2 text-sm rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition-colors"
-                      >
-                        + Add Quality
-                      </button>
-                    </div>
-              <div className="space-y-3">
-                {settings.radioStreams?.folclor?.map((stream, index) => (
-                  <div key={index} className="p-3 rounded-lg bg-bg-tertiary border border-border space-y-2">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-                      <input
-                        type="text"
-                        value={stream.id}
-                        onChange={(e) => updateStreamQuality('folclor', index, 'id', e.target.value)}
-                        placeholder="ID"
-                        className="px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
-                      />
-                      <input
-                        type="text"
-                        value={stream.label}
-                        onChange={(e) => updateStreamQuality('folclor', index, 'label', e.target.value)}
-                        placeholder="Label"
-                        className="px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
-                      />
-                      <input
-                        type="text"
-                        value={stream.format}
-                        onChange={(e) => updateStreamQuality('folclor', index, 'format', e.target.value)}
-                        placeholder="Format"
-                        className="px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
-                      />
-                      <input
-                        type="text"
-                        value={stream.bitrate}
-                        onChange={(e) => updateStreamQuality('folclor', index, 'bitrate', e.target.value)}
-                        placeholder="Bitrate"
-                        className="px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
-                      />
-                      <button
-                        onClick={() => removeStreamQuality('folclor', index)}
-                        className="px-2 py-1.5 text-xs rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors font-medium"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      value={stream.url}
-                      onChange={(e) => updateStreamQuality('folclor', index, 'url', e.target.value)}
-                      placeholder="Stream URL"
-                      className="w-full px-2 py-1.5 text-xs rounded bg-bg-secondary border border-border text-text-primary focus:outline-none focus:border-primary"
+                    <Heading level={6} className="text-base mb-4">Radio Constanța Folclor Streams</Heading>
+
+                    <div className="space-y-4">
+                      {/* MP3 128 kbps */}
+                      <div className="p-4 rounded-lg bg-bg-tertiary border border-border">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={settings.radioStreams?.folclor?.mp3_128?.enabled || false}
+                                onChange={(e) => updateStreamConfig('folclor', 'mp3_128', 'enabled', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                            <div>
+                              <Body className="font-medium">MP3 128 kbps</Body>
+                              <Body size="small" opacity="secondary">Standard quality</Body>
+                            </div>
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          value={settings.radioStreams?.folclor?.mp3_128?.url || ''}
+                          onChange={(e) => updateStreamConfig('folclor', 'mp3_128', 'url', e.target.value)}
+                          placeholder="Stream URL (e.g., https://stream4.srr.ro:8443/radio-constanta-am)"
+                          disabled={!settings.radioStreams?.folclor?.mp3_128?.enabled}
+                          className="w-full px-3 py-2 text-sm rounded bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
-                    ))}
+
+                      {/* MP3 256 kbps */}
+                      <div className="p-4 rounded-lg bg-bg-tertiary border border-border">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={settings.radioStreams?.folclor?.mp3_256?.enabled || false}
+                                onChange={(e) => updateStreamConfig('folclor', 'mp3_256', 'enabled', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                            <div>
+                              <Body className="font-medium">MP3 256 kbps</Body>
+                              <Body size="small" opacity="secondary">High quality</Body>
+                            </div>
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          value={settings.radioStreams?.folclor?.mp3_256?.url || ''}
+                          onChange={(e) => updateStreamConfig('folclor', 'mp3_256', 'url', e.target.value)}
+                          placeholder="Stream URL (e.g., https://stream4.srr.ro:8443/radio-constanta-folclor-256)"
+                          disabled={!settings.radioStreams?.folclor?.mp3_256?.enabled}
+                          className="w-full px-3 py-2 text-sm rounded bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                      </div>
+
+                      {/* FLAC/ALAC 1024 kbps */}
+                      <div className="p-4 rounded-lg bg-bg-tertiary border border-border">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={settings.radioStreams?.folclor?.flac?.enabled || false}
+                                onChange={(e) => updateStreamConfig('folclor', 'flac', 'enabled', e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                            <div>
+                              <Body className="font-medium">FLAC/ALAC 1024 kbps</Body>
+                              <Body size="small" opacity="secondary">Lossless quality (FLAC for most devices, ALAC for Apple)</Body>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <Body size="small" opacity="secondary" className="mb-1">FLAC Stream URL (Android, Windows, Linux)</Body>
+                            <input
+                              type="text"
+                              value={settings.radioStreams?.folclor?.flac?.url || ''}
+                              onChange={(e) => updateStreamConfig('folclor', 'flac', 'url', e.target.value)}
+                              placeholder="FLAC Stream URL (e.g., https://stream4.srr.ro:8443/radio-constanta-folclor-flac)"
+                              disabled={!settings.radioStreams?.folclor?.flac?.enabled}
+                              className="w-full px-3 py-2 text-sm rounded bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                          <div>
+                            <Body size="small" opacity="secondary" className="mb-1">ALAC Stream URL (iOS, macOS)</Body>
+                            <input
+                              type="text"
+                              value={settings.radioStreams?.folclor?.flac?.alacUrl || ''}
+                              onChange={(e) => updateStreamConfig('folclor', 'flac', 'alacUrl', e.target.value)}
+                              placeholder="ALAC Stream URL (e.g., https://stream4.srr.ro:8443/radio-constanta-folclor-alac)"
+                              disabled={!settings.radioStreams?.folclor?.flac?.enabled}
+                              className="w-full px-3 py-2 text-sm rounded bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

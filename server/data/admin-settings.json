@@ -2,31 +2,54 @@
   "weatherProvider": "openmeteo",
   "weatherApiKey": "",
   "radioStreams": {
-    "fm": [
-      {
-        "id": "320",
-        "label": "320 kbps",
-        "format": "AAC",
-        "bitrate": "320 kbps",
-        "url": "https://live.radioconstanta.ro/stream-aac"
+    "fm": {
+      "mp3_128": {
+        "enabled": true,
+        "url": "https://live.radioconstanta.ro/stream",
+        "label": "MP3 128 kbps",
+        "format": "MP3",
+        "bitrate": "128 kbps"
       },
-      {
-        "id": "128",
-        "label": "128 kbps",
+      "mp3_256": {
+        "enabled": true,
+        "url": "https://live.radioconstanta.ro/stream-256",
+        "label": "MP3 256 kbps",
         "format": "MP3",
-        "bitrate": "128 kbps",
-        "url": "https://live.radioconstanta.ro/stream"
+        "bitrate": "256 kbps"
+      },
+      "flac": {
+        "enabled": true,
+        "url": "https://live.radioconstanta.ro/stream-flac",
+        "alacUrl": "https://live.radioconstanta.ro/stream-alac",
+        "label": "FLAC/ALAC",
+        "format": "FLAC/ALAC",
+        "bitrate": "1024 kbps"
       }
-    ],
-    "folclor": [
-      {
-        "id": "128",
-        "label": "128 kbps",
+    },
+    "folclor": {
+      "mp3_128": {
+        "enabled": true,
+        "url": "https://stream4.srr.ro:8443/radio-constanta-am",
+        "label": "MP3 128 kbps",
         "format": "MP3",
-        "bitrate": "128 kbps",
-        "url": "https://stream4.srr.ro:8443/radio-constanta-am"
+        "bitrate": "128 kbps"
+      },
+      "mp3_256": {
+        "enabled": false,
+        "url": "",
+        "label": "MP3 256 kbps",
+        "format": "MP3",
+        "bitrate": "256 kbps"
+      },
+      "flac": {
+        "enabled": false,
+        "url": "",
+        "alacUrl": "",
+        "label": "FLAC/ALAC",
+        "format": "FLAC/ALAC",
+        "bitrate": "1024 kbps"
       }
-    ]
+    }
   },
   "defaultLocation": {
     "lat": 44.1598,

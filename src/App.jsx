@@ -11,6 +11,7 @@ import WeatherCard from './components/WeatherCard';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { createFloatingParticles } from './utils/createFloatingParticles';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
+import { getLosslessStreamUrl } from './utils/osDetection';
 
 // Create context for device info to share across components
 export const DeviceContext = createContext(null);
@@ -77,6 +78,9 @@ function AppContent() {
     folclor: '/rcf.png'
   });
 
+  // Dynamic stream configurations from API
+  const [dynamicStreams, setDynamicStreams] = useState(null);
+
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
 
@@ -116,26 +120,112 @@ function AppContent() {
     }
   };
 
-  // Fetch covers on mount and poll every 30 seconds
+  // Fetch stream configurations from API
+  const fetchStreamConfigurations = async () => {
+    console.log('[App] Fetching stream configurations...');
+    try {
+      const response = await fetch('/api/admin/public-settings');
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[App] Stream config data:', data);
+
+        if (data.radioStreams) {
+          // Convert new format to old format
+          const convertStreamConfig = (stationConfig) => {
+            const qualities = [];
+
+            // MP3 128 kbps
+            if (stationConfig.mp3_128?.enabled && stationConfig.mp3_128?.url) {
+              qualities.push({
+                id: 'mp3_128',
+                label: stationConfig.mp3_128.label || 'MP3 128 kbps',
+                format: 'MP3',
+                bitrate: '128 kbps',
+                url: stationConfig.mp3_128.url
+              });
+            }
+
+            // MP3 256 kbps
+            if (stationConfig.mp3_256?.enabled && stationConfig.mp3_256?.url) {
+              qualities.push({
+                id: 'mp3_256',
+                label: stationConfig.mp3_256.label || 'MP3 256 kbps',
+                format: 'MP3',
+                bitrate: '256 kbps',
+                url: stationConfig.mp3_256.url
+              });
+            }
+
+            // FLAC/ALAC - use appropriate URL based on OS
+            if (stationConfig.flac?.enabled) {
+              const losslessUrl = getLosslessStreamUrl(
+                stationConfig.flac.url,
+                stationConfig.flac.alacUrl
+              );
+
+              if (losslessUrl) {
+                qualities.push({
+                  id: 'flac',
+                  label: stationConfig.flac.label || 'FLAC/ALAC',
+                  format: 'FLAC/ALAC',
+                  bitrate: '1024 kbps',
+                  url: losslessUrl
+                });
+              }
+            }
+
+            return qualities;
+          };
+
+          const newStreams = {
+            fm: convertStreamConfig(data.radioStreams.fm || {}),
+            folclor: convertStreamConfig(data.radioStreams.folclor || {})
+          };
+
+          console.log('[App] Converted stream configs:', newStreams);
+          setDynamicStreams(newStreams);
+        }
+      }
+    } catch (error) {
+      console.error('[App] Error fetching stream configurations:', error);
+    }
+  };
+
+  // Fetch covers and stream configurations on mount and poll every 30 seconds
   useEffect(() => {
     fetchCurrentCovers();
+    fetchStreamConfigurations();
 
-    const interval = setInterval(fetchCurrentCovers, 30000); // Poll every 30 seconds
+    const interval = setInterval(() => {
+      fetchCurrentCovers();
+      fetchStreamConfigurations();
+    }, 30000); // Poll every 30 seconds
 
     return () => clearInterval(interval);
   }, []);
 
-  // Create station objects with dynamic covers
-  const stationsWithDynamicCovers = useMemo(() => ({
-    fm: {
-      ...STATIONS.fm,
-      coverArt: dynamicCovers.fm
-    },
-    folclor: {
-      ...STATIONS.folclor,
-      coverArt: dynamicCovers.folclor
-    }
-  }), [dynamicCovers]);
+  // Create station objects with dynamic covers and streams
+  const stationsWithDynamicCovers = useMemo(() => {
+    // Use dynamic streams if available, otherwise fall back to hardcoded STATIONS
+    const fmQualities = dynamicStreams?.fm?.length > 0 ? dynamicStreams.fm : STATIONS.fm.qualities;
+    const folclorQualities = dynamicStreams?.folclor?.length > 0 ? dynamicStreams.folclor : STATIONS.folclor.qualities;
+
+    return {
+      fm: {
+        ...STATIONS.fm,
+        coverArt: dynamicCovers.fm,
+        qualities: fmQualities,
+        defaultQuality: fmQualities[0]?.id || STATIONS.fm.defaultQuality
+      },
+      folclor: {
+        ...STATIONS.folclor,
+        coverArt: dynamicCovers.folclor,
+        qualities: folclorQualities,
+        defaultQuality: folclorQualities[0]?.id || STATIONS.folclor.defaultQuality
+      }
+    };
+  }, [dynamicCovers, dynamicStreams]);
 
   // Update current station when covers change
   useEffect(() => {
