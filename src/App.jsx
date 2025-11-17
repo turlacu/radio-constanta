@@ -19,7 +19,7 @@ export const DeviceContext = createContext(null);
 const STATIONS = {
   fm: {
     id: 'fm',
-    name: 'Radio Constanța FM',
+    name: 'Radio Constanța',
     coverArt: '/rcfm.png',
     color: 'from-blue-500/20 to-cyan-500/20',
     qualities: [
@@ -30,7 +30,7 @@ const STATIONS = {
   },
   folclor: {
     id: 'folclor',
-    name: 'Radio Constanța Folclor',
+    name: 'Radio Constanța',
     coverArt: '/rcf.png',
     color: 'from-purple-500/20 to-pink-500/20',
     qualities: [
