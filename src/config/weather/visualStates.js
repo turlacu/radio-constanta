@@ -195,16 +195,16 @@ export const VISUAL_STATES = {
     name: 'Clear Night',
     // Enhanced with 10 stops for deep blue night sky gradient
     gradients: [
-      { color: '#1A237E', opacity: 1, position: 0 },
-      { color: '#1E2885', opacity: 1, position: 11 },
-      { color: '#232D8B', opacity: 1, position: 22 },
-      { color: '#283593', opacity: 1, position: 33 },
-      { color: '#2C3996', opacity: 1, position: 44 },
-      { color: '#2E3C99', opacity: 1, position: 55 },
-      { color: '#303F9F', opacity: 1, position: 66 },
-      { color: '#3442A3', opacity: 1, position: 77 },
-      { color: '#3745A7', opacity: 1, position: 88 },
-      { color: '#3949AB', opacity: 1, position: 100 }
+      { color: '#041A40', opacity: 1, position: 0 },
+      { color: '#061E46', opacity: 1, position: 11 },
+      { color: '#08224C', opacity: 1, position: 22 },
+      { color: '#0A2652', opacity: 1, position: 33 },
+      { color: '#0C2A58', opacity: 1, position: 44 },
+      { color: '#0E2E5E', opacity: 1, position: 55 },
+      { color: '#103264', opacity: 1, position: 66 },
+      { color: '#12366A', opacity: 1, position: 77 },
+      { color: '#143A70', opacity: 1, position: 88 },
+      { color: '#163E76', opacity: 1, position: 100 }
     ],
     particles: {
       type: 'stars',
@@ -216,7 +216,7 @@ export const VISUAL_STATES = {
       twinkle: true
     },
     aurora: false, // Disabled - removed aurora entirely for consistent, fast, banding-free rendering
-    overlayColor: 'rgba(26, 35, 126, 0.2)',
+    overlayColor: 'rgba(4, 26, 64, 0.2)',
     animationSpeed: 0.4
   },
 
