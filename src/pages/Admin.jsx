@@ -211,6 +211,55 @@ export default function Admin() {
     }
   };
 
+  const handleDefaultCoverUpload = async (event, station) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingCover(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('cover', file);
+
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`/api/admin/covers/${station}/upload-default`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Update settings with new default cover path
+        setSettings(prevSettings => ({
+          ...prevSettings,
+          coverScheduling: {
+            ...prevSettings.coverScheduling,
+            [station]: {
+              ...prevSettings.coverScheduling[station],
+              defaultCover: data.coverPath
+            }
+          }
+        }));
+
+        setSaveMessage('Default cover uploaded successfully!');
+        setTimeout(() => setSaveMessage(''), 3000);
+      } else {
+        setSaveMessage('Failed to upload default cover');
+      }
+    } catch (error) {
+      console.error('Error uploading default cover:', error);
+      setSaveMessage('Error uploading default cover');
+    } finally {
+      setUploadingCover(false);
+      // Reset the input
+      event.target.value = '';
+    }
+  };
+
   const handleDeleteCover = async (station, coverId) => {
     if (!confirm('Are you sure you want to delete this cover?')) return;
 
@@ -1029,7 +1078,19 @@ export default function Admin() {
 
                     {/* Default Cover */}
                     <div>
-                      <Body size="small" opacity="secondary" className="mb-2 text-xs">Default Cover</Body>
+                      <div className="flex items-center justify-between mb-2">
+                        <Body size="small" opacity="secondary" className="text-xs">Default Cover</Body>
+                        <label className="px-3 py-1.5 text-xs rounded-lg bg-primary text-white font-medium hover:bg-primary-dark cursor-pointer transition-colors">
+                          {uploadingCover ? 'Uploading...' : 'Upload New'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleDefaultCoverUpload(e, selectedStation)}
+                            disabled={uploadingCover}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
                       <div className="flex gap-2 items-center">
                         <input
                           type="text"
@@ -1050,6 +1111,9 @@ export default function Admin() {
                           />
                         )}
                       </div>
+                      <Body size="small" opacity="secondary" className="text-xs mt-1">
+                        This is the main station cover shown when dynamic covers are disabled or no schedule matches.
+                      </Body>
                     </div>
 
                     {/* Transition Settings */}

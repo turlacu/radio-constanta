@@ -238,6 +238,45 @@ router.post('/covers/:station/upload', authenticateAdmin, upload.single('cover')
   }
 });
 
+// Upload default/main cover for a station
+router.post('/covers/:station/upload-default', authenticateAdmin, upload.single('cover'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { station } = req.params;
+
+    // Read current settings
+    const data = await fs.readFile(SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+
+    // Ensure coverScheduling exists
+    if (!settings.coverScheduling) {
+      settings.coverScheduling = { fm: { covers: [], schedules: [] }, folclor: { covers: [], schedules: [] } };
+    }
+    if (!settings.coverScheduling[station]) {
+      settings.coverScheduling[station] = { covers: [], schedules: [] };
+    }
+
+    // Set the default cover path
+    const coverPath = `/covers/${station}/${req.file.filename}`;
+    settings.coverScheduling[station].defaultCover = coverPath;
+
+    // Save settings
+    await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
+
+    res.json({
+      success: true,
+      coverPath,
+      message: 'Default cover uploaded successfully'
+    });
+  } catch (error) {
+    console.error('Error uploading default cover:', error);
+    res.status(500).json({ error: 'Failed to upload default cover' });
+  }
+});
+
 // Delete cover image
 router.delete('/covers/:station/:coverId', authenticateAdmin, async (req, res) => {
   try {
