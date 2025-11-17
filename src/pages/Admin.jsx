@@ -18,6 +18,7 @@ export default function Admin() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
+  const [scheduleError, setScheduleError] = useState(''); // Error message for schedule modal
 
   // Schedule form state
   const [scheduleForm, setScheduleForm] = useState({
@@ -301,25 +302,28 @@ export default function Admin() {
     console.log('[Admin] Schedule form data:', scheduleForm);
     console.log('[Admin] Selected station:', selectedStation);
 
+    // Clear previous errors
+    setScheduleError('');
+
     // Validate form
     if (!scheduleForm.name.trim()) {
       console.log('[Admin] ❌ Validation failed: name is required');
-      setSaveMessage('Schedule name is required');
+      setScheduleError('Schedule name is required');
       return;
     }
     if (!scheduleForm.coverPath) {
       console.log('[Admin] ❌ Validation failed: coverPath is required');
-      setSaveMessage('Please select a cover');
+      setScheduleError('Please select a cover from the library below. Upload a cover first if needed.');
       return;
     }
     if (scheduleForm.days.length === 0) {
       console.log('[Admin] ❌ Validation failed: no days selected');
-      setSaveMessage('Please select at least one day');
+      setScheduleError('Please select at least one day');
       return;
     }
     if (scheduleForm.type === 'news' && scheduleForm.newsHours.length === 0) {
       console.log('[Admin] ❌ Validation failed: news type needs hours');
-      setSaveMessage('Please select at least one hour for news');
+      setScheduleError('Please select at least one hour for news');
       return;
     }
 
@@ -1219,6 +1223,7 @@ export default function Admin() {
                               newsHours: [],
                               duration: 3
                             });
+                            setScheduleError('');
                             setShowScheduleModal(true);
                           }}
                           className="px-3 py-1.5 text-xs rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors"
@@ -1269,6 +1274,7 @@ export default function Admin() {
                                       newsHours: schedule.newsHours || [],
                                       duration: schedule.duration || 3
                                     });
+                                    setScheduleError('');
                                     setShowScheduleModal(true);
                                   }}
                                   className="px-2 py-1 text-xs rounded bg-bg-secondary text-text-primary hover:bg-bg-secondary/80 transition-colors"
@@ -1596,6 +1602,15 @@ export default function Admin() {
                   </>
                 )}
 
+                {/* Error Message */}
+                {scheduleError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    <Body size="small" className="text-xs text-red-400">
+                      ⚠️ {scheduleError}
+                    </Body>
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-4">
                   <button
@@ -1605,7 +1620,10 @@ export default function Admin() {
                     {editingSchedule ? 'Update Schedule' : 'Add Schedule'}
                   </button>
                   <button
-                    onClick={() => setShowScheduleModal(false)}
+                    onClick={() => {
+                      setShowScheduleModal(false);
+                      setScheduleError('');
+                    }}
                     className="px-4 py-2 rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors text-sm"
                   >
                     Cancel
