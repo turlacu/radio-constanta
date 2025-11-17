@@ -37,7 +37,7 @@ const initializeDataDirectories = async () => {
 const initializeSettingsFile = async () => {
   const dataDir = path.join(__dirname, 'data');
   const settingsFile = path.join(dataDir, 'admin-settings.json');
-  const templateFile = path.join(dataDir, 'admin-settings.template.json');
+  const templateFile = path.join(__dirname, 'admin-settings.template.json'); // Template is in server/, not server/data/
 
   try {
     // Check if settings file exists
@@ -50,7 +50,7 @@ const initializeSettingsFile = async () => {
       console.log('✓ Admin settings file created from template');
     } catch (copyError) {
       console.error('Error creating settings file from template:', copyError);
-      console.error('Make sure admin-settings.template.json exists in server/data/');
+      console.error('Make sure admin-settings.template.json exists in server/');
     }
   }
 };

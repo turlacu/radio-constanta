@@ -19,7 +19,6 @@ dist-ssr
 # These should persist across deployments
 server/data/*
 !server/data/.gitkeep
-!server/data/admin-settings.template.json
 
 # Editor directories and files
 .vscode/*
