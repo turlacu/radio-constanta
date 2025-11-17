@@ -11,8 +11,30 @@ The app consists of:
 - **Backend**: Express.js API server
   - `/api/news` - Fetches articles from WordPress REST API
   - `/api/article` - Scrapes full article content from Radio Constanța website
+  - `/api/admin` - Admin panel for configuration
 
 In production, the Express server serves both the API and the static frontend files.
+
+---
+
+## Data Persistence (IMPORTANT!)
+
+The app stores configuration data and uploads that must persist across deployments:
+
+- **Radio stream configurations** (URLs, enable/disable settings)
+- **Uploaded cover images**
+- **Cover schedules**
+- **Admin settings**
+
+All of this data is stored in `server/data/` which is **NOT tracked in git** (intentionally, since it contains user data).
+
+### Why Volume Mounting is Critical
+
+During Docker deployments, the container is rebuilt from source code, which means:
+- ❌ Without volumes: `server/data/` is reset to defaults on each deployment
+- ✅ With volumes: `server/data/` persists across deployments and updates
+
+**All deployment methods below include proper volume configuration to ensure your data persists.**
 
 ---
 
@@ -51,15 +73,25 @@ Coolify is a self-hosted PaaS that makes deploying Docker apps easy.
    - **Build Command**: (leave empty, Dockerfile handles it)
    - **Start Command**: (leave empty, Dockerfile handles it)
 
-6. **Environment variables** (optional)
+6. **Configure persistent storage** (CRITICAL for data persistence)
+   - In Coolify, go to "Storages" or "Volumes" section
+   - Add a new volume:
+     - **Name**: `radio-data` (or any name you prefer)
+     - **Mount Path**: `/app/server/data`
+     - **Type**: Persistent Volume
+   - This ensures admin settings, covers, and schedules survive app updates
+
+7. **Environment variables** (optional)
    - `NODE_ENV=production` (already set in Dockerfile)
    - `PORT=3001` (if you want to change the port)
+   - `ADMIN_PASSWORD_HASH` - Custom admin password hash
+   - `JWT_SECRET` - Custom JWT secret
 
-7. **Domain configuration** (optional)
+8. **Domain configuration** (optional)
    - Add your domain in the "Domains" section
    - Coolify will automatically configure SSL with Let's Encrypt
 
-8. **Deploy**
+9. **Deploy**
    - Click "Deploy"
    - Coolify will:
      - Pull your code from Git
@@ -67,9 +99,9 @@ Coolify is a self-hosted PaaS that makes deploying Docker apps easy.
      - Start the container
      - Set up reverse proxy with SSL
 
-9. **Monitor**
-   - Check logs in Coolify dashboard
-   - Access your app at `http://your-domain` or `http://your-server-ip:3001`
+10. **Monitor**
+    - Check logs in Coolify dashboard
+    - Access your app at `http://your-domain` or `http://your-server-ip:3001`
 
 #### Coolify Auto-Deploy
 
@@ -110,8 +142,16 @@ If you prefer manual control without Coolify:
      --name radio-constanta \
      --restart unless-stopped \
      -p 3001:3001 \
+     -v radio-data:/app/server/data \
      radio-constanta
    ```
+
+   **Important:** The `-v radio-data:/app/server/data` flag creates a persistent volume that stores:
+   - Admin settings (radio stream configurations)
+   - Uploaded cover images
+   - Cover schedules
+
+   This ensures your data **survives container restarts and rebuilds**.
 
 5. **Set up Nginx reverse proxy** (optional, for SSL)
    ```nginx
@@ -149,39 +189,39 @@ If you prefer manual control without Coolify:
    docker stop radio-constanta
    docker rm radio-constanta
    docker build -t radio-constanta .
-   docker run -d --name radio-constanta --restart unless-stopped -p 3001:3001 radio-constanta
+   docker run -d \
+     --name radio-constanta \
+     --restart unless-stopped \
+     -p 3001:3001 \
+     -v radio-data:/app/server/data \
+     radio-constanta
    ```
+
+   **Note:** The `radio-data` volume is preserved when you remove the container, so your settings and uploads persist.
 
 ---
 
-### Option 3: Docker Compose
+### Option 3: Docker Compose (Recommended for Production)
 
-Create `docker-compose.yml`:
+A `docker-compose.yml` file is included in the repository with proper data persistence configured.
 
-```yaml
-version: '3.8'
-
-services:
-  radio-constanta:
-    build: .
-    container_name: radio-constanta
-    restart: unless-stopped
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=production
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/news"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-```
-
-Deploy:
+**Deploy:**
 ```bash
 docker-compose up -d
 ```
+
+**Update:**
+```bash
+git pull
+docker-compose up -d --build
+```
+
+**Important:** The docker-compose configuration includes a persistent volume (`radio-data`) that stores:
+- Admin settings (radio stream configurations)
+- Uploaded cover images
+- Cover schedules
+
+This ensures your configuration and uploads **survive app updates and container rebuilds**.
 
 ---
 
@@ -304,13 +344,29 @@ pm2 logs radio-constanta
 **With Coolify:**
 - Push to Git → Webhook triggers auto-deploy
 - Or click "Deploy" button in Coolify
+- Your data persists automatically (if you configured the volume in step 6)
 
-**With Docker:**
+**With Docker Compose:**
 ```bash
 git pull
-docker-compose down
 docker-compose up -d --build
 ```
+Note: Your data in the `radio-data` volume is preserved automatically.
+
+**With Manual Docker:**
+```bash
+git pull
+docker stop radio-constanta
+docker rm radio-constanta
+docker build -t radio-constanta .
+docker run -d \
+  --name radio-constanta \
+  --restart unless-stopped \
+  -p 3001:3001 \
+  -v radio-data:/app/server/data \
+  radio-constanta
+```
+Note: The `radio-data` volume preserves your settings and uploads.
 
 ---
 
