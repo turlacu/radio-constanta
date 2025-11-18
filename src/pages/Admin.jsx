@@ -1128,7 +1128,7 @@ export default function Admin() {
                                       <div className="text-white text-xs font-medium text-center">ORIGINAL</div>
                                     </div>
                                   )}
-                                  {/* Hover overlay */}
+                                  {/* Hover overlay - Set as Default */}
                                   {!isDefault && (
                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                       <div className="text-white text-xs font-medium text-center px-2">
@@ -1137,6 +1137,20 @@ export default function Admin() {
                                     </div>
                                   )}
                                 </div>
+                                {/* Delete button - only for uploaded covers, not original */}
+                                {!cover.isOriginal && (
+                                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteCover(selectedStation, cover.id);
+                                      }}
+                                      className="px-2 py-1 text-xs rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                )}
                                 <div className="mt-1.5 text-xs text-text-secondary truncate text-center">
                                   {cover.label}
                                 </div>
