@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useSettings } from '../contexts/SettingsContext';
 import { Heading, Body } from './ui';
 import { getWeatherManager } from '../modules/weather/WeatherManager';
+import { useWeatherTextColor } from '../hooks/useWeatherTextColor';
 
 // Phosphor Icons
 const PhosphorIcons = {
@@ -41,6 +42,7 @@ export default function WeatherCard() {
   const settings = useSettings();
   const [weatherData, setWeatherData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const textColor = useWeatherTextColor();
 
   useEffect(() => {
     // Get shared singleton WeatherManager instance (same one used by WeatherBackground)
@@ -248,12 +250,15 @@ export default function WeatherCard() {
     ? getManualWeatherIcon(settings.manualWeatherState.weatherType, settings.manualWeatherState.timeOfDay)
     : weatherData.icon;
 
+  // Dynamic text color classes based on background
+  const textColorClass = textColor === 'dark' ? 'text-gray-900' : 'text-white';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="flex items-center gap-4 text-white drop-shadow-2xl"
+      className={`flex items-center gap-4 ${textColorClass} drop-shadow-2xl`}
     >
       {/* Temperature - Only show in auto mode */}
       {!isManualMode && (
@@ -272,7 +277,7 @@ export default function WeatherCard() {
       </div>
 
       {/* Divider */}
-      <div className="w-px h-12 bg-white/30"></div>
+      <div className={`w-px h-12 ${textColor === 'dark' ? 'bg-gray-900/30' : 'bg-white/30'}`}></div>
 
       {/* Date and Location */}
       <div className="flex flex-col gap-1.5">
