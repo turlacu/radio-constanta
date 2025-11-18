@@ -48,7 +48,7 @@ export default function RadioPlayer({ radioState }) {
         )}
 
         {/* Main cover art card - clean dark card */}
-        <div className="relative w-full aspect-square rounded-[16px] overflow-hidden bg-bg-tertiary border border-gray-700 4k:rounded-[24px]">
+        <div className="relative w-full aspect-square rounded-[16px] overflow-hidden bg-bg-tertiary border border-gray-500 4k:rounded-[24px]">
           <motion.img
             key={currentStation.coverArt} // Force re-animation when cover changes
             src={currentStation.coverArt}
