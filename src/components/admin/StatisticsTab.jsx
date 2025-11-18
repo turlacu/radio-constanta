@@ -124,46 +124,81 @@ export default function StatisticsTab({ token }) {
 
   // Calculate aggregated stats for periods
   const getStationPeriodStats = () => {
-    const recentStats = dailyStats.slice(-stationPeriod);
-    const fmTotal = recentStats.reduce((sum, stat) => sum + (stat.fm_listeners || 0), 0);
-    const folclorTotal = recentStats.reduce((sum, stat) => sum + (stat.folclor_listeners || 0), 0);
+    // Get last N-1 days from historical data (excluding today)
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const historicalStats = dailyStats
+      .filter(stat => stat.date !== today)
+      .slice(-(stationPeriod - 1));
+
+    // Add today's data if available
+    const fmHistorical = historicalStats.reduce((sum, stat) => sum + (stat.fm_listeners || 0), 0);
+    const folclorHistorical = historicalStats.reduce((sum, stat) => sum + (stat.folclor_listeners || 0), 0);
+
+    // Include today's data from todayStats
+    const fmTotal = fmHistorical + (todayStats?.fm_listeners || 0);
+    const folclorTotal = folclorHistorical + (todayStats?.folclor_listeners || 0);
+
     return { fm: fmTotal, folclor: folclorTotal };
   };
 
   const getQualityPeriodStats = () => {
-    const recentStats = dailyStats.slice(-qualityPeriod);
-    return {
-      fm_mp3_128: recentStats.reduce((sum, stat) => {
-        // Estimate FM's portion (assuming proportional distribution)
+    // Get last N-1 days from historical data (excluding today)
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const historicalStats = dailyStats
+      .filter(stat => stat.date !== today)
+      .slice(-(qualityPeriod - 1));
+
+    // Calculate historical quality stats per station (using proportional estimation)
+    const historical = {
+      fm_mp3_128: historicalStats.reduce((sum, stat) => {
         const totalQuality = (stat.mp3_128_listeners || 0);
         const fmRatio = stat.fm_listeners / (stat.total_listeners || 1);
         return sum + Math.round(totalQuality * fmRatio);
       }, 0),
-      fm_mp3_256: recentStats.reduce((sum, stat) => {
+      fm_mp3_256: historicalStats.reduce((sum, stat) => {
         const totalQuality = (stat.mp3_256_listeners || 0);
         const fmRatio = stat.fm_listeners / (stat.total_listeners || 1);
         return sum + Math.round(totalQuality * fmRatio);
       }, 0),
-      fm_flac: recentStats.reduce((sum, stat) => {
+      fm_flac: historicalStats.reduce((sum, stat) => {
         const totalQuality = (stat.flac_listeners || 0);
         const fmRatio = stat.fm_listeners / (stat.total_listeners || 1);
         return sum + Math.round(totalQuality * fmRatio);
       }, 0),
-      folclor_mp3_128: recentStats.reduce((sum, stat) => {
+      folclor_mp3_128: historicalStats.reduce((sum, stat) => {
         const totalQuality = (stat.mp3_128_listeners || 0);
         const folclorRatio = stat.folclor_listeners / (stat.total_listeners || 1);
         return sum + Math.round(totalQuality * folclorRatio);
       }, 0),
-      folclor_mp3_256: recentStats.reduce((sum, stat) => {
+      folclor_mp3_256: historicalStats.reduce((sum, stat) => {
         const totalQuality = (stat.mp3_256_listeners || 0);
         const folclorRatio = stat.folclor_listeners / (stat.total_listeners || 1);
         return sum + Math.round(totalQuality * folclorRatio);
       }, 0),
-      folclor_flac: recentStats.reduce((sum, stat) => {
+      folclor_flac: historicalStats.reduce((sum, stat) => {
         const totalQuality = (stat.flac_listeners || 0);
         const folclorRatio = stat.folclor_listeners / (stat.total_listeners || 1);
         return sum + Math.round(totalQuality * folclorRatio);
       }, 0)
+    };
+
+    // Add today's current quality stats (estimated per station)
+    const todayTotal = (todayStats?.current?.total || 0);
+    const todayFmRatio = (todayStats?.current?.byStation?.fm || 0) / (todayTotal || 1);
+    const todayFolclorRatio = (todayStats?.current?.byStation?.folclor || 0) / (todayTotal || 1);
+
+    // Map quality IDs (backend uses 'mp3_128', '128', 'flac', etc.)
+    const getQualityCount = (qualityId) => {
+      return (todayStats?.current?.byQuality?.[qualityId] || 0);
+    };
+
+    return {
+      fm_mp3_128: historical.fm_mp3_128 + Math.round((getQualityCount('mp3_128') + getQualityCount('128')) * todayFmRatio),
+      fm_mp3_256: historical.fm_mp3_256 + Math.round((getQualityCount('mp3_256') + getQualityCount('256')) * todayFmRatio),
+      fm_flac: historical.fm_flac + Math.round(getQualityCount('flac') * todayFmRatio),
+      folclor_mp3_128: historical.folclor_mp3_128 + Math.round((getQualityCount('mp3_128') + getQualityCount('128')) * todayFolclorRatio),
+      folclor_mp3_256: historical.folclor_mp3_256 + Math.round((getQualityCount('mp3_256') + getQualityCount('256')) * todayFolclorRatio),
+      folclor_flac: historical.folclor_flac + Math.round(getQualityCount('flac') * todayFolclorRatio)
     };
   };
 
