@@ -372,6 +372,7 @@ async function evaluateCurrentCover(station, verbose = true) {
     const currentDay = romaniaDate.getDay(); // 0 = Sunday
     const currentHour = romaniaDate.getHours();
     const currentMinutes = romaniaDate.getMinutes();
+    const currentSeconds = romaniaDate.getSeconds();
     const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
 
     if (verbose) {
@@ -401,10 +402,13 @@ async function evaluateCurrentCover(station, verbose = true) {
             if (verbose) console.log(`[Cover API]   - ❌ Hour not matched`);
             return false;
           }
-          // Check if current minutes are within duration (starts at :00)
-          const duration = schedule.duration || 3; // Default 3 minutes
-          const matched = currentMinutes >= 0 && currentMinutes < duration;
-          if (verbose) console.log(`[Cover API]   - Minutes ${currentMinutes} within ${duration}min? ${matched ? '✅' : '❌'}`);
+          // Check if current time is within duration (starts at :00)
+          // Convert to seconds for accurate fractional minute support (e.g., 3.5 min = 210 sec)
+          const duration = schedule.duration || 3; // Duration in minutes (can be fractional like 3.5)
+          const durationInSeconds = duration * 60;
+          const currentTimeInSeconds = currentMinutes * 60 + currentSeconds;
+          const matched = currentTimeInSeconds < durationInSeconds;
+          if (verbose) console.log(`[Cover API]   - Time ${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} within ${duration}min (${durationInSeconds}s)? ${matched ? '✅' : '❌'}`);
           return matched;
         }
 
