@@ -710,7 +710,7 @@ export default function Admin() {
                     <Heading level={6} className="mb-4 text-base">Weather Data Provider</Heading>
                     <div className="space-y-4">
                       <div>
-                        <Body size="small" opacity="secondary" className="mb-2">Provider</Body>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">Provider</Body>
                         <select
                           value={settings.weatherProvider || 'openmeteo'}
                           onChange={(e) => setSettings({ ...settings, weatherProvider: e.target.value })}
@@ -723,7 +723,7 @@ export default function Admin() {
 
                       {settings.weatherProvider === 'openweathermap' && (
                         <div>
-                          <Body size="small" opacity="secondary" className="mb-2">
+                          <Body size="small" opacity="secondary" className="mb-2 text-xs">
                             OpenWeatherMap API Key
                           </Body>
                           <input
@@ -1515,7 +1515,7 @@ export default function Admin() {
                   <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
                     <Heading level={6} className="mb-4 text-base">API Base URL</Heading>
                     <div className="space-y-4">
-                      <Body size="small" opacity="secondary">
+                      <Body size="small" opacity="secondary" className="text-xs">
                         Optional base URL for API endpoints (leave empty for relative paths)
                       </Body>
                       <input
