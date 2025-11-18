@@ -568,7 +568,8 @@ function AppContent() {
     pauseRadio,
     stopRadio,
     resumeRadio,
-    restoreRadio
+    restoreRadio,
+    showWeatherBackground: !showNews && isPlaying && settings.backgroundAnimation === 'weather' // Track if weather background is visible
   };
 
   // Split-screen layout for screens larger than small tablet portrait (768px+)
