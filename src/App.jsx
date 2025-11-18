@@ -12,6 +12,7 @@ import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { createFloatingParticles } from './utils/createFloatingParticles';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { getLosslessStreamUrl, getLosslessFormatLabel } from './utils/osDetection';
+import analytics from './utils/analytics';
 
 // Create context for device info to share across components
 export const DeviceContext = createContext(null);
@@ -456,6 +457,10 @@ function AppContent() {
       try {
         await audio.play();
         logDebug('✓ play() success');
+
+        // Track stream start
+        const quality = currentStation.qualities.find(q => q.id === selectedQuality[currentStation.id]);
+        analytics.trackStreamStart(currentStation.id, quality?.id || selectedQuality[currentStation.id]);
       } catch (err) {
         logDebug(`✗ play() failed: ${err.message}`);
         setIsLoading(false);
@@ -464,6 +469,9 @@ function AppContent() {
       // Pause
       logDebug('pause()');
       audio.pause();
+
+      // Track stream stop
+      analytics.trackStreamStop();
     }
   };
 
@@ -515,6 +523,9 @@ function AppContent() {
         try {
           await audio.play();
           logDebug('✓ Autoplay success');
+
+          // Track station switch
+          analytics.trackStationSwitch(station.id, qualityId);
         } catch (err) {
           logDebug(`✗ Autoplay failed: ${err.message}`);
           setIsLoading(false);
@@ -575,6 +586,9 @@ function AppContent() {
           try {
             await audio.play();
             logDebug('✓ Quality switch success');
+
+            // Track quality change
+            analytics.trackQualityChange(currentStation.id, qualityId);
           } catch (err) {
             logDebug(`✗ Quality switch failed: ${err.message}`);
             setIsLoading(false);
