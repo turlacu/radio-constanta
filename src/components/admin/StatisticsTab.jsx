@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Pie, Line, Bar } from 'react-chartjs-2';
-import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth, subMonths, getDaysInMonth } from 'date-fns';
 import { Heading, Body, Caption } from '../ui';
 
 // Register Chart.js components
@@ -167,19 +167,56 @@ export default function StatisticsTab({ token }) {
     };
   };
 
+  // Fill missing days with complete month data
+  const fillMissingDays = () => {
+    const daysInMonth = getDaysInMonth(selectedMonth);
+    const monthStart = startOfMonth(selectedMonth);
+    const year = monthStart.getFullYear();
+    const month = monthStart.getMonth();
+
+    // Create a map of existing data by day number
+    const dataMap = {};
+    dailyStats.forEach(stat => {
+      const date = new Date(stat.date);
+      const day = date.getDate();
+      dataMap[day] = stat;
+    });
+
+    // Generate complete data for all days
+    const completeData = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      if (dataMap[day]) {
+        completeData.push(dataMap[day]);
+      } else {
+        // Create empty data for missing days
+        const dateStr = format(new Date(year, month, day), 'yyyy-MM-dd');
+        completeData.push({
+          date: dateStr,
+          fm_listeners: 0,
+          folclor_listeners: 0,
+          total_listeners: 0
+        });
+      }
+    }
+
+    return completeData;
+  };
+
+  const completeMonthData = fillMissingDays();
+
   const listenersOverTimeData = {
-    labels: dailyStats.map(stat => format(new Date(stat.date), 'MMM d')),
+    labels: completeMonthData.map((_, index) => (index + 1).toString()),
     datasets: [
       {
         label: 'FM',
-        data: dailyStats.map(stat => stat.fm_listeners || 0),
+        data: completeMonthData.map(stat => stat.fm_listeners || 0),
         backgroundColor: '#3B82F6',
         borderColor: '#3B82F6',
         borderWidth: 1
       },
       {
         label: 'Folclor',
-        data: dailyStats.map(stat => stat.folclor_listeners || 0),
+        data: completeMonthData.map(stat => stat.folclor_listeners || 0),
         backgroundColor: '#8B5CF6',
         borderColor: '#8B5CF6',
         borderWidth: 1
@@ -212,7 +249,13 @@ export default function StatisticsTab({ token }) {
         grid: { color: 'rgba(156, 163, 175, 0.1)' }
       },
       x: {
-        ticks: { color: '#9CA3AF' },
+        ticks: {
+          color: '#9CA3AF',
+          font: { size: 10 },
+          autoSkip: false,
+          maxRotation: 0,
+          minRotation: 0
+        },
         grid: { color: 'rgba(156, 163, 175, 0.1)' }
       }
     }
