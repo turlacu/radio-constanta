@@ -16,9 +16,14 @@ export default function RadioPlayer({ radioState }) {
     togglePlay,
     switchStation,
     switchQuality,
+    showWeatherBackground,
   } = radioState;
 
-  const textColor = useWeatherTextColor();
+  const weatherTextColor = useWeatherTextColor();
+
+  // Only use dynamic weather text color when weather background is actually visible
+  // Otherwise use light text (white) for dark backgrounds
+  const textColor = showWeatherBackground ? weatherTextColor : 'light';
 
   // Dynamic text color classes based on background
   const textPrimaryClass = textColor === 'dark' ? 'text-gray-900' : 'text-text-primary';
