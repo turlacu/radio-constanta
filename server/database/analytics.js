@@ -312,7 +312,19 @@ export function getDailyStats(startDate, endDate) {
 
   try {
     const stmt = db.prepare(`
-      SELECT * FROM daily_stats
+      SELECT
+        date,
+        total_listeners,
+        peak_listeners,
+        avg_listeners,
+        fm_listeners,
+        folclor_listeners,
+        mp3_128_count as mp3_128_listeners,
+        mp3_256_count as mp3_256_listeners,
+        flac_count as flac_listeners,
+        article_views,
+        total_sessions
+      FROM daily_stats
       WHERE date >= ? AND date <= ?
       ORDER BY date ASC
     `);
@@ -346,6 +358,8 @@ export function getTodayStats() {
       date: today,
       current: current,
       total_listeners: (dailyStats?.total_listeners || 0) + current.total,
+      fm_listeners: (dailyStats?.fm_listeners || 0) + (current.byStation?.fm || 0),
+      folclor_listeners: (dailyStats?.folclor_listeners || 0) + (current.byStation?.folclor || 0),
       peak_listeners: Math.max(dailyStats?.peak_listeners || 0, current.total),
       article_views: articleViews.count
     };

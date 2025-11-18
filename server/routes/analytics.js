@@ -204,9 +204,9 @@ router.get('/admin/export', authenticateAdmin, (req, res) => {
       stat.avg_listeners,
       stat.fm_listeners,
       stat.folclor_listeners,
-      stat.mp3_128_count,
-      stat.mp3_256_count,
-      stat.flac_count,
+      stat.mp3_128_listeners,
+      stat.mp3_256_listeners,
+      stat.flac_listeners,
       stat.article_views,
       stat.total_sessions
     ]);
