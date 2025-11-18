@@ -54,26 +54,26 @@ export default function SettingsModal({ isOpen, onClose }) {
   const [isGettingCurrentLocation, setIsGettingCurrentLocation] = useState(false);
 
   const weatherTypes = [
-    { id: 'sunny', label: 'Sunny', icon: 'Sun' },
-    { id: 'cloudy', label: 'Cloudy', icon: 'Cloud' },
-    { id: 'rain', label: 'Rain', icon: 'CloudRain' },
-    { id: 'storm', label: 'Storm', icon: 'Lightning' },
-    { id: 'snow', label: 'Snow', icon: 'Snowflake' },
-    { id: 'fog', label: 'Fog', icon: 'Drop' }
+    { id: 'sunny', label: 'Însorit', icon: 'Sun' },
+    { id: 'cloudy', label: 'Înnorat', icon: 'Cloud' },
+    { id: 'rain', label: 'Ploaie', icon: 'CloudRain' },
+    { id: 'storm', label: 'Furtună', icon: 'Lightning' },
+    { id: 'snow', label: 'Ninsoare', icon: 'Snowflake' },
+    { id: 'fog', label: 'Ceață', icon: 'Drop' }
   ];
 
   if (!isOpen) return null;
 
   const backgroundOptions = [
-    { value: 'none', label: 'None', description: 'Solid color background' },
-    { value: 'minimal', label: 'Minimal', description: 'Current animated gradient' },
-    { value: 'weather', label: 'Weather Reactive', description: 'Dynamic weather-based animation' }
+    { value: 'none', label: 'Niciunul', description: 'Fundal culoare solidă' },
+    { value: 'minimal', label: 'Minimalist', description: 'Gradient animat actual' },
+    { value: 'weather', label: 'Reactiv la Vreme', description: 'Animație dinamică bazată pe vreme' }
   ];
 
   const performanceOptions = [
-    { value: 'low', label: 'Low', description: 'Minimal effects, best for older devices' },
-    { value: 'medium', label: 'Medium', description: 'Balanced performance (recommended)' },
-    { value: 'high', label: 'High', description: 'Full effects, for powerful devices' }
+    { value: 'low', label: 'Scăzută', description: 'Efecte minime, ideal pentru dispozitive mai vechi' },
+    { value: 'medium', label: 'Medie', description: 'Performanță echilibrată (recomandat)' },
+    { value: 'high', label: 'Ridicată', description: 'Efecte complete, pentru dispozitive performante' }
   ];
 
   const handleLocationChange = async () => {
@@ -101,7 +101,7 @@ export default function SettingsModal({ isOpen, onClose }) {
       const data = await response.json();
 
       if (data.length === 0) {
-        setLocationError('Location not found. Please try a different search.');
+        setLocationError('Locația nu a fost găsită. Te rog încearcă o altă căutare.');
         setIsSearchingLocation(false);
         return;
       }
@@ -117,7 +117,7 @@ export default function SettingsModal({ isOpen, onClose }) {
       setLocationError('');
     } catch (error) {
       console.error('Error geocoding location:', error);
-      setLocationError('Failed to search location. Please try again.');
+      setLocationError('Căutarea locației a eșuat. Te rog încearcă din nou.');
     } finally {
       setIsSearchingLocation(false);
     }
@@ -125,7 +125,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   const handleUseCurrentLocation = async () => {
     if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser');
+      setLocationError('Geolocația nu este suportată de browserul tău');
       return;
     }
 
@@ -160,7 +160,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                           data.address?.town ||
                           data.address?.village ||
                           data.address?.county ||
-                          'Your Location';
+                          'Locația Ta';
 
           setWeatherLocation({
             lat,
@@ -172,7 +172,7 @@ export default function SettingsModal({ isOpen, onClose }) {
           setWeatherLocation({
             lat,
             lon,
-            name: 'Your Location'
+            name: 'Locația Ta'
           });
         }
       } catch (geocodeError) {
@@ -181,25 +181,25 @@ export default function SettingsModal({ isOpen, onClose }) {
         setWeatherLocation({
           lat,
           lon,
-          name: 'Your Location'
+          name: 'Locația Ta'
         });
       }
     } catch (error) {
       console.error('Error getting location:', error);
 
-      let errorMessage = 'Failed to get your location. ';
+      let errorMessage = 'Nu am putut obține locația ta. ';
       switch (error.code) {
         case 1: // PERMISSION_DENIED
-          errorMessage += 'Please allow location access in your browser.';
+          errorMessage += 'Te rog permite accesul la locație în browser.';
           break;
         case 2: // POSITION_UNAVAILABLE
-          errorMessage += 'Location information is unavailable.';
+          errorMessage += 'Informațiile despre locație sunt indisponibile.';
           break;
         case 3: // TIMEOUT
-          errorMessage += 'Location request timed out.';
+          errorMessage += 'Cererea de locație a expirat.';
           break;
         default:
-          errorMessage += 'Please try again.';
+          errorMessage += 'Te rog încearcă din nou.';
       }
       setLocationError(errorMessage);
     } finally {
@@ -229,7 +229,7 @@ export default function SettingsModal({ isOpen, onClose }) {
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-            <Heading level={3}>Settings</Heading>
+            <Heading level={3}>Setări</Heading>
             <button
               onClick={onClose}
               className="p-2 rounded-lg bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80 transition-colors"
@@ -244,7 +244,7 @@ export default function SettingsModal({ isOpen, onClose }) {
               {/* Column 1: Background Animation */}
               <div className="space-y-4">
                 <div>
-                  <Heading level={5} className="mb-3">Background Animation</Heading>
+                  <Heading level={5} className="mb-3">Animație Fundal</Heading>
                   <div className="space-y-2">
                     {backgroundOptions.map((option) => (
                       <button
@@ -269,7 +269,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                 {backgroundAnimation === 'weather' && (
                   <>
                     <div>
-                      <Heading level={5} className="mb-3">Weather Mode</Heading>
+                      <Heading level={5} className="mb-3">Mod Vreme</Heading>
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => setWeatherMode('auto')}
@@ -279,8 +279,8 @@ export default function SettingsModal({ isOpen, onClose }) {
                               : 'border-border hover:border-primary/50'
                           }`}
                         >
-                          <div className="font-medium text-text-primary">Auto</div>
-                          <div className="text-xs text-text-tertiary mt-1">Real weather</div>
+                          <div className="font-medium text-text-primary">Automat</div>
+                          <div className="text-xs text-text-tertiary mt-1">Vreme reală</div>
                         </button>
                         <button
                           onClick={() => setWeatherMode('manual')}
@@ -291,13 +291,13 @@ export default function SettingsModal({ isOpen, onClose }) {
                           }`}
                         >
                           <div className="font-medium text-text-primary">Manual</div>
-                          <div className="text-xs text-text-tertiary mt-1">Choose type</div>
+                          <div className="text-xs text-text-tertiary mt-1">Alege tipul</div>
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <Heading level={5} className="mb-3">Performance</Heading>
+                      <Heading level={5} className="mb-3">Performanță</Heading>
                       <div className="grid grid-cols-3 gap-2">
                         {performanceOptions.map((option) => (
                           <button
@@ -318,7 +318,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                     {weatherMode === 'manual' && (
                       <>
                         <div>
-                          <Heading level={5} className="mb-3">Time of Day</Heading>
+                          <Heading level={5} className="mb-3">Momentul Zilei</Heading>
                           <div className="grid grid-cols-2 gap-2">
                             <button
                               onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'day' })}
@@ -329,7 +329,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                               }`}
                             >
                               <PhosphorIcons.Sun />
-                              <div className="font-medium text-text-primary text-sm mt-2">Day</div>
+                              <div className="font-medium text-text-primary text-sm mt-2">Zi</div>
                             </button>
                             <button
                               onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'night' })}
@@ -340,7 +340,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                               }`}
                             >
                               <PhosphorIcons.Moon />
-                              <div className="font-medium text-text-primary text-sm mt-2">Night</div>
+                              <div className="font-medium text-text-primary text-sm mt-2">Noapte</div>
                             </button>
                           </div>
                         </div>
@@ -352,7 +352,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                 {backgroundAnimation !== 'weather' && (
                   <div className="h-full flex items-center justify-center">
                     <Body opacity="secondary" className="text-center">
-                      Select Weather Reactive animation<br />to configure weather settings
+                      Selectează animația Reactiv la Vreme<br />pentru a configura setările meteo
                     </Body>
                   </div>
                 )}
@@ -364,7 +364,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                   <div>
                     <Heading level={5} className="mb-3 flex items-center gap-2">
                       <PhosphorIcons.MapPin />
-                      Location
+                      Locație
                     </Heading>
                     <div className="p-4 rounded-xl bg-bg-tertiary border border-border mb-3">
                       <Body className="font-medium">{weatherLocation.name}</Body>
@@ -375,7 +375,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                     <div className="space-y-2">
                       <input
                         type="text"
-                        placeholder="Enter city name..."
+                        placeholder="Introdu numele orașului..."
                         value={locationInput}
                         onChange={(e) => setLocationInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -389,7 +389,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                         disabled={isSearchingLocation || !locationInput.trim()}
                         className="w-full px-4 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        {isSearchingLocation ? 'Searching...' : 'Set Location'}
+                        {isSearchingLocation ? 'Caut...' : 'Setează Locația'}
                       </button>
                       {locationError && (
                         <Body size="small" className="text-red-500">{locationError}</Body>
@@ -399,7 +399,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                         disabled={isGettingCurrentLocation}
                         className="w-full px-4 py-3 rounded-xl bg-bg-tertiary border border-border text-text-primary font-medium hover:bg-bg-tertiary/80 disabled:opacity-50 transition-colors"
                       >
-                        {isGettingCurrentLocation ? 'Getting location...' : 'Use Current Location'}
+                        {isGettingCurrentLocation ? 'Obțin locația...' : 'Folosește Locația Curentă'}
                       </button>
                     </div>
                   </div>
@@ -407,7 +407,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
                 {backgroundAnimation === 'weather' && weatherMode === 'manual' && (
                   <div>
-                    <Heading level={5} className="mb-3">Weather Type</Heading>
+                    <Heading level={5} className="mb-3">Tip Vreme</Heading>
                     <div className="grid grid-cols-2 gap-2">
                       {weatherTypes.map((type) => {
                         const IconComponent = PhosphorIcons[type.icon];
@@ -433,7 +433,7 @@ export default function SettingsModal({ isOpen, onClose }) {
                 {backgroundAnimation !== 'weather' && (
                   <div className="h-full flex items-center justify-center">
                     <Body opacity="secondary" className="text-center">
-                      Weather settings are only available<br />when using Weather Reactive animation
+                      Setările meteo sunt disponibile doar<br />când folosești animația Reactiv la Vreme
                     </Body>
                   </div>
                 )}
