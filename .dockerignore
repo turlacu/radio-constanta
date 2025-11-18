@@ -39,3 +39,8 @@ coverage
 # Misc
 *.log
 .cache
+
+# Persistent data (exclude from Docker builds)
+# These files should come from mounted volumes, not be copied into the image
+server/data/*
+!server/data/.gitkeep
