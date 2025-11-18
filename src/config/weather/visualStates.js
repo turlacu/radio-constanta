@@ -13,6 +13,7 @@ export const VISUAL_STATES = {
   // ===== DAY STATES =====
   sunny_day: {
     name: 'Sunny Day',
+    textColor: 'light', // White text on dark/medium blue background
     // Simple gradient - darker blue sky, minimal stops for performance
     gradients: [
       { color: '#2B5876', opacity: 1, position: 0 },    // Dark blue (top)
@@ -47,6 +48,7 @@ export const VISUAL_STATES = {
 
   cloudy_day: {
     name: 'Cloudy Day',
+    textColor: 'dark', // Dark text on light gray background
     // Enhanced with more stops to prevent banding in grays
     gradients: [
       { color: '#B8C5CC', opacity: 1, position: 0 },
@@ -75,6 +77,7 @@ export const VISUAL_STATES = {
 
   rain_day: {
     name: 'Rainy Day',
+    textColor: 'light', // White text on dark gray background
     // Enhanced with 9 stops for smooth dark blue-gray gradient
     gradients: [
       { color: '#546E7A', opacity: 1, position: 0 },
@@ -103,6 +106,7 @@ export const VISUAL_STATES = {
 
   storm_day: {
     name: 'Stormy Day',
+    textColor: 'light', // White text on dark storm background
     // Enhanced with 10 stops for dramatic storm gradient
     gradients: [
       { color: '#455A64', opacity: 1, position: 0 },
@@ -133,6 +137,7 @@ export const VISUAL_STATES = {
 
   snow_day: {
     name: 'Snowy Day',
+    textColor: 'dark', // Dark text on very light snowy background
     // Enhanced with 10 stops for soft winter gradient
     gradients: [
       { color: '#CFD8DC', opacity: 1, position: 0 },
@@ -162,6 +167,7 @@ export const VISUAL_STATES = {
 
   fog_day: {
     name: 'Foggy Day',
+    textColor: 'dark', // Dark text on very light foggy background
     // Enhanced for ultra-smooth fog gradients
     gradients: [
       { color: '#F2F5F7', opacity: 1, position: 0 },
@@ -193,6 +199,7 @@ export const VISUAL_STATES = {
   // ===== NIGHT STATES =====
   clear_night: {
     name: 'Clear Night',
+    textColor: 'light', // White text on dark night background
     // Enhanced with 10 stops for deep blue night sky gradient
     gradients: [
       { color: '#041A40', opacity: 1, position: 0 },
@@ -222,6 +229,7 @@ export const VISUAL_STATES = {
 
   cloudy_night: {
     name: 'Cloudy Night',
+    textColor: 'light', // White text on dark night background
     // Enhanced gradient with more stops and subtle color shifts to prevent banding
     gradients: [
       { color: '#2D3A41', opacity: 1, position: 0 },     // Darker start with blue tint
@@ -251,6 +259,7 @@ export const VISUAL_STATES = {
 
   rain_night: {
     name: 'Rainy Night',
+    textColor: 'light', // White text on dark night background
     // Enhanced with 9 stops for smooth rainy night gradient
     gradients: [
       { color: '#263238', opacity: 1, position: 0 },
@@ -279,6 +288,7 @@ export const VISUAL_STATES = {
 
   storm_night: {
     name: 'Stormy Night',
+    textColor: 'light', // White text on dark night background
     // Enhanced with 10 stops for dramatic night storm gradient
     gradients: [
       { color: '#1C2833', opacity: 1, position: 0 },
@@ -309,6 +319,7 @@ export const VISUAL_STATES = {
 
   snow_night: {
     name: 'Snowy Night',
+    textColor: 'light', // White text on dark night background
     // Enhanced with 10 stops for gentle snowy night gradient
     gradients: [
       { color: '#455A64', opacity: 1, position: 0 },
@@ -338,6 +349,7 @@ export const VISUAL_STATES = {
 
   fog_night: {
     name: 'Foggy Night',
+    textColor: 'light', // White text on dark night background
     // Enhanced with more stops for smooth foggy night
     gradients: [
       { color: '#2F3C43', opacity: 1, position: 0 },

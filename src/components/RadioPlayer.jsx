@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import Loader from './Loader';
 import { ResponsiveContainer, Heading, Body, Caption } from './ui';
+import { useWeatherTextColor } from '../hooks/useWeatherTextColor';
 
 export default function RadioPlayer({ radioState }) {
   const {
@@ -16,6 +17,13 @@ export default function RadioPlayer({ radioState }) {
     switchStation,
     switchQuality,
   } = radioState;
+
+  const textColor = useWeatherTextColor();
+
+  // Dynamic text color classes based on background
+  const textPrimaryClass = textColor === 'dark' ? 'text-gray-900' : 'text-text-primary';
+  const textSecondaryClass = textColor === 'dark' ? 'text-gray-700' : 'text-text-secondary';
+  const textTertiaryClass = textColor === 'dark' ? 'text-gray-600' : 'text-text-tertiary';
 
   return (
     <ResponsiveContainer section="radio">
@@ -87,7 +95,7 @@ export default function RadioPlayer({ radioState }) {
           transition={{ delay: 0.1 }}
           className="text-center mb-8 4k:mb-12"
         >
-          <Heading level={3} className="mb-2">
+          <Heading level={3} className={`mb-2 ${textPrimaryClass}`}>
             {currentStation.name}
           </Heading>
           {metadata && (
@@ -96,7 +104,7 @@ export default function RadioPlayer({ radioState }) {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <Body size="normal" opacity="secondary" weight="medium">
+              <Body size="normal" weight="medium" className={textSecondaryClass}>
                 {metadata}
               </Body>
             </motion.div>
@@ -214,16 +222,16 @@ export default function RadioPlayer({ radioState }) {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center justify-center gap-2 text-text-tertiary text-[12px] font-medium 4k:text-[18px] 4k:gap-3"
+            className={`flex items-center justify-center gap-2 ${textTertiaryClass} text-[12px] font-medium 4k:text-[18px] 4k:gap-3`}
             role="status"
             aria-label="Stream information"
           >
             <span>{streamInfo.format}</span>
-            <span className="bg-border rounded-full w-1 h-1" aria-hidden="true" />
+            <span className={`rounded-full w-1 h-1 ${textColor === 'dark' ? 'bg-gray-400' : 'bg-border'}`} aria-hidden="true" />
             <span>{streamInfo.bitrate}</span>
-            <span className="bg-border rounded-full w-1 h-1" aria-hidden="true" />
+            <span className={`rounded-full w-1 h-1 ${textColor === 'dark' ? 'bg-gray-400' : 'bg-border'}`} aria-hidden="true" />
             <span>{streamInfo.channels}</span>
-            <span className="bg-border rounded-full w-1 h-1" aria-hidden="true" />
+            <span className={`rounded-full w-1 h-1 ${textColor === 'dark' ? 'bg-gray-400' : 'bg-border'}`} aria-hidden="true" />
             <span>{streamInfo.sampleRate}</span>
           </motion.div>
         )}
