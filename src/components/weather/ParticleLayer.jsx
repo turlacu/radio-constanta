@@ -223,6 +223,11 @@ function updateParticle(particle, config, width, height, deltaTime) {
     particle.x = Math.random() * width;
   }
 
+  if (particle.y < -particle.size) {
+    particle.y = height + particle.size;
+    particle.x = Math.random() * width;
+  }
+
   if (particle.x > width + particle.size) {
     particle.x = -particle.size;
   } else if (particle.x < -particle.size) {
