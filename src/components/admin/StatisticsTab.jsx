@@ -26,8 +26,8 @@ export default function StatisticsTab({ token }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date()); // Current month
-  const [stationView, setStationView] = useState('current'); // 'current' or 'overtime'
-  const [qualityView, setQualityView] = useState('current'); // 'current' or 'overtime'
+  const [stationPeriod, setStationPeriod] = useState(7); // 7 or 30 days
+  const [qualityPeriod, setQualityPeriod] = useState(7); // 7 or 30 days
 
   // Fetch statistics
   const fetchStats = async (isManual = false) => {
@@ -122,76 +122,72 @@ export default function StatisticsTab({ token }) {
     );
   }
 
-  // Prepare chart data for Over Time views
-  const getStationOverTimeData = () => {
-    return {
-      labels: dailyStats.map(stat => format(new Date(stat.date), 'MMM d')),
-      datasets: [
-        {
-          label: 'FM',
-          data: dailyStats.map(stat => stat.fm_listeners || 0),
-          borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.4,
-          fill: true
-        },
-        {
-          label: 'Folclor',
-          data: dailyStats.map(stat => stat.folclor_listeners || 0),
-          borderColor: '#8B5CF6',
-          backgroundColor: 'rgba(139, 92, 246, 0.1)',
-          tension: 0.4,
-          fill: true
-        }
-      ]
-    };
+  // Calculate aggregated stats for periods
+  const getStationPeriodStats = () => {
+    const recentStats = dailyStats.slice(-stationPeriod);
+    const fmTotal = recentStats.reduce((sum, stat) => sum + (stat.fm_listeners || 0), 0);
+    const folclorTotal = recentStats.reduce((sum, stat) => sum + (stat.folclor_listeners || 0), 0);
+    return { fm: fmTotal, folclor: folclorTotal };
   };
 
-  const getQualityOverTimeData = () => {
+  const getQualityPeriodStats = () => {
+    const recentStats = dailyStats.slice(-qualityPeriod);
     return {
-      labels: dailyStats.map(stat => format(new Date(stat.date), 'MMM d')),
-      datasets: [
-        {
-          label: 'MP3 128',
-          data: dailyStats.map(stat => stat.mp3_128_listeners || 0),
-          borderColor: '#10B981',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          tension: 0.4,
-          fill: true
-        },
-        {
-          label: 'MP3 256',
-          data: dailyStats.map(stat => stat.mp3_256_listeners || 0),
-          borderColor: '#F59E0B',
-          backgroundColor: 'rgba(245, 158, 11, 0.1)',
-          tension: 0.4,
-          fill: true
-        },
-        {
-          label: 'FLAC',
-          data: dailyStats.map(stat => stat.flac_listeners || 0),
-          borderColor: '#EF4444',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          tension: 0.4,
-          fill: true
-        }
-      ]
+      fm_mp3_128: recentStats.reduce((sum, stat) => {
+        // Estimate FM's portion (assuming proportional distribution)
+        const totalQuality = (stat.mp3_128_listeners || 0);
+        const fmRatio = stat.fm_listeners / (stat.total_listeners || 1);
+        return sum + Math.round(totalQuality * fmRatio);
+      }, 0),
+      fm_mp3_256: recentStats.reduce((sum, stat) => {
+        const totalQuality = (stat.mp3_256_listeners || 0);
+        const fmRatio = stat.fm_listeners / (stat.total_listeners || 1);
+        return sum + Math.round(totalQuality * fmRatio);
+      }, 0),
+      fm_flac: recentStats.reduce((sum, stat) => {
+        const totalQuality = (stat.flac_listeners || 0);
+        const fmRatio = stat.fm_listeners / (stat.total_listeners || 1);
+        return sum + Math.round(totalQuality * fmRatio);
+      }, 0),
+      folclor_mp3_128: recentStats.reduce((sum, stat) => {
+        const totalQuality = (stat.mp3_128_listeners || 0);
+        const folclorRatio = stat.folclor_listeners / (stat.total_listeners || 1);
+        return sum + Math.round(totalQuality * folclorRatio);
+      }, 0),
+      folclor_mp3_256: recentStats.reduce((sum, stat) => {
+        const totalQuality = (stat.mp3_256_listeners || 0);
+        const folclorRatio = stat.folclor_listeners / (stat.total_listeners || 1);
+        return sum + Math.round(totalQuality * folclorRatio);
+      }, 0),
+      folclor_flac: recentStats.reduce((sum, stat) => {
+        const totalQuality = (stat.flac_listeners || 0);
+        const folclorRatio = stat.folclor_listeners / (stat.total_listeners || 1);
+        return sum + Math.round(totalQuality * folclorRatio);
+      }, 0)
     };
   };
 
   const listenersOverTimeData = {
     labels: dailyStats.map(stat => format(new Date(stat.date), 'MMM d')),
-    datasets: [{
-      label: 'Total Listeners',
-      data: dailyStats.map(stat => stat.total_listeners),
-      borderColor: '#3B82F6',
-      backgroundColor: 'rgba(59, 130, 246, 0.1)',
-      tension: 0.4,
-      fill: true
-    }]
+    datasets: [
+      {
+        label: 'FM',
+        data: dailyStats.map(stat => stat.fm_listeners || 0),
+        backgroundColor: '#3B82F6',
+        borderColor: '#3B82F6',
+        borderWidth: 1
+      },
+      {
+        label: 'Folclor',
+        data: dailyStats.map(stat => stat.folclor_listeners || 0),
+        backgroundColor: '#8B5CF6',
+        borderColor: '#8B5CF6',
+        borderWidth: 1
+      }
+    ]
   };
 
-  const chartOptions = {
+  const barChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -200,10 +196,18 @@ export default function StatisticsTab({ token }) {
           color: '#9CA3AF',
           font: { size: 12 }
         }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: ${context.parsed.y} listeners`;
+          }
+        }
       }
     },
     scales: {
       y: {
+        beginAtZero: true,
         ticks: { color: '#9CA3AF' },
         grid: { color: 'rgba(156, 163, 175, 0.1)' }
       },
@@ -328,36 +332,30 @@ export default function StatisticsTab({ token }) {
           <div className="flex items-center justify-between mb-4">
             <Heading level={4}>Listeners by Station</Heading>
             <select
-              value={stationView}
-              onChange={(e) => setStationView(e.target.value)}
+              value={stationPeriod}
+              onChange={(e) => setStationPeriod(Number(e.target.value))}
               className="px-3 py-2 bg-bg-tertiary border border-border rounded-lg text-sm text-text-primary"
             >
-              <option value="current">Current</option>
-              <option value="overtime">Over Time</option>
+              <option value={7}>Last 7 days</option>
+              <option value={30}>Last 30 days</option>
             </select>
           </div>
-          {stationView === 'current' ? (
-            <div className="space-y-4 py-8">
-              <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#3B82F6]"></div>
-                  <Body className="font-medium">FM</Body>
-                </div>
-                <Heading level={3} className="text-3xl text-primary">{currentStats?.byStation?.fm || 0}</Heading>
+          <div className="space-y-4 py-8">
+            <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 rounded-full bg-[#3B82F6]"></div>
+                <Body className="font-medium">FM</Body>
               </div>
-              <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#8B5CF6]"></div>
-                  <Body className="font-medium">Folclor</Body>
-                </div>
-                <Heading level={3} className="text-3xl text-secondary">{currentStats?.byStation?.folclor || 0}</Heading>
+              <Heading level={3} className="text-3xl text-primary">{getStationPeriodStats().fm}</Heading>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 rounded-full bg-[#8B5CF6]"></div>
+                <Body className="font-medium">Folclor</Body>
               </div>
+              <Heading level={3} className="text-3xl text-secondary">{getStationPeriodStats().folclor}</Heading>
             </div>
-          ) : (
-            <div className="h-64">
-              <Line data={getStationOverTimeData()} options={chartOptions} />
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Quality Distribution */}
@@ -365,43 +363,70 @@ export default function StatisticsTab({ token }) {
           <div className="flex items-center justify-between mb-4">
             <Heading level={4}>Stream Quality Preference</Heading>
             <select
-              value={qualityView}
-              onChange={(e) => setQualityView(e.target.value)}
+              value={qualityPeriod}
+              onChange={(e) => setQualityPeriod(Number(e.target.value))}
               className="px-3 py-2 bg-bg-tertiary border border-border rounded-lg text-sm text-text-primary"
             >
-              <option value="current">Current</option>
-              <option value="overtime">Over Time</option>
+              <option value={7}>Last 7 days</option>
+              <option value={30}>Last 30 days</option>
             </select>
           </div>
-          {qualityView === 'current' ? (
-            <div className="space-y-4 py-8">
-              <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#10B981]"></div>
-                  <Body className="font-medium">MP3 128</Body>
+          <div className="space-y-3 py-4">
+            {/* FM Station */}
+            <div>
+              <Body size="small" className="text-text-tertiary mb-2 uppercase text-xs font-semibold">FM</Body>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#10B981]"></div>
+                    <Body size="small" className="font-medium">MP3 128</Body>
+                  </div>
+                  <Heading level={5} className="text-xl text-[#10B981]">{getQualityPeriodStats().fm_mp3_128}</Heading>
                 </div>
-                <Heading level={3} className="text-3xl text-[#10B981]">{currentStats?.byQuality?.mp3_128 || currentStats?.byQuality?.['128'] || 0}</Heading>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#F59E0B]"></div>
-                  <Body className="font-medium">MP3 256</Body>
+                <div className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#F59E0B]"></div>
+                    <Body size="small" className="font-medium">MP3 256</Body>
+                  </div>
+                  <Heading level={5} className="text-xl text-[#F59E0B]">{getQualityPeriodStats().fm_mp3_256}</Heading>
                 </div>
-                <Heading level={3} className="text-3xl text-[#F59E0B]">{currentStats?.byQuality?.mp3_256 || currentStats?.byQuality?.['256'] || 0}</Heading>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-[#EF4444]"></div>
-                  <Body className="font-medium">FLAC</Body>
+                <div className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#EF4444]"></div>
+                    <Body size="small" className="font-medium">FLAC</Body>
+                  </div>
+                  <Heading level={5} className="text-xl text-[#EF4444]">{getQualityPeriodStats().fm_flac}</Heading>
                 </div>
-                <Heading level={3} className="text-3xl text-[#EF4444]">{currentStats?.byQuality?.flac || 0}</Heading>
               </div>
             </div>
-          ) : (
-            <div className="h-64">
-              <Line data={getQualityOverTimeData()} options={chartOptions} />
+            {/* Folclor Station */}
+            <div className="pt-2">
+              <Body size="small" className="text-text-tertiary mb-2 uppercase text-xs font-semibold">Folclor</Body>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#10B981]"></div>
+                    <Body size="small" className="font-medium">MP3 128</Body>
+                  </div>
+                  <Heading level={5} className="text-xl text-[#10B981]">{getQualityPeriodStats().folclor_mp3_128}</Heading>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#F59E0B]"></div>
+                    <Body size="small" className="font-medium">MP3 256</Body>
+                  </div>
+                  <Heading level={5} className="text-xl text-[#F59E0B]">{getQualityPeriodStats().folclor_mp3_256}</Heading>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#EF4444]"></div>
+                    <Body size="small" className="font-medium">FLAC</Body>
+                  </div>
+                  <Heading level={5} className="text-xl text-[#EF4444]">{getQualityPeriodStats().folclor_flac}</Heading>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -420,7 +445,7 @@ export default function StatisticsTab({ token }) {
           </select>
         </div>
         <div className="h-80">
-          <Line data={listenersOverTimeData} options={chartOptions} />
+          <Bar data={listenersOverTimeData} options={barChartOptions} />
         </div>
       </div>
 
