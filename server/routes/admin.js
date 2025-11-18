@@ -49,11 +49,29 @@ const upload = multer({
   }
 });
 
-// Admin password from environment variable
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$10$K2wPm5W9ZMUoWo8HPVCnMORGDjANxJNcKUK4v5FMb8q2TvjM5rIom'; // default: "admin123"
+// Admin password from environment variable (fallback)
+const DEFAULT_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$10$K2wPm5W9ZMUoWo8HPVCnMORGDjANxJNcKUK4v5FMb8q2TvjM5rIom'; // default: "admin123"
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const SETTINGS_FILE = path.join(__dirname, '../data/admin-settings.json');
+
+// Get admin password hash (from settings file or environment variable)
+async function getPasswordHash() {
+  try {
+    const data = await fs.readFile(SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+
+    // Check if password hash exists in settings file
+    if (settings.security && settings.security.passwordHash) {
+      return settings.security.passwordHash;
+    }
+  } catch (error) {
+    // Settings file doesn't exist or doesn't have password - use env var
+  }
+
+  // Fallback to environment variable
+  return DEFAULT_PASSWORD_HASH;
+}
 
 // SSE: Track connected clients for cover updates
 const coverStreamClients = new Set();
@@ -87,8 +105,11 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Password is required' });
     }
 
+    // Get password hash from settings or environment
+    const passwordHash = await getPasswordHash();
+
     // Compare password with hash
-    const isValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+    const isValid = await bcrypt.compare(password, passwordHash);
 
     if (!isValid) {
       return res.status(401).json({ error: 'Invalid password' });
@@ -105,6 +126,60 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Change admin password endpoint
+router.post('/change-password', authenticateAdmin, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    // Validation
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters long' });
+    }
+
+    // Get current password hash
+    const currentPasswordHash = await getPasswordHash();
+
+    // Verify current password
+    const isValid = await bcrypt.compare(currentPassword, currentPasswordHash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    // Read current settings
+    let settings = {};
+    try {
+      const data = await fs.readFile(SETTINGS_FILE, 'utf8');
+      settings = JSON.parse(data);
+    } catch (error) {
+      // Settings file doesn't exist, create new structure
+      settings = {};
+    }
+
+    // Update password hash in settings
+    if (!settings.security) {
+      settings.security = {};
+    }
+    settings.security.passwordHash = newPasswordHash;
+
+    // Save settings
+    await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
+
+    console.log('[Security] Admin password changed successfully');
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
   }
 });
 
