@@ -8,6 +8,9 @@ import articleRouter from './routes/article.js';
 import streamRouter from './routes/stream.js';
 import imageProxyRouter from './routes/imageProxy.js';
 import adminRouter from './routes/admin.js';
+import analyticsRouter from './routes/analytics.js';
+import { initializeDatabase as initAnalyticsDB } from './database/analytics.js';
+import { startAnalyticsCronJobs } from './jobs/analytics-cron.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,6 +61,7 @@ const initializeSettingsFile = async () => {
 // Initialize directories and settings before starting server
 await initializeDataDirectories();
 await initializeSettingsFile();
+await initAnalyticsDB();
 
 // Middleware
 app.use(cors());
@@ -72,6 +76,7 @@ app.use('/api/article', articleRouter);
 app.use('/api/stream', streamRouter);
 app.use('/api/image-proxy', imageProxyRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/analytics', analyticsRouter);
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
@@ -103,4 +108,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+
+  // Start analytics cron jobs
+  startAnalyticsCronJobs();
 });

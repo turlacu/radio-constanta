@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Loader from './Loader';
 import { Heading, Body, Caption, Button } from './ui';
 import { useArticleMedia } from '../hooks/useArticleMedia';
+import analytics from '../utils/analytics';
 
 export default function NewsArticle({ article, onBack, radioState, isSplitScreen }) {
   const [fullContent, setFullContent] = useState(article.content || '');
@@ -37,6 +38,9 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         if (data.image) {
           setFullImage(data.image);
         }
+
+        // Track article view
+        analytics.trackArticleView(article.id || article.link, article.title);
       } catch (err) {
         console.error('Error fetching full article:', err);
         setError(
@@ -48,7 +52,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
     };
 
     fetchFullArticle();
-  }, [article.link]);
+  }, [article.link, article.id, article.title]);
 
   // Format date
   const formattedDate = useMemo(() => {

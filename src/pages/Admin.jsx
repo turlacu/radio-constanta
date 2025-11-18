@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heading, Body, Button, Card } from '../components/ui';
+import StatisticsTab from '../components/admin/StatisticsTab';
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,7 +36,7 @@ export default function Admin() {
   });
 
   // Active tab state
-  const [activeTab, setActiveTab] = useState('weather');
+  const [activeTab, setActiveTab] = useState('statistics');
 
   // Server time state (Romania timezone)
   const [serverTime, setServerTime] = useState(new Date());
@@ -517,6 +518,7 @@ export default function Admin() {
 
   // Tab definitions
   const tabs = [
+    { id: 'statistics', name: 'Statistics', icon: 'ChartBar' },
     { id: 'weather', name: 'Weather', icon: 'CloudSun' },
     { id: 'streams', name: 'Radio Streams', icon: 'Radio' },
     { id: 'covers', name: 'Cover Scheduling', icon: 'Images' },
@@ -525,6 +527,11 @@ export default function Admin() {
 
   // Phosphor icons (inline SVG for simplicity)
   const PhosphorIcons = {
+    ChartBar: () => (
+      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/>
+      </svg>
+    ),
     CloudSun: () => (
       <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
         <path d="M120,56V16a8,8,0,0,1,16,0V56a8,8,0,0,1-16,0Zm80,72a72,72,0,0,1-72,72H88A64,64,0,1,1,75.42,80.62a72,72,0,0,1,124.73,31.34A71.68,71.68,0,0,1,200,128Zm-16,0a56.06,56.06,0,0,0-56-56,57.27,57.27,0,0,0-9.6.84,8,8,0,0,1-9.4-9.4A56.06,56.06,0,0,0,72,8a56,56,0,0,0,0,112h56A56.06,56.06,0,0,0,184,128ZM69.17,64.59a71.88,71.88,0,0,1,42.07-35.5,72.75,72.75,0,0,1,8.48-1.84,72.36,72.36,0,0,1,11.51-.93,8,8,0,0,1,0,16,56.44,56.44,0,0,0-9.17.76,56.84,56.84,0,0,0-48.15,61.71A56,56,0,1,0,88,184h40a56,56,0,0,0,0-112,57.27,57.27,0,0,0-9.6.84,8,8,0,0,1-9.4-9.4,56.24,56.24,0,0,0-.84-9.17ZM216.49,111.51a8,8,0,0,0-11.31,0L192,124.69l-13.17-13.18a8,8,0,0,0-11.31,11.31L180.69,136l-13.18,13.17a8,8,0,0,0,11.31,11.31L192,147.31l13.17,13.18a8,8,0,0,0,11.31-11.31L203.31,136l13.18-13.17A8,8,0,0,0,216.49,111.51ZM88,56a8,8,0,0,0,5.66-2.34l8-8a8,8,0,0,0-11.32-11.32l-8,8A8,8,0,0,0,88,56Zm-.49,96.49a8,8,0,0,0-11.31,0l-8,8a8,8,0,0,0,11.31,11.31l8-8A8,8,0,0,0,87.51,152.49ZM40,120H16a8,8,0,0,0,0,16H40a8,8,0,0,0,0-16Z"/>
@@ -605,6 +612,11 @@ export default function Admin() {
 
         {settings && (
           <div className="space-y-6">
+            {/* Statistics Tab */}
+            {activeTab === 'statistics' && (
+              <StatisticsTab token={localStorage.getItem('adminToken')} />
+            )}
+
             {/* Weather Tab */}
             {activeTab === 'weather' && (
               <div>
