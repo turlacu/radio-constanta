@@ -81,10 +81,7 @@ export default function StatisticsTab({ token }) {
   useEffect(() => {
     if (token) {
       fetchStats();
-
-      // Auto-refresh every 30 seconds (increased from 10)
-      const interval = setInterval(() => fetchStats(), 30000);
-      return () => clearInterval(interval);
+      // No auto-refresh - only manual refresh via button
     }
   }, [token, dateRange]);
 
