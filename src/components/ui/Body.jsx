@@ -35,6 +35,7 @@ const bodyVariants = cva('', {
       secondary: 'text-text-secondary',
       tertiary: 'text-text-tertiary',
       disabled: 'text-text-tertiary/50',
+      custom: '', // For custom colors via className
     },
     align: {
       left: 'text-left',
