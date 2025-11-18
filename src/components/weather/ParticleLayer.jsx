@@ -218,20 +218,33 @@ function updateParticle(particle, config, width, height, deltaTime) {
   }
 
   // Wrap or reset particles that go off screen
-  if (particle.y > height + particle.size) {
+  // Only wrap if particle is moving in the correct direction to prevent edge clustering
+
+  // Vertical wrapping
+  if (particle.y > height + particle.size && particle.vy > 0) {
+    // Only wrap to top if moving downward
     particle.y = -particle.size;
     particle.x = Math.random() * width;
-  }
-
-  if (particle.y < -particle.size) {
+  } else if (particle.y < -particle.size && particle.vy < 0) {
+    // Only wrap to bottom if moving upward
     particle.y = height + particle.size;
     particle.x = Math.random() * width;
+  } else if (particle.y > height + particle.size || particle.y < -particle.size) {
+    // If particle is off screen but moving wrong direction, reset it
+    particle.x = Math.random() * width;
+    particle.y = Math.random() * height;
   }
 
-  if (particle.x > width + particle.size) {
+  // Horizontal wrapping
+  if (particle.x > width + particle.size && particle.vx > 0) {
+    // Only wrap to left if moving right
     particle.x = -particle.size;
-  } else if (particle.x < -particle.size) {
+  } else if (particle.x < -particle.size && particle.vx < 0) {
+    // Only wrap to right if moving left
     particle.x = width + particle.size;
+  } else if (particle.x > width + particle.size || particle.x < -particle.size) {
+    // If particle is off screen but moving wrong direction, reset it
+    particle.x = Math.random() * width;
   }
 
   // For fog, slowly fade in and out
