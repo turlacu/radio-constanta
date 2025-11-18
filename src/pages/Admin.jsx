@@ -1046,7 +1046,7 @@ export default function Admin() {
                       </div>
 
                       {/* Default Cover Grid - Shows original defaults + covers uploaded as 'default' category */}
-                      <div className="grid grid-cols-4 gap-3">
+                      <div className="grid grid-cols-4 gap-2">
                         {(() => {
                           // Create array with original default cover + uploaded default covers only
                           const originalDefaultCover = {
@@ -1105,7 +1105,7 @@ export default function Admin() {
                                       setIsSaving(false);
                                     }
                                   }}
-                                  className={`relative cursor-pointer rounded-lg border-2 transition-all overflow-hidden ${
+                                  className={`relative cursor-pointer rounded border transition-all overflow-hidden ${
                                     isDefault
                                       ? 'border-primary ring-2 ring-primary/30'
                                       : 'border-border hover:border-primary/50'
@@ -1128,30 +1128,30 @@ export default function Admin() {
                                       <div className="text-white text-xs font-medium text-center">ORIGINAL</div>
                                     </div>
                                   )}
-                                  {/* Hover overlay - Set as Default */}
+                                  {/* Hover overlay - Set as Default + Delete */}
                                   {!isDefault && (
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                      <div className="text-white text-xs font-medium text-center px-2">
-                                        Set as Default
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                                      <div className="flex flex-col items-center gap-2">
+                                        <div className="text-white text-xs font-medium text-center px-2">
+                                          Set as Default
+                                        </div>
+                                        {/* Delete button - only for uploaded covers, not original */}
+                                        {!cover.isOriginal && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteCover(selectedStation, cover.id);
+                                            }}
+                                            className="px-2 py-1 text-xs rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
+                                          >
+                                            Delete
+                                          </button>
+                                        )}
                                       </div>
                                     </div>
                                   )}
                                 </div>
-                                {/* Delete button - only for uploaded covers, not original */}
-                                {!cover.isOriginal && (
-                                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteCover(selectedStation, cover.id);
-                                      }}
-                                      className="px-2 py-1 text-xs rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                )}
-                                <div className="mt-1.5 text-xs text-text-secondary truncate text-center">
+                                <div className="mt-1 text-xs text-text-secondary truncate">
                                   {cover.label}
                                 </div>
                               </div>
