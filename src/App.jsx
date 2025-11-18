@@ -90,7 +90,7 @@ function AppContent() {
     return createFloatingParticles(60);
   }, []);
 
-  // Fetch dynamic covers from API
+  // Fetch dynamic covers from API (fallback for SSE failure)
   const fetchCurrentCovers = async () => {
     console.log('[App] Fetching current covers...');
     try {
@@ -192,17 +192,86 @@ function AppContent() {
     }
   };
 
-  // Fetch covers and stream configurations on mount and poll every 30 seconds
+  // Set up SSE connection for real-time cover updates
   useEffect(() => {
-    fetchCurrentCovers();
+    let eventSource = null;
+    let reconnectTimeout = null;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_DELAY = 30000; // Max 30 seconds between reconnects
+
+    const connectToSSE = () => {
+      console.log('[App] Connecting to cover SSE stream...');
+
+      try {
+        eventSource = new EventSource('/api/admin/covers/stream');
+
+        eventSource.onopen = () => {
+          console.log('[App] ✅ SSE connection established');
+          reconnectAttempts = 0; // Reset on successful connection
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('[App] SSE message received:', data);
+
+            if (data.type === 'covers' && data.covers) {
+              console.log('[App] Updating covers from SSE:', data.covers);
+              setDynamicCovers({
+                fm: data.covers.fm || '/rcfm.png',
+                folclor: data.covers.folclor || '/rcf.png'
+              });
+            }
+          } catch (error) {
+            console.error('[App] Error parsing SSE message:', error);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error('[App] SSE connection error:', error);
+          eventSource.close();
+
+          // Exponential backoff for reconnection
+          reconnectAttempts++;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), MAX_RECONNECT_DELAY);
+          console.log(`[App] Reconnecting in ${delay}ms (attempt ${reconnectAttempts})...`);
+
+          reconnectTimeout = setTimeout(() => {
+            connectToSSE();
+          }, delay);
+        };
+      } catch (error) {
+        console.error('[App] Error creating SSE connection:', error);
+        // Fallback to polling if SSE fails completely
+        console.log('[App] Falling back to polling...');
+        fetchCurrentCovers();
+      }
+    };
+
+    // Initial fetch for stream configurations (not real-time)
     fetchStreamConfigurations();
 
-    const interval = setInterval(() => {
-      fetchCurrentCovers();
-      fetchStreamConfigurations();
-    }, 30000); // Poll every 30 seconds
+    // Start SSE connection for covers
+    connectToSSE();
 
-    return () => clearInterval(interval);
+    // Poll stream configurations every 30 seconds (they change rarely)
+    const streamConfigInterval = setInterval(() => {
+      fetchStreamConfigurations();
+    }, 30000);
+
+    // Cleanup on unmount
+    return () => {
+      console.log('[App] Cleaning up SSE connection...');
+      if (eventSource) {
+        eventSource.close();
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      if (streamConfigInterval) {
+        clearInterval(streamConfigInterval);
+      }
+    };
   }, []);
 
   // Create station objects with dynamic covers and streams

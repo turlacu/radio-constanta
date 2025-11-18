@@ -55,6 +55,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 
 const SETTINGS_FILE = path.join(__dirname, '../data/admin-settings.json');
 
+// SSE: Track connected clients for cover updates
+const coverStreamClients = new Set();
+let lastKnownCovers = { fm: null, folclor: null };
+
 // Middleware to verify JWT token
 const authenticateAdmin = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -328,24 +332,23 @@ router.delete('/covers/:station/:coverId', authenticateAdmin, async (req, res) =
   }
 });
 
-// Get current active cover for a station (public endpoint)
-router.get('/covers/current/:station', async (req, res) => {
+// Helper function: Evaluate current cover for a station
+async function evaluateCurrentCover(station, verbose = true) {
   try {
-    const { station } = req.params;
     const data = await fs.readFile(SETTINGS_FILE, 'utf8');
     const settings = JSON.parse(data);
 
     if (!settings.coverScheduling || !settings.coverScheduling[station]) {
-      console.log(`[Cover API] No cover scheduling config for station: ${station}`);
-      return res.json({ coverPath: station === 'fm' ? '/rcfm.png' : '/rcf.png' });
+      if (verbose) console.log(`[Cover API] No cover scheduling config for station: ${station}`);
+      return { coverPath: station === 'fm' ? '/rcfm.png' : '/rcf.png' };
     }
 
     const config = settings.coverScheduling[station];
 
     // If not enabled, return default cover
     if (!config.enabled) {
-      console.log(`[Cover API] Cover scheduling disabled for ${station}, returning default: ${config.defaultCover}`);
-      return res.json({ coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') });
+      if (verbose) console.log(`[Cover API] Cover scheduling disabled for ${station}, returning default: ${config.defaultCover}`);
+      return { coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') };
     }
 
     // Find active schedule based on current day/time (using Europe/Bucharest timezone)
@@ -371,59 +374,180 @@ router.get('/covers/current/:station', async (req, res) => {
     const currentMinutes = romaniaDate.getMinutes();
     const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
 
-    console.log(`[Cover API] ${station} - Current time: ${currentTime} (Romania/Bucharest), Day: ${currentDay} (${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][currentDay]})`);
-    console.log(`[Cover API] ${station} - UTC time: ${now.getHours()}:${now.getMinutes()}`);
-    console.log(`[Cover API] ${station} - Total schedules: ${config.schedules?.length || 0}`);
+    if (verbose) {
+      console.log(`[Cover API] ${station} - Current time: ${currentTime} (Romania/Bucharest), Day: ${currentDay} (${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][currentDay]})`);
+      console.log(`[Cover API] ${station} - UTC time: ${now.getHours()}:${now.getMinutes()}`);
+      console.log(`[Cover API] ${station} - Total schedules: ${config.schedules?.length || 0}`);
+    }
 
     const activeSchedules = (config.schedules || [])
       .filter(schedule => {
-        console.log(`[Cover API] Evaluating schedule: "${schedule.name}" (${schedule.type || 'regular'})`);
-        console.log(`[Cover API]   - Days: ${schedule.days} (current: ${currentDay})`);
+        if (verbose) {
+          console.log(`[Cover API] Evaluating schedule: "${schedule.name}" (${schedule.type || 'regular'})`);
+          console.log(`[Cover API]   - Days: ${schedule.days} (current: ${currentDay})`);
+        }
 
         // Check if current day is in schedule
         if (!schedule.days.includes(currentDay)) {
-          console.log(`[Cover API]   - ❌ Day not matched`);
+          if (verbose) console.log(`[Cover API]   - ❌ Day not matched`);
           return false;
         }
 
         // Handle news schedules (hour-based with duration)
         if (schedule.type === 'news') {
-          console.log(`[Cover API]   - News hours: ${schedule.newsHours}, current hour: ${currentHour}`);
+          if (verbose) console.log(`[Cover API]   - News hours: ${schedule.newsHours}, current hour: ${currentHour}`);
           // Check if current hour is in newsHours array
           if (!schedule.newsHours || !schedule.newsHours.includes(currentHour)) {
-            console.log(`[Cover API]   - ❌ Hour not matched`);
+            if (verbose) console.log(`[Cover API]   - ❌ Hour not matched`);
             return false;
           }
           // Check if current minutes are within duration (starts at :00)
           const duration = schedule.duration || 3; // Default 3 minutes
           const matched = currentMinutes >= 0 && currentMinutes < duration;
-          console.log(`[Cover API]   - Minutes ${currentMinutes} within ${duration}min? ${matched ? '✅' : '❌'}`);
+          if (verbose) console.log(`[Cover API]   - Minutes ${currentMinutes} within ${duration}min? ${matched ? '✅' : '❌'}`);
           return matched;
         }
 
         // Handle regular schedules (time range)
-        console.log(`[Cover API]   - Time range: ${schedule.startTime} - ${schedule.endTime} (current: ${currentTime})`);
+        if (verbose) console.log(`[Cover API]   - Time range: ${schedule.startTime} - ${schedule.endTime} (current: ${currentTime})`);
         const matched = currentTime >= schedule.startTime && currentTime <= schedule.endTime;
-        console.log(`[Cover API]   - ${matched ? '✅ MATCHED' : '❌ Not in range'}`);
+        if (verbose) console.log(`[Cover API]   - ${matched ? '✅ MATCHED' : '❌ Not in range'}`);
         return matched;
       })
       .sort((a, b) => (b.priority || 0) - (a.priority || 0)); // Sort by priority descending
 
     if (activeSchedules.length > 0) {
-      console.log(`[Cover API] ✅ Active schedule found: "${activeSchedules[0].name}" -> ${activeSchedules[0].coverPath}`);
-      return res.json({
+      if (verbose) console.log(`[Cover API] ✅ Active schedule found: "${activeSchedules[0].name}" -> ${activeSchedules[0].coverPath}`);
+      return {
         coverPath: activeSchedules[0].coverPath,
         scheduleId: activeSchedules[0].id
-      });
+      };
     }
 
     // No active schedule, return default
-    console.log(`[Cover API] No active schedules, returning default: ${config.defaultCover}`);
-    res.json({ coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') });
+    if (verbose) console.log(`[Cover API] No active schedules, returning default: ${config.defaultCover}`);
+    return { coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') };
+  } catch (error) {
+    console.error('Error evaluating current cover:', error);
+    return { coverPath: station === 'fm' ? '/rcfm.png' : '/rcf.png' };
+  }
+}
+
+// Get current active cover for a station (public endpoint)
+router.get('/covers/current/:station', async (req, res) => {
+  try {
+    const { station } = req.params;
+    const result = await evaluateCurrentCover(station, true);
+    res.json(result);
   } catch (error) {
     console.error('Error getting current cover:', error);
     res.status(500).json({ error: 'Failed to get current cover' });
   }
 });
+
+// SSE endpoint: Stream cover updates in real-time
+router.get('/covers/stream', (req, res) => {
+  // Set up SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+
+  // Send initial connection message
+  res.write(`data: ${JSON.stringify({ type: 'connected', message: 'Cover stream connected' })}\n\n`);
+
+  // Send current covers immediately
+  (async () => {
+    try {
+      const fmCover = await evaluateCurrentCover('fm', false);
+      const folclorCover = await evaluateCurrentCover('folclor', false);
+
+      const covers = {
+        fm: fmCover.coverPath,
+        folclor: folclorCover.coverPath
+      };
+
+      res.write(`data: ${JSON.stringify({ type: 'covers', covers })}\n\n`);
+      console.log('[SSE] Client connected, sent initial covers:', covers);
+    } catch (error) {
+      console.error('[SSE] Error sending initial covers:', error);
+    }
+  })();
+
+  // Add client to tracking set
+  const clientId = Date.now();
+  coverStreamClients.add(res);
+  console.log(`[SSE] Client ${clientId} connected. Total clients: ${coverStreamClients.size}`);
+
+  // Send keep-alive ping every 30 seconds
+  const keepAliveInterval = setInterval(() => {
+    res.write(': keep-alive\n\n');
+  }, 30000);
+
+  // Handle client disconnect
+  req.on('close', () => {
+    clearInterval(keepAliveInterval);
+    coverStreamClients.delete(res);
+    console.log(`[SSE] Client ${clientId} disconnected. Total clients: ${coverStreamClients.size}`);
+  });
+});
+
+// Periodic check for cover changes and broadcast to all connected clients
+let coverCheckInterval = null;
+
+function startCoverChangeMonitoring() {
+  if (coverCheckInterval) {
+    return; // Already running
+  }
+
+  console.log('[SSE] Starting cover change monitoring (every 5 seconds)');
+
+  coverCheckInterval = setInterval(async () => {
+    try {
+      // Evaluate current covers for both stations
+      const fmCover = await evaluateCurrentCover('fm', false);
+      const folclorCover = await evaluateCurrentCover('folclor', false);
+
+      const currentCovers = {
+        fm: fmCover.coverPath,
+        folclor: folclorCover.coverPath
+      };
+
+      // Check if covers have changed
+      const fmChanged = lastKnownCovers.fm !== currentCovers.fm;
+      const folclorChanged = lastKnownCovers.folclor !== currentCovers.folclor;
+
+      if (fmChanged || folclorChanged) {
+        console.log('[SSE] Cover change detected!');
+        if (fmChanged) console.log(`[SSE]   FM: ${lastKnownCovers.fm} → ${currentCovers.fm}`);
+        if (folclorChanged) console.log(`[SSE]   Folclor: ${lastKnownCovers.folclor} → ${currentCovers.folclor}`);
+
+        // Update last known covers
+        lastKnownCovers = currentCovers;
+
+        // Broadcast to all connected clients
+        const message = `data: ${JSON.stringify({ type: 'covers', covers: currentCovers })}\n\n`;
+        let broadcastCount = 0;
+
+        coverStreamClients.forEach(client => {
+          try {
+            client.write(message);
+            broadcastCount++;
+          } catch (error) {
+            console.error('[SSE] Error broadcasting to client:', error);
+            coverStreamClients.delete(client);
+          }
+        });
+
+        console.log(`[SSE] Broadcasted update to ${broadcastCount} client(s)`);
+      }
+    } catch (error) {
+      console.error('[SSE] Error in cover change monitoring:', error);
+    }
+  }, 5000); // Check every 5 seconds
+}
+
+// Start monitoring when module loads
+startCoverChangeMonitoring();
 
 export default router;
