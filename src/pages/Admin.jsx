@@ -1347,7 +1347,13 @@ export default function Admin() {
                                 <div className="text-xs text-text-tertiary mt-1">
                                   {schedule.days?.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')}
                                   {schedule.type === 'news' ? (
-                                    <> | Hours: {schedule.newsHours?.map(h => `${String(h).padStart(2, '0')}:00`).join(', ')} ({schedule.duration || 3}min)</>
+                                    <> | Hours: {schedule.newsHours?.map(h => `${String(h).padStart(2, '0')}:00`).join(', ')} ({(() => {
+                                      const duration = schedule.duration || 3;
+                                      const minutes = Math.floor(duration);
+                                      const seconds = Math.round((duration - minutes) * 60);
+                                      if (seconds === 0) return `${minutes}min`;
+                                      return `${minutes}m ${seconds}s`;
+                                    })()})</>
                                   ) : (
                                     <> | {schedule.startTime} - {schedule.endTime}</>
                                   )}
@@ -1673,23 +1679,36 @@ export default function Admin() {
                     {/* Duration */}
                     <div>
                       <Body size="small" opacity="secondary" className="mb-2 text-xs">
-                        Duration (minutes)
+                        Duration (minutes and seconds)
                       </Body>
                       <div className="flex items-center gap-3">
                         <input
                           type="range"
-                          min="1"
+                          min="0.5"
                           max="10"
+                          step="0.5"
                           value={scheduleForm.duration}
-                          onChange={(e) => setScheduleForm({ ...scheduleForm, duration: parseInt(e.target.value) })}
+                          onChange={(e) => setScheduleForm({ ...scheduleForm, duration: parseFloat(e.target.value) })}
                           className="flex-1"
                         />
-                        <span className="text-sm font-medium text-text-primary w-16 text-center">
-                          {scheduleForm.duration} min
+                        <span className="text-sm font-medium text-text-primary w-24 text-center">
+                          {(() => {
+                            const minutes = Math.floor(scheduleForm.duration);
+                            const seconds = Math.round((scheduleForm.duration - minutes) * 60);
+                            if (seconds === 0) {
+                              return `${minutes} min`;
+                            }
+                            return `${minutes}m ${seconds}s`;
+                          })()}
                         </span>
                       </div>
                       <Body size="small" opacity="secondary" className="mt-1 text-xs">
-                        News bulletin will show from :00 to :{String(scheduleForm.duration).padStart(2, '0')}
+                        News bulletin will show from :00 to :{(() => {
+                          const totalSeconds = Math.round(scheduleForm.duration * 60);
+                          const minutes = Math.floor(totalSeconds / 60);
+                          const seconds = totalSeconds % 60;
+                          return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                        })()}
                       </Body>
                     </div>
 
