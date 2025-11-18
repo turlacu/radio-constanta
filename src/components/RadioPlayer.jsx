@@ -26,19 +26,6 @@ export default function RadioPlayer({ radioState }) {
         transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
         className="relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12"
       >
-        {/* Subtle accent glow behind cover (only when playing) */}
-        {isPlaying && (
-          <motion.div
-            animate={{
-              opacity: [0.15, 0.25, 0.15],
-              scale: [1, 1.02, 1],
-            }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute -inset-6 rounded-[20px] bg-primary/30 blur-2xl"
-            aria-hidden="true"
-          />
-        )}
-
         {/* Main cover art card - clean dark card */}
         <div className="relative w-full aspect-square rounded-[16px] overflow-hidden bg-bg-tertiary border border-border 4k:rounded-[24px]">
           <motion.img
