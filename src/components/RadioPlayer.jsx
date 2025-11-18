@@ -95,7 +95,7 @@ export default function RadioPlayer({ radioState }) {
           transition={{ delay: 0.1 }}
           className="text-center mb-8 4k:mb-12"
         >
-          <Heading level={3} className={`mb-2 ${textPrimaryClass}`}>
+          <Heading level={3} color="custom" className={`mb-2 ${textPrimaryClass}`}>
             {currentStation.name}
           </Heading>
           {metadata && (
@@ -104,7 +104,7 @@ export default function RadioPlayer({ radioState }) {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <Body size="normal" weight="medium" className={textSecondaryClass}>
+              <Body size="normal" weight="medium" opacity="custom" className={textSecondaryClass}>
                 {metadata}
               </Body>
             </motion.div>

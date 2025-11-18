@@ -15,7 +15,7 @@ import { memo } from 'react';
  * @param {React.ReactNode} children - Content
  */
 
-const headingVariants = cva('font-bold text-text-primary', {
+const headingVariants = cva('font-bold', {
   variants: {
     level: {
       1: 'text-[36px] leading-[43.2px]', // H1 - 36px
@@ -24,6 +24,11 @@ const headingVariants = cva('font-bold text-text-primary', {
       4: 'text-[20px] leading-[24px]',   // H4 - 20px
       5: 'text-[18px] leading-[21.6px]', // H5 - 18px
       6: 'text-[16px] leading-[19.2px]', // H6 - 16px
+    },
+    color: {
+      primary: 'text-text-primary',
+      secondary: 'text-text-secondary',
+      custom: '', // For custom colors via className
     },
     gradient: {
       true: 'bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent',
@@ -37,6 +42,7 @@ const headingVariants = cva('font-bold text-text-primary', {
   },
   defaultVariants: {
     level: 2,
+    color: 'primary',
     gradient: false,
     align: 'left',
   },
@@ -45,6 +51,7 @@ const headingVariants = cva('font-bold text-text-primary', {
 const Heading = memo(function Heading({
   level = 2,
   className,
+  color = 'primary',
   gradient = false,
   align = 'left',
   children,
@@ -54,7 +61,7 @@ const Heading = memo(function Heading({
 
   return (
     <Tag
-      className={clsx(headingVariants({ level, gradient, align }), className)}
+      className={clsx(headingVariants({ level, color, gradient, align }), className)}
       {...props}
     >
       {children}
