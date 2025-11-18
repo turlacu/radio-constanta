@@ -22,59 +22,68 @@ export default function StatisticsTab({ token }) {
   const [todayStats, setTodayStats] = useState(null);
   const [dailyStats, setDailyStats] = useState([]);
   const [topArticles, setTopArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [dateRange, setDateRange] = useState(7); // Days
 
   // Fetch statistics
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-
-        const headers = { 'Authorization': `Bearer ${token}` };
-
-        // Fetch current stats
-        const currentRes = await fetch('/api/analytics/admin/current', { headers });
-        if (currentRes.ok) {
-          const data = await currentRes.json();
-          setCurrentStats(data);
-        }
-
-        // Fetch today's stats
-        const todayRes = await fetch('/api/analytics/admin/today', { headers });
-        if (todayRes.ok) {
-          const data = await todayRes.json();
-          setTodayStats(data);
-        }
-
-        // Fetch daily stats for date range
-        const endDate = format(new Date(), 'yyyy-MM-dd');
-        const startDate = format(subDays(new Date(), dateRange - 1), 'yyyy-MM-dd');
-        const dailyRes = await fetch(`/api/analytics/admin/daily?start=${startDate}&end=${endDate}`, { headers });
-        if (dailyRes.ok) {
-          const data = await dailyRes.json();
-          setDailyStats(data);
-        }
-
-        // Fetch top articles
-        const articlesRes = await fetch('/api/analytics/admin/articles?limit=10&days=30', { headers });
-        if (articlesRes.ok) {
-          const data = await articlesRes.json();
-          setTopArticles(data);
-        }
-
-      } catch (error) {
-        console.error('Error fetching statistics:', error);
-      } finally {
-        setLoading(false);
+  const fetchStats = async (isManual = false) => {
+    try {
+      // Only show full loading on initial load
+      if (!currentStats && !isManual) {
+        setIsInitialLoading(true);
+      } else {
+        setIsRefreshing(true);
       }
-    };
 
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      // Fetch current stats
+      const currentRes = await fetch('/api/analytics/admin/current', { headers });
+      if (currentRes.ok) {
+        const data = await currentRes.json();
+        setCurrentStats(data);
+      }
+
+      // Fetch today's stats
+      const todayRes = await fetch('/api/analytics/admin/today', { headers });
+      if (todayRes.ok) {
+        const data = await todayRes.json();
+        setTodayStats(data);
+      }
+
+      // Fetch daily stats for date range
+      const endDate = format(new Date(), 'yyyy-MM-dd');
+      const startDate = format(subDays(new Date(), dateRange - 1), 'yyyy-MM-dd');
+      const dailyRes = await fetch(`/api/analytics/admin/daily?start=${startDate}&end=${endDate}`, { headers });
+      if (dailyRes.ok) {
+        const data = await dailyRes.json();
+        setDailyStats(data);
+      }
+
+      // Fetch top articles
+      const articlesRes = await fetch('/api/analytics/admin/articles?limit=10&days=30', { headers });
+      if (articlesRes.ok) {
+        const data = await articlesRes.json();
+        setTopArticles(data);
+      }
+
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+    } finally {
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     if (token) {
       fetchStats();
 
-      // Auto-refresh every 10 seconds
-      const interval = setInterval(fetchStats, 10000);
+      // Auto-refresh every 30 seconds (increased from 10)
+      const interval = setInterval(() => fetchStats(), 30000);
       return () => clearInterval(interval);
     }
   }, [token, dateRange]);
@@ -104,7 +113,7 @@ export default function StatisticsTab({ token }) {
     }
   };
 
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center p-12">
         <Body opacity="secondary">Loading statistics...</Body>
@@ -194,16 +203,49 @@ export default function StatisticsTab({ token }) {
       <div className="flex items-center justify-between">
         <div>
           <Heading level={3} className="text-2xl">Statistics</Heading>
-          <Body size="small" opacity="secondary" className="mt-2">
-            Real-time analytics and listener insights
-          </Body>
+          <div className="flex items-center gap-3 mt-2">
+            <Body size="small" opacity="secondary">
+              Real-time analytics and listener insights
+            </Body>
+            {lastUpdated && (
+              <>
+                <span className="text-text-tertiary">•</span>
+                <Body size="small" opacity="secondary" className="flex items-center gap-2">
+                  {isRefreshing ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-3 w-3 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Updating...
+                    </span>
+                  ) : (
+                    `Last updated: ${format(lastUpdated, 'HH:mm:ss')}`
+                  )}
+                </Body>
+              </>
+            )}
+          </div>
         </div>
-        <button
-          onClick={exportToCSV}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium"
-        >
-          Export CSV
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => fetchStats(true)}
+            disabled={isRefreshing}
+            className="px-4 py-2 bg-bg-secondary border border-border text-text-primary rounded-lg hover:bg-bg-tertiary transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            title="Refresh statistics"
+          >
+            <svg className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+          <button
+            onClick={exportToCSV}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-medium"
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Real-time Overview Cards */}
