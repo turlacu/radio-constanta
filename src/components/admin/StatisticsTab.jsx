@@ -284,7 +284,9 @@ export default function StatisticsTab({ token }) {
         <div className="bg-bg-secondary border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-2">
             <Caption uppercase opacity="secondary" className="text-xs">Current Listeners</Caption>
-            <span className="text-2xl">🎧</span>
+            <svg className="w-6 h-6 text-primary" viewBox="0 0 256 256" fill="currentColor">
+              <path d="M201.89,62.11a104,104,0,1,0,0,131.78,8,8,0,1,0-11.78-10.89,88,88,0,1,1,0-110,8,8,0,1,0,11.78-10.89ZM232,128a104.11,104.11,0,0,1-104,104,8,8,0,0,1,0-16,88.1,88.1,0,0,0,88-88,8,8,0,0,1,16,0Zm-104,0a24,24,0,1,1-24-24A24,24,0,0,1,128,128Z"/>
+            </svg>
           </div>
           <div className="space-y-2 mt-3">
             <div className="flex items-center justify-between">
@@ -301,7 +303,9 @@ export default function StatisticsTab({ token }) {
         <div className="bg-bg-secondary border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-2">
             <Caption uppercase opacity="secondary" className="text-xs">Today's Total</Caption>
-            <span className="text-2xl">📊</span>
+            <svg className="w-6 h-6 text-secondary" viewBox="0 0 256 256" fill="currentColor">
+              <path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/>
+            </svg>
           </div>
           <div className="space-y-2 mt-3">
             <div className="flex items-center justify-between">
@@ -318,7 +322,9 @@ export default function StatisticsTab({ token }) {
         <div className="bg-bg-secondary border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-2">
             <Caption uppercase opacity="secondary" className="text-xs">Article Views</Caption>
-            <span className="text-2xl">📰</span>
+            <svg className="w-6 h-6 text-success" viewBox="0 0 256 256" fill="currentColor">
+              <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,160H40V56H216V200ZM184,96a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,96Zm0,32a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,128Zm0,32a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,160Z"/>
+            </svg>
           </div>
           <Heading level={2} className="text-4xl text-success">{todayStats?.article_views || 0}</Heading>
           <Body size="small" opacity="secondary" className="mt-1">Today</Body>
