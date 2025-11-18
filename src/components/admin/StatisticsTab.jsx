@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Pie, Line, Bar } from 'react-chartjs-2';
-import { format, subDays } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { Heading, Body, Caption } from '../ui';
 
 // Register Chart.js components
@@ -25,7 +25,9 @@ export default function StatisticsTab({ token }) {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [dateRange, setDateRange] = useState(7); // Days
+  const [selectedMonth, setSelectedMonth] = useState(new Date()); // Current month
+  const [stationView, setStationView] = useState('current'); // 'current' or 'overtime'
+  const [qualityView, setQualityView] = useState('current'); // 'current' or 'overtime'
 
   // Fetch statistics
   const fetchStats = async (isManual = false) => {
@@ -53,9 +55,11 @@ export default function StatisticsTab({ token }) {
         setTodayStats(data);
       }
 
-      // Fetch daily stats for date range
-      const endDate = format(new Date(), 'yyyy-MM-dd');
-      const startDate = format(subDays(new Date(), dateRange - 1), 'yyyy-MM-dd');
+      // Fetch daily stats for selected month
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
+      const startDate = format(monthStart, 'yyyy-MM-dd');
+      const endDate = format(monthEnd, 'yyyy-MM-dd');
       const dailyRes = await fetch(`/api/analytics/admin/daily?start=${startDate}&end=${endDate}`, { headers });
       if (dailyRes.ok) {
         const data = await dailyRes.json();
@@ -83,7 +87,7 @@ export default function StatisticsTab({ token }) {
       fetchStats();
       // No auto-refresh - only manual refresh via button
     }
-  }, [token, dateRange]);
+  }, [token, selectedMonth]);
 
   // Export to CSV
   const exportToCSV = async () => {
@@ -118,30 +122,61 @@ export default function StatisticsTab({ token }) {
     );
   }
 
-  // Prepare chart data
-  const stationChartData = {
-    labels: ['FM', 'Folclor'],
-    datasets: [{
-      data: [
-        currentStats?.byStation?.fm || 0,
-        currentStats?.byStation?.folclor || 0
-      ],
-      backgroundColor: ['#3B82F6', '#8B5CF6'],
-      borderWidth: 0
-    }]
+  // Prepare chart data for Over Time views
+  const getStationOverTimeData = () => {
+    return {
+      labels: dailyStats.map(stat => format(new Date(stat.date), 'MMM d')),
+      datasets: [
+        {
+          label: 'FM',
+          data: dailyStats.map(stat => stat.fm_listeners || 0),
+          borderColor: '#3B82F6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Folclor',
+          data: dailyStats.map(stat => stat.folclor_listeners || 0),
+          borderColor: '#8B5CF6',
+          backgroundColor: 'rgba(139, 92, 246, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    };
   };
 
-  const qualityChartData = {
-    labels: ['MP3 128', 'MP3 256', 'FLAC'],
-    datasets: [{
-      data: [
-        currentStats?.byQuality?.mp3_128 || currentStats?.byQuality?.['128'] || 0,
-        currentStats?.byQuality?.mp3_256 || currentStats?.byQuality?.['256'] || 0,
-        currentStats?.byQuality?.flac || 0
-      ],
-      backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
-      borderWidth: 0
-    }]
+  const getQualityOverTimeData = () => {
+    return {
+      labels: dailyStats.map(stat => format(new Date(stat.date), 'MMM d')),
+      datasets: [
+        {
+          label: 'MP3 128',
+          data: dailyStats.map(stat => stat.mp3_128_listeners || 0),
+          borderColor: '#10B981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'MP3 256',
+          data: dailyStats.map(stat => stat.mp3_256_listeners || 0),
+          borderColor: '#F59E0B',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'FLAC',
+          data: dailyStats.map(stat => stat.flac_listeners || 0),
+          borderColor: '#EF4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    };
   };
 
   const listenersOverTimeData = {
@@ -179,20 +214,15 @@ export default function StatisticsTab({ token }) {
     }
   };
 
-  const pieOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          color: '#9CA3AF',
-          font: { size: 12 },
-          padding: 15
-        }
-      }
-    }
-  };
+  // Generate month options (last 12 months)
+  const monthOptions = [];
+  for (let i = 0; i < 12; i++) {
+    const date = subMonths(new Date(), i);
+    monthOptions.push({
+      value: date.toISOString(),
+      label: format(date, 'MMMM yyyy')
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -252,8 +282,16 @@ export default function StatisticsTab({ token }) {
             <Caption uppercase opacity="secondary" className="text-xs">Current Listeners</Caption>
             <span className="text-2xl">🎧</span>
           </div>
-          <Heading level={2} className="text-4xl text-primary">{currentStats?.total || 0}</Heading>
-          <Body size="small" opacity="secondary" className="mt-1">Active right now</Body>
+          <div className="space-y-2 mt-3">
+            <div className="flex items-center justify-between">
+              <Body size="small" className="text-text-secondary">FM:</Body>
+              <Heading level={3} className="text-2xl text-primary">{currentStats?.byStation?.fm || 0}</Heading>
+            </div>
+            <div className="flex items-center justify-between">
+              <Body size="small" className="text-text-secondary">Folclor:</Body>
+              <Heading level={3} className="text-2xl text-secondary">{currentStats?.byStation?.folclor || 0}</Heading>
+            </div>
+          </div>
         </div>
 
         <div className="bg-bg-secondary border border-border rounded-xl p-6">
@@ -261,8 +299,16 @@ export default function StatisticsTab({ token }) {
             <Caption uppercase opacity="secondary" className="text-xs">Today's Total</Caption>
             <span className="text-2xl">📊</span>
           </div>
-          <Heading level={2} className="text-4xl text-secondary">{todayStats?.total_listeners || 0}</Heading>
-          <Body size="small" opacity="secondary" className="mt-1">Unique listeners</Body>
+          <div className="space-y-2 mt-3">
+            <div className="flex items-center justify-between">
+              <Body size="small" className="text-text-secondary">FM:</Body>
+              <Heading level={3} className="text-2xl text-primary">{todayStats?.fm_listeners || 0}</Heading>
+            </div>
+            <div className="flex items-center justify-between">
+              <Body size="small" className="text-text-secondary">Folclor:</Body>
+              <Heading level={3} className="text-2xl text-secondary">{todayStats?.folclor_listeners || 0}</Heading>
+            </div>
+          </div>
         </div>
 
         <div className="bg-bg-secondary border border-border rounded-xl p-6">
@@ -279,18 +325,83 @@ export default function StatisticsTab({ token }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Station Distribution */}
         <div className="bg-bg-secondary border border-border rounded-xl p-6">
-          <Heading level={4} className="mb-4">Listeners by Station</Heading>
-          <div className="h-64">
-            <Pie data={stationChartData} options={pieOptions} />
+          <div className="flex items-center justify-between mb-4">
+            <Heading level={4}>Listeners by Station</Heading>
+            <select
+              value={stationView}
+              onChange={(e) => setStationView(e.target.value)}
+              className="px-3 py-2 bg-bg-tertiary border border-border rounded-lg text-sm text-text-primary"
+            >
+              <option value="current">Current</option>
+              <option value="overtime">Over Time</option>
+            </select>
           </div>
+          {stationView === 'current' ? (
+            <div className="space-y-4 py-8">
+              <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full bg-[#3B82F6]"></div>
+                  <Body className="font-medium">FM</Body>
+                </div>
+                <Heading level={3} className="text-3xl text-primary">{currentStats?.byStation?.fm || 0}</Heading>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full bg-[#8B5CF6]"></div>
+                  <Body className="font-medium">Folclor</Body>
+                </div>
+                <Heading level={3} className="text-3xl text-secondary">{currentStats?.byStation?.folclor || 0}</Heading>
+              </div>
+            </div>
+          ) : (
+            <div className="h-64">
+              <Line data={getStationOverTimeData()} options={chartOptions} />
+            </div>
+          )}
         </div>
 
         {/* Quality Distribution */}
         <div className="bg-bg-secondary border border-border rounded-xl p-6">
-          <Heading level={4} className="mb-4">Stream Quality Preference</Heading>
-          <div className="h-64">
-            <Pie data={qualityChartData} options={pieOptions} />
+          <div className="flex items-center justify-between mb-4">
+            <Heading level={4}>Stream Quality Preference</Heading>
+            <select
+              value={qualityView}
+              onChange={(e) => setQualityView(e.target.value)}
+              className="px-3 py-2 bg-bg-tertiary border border-border rounded-lg text-sm text-text-primary"
+            >
+              <option value="current">Current</option>
+              <option value="overtime">Over Time</option>
+            </select>
           </div>
+          {qualityView === 'current' ? (
+            <div className="space-y-4 py-8">
+              <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full bg-[#10B981]"></div>
+                  <Body className="font-medium">MP3 128</Body>
+                </div>
+                <Heading level={3} className="text-3xl text-[#10B981]">{currentStats?.byQuality?.mp3_128 || currentStats?.byQuality?.['128'] || 0}</Heading>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full bg-[#F59E0B]"></div>
+                  <Body className="font-medium">MP3 256</Body>
+                </div>
+                <Heading level={3} className="text-3xl text-[#F59E0B]">{currentStats?.byQuality?.mp3_256 || currentStats?.byQuality?.['256'] || 0}</Heading>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-bg-tertiary rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full bg-[#EF4444]"></div>
+                  <Body className="font-medium">FLAC</Body>
+                </div>
+                <Heading level={3} className="text-3xl text-[#EF4444]">{currentStats?.byQuality?.flac || 0}</Heading>
+              </div>
+            </div>
+          ) : (
+            <div className="h-64">
+              <Line data={getQualityOverTimeData()} options={chartOptions} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -299,13 +410,13 @@ export default function StatisticsTab({ token }) {
         <div className="flex items-center justify-between mb-4">
           <Heading level={4}>Listeners Over Time</Heading>
           <select
-            value={dateRange}
-            onChange={(e) => setDateRange(Number(e.target.value))}
+            value={selectedMonth.toISOString()}
+            onChange={(e) => setSelectedMonth(new Date(e.target.value))}
             className="px-3 py-2 bg-bg-tertiary border border-border rounded-lg text-sm text-text-primary"
           >
-            <option value={7}>Last 7 days</option>
-            <option value={14}>Last 14 days</option>
-            <option value={30}>Last 30 days</option>
+            {monthOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
           </select>
         </div>
         <div className="h-80">
