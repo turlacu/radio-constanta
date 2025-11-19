@@ -36,7 +36,6 @@ export async function initializeDatabase() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_session_id ON listener_sessions(session_id);
-      CREATE INDEX IF NOT EXISTS idx_user_id ON listener_sessions(user_id);
       CREATE INDEX IF NOT EXISTS idx_active_sessions ON listener_sessions(ended_at) WHERE ended_at IS NULL;
       CREATE INDEX IF NOT EXISTS idx_started_at ON listener_sessions(started_at);
 
@@ -87,9 +86,11 @@ export async function initializeDatabase() {
     if (!hasUserId) {
       console.log('[Analytics] Migrating: Adding user_id column to listener_sessions...');
       db.exec(`ALTER TABLE listener_sessions ADD COLUMN user_id TEXT`);
-      db.exec(`CREATE INDEX IF NOT EXISTS idx_user_id ON listener_sessions(user_id)`);
       console.log('[Analytics] Migration complete: user_id column added');
     }
+
+    // Create user_id index if it doesn't exist (safe to run multiple times)
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_user_id ON listener_sessions(user_id)`);
 
     console.log('✅ Analytics database initialized:', DB_PATH);
   } catch (error) {
