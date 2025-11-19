@@ -21,6 +21,7 @@ export default function StatisticsTab({ token }) {
   const [currentStats, setCurrentStats] = useState(null);
   const [todayStats, setTodayStats] = useState(null);
   const [dailyStats, setDailyStats] = useState([]);
+  const [periodStats, setPeriodStats] = useState([]); // Stats for period calculations
   const [topArticles, setTopArticles] = useState([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -28,6 +29,26 @@ export default function StatisticsTab({ token }) {
   const [selectedMonth, setSelectedMonth] = useState(new Date()); // Current month
   const [stationPeriod, setStationPeriod] = useState(7); // 7 or 30 days
   const [qualityPeriod, setQualityPeriod] = useState(7); // 7 or 30 days
+
+  // Fetch period stats (for 7/30 day calculations)
+  const fetchPeriodStats = async () => {
+    try {
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      // Get the maximum period needed (30 days)
+      const maxPeriod = Math.max(stationPeriod, qualityPeriod);
+      const periodEnd = format(new Date(), 'yyyy-MM-dd');
+      const periodStart = format(subDays(new Date(), maxPeriod), 'yyyy-MM-dd');
+
+      const periodRes = await fetch(`/api/analytics/admin/daily?start=${periodStart}&end=${periodEnd}`, { headers });
+      if (periodRes.ok) {
+        const data = await periodRes.json();
+        setPeriodStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching period statistics:', error);
+    }
+  };
 
   // Fetch statistics
   const fetchStats = async (isManual = false) => {
@@ -66,6 +87,9 @@ export default function StatisticsTab({ token }) {
         setDailyStats(data);
       }
 
+      // Fetch period stats for period calculations
+      await fetchPeriodStats();
+
       // Fetch top articles
       const articlesRes = await fetch('/api/analytics/admin/articles?limit=10&days=30', { headers });
       if (articlesRes.ok) {
@@ -88,6 +112,13 @@ export default function StatisticsTab({ token }) {
       // No auto-refresh - only manual refresh via button
     }
   }, [token, selectedMonth]);
+
+  // Re-fetch period stats when period selection changes
+  useEffect(() => {
+    if (token && currentStats) {
+      fetchPeriodStats();
+    }
+  }, [stationPeriod, qualityPeriod]);
 
   // Export to CSV
   const exportToCSV = async () => {
@@ -124,82 +155,49 @@ export default function StatisticsTab({ token }) {
 
   // Calculate aggregated stats for periods
   const getStationPeriodStats = () => {
-    // Get last N-1 days from historical data (excluding today)
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const historicalStats = dailyStats
-      .filter(stat => stat.date !== today)
-      .slice(-(stationPeriod - 1));
+    // Get last N days from period stats
+    const lastNDays = periodStats.slice(-stationPeriod);
 
-    // Add today's data if available
-    const fmHistorical = historicalStats.reduce((sum, stat) => sum + (stat.fm_listeners || 0), 0);
-    const folclorHistorical = historicalStats.reduce((sum, stat) => sum + (stat.folclor_listeners || 0), 0);
-
-    // Include today's data from todayStats
-    const fmTotal = fmHistorical + (todayStats?.fm_listeners || 0);
-    const folclorTotal = folclorHistorical + (todayStats?.folclor_listeners || 0);
+    // Sum up FM and Folclor listeners
+    const fmTotal = lastNDays.reduce((sum, stat) => sum + (stat.fm_listeners || 0), 0);
+    const folclorTotal = lastNDays.reduce((sum, stat) => sum + (stat.folclor_listeners || 0), 0);
 
     return { fm: fmTotal, folclor: folclorTotal };
   };
 
   const getQualityPeriodStats = () => {
-    // Get last N-1 days from historical data (excluding today)
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const historicalStats = dailyStats
-      .filter(stat => stat.date !== today)
-      .slice(-(qualityPeriod - 1));
+    // Get last N days from period stats
+    const lastNDays = periodStats.slice(-qualityPeriod);
 
-    // Calculate historical quality stats per station (using proportional estimation)
-    const historical = {
-      fm_mp3_128: historicalStats.reduce((sum, stat) => {
-        const totalQuality = (stat.mp3_128_listeners || 0);
-        const fmRatio = stat.fm_listeners / (stat.total_listeners || 1);
-        return sum + Math.round(totalQuality * fmRatio);
-      }, 0),
-      fm_mp3_256: historicalStats.reduce((sum, stat) => {
-        const totalQuality = (stat.mp3_256_listeners || 0);
-        const fmRatio = stat.fm_listeners / (stat.total_listeners || 1);
-        return sum + Math.round(totalQuality * fmRatio);
-      }, 0),
-      fm_flac: historicalStats.reduce((sum, stat) => {
-        const totalQuality = (stat.flac_listeners || 0);
-        const fmRatio = stat.fm_listeners / (stat.total_listeners || 1);
-        return sum + Math.round(totalQuality * fmRatio);
-      }, 0),
-      folclor_mp3_128: historicalStats.reduce((sum, stat) => {
-        const totalQuality = (stat.mp3_128_listeners || 0);
-        const folclorRatio = stat.folclor_listeners / (stat.total_listeners || 1);
-        return sum + Math.round(totalQuality * folclorRatio);
-      }, 0),
-      folclor_mp3_256: historicalStats.reduce((sum, stat) => {
-        const totalQuality = (stat.mp3_256_listeners || 0);
-        const folclorRatio = stat.folclor_listeners / (stat.total_listeners || 1);
-        return sum + Math.round(totalQuality * folclorRatio);
-      }, 0),
-      folclor_flac: historicalStats.reduce((sum, stat) => {
-        const totalQuality = (stat.flac_listeners || 0);
-        const folclorRatio = stat.folclor_listeners / (stat.total_listeners || 1);
-        return sum + Math.round(totalQuality * folclorRatio);
-      }, 0)
+    // Calculate quality stats per station using proportional distribution
+    const stats = {
+      fm_mp3_128: 0,
+      fm_mp3_256: 0,
+      fm_flac: 0,
+      folclor_mp3_128: 0,
+      folclor_mp3_256: 0,
+      folclor_flac: 0
     };
 
-    // Add today's current quality stats (estimated per station)
-    const todayTotal = (todayStats?.current?.total || 0);
-    const todayFmRatio = (todayStats?.current?.byStation?.fm || 0) / (todayTotal || 1);
-    const todayFolclorRatio = (todayStats?.current?.byStation?.folclor || 0) / (todayTotal || 1);
+    // Aggregate quality stats proportionally by station
+    lastNDays.forEach(stat => {
+      const totalListeners = stat.total_listeners || 0;
+      if (totalListeners === 0) return;
 
-    // Map quality IDs (backend uses 'mp3_128', '128', 'flac', etc.)
-    const getQualityCount = (qualityId) => {
-      return (todayStats?.current?.byQuality?.[qualityId] || 0);
-    };
+      const fmRatio = (stat.fm_listeners || 0) / totalListeners;
+      const folclorRatio = (stat.folclor_listeners || 0) / totalListeners;
 
-    return {
-      fm_mp3_128: historical.fm_mp3_128 + Math.round((getQualityCount('mp3_128') + getQualityCount('128')) * todayFmRatio),
-      fm_mp3_256: historical.fm_mp3_256 + Math.round((getQualityCount('mp3_256') + getQualityCount('256')) * todayFmRatio),
-      fm_flac: historical.fm_flac + Math.round(getQualityCount('flac') * todayFmRatio),
-      folclor_mp3_128: historical.folclor_mp3_128 + Math.round((getQualityCount('mp3_128') + getQualityCount('128')) * todayFolclorRatio),
-      folclor_mp3_256: historical.folclor_mp3_256 + Math.round((getQualityCount('mp3_256') + getQualityCount('256')) * todayFolclorRatio),
-      folclor_flac: historical.folclor_flac + Math.round(getQualityCount('flac') * todayFolclorRatio)
-    };
+      // Distribute quality counts proportionally
+      stats.fm_mp3_128 += Math.round((stat.mp3_128_listeners || 0) * fmRatio);
+      stats.fm_mp3_256 += Math.round((stat.mp3_256_listeners || 0) * fmRatio);
+      stats.fm_flac += Math.round((stat.flac_listeners || 0) * fmRatio);
+
+      stats.folclor_mp3_128 += Math.round((stat.mp3_128_listeners || 0) * folclorRatio);
+      stats.folclor_mp3_256 += Math.round((stat.mp3_256_listeners || 0) * folclorRatio);
+      stats.folclor_flac += Math.round((stat.flac_listeners || 0) * folclorRatio);
+    });
+
+    return stats;
   };
 
   // Fill missing days with complete month data
