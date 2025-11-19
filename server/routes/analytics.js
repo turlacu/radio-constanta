@@ -118,6 +118,62 @@ router.post('/article-view', (req, res) => {
 
 // === ADMIN ENDPOINTS (Protected) ===
 
+// Debug endpoint - Get raw session data
+router.get('/admin/debug/sessions', authenticateAdmin, (req, res) => {
+  try {
+    const { getDatabase } = require('../database/analytics.js');
+    const db = getDatabase();
+
+    // Get all active sessions
+    const activeSessions = db.prepare(`
+      SELECT
+        session_id,
+        station,
+        quality,
+        started_at,
+        last_heartbeat,
+        (? - last_heartbeat) as seconds_since_heartbeat
+      FROM listener_sessions
+      WHERE ended_at IS NULL
+      ORDER BY last_heartbeat DESC
+    `).all(Date.now());
+
+    // Get recent ended sessions (last 10)
+    const recentEnded = db.prepare(`
+      SELECT
+        session_id,
+        station,
+        quality,
+        started_at,
+        last_heartbeat,
+        ended_at
+      FROM listener_sessions
+      WHERE ended_at IS NOT NULL
+      ORDER BY ended_at DESC
+      LIMIT 10
+    `).all();
+
+    // Get session counts
+    const counts = db.prepare(`
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN ended_at IS NULL THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN ended_at IS NOT NULL THEN 1 ELSE 0 END) as ended
+      FROM listener_sessions
+    `).get();
+
+    res.json({
+      counts,
+      activeSessions,
+      recentEnded,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting debug sessions:', error);
+    res.status(500).json({ error: 'Failed to get debug sessions', message: error.message });
+  }
+});
+
 // Get current real-time statistics
 router.get('/admin/current', authenticateAdmin, (req, res) => {
   try {

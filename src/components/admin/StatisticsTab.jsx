@@ -29,6 +29,22 @@ export default function StatisticsTab({ token }) {
   const [selectedMonth, setSelectedMonth] = useState(new Date()); // Current month
   const [stationPeriod, setStationPeriod] = useState(7); // 7 or 30 days
   const [qualityPeriod, setQualityPeriod] = useState(7); // 7 or 30 days
+  const [debugData, setDebugData] = useState(null);
+  const [showDebug, setShowDebug] = useState(false);
+
+  // Fetch debug session data
+  const fetchDebugData = async () => {
+    try {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const response = await fetch('/api/analytics/admin/debug/sessions', { headers });
+      if (response.ok) {
+        const data = await response.json();
+        setDebugData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching debug data:', error);
+    }
+  };
 
   // Fetch period stats (for 7/30 day calculations)
   const fetchPeriodStats = async () => {
@@ -306,6 +322,42 @@ export default function StatisticsTab({ token }) {
 
   return (
     <div className="space-y-6">
+      {/* Debug Panel */}
+      {showDebug && debugData && (
+        <div className="bg-yellow-500/10 border-2 border-yellow-500/30 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <Heading level={4} className="text-yellow-400">Debug Information</Heading>
+            <button
+              onClick={() => setShowDebug(false)}
+              className="text-yellow-400 hover:text-yellow-300"
+            >
+              Close
+            </button>
+          </div>
+          <div className="space-y-4 text-xs font-mono">
+            <div>
+              <Body size="small" className="font-bold text-yellow-300">Session Counts:</Body>
+              <pre className="mt-2 p-3 bg-black/30 rounded text-yellow-100">
+                {JSON.stringify(debugData.counts, null, 2)}
+              </pre>
+            </div>
+            <div>
+              <Body size="small" className="font-bold text-yellow-300">Active Sessions ({debugData.activeSessions.length}):</Body>
+              <pre className="mt-2 p-3 bg-black/30 rounded text-yellow-100 max-h-60 overflow-y-auto">
+                {JSON.stringify(debugData.activeSessions, null, 2)}
+              </pre>
+            </div>
+            <div>
+              <Body size="small" className="font-bold text-yellow-300">Recent Ended Sessions:</Body>
+              <pre className="mt-2 p-3 bg-black/30 rounded text-yellow-100 max-h-40 overflow-y-auto">
+                {JSON.stringify(debugData.recentEnded, null, 2)}
+              </pre>
+            </div>
+            <Body size="small" className="text-yellow-300">Timestamp: {debugData.timestamp}</Body>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -335,6 +387,16 @@ export default function StatisticsTab({ token }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              fetchDebugData();
+              setShowDebug(!showDebug);
+            }}
+            className="px-4 py-2 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-colors text-sm font-medium"
+            title="Toggle debug information"
+          >
+            {showDebug ? 'Hide Debug' : 'Show Debug'}
+          </button>
           <button
             onClick={() => fetchStats(true)}
             disabled={isRefreshing}
