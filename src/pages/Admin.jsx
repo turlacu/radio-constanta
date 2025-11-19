@@ -51,6 +51,17 @@ export default function Admin() {
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
+  // NTP Server modal state
+  const [showNtpModal, setShowNtpModal] = useState(false);
+  const [editingNtpServer, setEditingNtpServer] = useState(null);
+  const [ntpServerForm, setNtpServerForm] = useState({
+    hostname: '',
+    port: 123,
+    priority: 1,
+    enabled: true
+  });
+  const [ntpFormError, setNtpFormError] = useState('');
+
   // Server time state (Romania timezone)
   const [serverTime, setServerTime] = useState(new Date());
 
@@ -233,6 +244,153 @@ export default function Admin() {
     }
     newSettings.radioStreams[station][streamType][field] = value;
     setSettings(newSettings);
+  };
+
+  // NTP Server management functions
+  const openNtpModal = (server = null) => {
+    if (server) {
+      // Edit mode
+      setEditingNtpServer(server);
+      setNtpServerForm({
+        hostname: server.hostname,
+        port: server.port,
+        priority: server.priority,
+        enabled: server.enabled
+      });
+    } else {
+      // Add mode
+      setEditingNtpServer(null);
+      // Find next available priority
+      const maxPriority = settings.timeSynchronization?.ntpServers?.length > 0
+        ? Math.max(...settings.timeSynchronization.ntpServers.map(s => s.priority))
+        : 0;
+      setNtpServerForm({
+        hostname: '',
+        port: 123,
+        priority: maxPriority + 1,
+        enabled: true
+      });
+    }
+    setNtpFormError('');
+    setShowNtpModal(true);
+  };
+
+  const closeNtpModal = () => {
+    setShowNtpModal(false);
+    setEditingNtpServer(null);
+    setNtpFormError('');
+  };
+
+  const validateNtpForm = () => {
+    // Validate hostname
+    if (!ntpServerForm.hostname.trim()) {
+      setNtpFormError('Hostname is required');
+      return false;
+    }
+
+    // Validate port
+    if (ntpServerForm.port < 1 || ntpServerForm.port > 65535) {
+      setNtpFormError('Port must be between 1 and 65535');
+      return false;
+    }
+
+    // Check for duplicate hostname:port (except when editing the same server)
+    const isDuplicate = settings.timeSynchronization?.ntpServers?.some(server => {
+      if (editingNtpServer && server.id === editingNtpServer.id) {
+        return false; // Skip checking against itself when editing
+      }
+      return server.hostname === ntpServerForm.hostname.trim() && server.port === ntpServerForm.port;
+    });
+
+    if (isDuplicate) {
+      setNtpFormError('This NTP server is already configured');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSaveNtpServer = () => {
+    if (!validateNtpForm()) {
+      return;
+    }
+
+    if (editingNtpServer) {
+      // Update existing server
+      setSettings({
+        ...settings,
+        timeSynchronization: {
+          ...settings.timeSynchronization,
+          ntpServers: settings.timeSynchronization.ntpServers.map(s =>
+            s.id === editingNtpServer.id
+              ? { ...s, ...ntpServerForm, hostname: ntpServerForm.hostname.trim() }
+              : s
+          )
+        }
+      });
+    } else {
+      // Add new server
+      const newServer = {
+        id: `ntp-${Date.now()}`,
+        hostname: ntpServerForm.hostname.trim(),
+        port: ntpServerForm.port,
+        priority: ntpServerForm.priority,
+        enabled: ntpServerForm.enabled
+      };
+      setSettings({
+        ...settings,
+        timeSynchronization: {
+          ...settings.timeSynchronization,
+          ntpServers: [...(settings.timeSynchronization?.ntpServers || []), newServer]
+        }
+      });
+    }
+
+    closeNtpModal();
+  };
+
+  const handleDeleteNtpServer = (serverId) => {
+    if (confirm('Are you sure you want to delete this NTP server?')) {
+      setSettings({
+        ...settings,
+        timeSynchronization: {
+          ...settings.timeSynchronization,
+          ntpServers: settings.timeSynchronization.ntpServers.filter(s => s.id !== serverId)
+        }
+      });
+    }
+  };
+
+  const handleToggleNtpServer = (serverId, enabled) => {
+    setSettings({
+      ...settings,
+      timeSynchronization: {
+        ...settings.timeSynchronization,
+        ntpServers: settings.timeSynchronization.ntpServers.map(s =>
+          s.id === serverId ? { ...s, enabled } : s
+        )
+      }
+    });
+  };
+
+  const handleToggleNtpSync = (enabled) => {
+    setSettings({
+      ...settings,
+      timeSynchronization: {
+        ...settings.timeSynchronization,
+        enabled
+      }
+    });
+  };
+
+  const handleUpdateSyncInterval = (interval) => {
+    setSettings({
+      ...settings,
+      timeSynchronization: {
+        ...settings.timeSynchronization,
+        syncInterval: parseInt(interval) || 3600
+      }
+    });
   };
 
   // Cover scheduling functions
@@ -594,6 +752,7 @@ export default function Admin() {
     { id: 'streams', name: 'Radio Streams', icon: 'Radio' },
     { id: 'covers', name: 'Cover Scheduling', icon: 'Images' },
     { id: 'api', name: 'API Settings', icon: 'Database' },
+    { id: 'time', name: 'Time Sync', icon: 'Clock' },
     { id: 'security', name: 'Security', icon: 'Lock' }
   ];
 
@@ -622,6 +781,11 @@ export default function Admin() {
     Database: () => (
       <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
         <path d="M128,24C74.17,24,32,48.6,32,80v96c0,31.4,42.17,56,96,56s96-24.6,96-56V80C224,48.6,181.83,24,128,24Zm80,104c0,9.62-7.88,19.43-21.61,26.92C170.93,163.35,150.19,168,128,168s-42.93-4.65-58.39-13.08C55.88,147.43,48,137.62,48,128V111.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64ZM69.61,53.08C85.07,44.65,105.81,40,128,40s42.93,4.65,58.39,13.08C200.12,60.57,208,70.38,208,80s-7.88,19.43-21.61,26.92C170.93,115.35,150.19,120,128,120s-42.93-4.65-58.39-13.08C55.88,99.43,48,89.62,48,80S55.88,60.57,69.61,53.08ZM186.39,202.92C170.93,211.35,150.19,216,128,216s-42.93-4.65-58.39-13.08C55.88,195.43,48,185.62,48,176V159.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64V176C208,185.62,200.12,195.43,186.39,202.92Z"/>
+      </svg>
+    ),
+    Clock: () => (
+      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/>
       </svg>
     ),
     Lock: () => (
@@ -1531,6 +1695,200 @@ export default function Admin() {
               </div>
             )}
 
+            {/* Time Synchronization Tab */}
+            {activeTab === 'time' && (
+              <div>
+                <div className="mb-6">
+                  <Heading level={3} className="text-2xl">Time Synchronization</Heading>
+                  <Body size="small" opacity="secondary" className="mt-2">
+                    Configure NTP servers and time synchronization settings
+                  </Body>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Current Server Time */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <Heading level={6} className="mb-4 text-base">Current Server Time</Heading>
+                    <div className="space-y-3">
+                      <div className="text-2xl font-semibold text-text-primary">
+                        {serverTime.toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          timeZone: 'Europe/Bucharest'
+                        })}
+                      </div>
+                      <div className="text-3xl font-bold text-primary">
+                        {serverTime.toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          timeZone: 'Europe/Bucharest'
+                        })} EET
+                      </div>
+                      <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${
+                            settings.timeSynchronization?.syncStatus === 'synced' ? 'bg-green-500' :
+                            settings.timeSynchronization?.syncStatus === 'error' ? 'bg-red-500' :
+                            'bg-yellow-500'
+                          }`}></div>
+                          <Body size="small" opacity="secondary" className="text-xs">
+                            Status: {
+                              settings.timeSynchronization?.syncStatus === 'synced' ? 'Synced' :
+                              settings.timeSynchronization?.syncStatus === 'error' ? 'Error' :
+                              'Unknown'
+                            }
+                          </Body>
+                        </div>
+                        {settings.timeSynchronization?.lastSync && (
+                          <Body size="small" opacity="secondary" className="text-xs">
+                            Last sync: {new Date(settings.timeSynchronization.lastSync).toLocaleString('en-US', {
+                              timeZone: 'Europe/Bucharest'
+                            })}
+                          </Body>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Time Synchronization Settings */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <Heading level={6} className="mb-4 text-base">Time Synchronization Settings</Heading>
+                    <div className="space-y-4">
+                      {/* Enable NTP Toggle */}
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={settings.timeSynchronization?.enabled || false}
+                          onChange={(e) => handleToggleNtpSync(e.target.checked)}
+                          className="w-4 h-4 rounded border-border bg-bg-tertiary text-primary focus:ring-primary"
+                        />
+                        <Body size="small" className="text-sm font-medium">
+                          Enable NTP Synchronization
+                        </Body>
+                      </div>
+
+                      {/* Sync Interval */}
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                          Sync Interval (seconds)
+                        </Body>
+                        <input
+                          type="number"
+                          min="60"
+                          max="86400"
+                          value={settings.timeSynchronization?.syncInterval || 3600}
+                          onChange={(e) => handleUpdateSyncInterval(e.target.value)}
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                        />
+                        <Body size="small" opacity="secondary" className="mt-1 text-xs">
+                          Recommended: 3600-86400 seconds (1-24 hours)
+                        </Body>
+                      </div>
+
+                      {/* Timezone Display */}
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                          Timezone
+                        </Body>
+                        <input
+                          type="text"
+                          value={settings.timeSynchronization?.timezone || 'Europe/Bucharest'}
+                          disabled
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-secondary cursor-not-allowed"
+                        />
+                        <Body size="small" opacity="secondary" className="mt-1 text-xs">
+                          Server timezone (read-only)
+                        </Body>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* NTP Servers */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <Heading level={6} className="text-base">NTP Servers</Heading>
+                      <Button
+                        onClick={() => openNtpModal()}
+                        className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                      >
+                        + Add NTP Server
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {settings.timeSynchronization?.ntpServers?.length > 0 ? (
+                        settings.timeSynchronization.ntpServers
+                          .sort((a, b) => a.priority - b.priority)
+                          .map((server) => (
+                            <div
+                              key={server.id}
+                              className={`p-4 rounded-lg border ${
+                                server.enabled
+                                  ? 'bg-bg-tertiary border-border'
+                                  : 'bg-bg-tertiary/50 border-border/50 opacity-60'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3 flex-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={server.enabled}
+                                    onChange={(e) => handleToggleNtpServer(server.id, e.target.checked)}
+                                    className="w-4 h-4 rounded border-border bg-bg-primary text-primary focus:ring-primary"
+                                  />
+                                  <div className="flex-1">
+                                    <div className="font-medium text-text-primary text-sm">
+                                      {server.hostname}:{server.port}
+                                    </div>
+                                    <Body size="small" opacity="secondary" className="text-xs mt-1">
+                                      Priority: {server.priority}
+                                    </Body>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => openNtpModal(server)}
+                                    className="px-3 py-1 text-xs rounded-lg bg-bg-primary border border-border text-text-primary hover:bg-bg-secondary transition-colors"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteNtpServer(server.id)}
+                                    className="px-3 py-1 text-xs rounded-lg bg-error/10 border border-error/30 text-error hover:bg-error/20 transition-colors"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                      ) : (
+                        <Body size="small" opacity="secondary" className="text-center py-8 text-xs">
+                          No NTP servers configured. Click "Add NTP Server" to get started.
+                        </Body>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Recommended NTP Servers */}
+                  <div className="rounded-2xl bg-bg-tertiary border border-border p-6">
+                    <Heading level={6} className="mb-3 text-base">Recommended NTP Servers</Heading>
+                    <Body size="small" opacity="secondary" className="text-xs space-y-2">
+                      <div>• <span className="font-medium">pool.ntp.org</span> - NTP Pool Project (Global)</div>
+                      <div>• <span className="font-medium">time.google.com</span> - Google Public NTP</div>
+                      <div>• <span className="font-medium">time.cloudflare.com</span> - Cloudflare NTP</div>
+                      <div>• <span className="font-medium">ntp.ubuntu.com</span> - Ubuntu NTP Pool</div>
+                      <div>• <span className="font-medium">ro.pool.ntp.org</span> - Romania NTP Pool</div>
+                      <div>• <span className="font-medium">europe.pool.ntp.org</span> - European NTP Pool</div>
+                    </Body>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Security Tab */}
             {activeTab === 'security' && (
               <div>
@@ -1984,6 +2342,120 @@ export default function Admin() {
                     Cancel
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* NTP Server Modal */}
+        {showNtpModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" onClick={closeNtpModal}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-2xl bg-bg-secondary border border-border shadow-2xl p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <Heading level={5} className="text-base">
+                  {editingNtpServer ? 'Edit NTP Server' : 'Add NTP Server'}
+                </Heading>
+                <button
+                  onClick={closeNtpModal}
+                  className="text-text-tertiary hover:text-text-primary transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {ntpFormError && (
+                <div className="mb-4 p-3 bg-error/10 border border-error/30 rounded-lg">
+                  <Body size="small" className="text-xs text-error">
+                    {ntpFormError}
+                  </Body>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {/* Hostname */}
+                <div>
+                  <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                    Hostname or IP Address *
+                  </Body>
+                  <input
+                    type="text"
+                    value={ntpServerForm.hostname}
+                    onChange={(e) => setNtpServerForm({ ...ntpServerForm, hostname: e.target.value })}
+                    placeholder="pool.ntp.org"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                {/* Port */}
+                <div>
+                  <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                    Port
+                  </Body>
+                  <input
+                    type="number"
+                    min="1"
+                    max="65535"
+                    value={ntpServerForm.port}
+                    onChange={(e) => setNtpServerForm({ ...ntpServerForm, port: parseInt(e.target.value) || 123 })}
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                  />
+                  <Body size="small" opacity="secondary" className="mt-1 text-xs">
+                    Default NTP port is 123
+                  </Body>
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                    Priority
+                  </Body>
+                  <input
+                    type="number"
+                    min="1"
+                    value={ntpServerForm.priority}
+                    onChange={(e) => setNtpServerForm({ ...ntpServerForm, priority: parseInt(e.target.value) || 1 })}
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                  />
+                  <Body size="small" opacity="secondary" className="mt-1 text-xs">
+                    Lower numbers = higher priority
+                  </Body>
+                </div>
+
+                {/* Enabled */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={ntpServerForm.enabled}
+                    onChange={(e) => setNtpServerForm({ ...ntpServerForm, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded border-border bg-bg-tertiary text-primary focus:ring-primary"
+                  />
+                  <Body size="small" className="text-sm">
+                    Enable this server
+                  </Body>
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSaveNtpServer}
+                  className="flex-1 px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition-colors text-sm"
+                >
+                  {editingNtpServer ? 'Update Server' : 'Add Server'}
+                </button>
+                <button
+                  onClick={closeNtpModal}
+                  className="px-4 py-2 rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
               </div>
             </motion.div>
           </div>
