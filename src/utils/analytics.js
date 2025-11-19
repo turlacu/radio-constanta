@@ -111,13 +111,20 @@ class AnalyticsClient {
   // Send heartbeat to keep session alive
   async sendHeartbeat() {
     try {
-      await fetch('/api/analytics/heartbeat', {
+      console.log('[Analytics] Sending heartbeat...');
+      const response = await fetch('/api/analytics/heartbeat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: this.sessionId
         })
       });
+
+      if (response.ok) {
+        console.log('[Analytics] Heartbeat sent successfully');
+      } else {
+        console.error('[Analytics] Heartbeat failed:', response.status, response.statusText);
+      }
     } catch (error) {
       console.error('[Analytics] Error sending heartbeat:', error);
     }
@@ -127,14 +134,21 @@ class AnalyticsClient {
   startHeartbeat() {
     this.stopHeartbeat(); // Clear any existing interval
 
+    // Send first heartbeat immediately
+    this.sendHeartbeat();
+
+    // Then send every 30 seconds
     this.heartbeatInterval = setInterval(() => {
       this.sendHeartbeat();
     }, 30000); // 30 seconds
+
+    console.log('[Analytics] Heartbeat interval started (30s)');
   }
 
   // Stop heartbeat interval
   stopHeartbeat() {
     if (this.heartbeatInterval) {
+      console.log('[Analytics] Stopping heartbeat interval');
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
     }
