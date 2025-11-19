@@ -108,6 +108,51 @@ export async function initializeDatabase() {
       console.log('[Analytics] Migration complete: stream_events quality IDs updated');
     }
 
+    // Migration: Remove UNIQUE constraint from session_id to allow multiple sessions per browser session
+    const hasUniqueConstraint = db.prepare(`
+      SELECT sql FROM sqlite_master
+      WHERE type='table' AND name='listener_sessions' AND sql LIKE '%session_id TEXT UNIQUE%'
+    `).get();
+
+    if (hasUniqueConstraint) {
+      console.log('[Analytics] Migrating: Removing UNIQUE constraint from session_id...');
+      db.exec(`
+        BEGIN TRANSACTION;
+
+        -- Create new table without UNIQUE constraint
+        CREATE TABLE listener_sessions_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          session_id TEXT NOT NULL,
+          user_id TEXT,
+          station TEXT NOT NULL,
+          quality TEXT NOT NULL,
+          started_at INTEGER NOT NULL,
+          last_heartbeat INTEGER NOT NULL,
+          ended_at INTEGER
+        );
+
+        -- Copy all data from old table to new table
+        INSERT INTO listener_sessions_new
+        SELECT id, session_id, user_id, station, quality, started_at, last_heartbeat, ended_at
+        FROM listener_sessions;
+
+        -- Drop old table
+        DROP TABLE listener_sessions;
+
+        -- Rename new table to original name
+        ALTER TABLE listener_sessions_new RENAME TO listener_sessions;
+
+        -- Recreate indexes
+        CREATE INDEX idx_session_id ON listener_sessions(session_id);
+        CREATE INDEX idx_active_sessions ON listener_sessions(ended_at) WHERE ended_at IS NULL;
+        CREATE INDEX idx_started_at ON listener_sessions(started_at);
+        CREATE INDEX idx_user_id ON listener_sessions(user_id);
+
+        COMMIT;
+      `);
+      console.log('[Analytics] Migration complete: UNIQUE constraint removed from session_id');
+    }
+
     console.log('✅ Analytics database initialized:', DB_PATH);
   } catch (error) {
     console.error('Error initializing analytics database:', error);
@@ -132,8 +177,8 @@ export function startSession(sessionId, userId, station, quality) {
 
   try {
     const stmt = db.prepare(`
-      INSERT OR REPLACE INTO listener_sessions (session_id, user_id, station, quality, started_at, last_heartbeat)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO listener_sessions (session_id, user_id, station, quality, started_at, last_heartbeat, ended_at)
+      VALUES (?, ?, ?, ?, ?, ?, NULL)
     `);
     stmt.run(sessionId, userId, station, quality, now, now);
 
