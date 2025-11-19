@@ -24,10 +24,10 @@ const STATIONS = {
     coverArt: '/rcfm.png',
     color: 'from-blue-500/20 to-cyan-500/20',
     qualities: [
-      { id: '128', label: '128 kbps', format: 'MP3', bitrate: '128 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-fm' },
+      { id: 'mp3_128', label: '128 kbps', format: 'MP3', bitrate: '128 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-fm' },
       { id: 'flac', label: 'Lossless', format: 'FLAC', bitrate: '1024 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-flac' }
     ],
-    defaultQuality: '128'
+    defaultQuality: 'mp3_128'
   },
   folclor: {
     id: 'folclor',
@@ -35,9 +35,9 @@ const STATIONS = {
     coverArt: '/rcf.png',
     color: 'from-purple-500/20 to-pink-500/20',
     qualities: [
-      { id: '128', label: '128 kbps', format: 'MP3', bitrate: '128 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-am' }
+      { id: 'mp3_128', label: '128 kbps', format: 'MP3', bitrate: '128 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-am' }
     ],
-    defaultQuality: '128'
+    defaultQuality: 'mp3_128'
   }
 };
 
