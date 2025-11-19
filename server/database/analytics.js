@@ -423,7 +423,8 @@ export function getDailyStats(startDate, endDate) {
   const db = getDatabase();
 
   try {
-    const stmt = db.prepare(`
+    // Get aggregated data from daily_stats
+    const aggregated = db.prepare(`
       SELECT
         date,
         total_listeners,
@@ -439,8 +440,88 @@ export function getDailyStats(startDate, endDate) {
       FROM daily_stats
       WHERE date >= ? AND date <= ?
       ORDER BY date ASC
-    `);
-    return stmt.all(startDate, endDate);
+    `).all(startDate, endDate);
+
+    // Create a map of dates we have aggregated data for
+    const aggregatedMap = {};
+    aggregated.forEach(stat => {
+      aggregatedMap[stat.date] = stat;
+    });
+
+    // Generate all dates in range and fill missing ones with live data
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const result = [];
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+
+      if (aggregatedMap[dateStr]) {
+        // Use aggregated data
+        result.push(aggregatedMap[dateStr]);
+      } else {
+        // Calculate from listener_sessions for missing dates
+        const dayStart = new Date(dateStr + 'T00:00:00Z').getTime();
+        const dayEnd = new Date(dateStr + 'T23:59:59Z').getTime();
+
+        // Count sessions by station
+        const stationStats = db.prepare(`
+          SELECT
+            station,
+            COUNT(*) as count
+          FROM listener_sessions
+          WHERE started_at >= ? AND started_at < ?
+          GROUP BY station
+        `).all(dayStart, dayEnd);
+
+        const fmCount = stationStats.find(s => s.station === 'fm')?.count || 0;
+        const folclorCount = stationStats.find(s => s.station === 'folclor')?.count || 0;
+
+        // Count sessions by quality
+        const qualityStats = db.prepare(`
+          SELECT
+            quality,
+            COUNT(*) as count
+          FROM listener_sessions
+          WHERE started_at >= ? AND started_at < ?
+          GROUP BY quality
+        `).all(dayStart, dayEnd);
+
+        const mp3_128Count = qualityStats.find(q => q.quality === 'mp3_128')?.count || 0;
+        const mp3_256Count = qualityStats.find(q => q.quality === 'mp3_256')?.count || 0;
+        const flacCount = qualityStats.find(q => q.quality === 'flac')?.count || 0;
+
+        // Total sessions
+        const totalSessions = db.prepare(`
+          SELECT COUNT(*) as count
+          FROM listener_sessions
+          WHERE started_at >= ? AND started_at < ?
+        `).get(dayStart, dayEnd);
+
+        // Article views
+        const articleViews = db.prepare(`
+          SELECT COUNT(*) as count
+          FROM article_views
+          WHERE view_date = ?
+        `).get(dateStr);
+
+        result.push({
+          date: dateStr,
+          total_listeners: totalSessions.count,
+          peak_listeners: 0, // Can't determine peak from historical data
+          avg_listeners: 0,
+          fm_listeners: fmCount,
+          folclor_listeners: folclorCount,
+          mp3_128_listeners: mp3_128Count,
+          mp3_256_listeners: mp3_256Count,
+          flac_listeners: flacCount,
+          article_views: articleViews.count,
+          total_sessions: totalSessions.count
+        });
+      }
+    }
+
+    return result;
   } catch (error) {
     console.error('Error getting daily stats:', error);
     return [];
