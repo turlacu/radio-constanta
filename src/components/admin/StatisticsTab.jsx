@@ -464,38 +464,55 @@ export default function StatisticsTab({ token }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-bg-secondary border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-2">
-            <Caption uppercase opacity="secondary" className="text-xs">Current Listeners</Caption>
+            <Caption uppercase opacity="secondary" className="text-xs">Now Playing</Caption>
             <svg className="w-6 h-6 text-primary" viewBox="0 0 256 256" fill="currentColor">
               <path d="M201.89,62.11a104,104,0,1,0,0,131.78,8,8,0,1,0-11.78-10.89,88,88,0,1,1,0-110,8,8,0,1,0,11.78-10.89ZM232,128a104.11,104.11,0,0,1-104,104,8,8,0,0,1,0-16,88.1,88.1,0,0,0,88-88,8,8,0,0,1,16,0Zm-104,0a24,24,0,1,1-24-24A24,24,0,0,1,128,128Z"/>
             </svg>
           </div>
-          <div className="space-y-2 mt-3">
-            <div className="flex items-center justify-between">
-              <Body size="small" className="text-text-secondary">FM:</Body>
-              <Heading level={3} className="text-2xl text-primary">{currentStats?.byStation?.fm || 0}</Heading>
+          <div className="space-y-3 mt-3">
+            <div>
+              <Body size="small" className="text-text-tertiary uppercase text-xs font-semibold mb-1">Active Listeners</Body>
+              <Heading level={2} className="text-3xl text-success">{currentStats?.uniqueUsers || 0}</Heading>
             </div>
-            <div className="flex items-center justify-between">
-              <Body size="small" className="text-text-secondary">Folclor:</Body>
-              <Heading level={3} className="text-2xl text-secondary">{currentStats?.byStation?.folclor || 0}</Heading>
+            <div className="border-t border-border pt-3">
+              <Body size="small" className="text-text-tertiary uppercase text-xs font-semibold mb-1">By Station</Body>
+              <div className="flex items-center justify-between">
+                <Body size="small" className="text-text-secondary">FM:</Body>
+                <Heading level={4} className="text-xl text-primary">{currentStats?.byStation?.fm || 0}</Heading>
+              </div>
+              <div className="flex items-center justify-between">
+                <Body size="small" className="text-text-secondary">Folclor:</Body>
+                <Heading level={4} className="text-xl text-secondary">{currentStats?.byStation?.folclor || 0}</Heading>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="bg-bg-secondary border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-2">
-            <Caption uppercase opacity="secondary" className="text-xs">Today's Total</Caption>
+            <Caption uppercase opacity="secondary" className="text-xs">Today's Analytics</Caption>
             <svg className="w-6 h-6 text-secondary" viewBox="0 0 256 256" fill="currentColor">
               <path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/>
             </svg>
           </div>
-          <div className="space-y-2 mt-3">
-            <div className="flex items-center justify-between">
-              <Body size="small" className="text-text-secondary">FM:</Body>
-              <Heading level={3} className="text-2xl text-primary">{todayStats?.fm_listeners || 0}</Heading>
+          <div className="space-y-3 mt-3">
+            <div>
+              <Body size="small" className="text-text-tertiary uppercase text-xs font-semibold mb-1">Unique Listeners</Body>
+              <div className="flex items-center justify-between">
+                <Body size="small" className="text-text-secondary">Total:</Body>
+                <Heading level={3} className="text-2xl text-success">{todayStats?.unique_users || 0}</Heading>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <Body size="small" className="text-text-secondary">Folclor:</Body>
-              <Heading level={3} className="text-2xl text-secondary">{todayStats?.folclor_listeners || 0}</Heading>
+            <div className="border-t border-border pt-3">
+              <Body size="small" className="text-text-tertiary uppercase text-xs font-semibold mb-1">Total Sessions</Body>
+              <div className="flex items-center justify-between">
+                <Body size="small" className="text-text-secondary">FM:</Body>
+                <Heading level={4} className="text-xl text-primary">{todayStats?.fm_listeners || 0}</Heading>
+              </div>
+              <div className="flex items-center justify-between">
+                <Body size="small" className="text-text-secondary">Folclor:</Body>
+                <Heading level={4} className="text-xl text-secondary">{todayStats?.folclor_listeners || 0}</Heading>
+              </div>
             </div>
           </div>
         </div>
