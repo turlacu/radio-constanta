@@ -92,6 +92,22 @@ export async function initializeDatabase() {
     // Create user_id index if it doesn't exist (safe to run multiple times)
     db.exec(`CREATE INDEX IF NOT EXISTS idx_user_id ON listener_sessions(user_id)`);
 
+    // Migration: Fix old quality IDs ('128' → 'mp3_128')
+    const oldQualityCount = db.prepare(`SELECT COUNT(*) as count FROM listener_sessions WHERE quality = '128'`).get();
+    if (oldQualityCount.count > 0) {
+      console.log(`[Analytics] Migrating: Fixing ${oldQualityCount.count} sessions with old quality ID '128' → 'mp3_128'...`);
+      db.exec(`UPDATE listener_sessions SET quality = 'mp3_128' WHERE quality = '128'`);
+      console.log('[Analytics] Migration complete: listener_sessions quality IDs updated');
+    }
+
+    // Also fix stream_events table
+    const oldEventsCount = db.prepare(`SELECT COUNT(*) as count FROM stream_events WHERE quality = '128'`).get();
+    if (oldEventsCount.count > 0) {
+      console.log(`[Analytics] Migrating: Fixing ${oldEventsCount.count} events with old quality ID '128' → 'mp3_128'...`);
+      db.exec(`UPDATE stream_events SET quality = 'mp3_128' WHERE quality = '128'`);
+      console.log('[Analytics] Migration complete: stream_events quality IDs updated');
+    }
+
     console.log('✅ Analytics database initialized:', DB_PATH);
   } catch (error) {
     console.error('Error initializing analytics database:', error);
