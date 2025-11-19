@@ -327,12 +327,32 @@ export default function StatisticsTab({ token }) {
         <div className="bg-yellow-500/10 border-2 border-yellow-500/30 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <Heading level={4} className="text-yellow-400">Debug Information</Heading>
-            <button
-              onClick={() => setShowDebug(false)}
-              className="text-yellow-400 hover:text-yellow-300"
-            >
-              Close
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('adminToken');
+                    await fetch('/api/analytics/admin/debug/cleanup', {
+                      method: 'POST',
+                      headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    // Refresh debug data
+                    await fetchDebugData();
+                  } catch (error) {
+                    console.error('Cleanup failed:', error);
+                  }
+                }}
+                className="px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-400/50 rounded text-yellow-300 text-sm transition-colors"
+              >
+                Cleanup Stale Sessions
+              </button>
+              <button
+                onClick={() => setShowDebug(false)}
+                className="text-yellow-400 hover:text-yellow-300"
+              >
+                Close
+              </button>
+            </div>
           </div>
           <div className="space-y-4 text-xs font-mono">
             <div>
