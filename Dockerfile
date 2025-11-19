@@ -26,6 +26,9 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
 # Copy package files
 COPY package*.json ./
 
@@ -49,8 +52,8 @@ EXPOSE 3001
 ENV NODE_ENV=production
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/api/news', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/api/news || exit 1
 
 # Start the server
 CMD ["npm", "start"]
