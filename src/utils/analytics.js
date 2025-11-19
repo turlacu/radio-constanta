@@ -3,9 +3,26 @@
 
 class AnalyticsClient {
   constructor() {
+    this.userId = this.getUserId();
     this.sessionId = this.generateSessionId();
     this.heartbeatInterval = null;
     this.isTracking = false;
+  }
+
+  // Get or generate persistent user ID (stored in localStorage)
+  getUserId() {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      // Server-side or no localStorage support
+      return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    let userId = localStorage.getItem('radio_user_id');
+    if (!userId) {
+      userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('radio_user_id', userId);
+      console.log('[Analytics] Generated new user ID:', userId.substring(0, 20) + '...');
+    }
+    return userId;
   }
 
   // Generate a random session ID (no personal data)
@@ -20,6 +37,7 @@ class AnalyticsClient {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: this.userId,
           sessionId: this.sessionId,
           event: 'start',
           station,
@@ -71,6 +89,7 @@ class AnalyticsClient {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: this.userId,
           sessionId: this.sessionId,
           event: 'switch_station',
           station: newStation,
@@ -95,6 +114,7 @@ class AnalyticsClient {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: this.userId,
           sessionId: this.sessionId,
           event: 'change_quality',
           station,
