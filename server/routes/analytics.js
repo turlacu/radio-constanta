@@ -10,7 +10,8 @@ import {
   getCurrentStats,
   getDailyStats,
   getTodayStats,
-  getMostViewedArticles
+  getMostViewedArticles,
+  getDatabase
 } from '../database/analytics.js';
 
 const router = express.Router();
@@ -121,7 +122,6 @@ router.post('/article-view', (req, res) => {
 // Debug endpoint - Get raw session data
 router.get('/admin/debug/sessions', authenticateAdmin, (req, res) => {
   try {
-    const { getDatabase } = require('../database/analytics.js');
     const db = getDatabase();
 
     // Get all active sessions
