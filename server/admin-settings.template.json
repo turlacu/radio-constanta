@@ -74,5 +74,35 @@
       "covers": [],
       "schedules": []
     }
+  },
+  "timeSynchronization": {
+    "enabled": true,
+    "ntpServers": [
+      {
+        "id": "ntp-1",
+        "hostname": "pool.ntp.org",
+        "port": 123,
+        "enabled": true,
+        "priority": 1
+      },
+      {
+        "id": "ntp-2",
+        "hostname": "time.google.com",
+        "port": 123,
+        "enabled": true,
+        "priority": 2
+      },
+      {
+        "id": "ntp-3",
+        "hostname": "time.cloudflare.com",
+        "port": 123,
+        "enabled": false,
+        "priority": 3
+      }
+    ],
+    "timezone": "Europe/Bucharest",
+    "syncInterval": 3600,
+    "lastSync": null,
+    "syncStatus": "unknown"
   }
 }
