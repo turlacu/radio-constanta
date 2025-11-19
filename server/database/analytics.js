@@ -339,13 +339,46 @@ export function getDailyStats(startDate, endDate) {
 export function getTodayStats() {
   const db = getDatabase();
   const today = new Date().toISOString().split('T')[0];
+  const todayStart = new Date(today).getTime();
+  const tomorrowStart = todayStart + (24 * 60 * 60 * 1000);
 
   try {
-    // Get stored daily stats for today (if exists)
-    const dailyStats = db.prepare('SELECT * FROM daily_stats WHERE date = ?').get(today);
-
-    // Get current live stats
+    // Get current live stats (for current listeners count)
     const current = getCurrentStats();
+
+    // Count total sessions that started today (both active and ended)
+    const totalSessions = db.prepare(`
+      SELECT COUNT(*) as count
+      FROM listener_sessions
+      WHERE started_at >= ? AND started_at < ?
+    `).get(todayStart, tomorrowStart);
+
+    // Count sessions by station for today
+    const stationStats = db.prepare(`
+      SELECT
+        station,
+        COUNT(*) as count
+      FROM listener_sessions
+      WHERE started_at >= ? AND started_at < ?
+      GROUP BY station
+    `).all(todayStart, tomorrowStart);
+
+    const fmCount = stationStats.find(s => s.station === 'fm')?.count || 0;
+    const folclorCount = stationStats.find(s => s.station === 'folclor')?.count || 0;
+
+    // Count sessions by quality for today
+    const qualityStats = db.prepare(`
+      SELECT
+        quality,
+        COUNT(*) as count
+      FROM listener_sessions
+      WHERE started_at >= ? AND started_at < ?
+      GROUP BY quality
+    `).all(todayStart, tomorrowStart);
+
+    const mp3_128Count = qualityStats.find(q => q.quality === 'mp3_128')?.count || 0;
+    const mp3_256Count = qualityStats.find(q => q.quality === 'mp3_256')?.count || 0;
+    const flacCount = qualityStats.find(q => q.quality === 'flac')?.count || 0;
 
     // Get article views today
     const articleViews = db.prepare(`
@@ -357,13 +390,13 @@ export function getTodayStats() {
     return {
       date: today,
       current: current,
-      total_listeners: (dailyStats?.total_listeners || 0) + current.total,
-      fm_listeners: (dailyStats?.fm_listeners || 0) + (current.byStation?.fm || 0),
-      folclor_listeners: (dailyStats?.folclor_listeners || 0) + (current.byStation?.folclor || 0),
-      peak_listeners: Math.max(dailyStats?.peak_listeners || 0, current.total),
-      mp3_128_listeners: (dailyStats?.mp3_128_count || 0) + (current.byQuality?.mp3_128 || 0),
-      mp3_256_listeners: (dailyStats?.mp3_256_count || 0) + (current.byQuality?.mp3_256 || 0),
-      flac_listeners: (dailyStats?.flac_count || 0) + (current.byQuality?.flac || 0),
+      total_listeners: totalSessions.count,
+      fm_listeners: fmCount,
+      folclor_listeners: folclorCount,
+      peak_listeners: Math.max(current.total, 0), // For now, use current as peak (will be updated by aggregation)
+      mp3_128_listeners: mp3_128Count,
+      mp3_256_listeners: mp3_256Count,
+      flac_listeners: flacCount,
       article_views: articleViews.count
     };
   } catch (error) {
