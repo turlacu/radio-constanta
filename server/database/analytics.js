@@ -160,14 +160,23 @@ export function endSession(sessionId) {
 // Update session when station changes
 export function switchStation(sessionId, newStation, quality) {
   const db = getDatabase();
+  const now = Date.now();
 
   try {
-    const stmt = db.prepare(`
+    // End the current session
+    const endStmt = db.prepare(`
       UPDATE listener_sessions
-      SET station = ?, last_heartbeat = ?
+      SET ended_at = ?, last_heartbeat = ?
       WHERE session_id = ? AND ended_at IS NULL
     `);
-    stmt.run(newStation, Date.now(), sessionId);
+    endStmt.run(now, now, sessionId);
+
+    // Start a new session with the new station
+    const startStmt = db.prepare(`
+      INSERT INTO listener_sessions (session_id, station, quality, started_at, last_heartbeat)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    startStmt.run(sessionId, newStation, quality, now, now);
 
     logStreamEvent(sessionId, 'switch_station', newStation, quality);
   } catch (error) {
@@ -178,14 +187,23 @@ export function switchStation(sessionId, newStation, quality) {
 // Update session when quality changes
 export function changeQuality(sessionId, station, newQuality) {
   const db = getDatabase();
+  const now = Date.now();
 
   try {
-    const stmt = db.prepare(`
+    // End the current session
+    const endStmt = db.prepare(`
       UPDATE listener_sessions
-      SET quality = ?, last_heartbeat = ?
+      SET ended_at = ?, last_heartbeat = ?
       WHERE session_id = ? AND ended_at IS NULL
     `);
-    stmt.run(newQuality, Date.now(), sessionId);
+    endStmt.run(now, now, sessionId);
+
+    // Start a new session with the new quality
+    const startStmt = db.prepare(`
+      INSERT INTO listener_sessions (session_id, station, quality, started_at, last_heartbeat)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    startStmt.run(sessionId, station, newQuality, now, now);
 
     logStreamEvent(sessionId, 'change_quality', station, newQuality);
   } catch (error) {
