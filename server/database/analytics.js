@@ -132,8 +132,8 @@ export function startSession(sessionId, userId, station, quality) {
 
   try {
     const stmt = db.prepare(`
-      INSERT OR REPLACE INTO listener_sessions (session_id, user_id, station, quality, started_at, last_heartbeat)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO listener_sessions (session_id, user_id, station, quality, started_at, last_heartbeat, ended_at)
+      VALUES (?, ?, ?, ?, ?, ?, NULL)
     `);
     stmt.run(sessionId, userId, station, quality, now, now);
 
