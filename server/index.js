@@ -11,12 +11,17 @@ import adminRouter from './routes/admin.js';
 import analyticsRouter from './routes/analytics.js';
 import { initializeDatabase as initAnalyticsDB } from './database/analytics.js';
 import { startAnalyticsCronJobs } from './jobs/analytics-cron.js';
+import logger from './utils/logger.js';
+import { validateEnvironment } from './utils/validateEnv.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Validate environment variables before starting server
+const config = validateEnvironment();
+
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = config.port;
 
 // Initialize persistent data directories on startup
 const initializeDataDirectories = async () => {
@@ -30,9 +35,9 @@ const initializeDataDirectories = async () => {
     await mkdir(coversDir, { recursive: true });
     await mkdir(fmCoversDir, { recursive: true });
     await mkdir(folclorCoversDir, { recursive: true });
-    console.log('✓ Persistent data directories initialized');
+    logger.info('[Server]', '✓ Persistent data directories initialized');
   } catch (error) {
-    console.error('Error creating data directories:', error);
+    logger.error('[Server]', 'Error creating data directories:', error);
   }
 };
 
@@ -45,15 +50,15 @@ const initializeSettingsFile = async () => {
   try {
     // Check if settings file exists
     await access(settingsFile);
-    console.log('✓ Admin settings file exists');
+    logger.info('[Server]', '✓ Admin settings file exists');
   } catch (error) {
     // Settings file doesn't exist, copy from template
     try {
       await copyFile(templateFile, settingsFile);
-      console.log('✓ Admin settings file created from template');
+      logger.info('[Server]', '✓ Admin settings file created from template');
     } catch (copyError) {
-      console.error('Error creating settings file from template:', copyError);
-      console.error('Make sure admin-settings.template.json exists in server/');
+      logger.error('[Server]', 'Error creating settings file from template:', copyError);
+      logger.error('[Server]', 'Make sure admin-settings.template.json exists in server/');
     }
   }
 };
@@ -64,8 +69,25 @@ await initializeSettingsFile();
 await initAnalyticsDB();
 
 // Middleware
-app.use(cors());
+// CORS configuration - restrict origins in production
+const corsOptions = {
+  origin: config.allowedOrigins || '*',
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+if (config.nodeEnv === 'production' && !config.allowedOrigins) {
+  logger.warn('[Security]', 'CORS configured to allow all origins. Set ALLOWED_ORIGINS in production!');
+}
+
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  logger.debug('[HTTP]', `${req.method} ${req.path}`);
+  next();
+});
 
 // Serve uploaded cover images from persistent storage
 app.use('/covers', express.static(path.join(__dirname, 'data/covers')));
@@ -98,16 +120,17 @@ if (process.env.NODE_ENV === 'production') {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  logger.error('[Server]', `Error on ${req.method} ${req.path}:`, err);
   res.status(500).json({
     error: 'Internal server error',
-    message: err.message
+    message: config.nodeEnv === 'production' ? 'An error occurred' : err.message,
   });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info('[Server]', `🚀 Server running on port ${PORT}`);
+  logger.info('[Server]', `📍 Environment: ${config.nodeEnv}`);
+  logger.info('[Server]', `📊 Log level: ${config.logLevel}`);
 
   // Start analytics cron jobs
   startAnalyticsCronJobs();

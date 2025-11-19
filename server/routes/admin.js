@@ -6,11 +6,30 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import ntpClient from 'ntp-client';
+import rateLimit from 'express-rate-limit';
+import { authenticateAdmin, getJWTSecret } from '../middleware/auth.js';
+import logger from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = express.Router();
+
+// Rate limiting for authentication endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: 'Too many login attempts from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    logger.warn('[Auth]', `Rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      error: 'Too many requests',
+      message: 'Too many login attempts. Please try again later.',
+    });
+  },
+});
 
 // Configure multer for cover uploads
 // Store in server/data/covers for persistence across deployments
@@ -52,9 +71,9 @@ const upload = multer({
 
 // Admin password from environment variable (fallback)
 const DEFAULT_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$10$K2wPm5W9ZMUoWo8HPVCnMORGDjANxJNcKUK4v5FMb8q2TvjM5rIom'; // default: "admin123"
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const SETTINGS_FILE = path.join(__dirname, '../data/admin-settings.json');
+const COVERS_DIR = path.join(__dirname, '../data/covers');
 
 // Get admin password hash (from settings file or environment variable)
 async function getPasswordHash() {
@@ -76,29 +95,18 @@ async function getPasswordHash() {
 
 // SSE: Track connected clients for cover updates
 const coverStreamClients = new Set();
+const MAX_SSE_CLIENTS = 100; // Prevent memory issues
 let lastKnownCovers = { fm: null, folclor: null };
 
-// Middleware to verify JWT token
-const authenticateAdmin = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+// Helper function to validate file paths are within allowed directory
+function validateFilePath(filePath, allowedDir) {
+  const absolute = path.resolve(filePath);
+  const allowed = path.resolve(allowedDir);
+  return absolute.startsWith(allowed);
+}
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-
-  const token = authHeader.substring(7);
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.admin = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-};
-
-// Admin login endpoint
-router.post('/login', async (req, res) => {
+// Admin login endpoint - with rate limiting
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { password } = req.body;
 
@@ -113,19 +121,21 @@ router.post('/login', async (req, res) => {
     const isValid = await bcrypt.compare(password, passwordHash);
 
     if (!isValid) {
+      logger.warn('[Auth]', `Invalid password attempt from IP: ${req.ip}`);
       return res.status(401).json({ error: 'Invalid password' });
     }
 
     // Generate JWT token (valid for 24 hours)
     const token = jwt.sign(
       { role: 'admin' },
-      JWT_SECRET,
+      getJWTSecret(),
       { expiresIn: '24h' }
     );
 
+    logger.info('[Auth]', `Admin login successful from IP: ${req.ip}`);
     res.json({ token });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('[Auth]', 'Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
 });
@@ -175,11 +185,11 @@ router.post('/change-password', authenticateAdmin, async (req, res) => {
     // Save settings
     await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
 
-    console.log('[Security] Admin password changed successfully');
+    logger.info('[Security]', 'Admin password changed successfully');
 
     res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
-    console.error('Change password error:', error);
+    logger.error('[Security]', 'Change password error:', error);
     res.status(500).json({ error: 'Failed to change password' });
   }
 });
@@ -191,7 +201,7 @@ router.get('/settings', authenticateAdmin, async (req, res) => {
     const settings = JSON.parse(data);
     res.json(settings);
   } catch (error) {
-    console.error('Error reading settings:', error);
+    logger.error('[Settings]', 'Error reading settings:', error);
     res.status(500).json({ error: 'Failed to read settings' });
   }
 });
@@ -210,12 +220,12 @@ router.put('/settings', authenticateAdmin, async (req, res) => {
     if (newSettings.coverScheduling) {
       Object.keys(newSettings.coverScheduling).forEach(station => {
         const config = newSettings.coverScheduling[station];
-        console.log(`[Settings API] ${station} cover scheduling:`);
-        console.log(`[Settings API]   - Enabled: ${config.enabled}`);
-        console.log(`[Settings API]   - Schedules: ${config.schedules?.length || 0}`);
+        logger.info('[Settings]', `${station} cover scheduling:`);
+        logger.info('[Settings]', `  - Enabled: ${config.enabled}`);
+        logger.info('[Settings]', `  - Schedules: ${config.schedules?.length || 0}`);
         if (config.schedules?.length > 0) {
           config.schedules.forEach(s => {
-            console.log(`[Settings API]     * "${s.name}" (${s.type || 'regular'}) - Days: ${s.days}, Priority: ${s.priority || 0}`);
+            logger.debug('[Settings]', `    * "${s.name}" (${s.type || 'regular'}) - Days: ${s.days}, Priority: ${s.priority || 0}`);
           });
         }
       });
@@ -228,10 +238,10 @@ router.put('/settings', authenticateAdmin, async (req, res) => {
       'utf8'
     );
 
-    console.log('[Settings API] ✅ Settings saved successfully');
+    logger.info('[Settings]', '✅ Settings saved successfully');
     res.json({ success: true, settings: newSettings });
   } catch (error) {
-    console.error('Error writing settings:', error);
+    logger.error('[Settings]', 'Error writing settings:', error);
     res.status(500).json({ error: 'Failed to update settings' });
   }
 });
@@ -252,7 +262,7 @@ router.get('/public-settings', async (req, res) => {
       coverScheduling: settings.coverScheduling || {}
     });
   } catch (error) {
-    console.error('Error reading public settings:', error);
+    logger.error('[Settings]', 'Error reading public settings:', error);
     res.status(500).json({ error: 'Failed to read settings' });
   }
 });
@@ -264,7 +274,7 @@ router.get('/weather-api-key', authenticateAdmin, async (req, res) => {
     const settings = JSON.parse(data);
     res.json({ apiKey: settings.weatherApiKey || '' });
   } catch (error) {
-    console.error('Error reading API key:', error);
+    logger.error('[Settings]', 'Error reading API key:', error);
     res.status(500).json({ error: 'Failed to read API key' });
   }
 });
@@ -380,12 +390,20 @@ router.delete('/covers/:station/:coverId', authenticateAdmin, async (req, res) =
 
     const cover = covers[coverIndex];
 
-    // Delete file from disk
-    const filePath = path.join(__dirname, '../../public', cover.path);
+    // Delete file from disk with path validation
+    const filePath = path.join(COVERS_DIR, path.basename(cover.path));
+
+    // Validate path is within allowed directory
+    if (!validateFilePath(filePath, COVERS_DIR)) {
+      logger.warn('[Security]', `Path traversal attempt blocked: ${cover.path}`);
+      return res.status(403).json({ error: 'Invalid file path' });
+    }
+
     try {
       await fs.unlink(filePath);
+      logger.info('[Cover]', `Deleted cover file: ${path.basename(cover.path)}`);
     } catch (error) {
-      console.warn('Could not delete file:', error);
+      logger.warn('[Cover]', 'Could not delete file:', error);
     }
 
     // Remove from covers array
@@ -415,7 +433,7 @@ async function evaluateCurrentCover(station, verbose = true) {
     const settings = JSON.parse(data);
 
     if (!settings.coverScheduling || !settings.coverScheduling[station]) {
-      if (verbose) console.log(`[Cover API] No cover scheduling config for station: ${station}`);
+      if (verbose) logger.debug('[Cover]', `No cover scheduling config for station: ${station}`);
       return { coverPath: station === 'fm' ? '/rcfm.png' : '/rcf.png' };
     }
 
@@ -423,7 +441,7 @@ async function evaluateCurrentCover(station, verbose = true) {
 
     // If not enabled, return default cover
     if (!config.enabled) {
-      if (verbose) console.log(`[Cover API] Cover scheduling disabled for ${station}, returning default: ${config.defaultCover}`);
+      if (verbose) logger.debug('[Cover]', `Cover scheduling disabled for ${station}, returning default: ${config.defaultCover}`);
       return { coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') };
     }
 
@@ -452,30 +470,30 @@ async function evaluateCurrentCover(station, verbose = true) {
     const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
 
     if (verbose) {
-      console.log(`[Cover API] ${station} - Current time: ${currentTime} (Romania/Bucharest), Day: ${currentDay} (${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][currentDay]})`);
-      console.log(`[Cover API] ${station} - UTC time: ${now.getHours()}:${now.getMinutes()}`);
-      console.log(`[Cover API] ${station} - Total schedules: ${config.schedules?.length || 0}`);
+      logger.debug('[Cover]', `${station} - Current time: ${currentTime} (Romania/Bucharest), Day: ${currentDay} (${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][currentDay]})`);
+      logger.debug('[Cover]', `${station} - UTC time: ${now.getHours()}:${now.getMinutes()}`);
+      logger.debug('[Cover]', `${station} - Total schedules: ${config.schedules?.length || 0}`);
     }
 
     const activeSchedules = (config.schedules || [])
       .filter(schedule => {
         if (verbose) {
-          console.log(`[Cover API] Evaluating schedule: "${schedule.name}" (${schedule.type || 'regular'})`);
-          console.log(`[Cover API]   - Days: ${schedule.days} (current: ${currentDay})`);
+          logger.debug('[Cover]', `Evaluating schedule: "${schedule.name}" (${schedule.type || 'regular'})`);
+          logger.debug('[Cover]', `  - Days: ${schedule.days} (current: ${currentDay})`);
         }
 
         // Check if current day is in schedule
         if (!schedule.days.includes(currentDay)) {
-          if (verbose) console.log(`[Cover API]   - ❌ Day not matched`);
+          if (verbose) logger.debug('[Cover]', '  - ❌ Day not matched');
           return false;
         }
 
         // Handle news schedules (hour-based with duration)
         if (schedule.type === 'news') {
-          if (verbose) console.log(`[Cover API]   - News hours: ${schedule.newsHours}, current hour: ${currentHour}`);
+          if (verbose) logger.debug('[Cover]', `  - News hours: ${schedule.newsHours}, current hour: ${currentHour}`);
           // Check if current hour is in newsHours array
           if (!schedule.newsHours || !schedule.newsHours.includes(currentHour)) {
-            if (verbose) console.log(`[Cover API]   - ❌ Hour not matched`);
+            if (verbose) logger.debug('[Cover]', '  - ❌ Hour not matched');
             return false;
           }
           // Check if current time is within duration (starts at :00)
@@ -484,20 +502,20 @@ async function evaluateCurrentCover(station, verbose = true) {
           const durationInSeconds = duration * 60;
           const currentTimeInSeconds = currentMinutes * 60 + currentSeconds;
           const matched = currentTimeInSeconds < durationInSeconds;
-          if (verbose) console.log(`[Cover API]   - Time ${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} within ${duration}min (${durationInSeconds}s)? ${matched ? '✅' : '❌'}`);
+          if (verbose) logger.debug('[Cover]', `  - Time ${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} within ${duration}min (${durationInSeconds}s)? ${matched ? '✅' : '❌'}`);
           return matched;
         }
 
         // Handle regular schedules (time range)
-        if (verbose) console.log(`[Cover API]   - Time range: ${schedule.startTime} - ${schedule.endTime} (current: ${currentTime})`);
+        if (verbose) logger.debug('[Cover]', `  - Time range: ${schedule.startTime} - ${schedule.endTime} (current: ${currentTime})`);
         const matched = currentTime >= schedule.startTime && currentTime <= schedule.endTime;
-        if (verbose) console.log(`[Cover API]   - ${matched ? '✅ MATCHED' : '❌ Not in range'}`);
+        if (verbose) logger.debug('[Cover]', `  - ${matched ? '✅ MATCHED' : '❌ Not in range'}`);
         return matched;
       })
       .sort((a, b) => (b.priority || 0) - (a.priority || 0)); // Sort by priority descending
 
     if (activeSchedules.length > 0) {
-      if (verbose) console.log(`[Cover API] ✅ Active schedule found: "${activeSchedules[0].name}" -> ${activeSchedules[0].coverPath}`);
+      if (verbose) logger.debug('[Cover]', `✅ Active schedule found: "${activeSchedules[0].name}" -> ${activeSchedules[0].coverPath}`);
       return {
         coverPath: activeSchedules[0].coverPath,
         scheduleId: activeSchedules[0].id
@@ -505,10 +523,10 @@ async function evaluateCurrentCover(station, verbose = true) {
     }
 
     // No active schedule, return default
-    if (verbose) console.log(`[Cover API] No active schedules, returning default: ${config.defaultCover}`);
+    if (verbose) logger.debug('[Cover]', `No active schedules, returning default: ${config.defaultCover}`);
     return { coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') };
   } catch (error) {
-    console.error('Error evaluating current cover:', error);
+    logger.error('[Cover]', 'Error evaluating current cover:', error);
     return { coverPath: station === 'fm' ? '/rcfm.png' : '/rcf.png' };
   }
 }
@@ -520,13 +538,19 @@ router.get('/covers/current/:station', async (req, res) => {
     const result = await evaluateCurrentCover(station, true);
     res.json(result);
   } catch (error) {
-    console.error('Error getting current cover:', error);
+    logger.error('[Cover]', 'Error getting current cover:', error);
     res.status(500).json({ error: 'Failed to get current cover' });
   }
 });
 
 // SSE endpoint: Stream cover updates in real-time
 router.get('/covers/stream', (req, res) => {
+  // Check if we've hit max clients (prevent memory issues)
+  if (coverStreamClients.size >= MAX_SSE_CLIENTS) {
+    logger.warn('[SSE]', `Max SSE clients (${MAX_SSE_CLIENTS}) reached, rejecting connection`);
+    return res.status(503).json({ error: 'Too many active connections' });
+  }
+
   // Set up SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -548,16 +572,16 @@ router.get('/covers/stream', (req, res) => {
       };
 
       res.write(`data: ${JSON.stringify({ type: 'covers', covers })}\n\n`);
-      console.log('[SSE] Client connected, sent initial covers:', covers);
+      logger.info('[SSE]', `Client connected, sent initial covers:`, covers);
     } catch (error) {
-      console.error('[SSE] Error sending initial covers:', error);
+      logger.error('[SSE]', 'Error sending initial covers:', error);
     }
   })();
 
   // Add client to tracking set
   const clientId = Date.now();
   coverStreamClients.add(res);
-  console.log(`[SSE] Client ${clientId} connected. Total clients: ${coverStreamClients.size}`);
+  logger.info('[SSE]', `Client ${clientId} connected. Total clients: ${coverStreamClients.size}`);
 
   // Send keep-alive ping every 30 seconds
   const keepAliveInterval = setInterval(() => {
@@ -568,7 +592,7 @@ router.get('/covers/stream', (req, res) => {
   req.on('close', () => {
     clearInterval(keepAliveInterval);
     coverStreamClients.delete(res);
-    console.log(`[SSE] Client ${clientId} disconnected. Total clients: ${coverStreamClients.size}`);
+    logger.info('[SSE]', `Client ${clientId} disconnected. Total clients: ${coverStreamClients.size}`);
   });
 });
 
