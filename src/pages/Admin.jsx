@@ -61,6 +61,9 @@ export default function Admin() {
     enabled: true
   });
   const [ntpFormError, setNtpFormError] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
+  const [testingServerId, setTestingServerId] = useState(null);
 
   // Server time state (Romania timezone)
   const [serverTime, setServerTime] = useState(new Date());
@@ -391,6 +394,95 @@ export default function Admin() {
         syncInterval: parseInt(interval) || 3600
       }
     });
+  };
+
+  const handleTestNtpServer = async (server) => {
+    setTestingServerId(server.id);
+    setSyncMessage('');
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/ntp/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          hostname: server.hostname,
+          port: server.port
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSyncMessage(`✓ ${server.hostname}: Connected successfully (${data.responseTime}ms)`);
+      } else {
+        setSyncMessage(`✗ ${server.hostname}: ${data.message || data.error}`);
+      }
+
+      // Clear message after 5 seconds
+      setTimeout(() => setSyncMessage(''), 5000);
+
+    } catch (error) {
+      console.error('Test NTP server error:', error);
+      setSyncMessage(`✗ Failed to test ${server.hostname}: ${error.message}`);
+      setTimeout(() => setSyncMessage(''), 5000);
+    } finally {
+      setTestingServerId(null);
+    }
+  };
+
+  const handleSyncNow = async () => {
+    setIsSyncing(true);
+    setSyncMessage('');
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/ntp/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update settings with new sync status
+        setSettings({
+          ...settings,
+          timeSynchronization: {
+            ...settings.timeSynchronization,
+            syncStatus: data.syncStatus,
+            lastSync: data.lastSync
+          }
+        });
+        setSyncMessage(`✓ ${data.message}`);
+      } else {
+        // Update with error status
+        setSettings({
+          ...settings,
+          timeSynchronization: {
+            ...settings.timeSynchronization,
+            syncStatus: 'error'
+          }
+        });
+        setSyncMessage(`✗ ${data.message}`);
+      }
+
+      // Clear message after 10 seconds
+      setTimeout(() => setSyncMessage(''), 10000);
+
+    } catch (error) {
+      console.error('Sync NTP error:', error);
+      setSyncMessage(`✗ Failed to synchronize: ${error.message}`);
+      setTimeout(() => setSyncMessage(''), 10000);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   // Cover scheduling functions
@@ -1750,6 +1842,43 @@ export default function Admin() {
                           </Body>
                         )}
                       </div>
+
+                      {/* Sync Now Button */}
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <button
+                          onClick={handleSyncNow}
+                          disabled={isSyncing || !settings.timeSynchronization?.enabled}
+                          className="w-full px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm flex items-center justify-center gap-2"
+                        >
+                          {isSyncing ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                              </svg>
+                              Synchronizing...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              Sync Now
+                            </>
+                          )}
+                        </button>
+
+                        {/* Sync Message */}
+                        {syncMessage && (
+                          <div className={`mt-3 p-3 rounded-lg text-xs ${
+                            syncMessage.startsWith('✓')
+                              ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+                              : 'bg-red-500/10 border border-red-500/30 text-red-400'
+                          }`}>
+                            {syncMessage}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1849,6 +1978,13 @@ export default function Admin() {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleTestNtpServer(server)}
+                                    disabled={testingServerId === server.id || !server.enabled}
+                                    className="px-3 py-1 text-xs rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                  >
+                                    {testingServerId === server.id ? 'Testing...' : 'Test'}
+                                  </button>
                                   <button
                                     onClick={() => openNtpModal(server)}
                                     className="px-3 py-1 text-xs rounded-lg bg-bg-primary border border-border text-text-primary hover:bg-bg-secondary transition-colors"

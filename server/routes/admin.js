@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
+import ntpClient from 'ntp-client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -628,5 +629,160 @@ function startCoverChangeMonitoring() {
 
 // Start monitoring when module loads
 startCoverChangeMonitoring();
+
+// NTP Time Synchronization Endpoints
+
+// Test NTP server connectivity
+router.post('/ntp/test', authenticateAdmin, async (req, res) => {
+  const { hostname, port = 123, timeout = 5000 } = req.body;
+
+  if (!hostname) {
+    return res.status(400).json({ error: 'Hostname is required' });
+  }
+
+  try {
+    const startTime = Date.now();
+
+    // Query NTP server
+    ntpClient.getNetworkTime(hostname, port, (err, date) => {
+      const responseTime = Date.now() - startTime;
+
+      if (err) {
+        console.error(`NTP test failed for ${hostname}:${port}:`, err.message);
+        return res.json({
+          success: false,
+          hostname,
+          port,
+          error: err.message,
+          responseTime,
+          message: `Failed to connect to ${hostname}:${port}`
+        });
+      }
+
+      const offset = date.getTime() - Date.now();
+
+      res.json({
+        success: true,
+        hostname,
+        port,
+        serverTime: date.toISOString(),
+        localTime: new Date().toISOString(),
+        offset,
+        responseTime,
+        message: `Successfully connected to ${hostname}:${port}`
+      });
+    });
+
+  } catch (error) {
+    console.error('NTP test error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      message: 'Failed to test NTP server'
+    });
+  }
+});
+
+// Sync with NTP servers and update settings
+router.post('/ntp/sync', authenticateAdmin, async (req, res) => {
+  const SETTINGS_FILE = path.join(__dirname, '../data/admin-settings.json');
+
+  try {
+    // Read current settings
+    const data = await fs.readFile(SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+
+    if (!settings.timeSynchronization || !settings.timeSynchronization.enabled) {
+      return res.json({
+        success: false,
+        message: 'NTP synchronization is disabled'
+      });
+    }
+
+    // Get enabled NTP servers sorted by priority
+    const enabledServers = settings.timeSynchronization.ntpServers
+      .filter(server => server.enabled)
+      .sort((a, b) => a.priority - b.priority);
+
+    if (enabledServers.length === 0) {
+      return res.json({
+        success: false,
+        message: 'No enabled NTP servers configured'
+      });
+    }
+
+    // Try to sync with servers in priority order
+    let syncSuccess = false;
+    let syncedServer = null;
+    let lastError = null;
+
+    for (const server of enabledServers) {
+      try {
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Connection timeout'));
+          }, 5000);
+
+          ntpClient.getNetworkTime(server.hostname, server.port, (err, date) => {
+            clearTimeout(timeout);
+
+            if (err) {
+              reject(err);
+            } else {
+              syncSuccess = true;
+              syncedServer = server;
+              resolve(date);
+            }
+          });
+        });
+
+        if (syncSuccess) {
+          console.log(`Successfully synced with ${server.hostname}:${server.port}`);
+          break;
+        }
+      } catch (error) {
+        console.error(`Failed to sync with ${server.hostname}:${server.port}:`, error.message);
+        lastError = error;
+        continue;
+      }
+    }
+
+    // Update settings with sync status
+    if (syncSuccess) {
+      settings.timeSynchronization.syncStatus = 'synced';
+      settings.timeSynchronization.lastSync = new Date().toISOString();
+    } else {
+      settings.timeSynchronization.syncStatus = 'error';
+    }
+
+    // Save updated settings
+    await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+
+    if (syncSuccess) {
+      res.json({
+        success: true,
+        syncStatus: 'synced',
+        lastSync: settings.timeSynchronization.lastSync,
+        server: `${syncedServer.hostname}:${syncedServer.port}`,
+        message: `Successfully synchronized with ${syncedServer.hostname}`
+      });
+    } else {
+      res.json({
+        success: false,
+        syncStatus: 'error',
+        message: `Failed to sync with any NTP server. Last error: ${lastError?.message || 'Unknown error'}`,
+        error: lastError?.message
+      });
+    }
+
+  } catch (error) {
+    console.error('NTP sync error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      message: 'Failed to perform NTP sync'
+    });
+  }
+});
 
 export default router;
