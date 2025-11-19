@@ -27,6 +27,7 @@ export async function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS listener_sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         session_id TEXT UNIQUE NOT NULL,
+        user_id TEXT,
         station TEXT NOT NULL,
         quality TEXT NOT NULL,
         started_at INTEGER NOT NULL,
@@ -35,6 +36,7 @@ export async function initializeDatabase() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_session_id ON listener_sessions(session_id);
+      CREATE INDEX IF NOT EXISTS idx_user_id ON listener_sessions(user_id);
       CREATE INDEX IF NOT EXISTS idx_active_sessions ON listener_sessions(ended_at) WHERE ended_at IS NULL;
       CREATE INDEX IF NOT EXISTS idx_started_at ON listener_sessions(started_at);
 
@@ -79,6 +81,16 @@ export async function initializeDatabase() {
       );
     `);
 
+    // Migration: Add user_id column if it doesn't exist
+    const tableInfo = db.prepare("PRAGMA table_info(listener_sessions)").all();
+    const hasUserId = tableInfo.some(col => col.name === 'user_id');
+    if (!hasUserId) {
+      console.log('[Analytics] Migrating: Adding user_id column to listener_sessions...');
+      db.exec(`ALTER TABLE listener_sessions ADD COLUMN user_id TEXT`);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_user_id ON listener_sessions(user_id)`);
+      console.log('[Analytics] Migration complete: user_id column added');
+    }
+
     console.log('✅ Analytics database initialized:', DB_PATH);
   } catch (error) {
     console.error('Error initializing analytics database:', error);
@@ -97,16 +109,16 @@ export function getDatabase() {
 // === SESSION TRACKING ===
 
 // Start a new listening session
-export function startSession(sessionId, station, quality) {
+export function startSession(sessionId, userId, station, quality) {
   const db = getDatabase();
   const now = Date.now();
 
   try {
     const stmt = db.prepare(`
-      INSERT OR REPLACE INTO listener_sessions (session_id, station, quality, started_at, last_heartbeat)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO listener_sessions (session_id, user_id, station, quality, started_at, last_heartbeat)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
-    stmt.run(sessionId, station, quality, now, now);
+    stmt.run(sessionId, userId, station, quality, now, now);
 
     // Log event
     logStreamEvent(sessionId, 'start', station, quality);
@@ -158,11 +170,17 @@ export function endSession(sessionId) {
 }
 
 // Update session when station changes
-export function switchStation(sessionId, newStation, quality) {
+export function switchStation(sessionId, userId, newStation, quality) {
   const db = getDatabase();
   const now = Date.now();
 
   try {
+    // Get user_id from existing session if not provided
+    if (!userId) {
+      const existingSession = db.prepare('SELECT user_id FROM listener_sessions WHERE session_id = ? AND ended_at IS NULL').get(sessionId);
+      userId = existingSession?.user_id;
+    }
+
     // End the current session
     const endStmt = db.prepare(`
       UPDATE listener_sessions
@@ -173,10 +191,10 @@ export function switchStation(sessionId, newStation, quality) {
 
     // Start a new session with the new station
     const startStmt = db.prepare(`
-      INSERT INTO listener_sessions (session_id, station, quality, started_at, last_heartbeat)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO listener_sessions (session_id, user_id, station, quality, started_at, last_heartbeat)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
-    startStmt.run(sessionId, newStation, quality, now, now);
+    startStmt.run(sessionId, userId, newStation, quality, now, now);
 
     logStreamEvent(sessionId, 'switch_station', newStation, quality);
   } catch (error) {
@@ -185,11 +203,17 @@ export function switchStation(sessionId, newStation, quality) {
 }
 
 // Update session when quality changes
-export function changeQuality(sessionId, station, newQuality) {
+export function changeQuality(sessionId, userId, station, newQuality) {
   const db = getDatabase();
   const now = Date.now();
 
   try {
+    // Get user_id from existing session if not provided
+    if (!userId) {
+      const existingSession = db.prepare('SELECT user_id FROM listener_sessions WHERE session_id = ? AND ended_at IS NULL').get(sessionId);
+      userId = existingSession?.user_id;
+    }
+
     // End the current session
     const endStmt = db.prepare(`
       UPDATE listener_sessions
@@ -200,10 +224,10 @@ export function changeQuality(sessionId, station, newQuality) {
 
     // Start a new session with the new quality
     const startStmt = db.prepare(`
-      INSERT INTO listener_sessions (session_id, station, quality, started_at, last_heartbeat)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO listener_sessions (session_id, user_id, station, quality, started_at, last_heartbeat)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
-    startStmt.run(sessionId, station, newQuality, now, now);
+    startStmt.run(sessionId, userId, station, newQuality, now, now);
 
     logStreamEvent(sessionId, 'change_quality', station, newQuality);
   } catch (error) {
@@ -305,8 +329,16 @@ export function getCurrentStats() {
       WHERE ended_at IS NULL
     `).get();
 
+    // Get unique active users count
+    const uniqueUsers = db.prepare(`
+      SELECT COUNT(DISTINCT user_id) as count
+      FROM listener_sessions
+      WHERE ended_at IS NULL AND user_id IS NOT NULL
+    `).get();
+
     return {
       total: totalActive.count,
+      uniqueUsers: uniqueUsers.count,
       byStation: stationStats.reduce((acc, row) => {
         acc[row.station] = row.count;
         return acc;
@@ -371,6 +403,13 @@ export function getTodayStats() {
       WHERE started_at >= ? AND started_at < ?
     `).get(todayStart, tomorrowStart);
 
+    // Count unique users today
+    const uniqueUsers = db.prepare(`
+      SELECT COUNT(DISTINCT user_id) as count
+      FROM listener_sessions
+      WHERE started_at >= ? AND started_at < ? AND user_id IS NOT NULL
+    `).get(todayStart, tomorrowStart);
+
     // Count sessions by station for today
     const stationStats = db.prepare(`
       SELECT
@@ -409,6 +448,7 @@ export function getTodayStats() {
       date: today,
       current: current,
       total_listeners: totalSessions.count,
+      unique_users: uniqueUsers.count,
       fm_listeners: fmCount,
       folclor_listeners: folclorCount,
       peak_listeners: Math.max(current.total, 0), // For now, use current as peak (will be updated by aggregation)
