@@ -10,7 +10,8 @@ import {
   getCurrentStats,
   getDailyStats,
   getTodayStats,
-  getMostViewedArticles
+  getMostViewedArticles,
+  getDatabase
 } from '../database/analytics.js';
 
 const router = express.Router();
@@ -118,10 +119,31 @@ router.post('/article-view', (req, res) => {
 
 // === ADMIN ENDPOINTS (Protected) ===
 
+// Health check endpoint - Test if analytics is working
+router.get('/admin/health', authenticateAdmin, (req, res) => {
+  try {
+    const db = getDatabase();
+    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+
+    res.json({
+      status: 'ok',
+      database: 'connected',
+      tables: tables.map(t => t.name),
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({
+      status: 'error',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // Debug endpoint - Get raw session data
 router.get('/admin/debug/sessions', authenticateAdmin, (req, res) => {
   try {
-    const { getDatabase } = require('../database/analytics.js');
     const db = getDatabase();
 
     // Get all active sessions
