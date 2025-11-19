@@ -648,7 +648,7 @@ export default function StatisticsTab({ token }) {
             ))}
           </select>
         </div>
-        <div className="h-80">
+        <div className="h-[600px]">
           <Bar data={listenersOverTimeData} options={barChartOptions} />
         </div>
       </div>
