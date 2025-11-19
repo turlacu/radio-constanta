@@ -361,6 +361,9 @@ export function getTodayStats() {
       fm_listeners: (dailyStats?.fm_listeners || 0) + (current.byStation?.fm || 0),
       folclor_listeners: (dailyStats?.folclor_listeners || 0) + (current.byStation?.folclor || 0),
       peak_listeners: Math.max(dailyStats?.peak_listeners || 0, current.total),
+      mp3_128_listeners: (dailyStats?.mp3_128_count || 0) + (current.byQuality?.mp3_128 || 0),
+      mp3_256_listeners: (dailyStats?.mp3_256_count || 0) + (current.byQuality?.mp3_256 || 0),
+      flac_listeners: (dailyStats?.flac_count || 0) + (current.byQuality?.flac || 0),
       article_views: articleViews.count
     };
   } catch (error) {
