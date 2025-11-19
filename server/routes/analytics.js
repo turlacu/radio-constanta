@@ -41,7 +41,7 @@ const authenticateAdmin = (req, res, next) => {
 // Log stream event (start, stop, switch, quality change)
 router.post('/stream-event', (req, res) => {
   try {
-    const { userId, sessionId, event, station, quality } = req.body;
+    const { sessionId, event, station, quality } = req.body;
 
     if (!sessionId || !event) {
       return res.status(400).json({ error: 'Missing required fields: sessionId, event' });
@@ -52,8 +52,8 @@ router.post('/stream-event', (req, res) => {
         if (!station || !quality) {
           return res.status(400).json({ error: 'Missing station or quality for start event' });
         }
-        console.log(`[Analytics] Stream started: ${station} (${quality}) - Session: ${sessionId.substring(0, 30)}... User: ${userId?.substring(0, 20)}...`);
-        startSession(sessionId, userId, station, quality);
+        console.log(`[Analytics] Stream started: ${station} (${quality}) - Session: ${sessionId.substring(0, 30)}...`);
+        startSession(sessionId, station, quality);
         break;
 
       case 'stop':
@@ -66,7 +66,7 @@ router.post('/stream-event', (req, res) => {
           return res.status(400).json({ error: 'Missing station for switch event' });
         }
         console.log(`[Analytics] Station switched: ${station} - Session: ${sessionId.substring(0, 30)}...`);
-        switchStation(sessionId, userId, station, quality);
+        switchStation(sessionId, station, quality);
         break;
 
       case 'change_quality':
@@ -74,7 +74,7 @@ router.post('/stream-event', (req, res) => {
           return res.status(400).json({ error: 'Missing quality for quality change event' });
         }
         console.log(`[Analytics] Quality changed: ${quality} - Session: ${sessionId.substring(0, 30)}...`);
-        changeQuality(sessionId, userId, station, quality);
+        changeQuality(sessionId, station, quality);
         break;
 
       default:
