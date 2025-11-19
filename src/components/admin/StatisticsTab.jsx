@@ -171,19 +171,25 @@ export default function StatisticsTab({ token }) {
 
   // Calculate aggregated stats for periods
   const getStationPeriodStats = () => {
-    // Get last N days from period stats
-    const lastNDays = periodStats.slice(-stationPeriod);
+    // Get last N-1 days from period stats (excluding today)
+    const lastNDays = periodStats.slice(-(stationPeriod - 1));
 
-    // Sum up FM and Folclor listeners
-    const fmTotal = lastNDays.reduce((sum, stat) => sum + (stat.fm_listeners || 0), 0);
-    const folclorTotal = lastNDays.reduce((sum, stat) => sum + (stat.folclor_listeners || 0), 0);
+    // Sum up FM and Folclor listeners from historical data
+    let fmTotal = lastNDays.reduce((sum, stat) => sum + (stat.fm_listeners || 0), 0);
+    let folclorTotal = lastNDays.reduce((sum, stat) => sum + (stat.folclor_listeners || 0), 0);
+
+    // Add today's stats
+    if (todayStats) {
+      fmTotal += todayStats.fm_listeners || 0;
+      folclorTotal += todayStats.folclor_listeners || 0;
+    }
 
     return { fm: fmTotal, folclor: folclorTotal };
   };
 
   const getQualityPeriodStats = () => {
-    // Get last N days from period stats
-    const lastNDays = periodStats.slice(-qualityPeriod);
+    // Get last N-1 days from period stats (excluding today)
+    const lastNDays = periodStats.slice(-(qualityPeriod - 1));
 
     // Calculate quality stats per station using proportional distribution
     const stats = {
@@ -195,7 +201,7 @@ export default function StatisticsTab({ token }) {
       folclor_flac: 0
     };
 
-    // Aggregate quality stats proportionally by station
+    // Aggregate quality stats proportionally by station from historical data
     lastNDays.forEach(stat => {
       const totalListeners = stat.total_listeners || 0;
       if (totalListeners === 0) return;
@@ -212,6 +218,23 @@ export default function StatisticsTab({ token }) {
       stats.folclor_mp3_256 += Math.round((stat.mp3_256_listeners || 0) * folclorRatio);
       stats.folclor_flac += Math.round((stat.flac_listeners || 0) * folclorRatio);
     });
+
+    // Add today's quality stats proportionally
+    if (todayStats) {
+      const todayTotal = todayStats.total_listeners || 0;
+      if (todayTotal > 0) {
+        const fmRatio = (todayStats.fm_listeners || 0) / todayTotal;
+        const folclorRatio = (todayStats.folclor_listeners || 0) / todayTotal;
+
+        stats.fm_mp3_128 += Math.round((todayStats.mp3_128_listeners || 0) * fmRatio);
+        stats.fm_mp3_256 += Math.round((todayStats.mp3_256_listeners || 0) * fmRatio);
+        stats.fm_flac += Math.round((todayStats.flac_listeners || 0) * fmRatio);
+
+        stats.folclor_mp3_128 += Math.round((todayStats.mp3_128_listeners || 0) * folclorRatio);
+        stats.folclor_mp3_256 += Math.round((todayStats.mp3_256_listeners || 0) * folclorRatio);
+        stats.folclor_flac += Math.round((todayStats.flac_listeners || 0) * folclorRatio);
+      }
+    }
 
     return stats;
   };
