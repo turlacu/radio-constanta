@@ -89,6 +89,31 @@ const proxyImageUrl = (imageUrl) => {
   return imageUrl;
 };
 
+// Helper to fetch og:image from a URL (for fallback image extraction)
+const fetchOgImage = async (url) => {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; RadioApp/1.0)'
+      }
+    });
+    if (!response.ok) return null;
+
+    const html = await response.text();
+    // Extract og:image from meta tag
+    const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+                    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+
+    if (ogMatch && ogMatch[1]) {
+      return ogMatch[1];
+    }
+    return null;
+  } catch (error) {
+    console.log(`Failed to fetch og:image from ${url}: ${error.message}`);
+    return null;
+  }
+};
+
 // Fetch articles from WordPress REST API
 const fetchFromWordPressAPI = async (limit = 20) => {
   try {
@@ -166,12 +191,6 @@ const fetchFromWordPressAPI = async (limit = 20) => {
           }
         }
 
-        // Use placeholder if still no image
-        if (!image) {
-          const placeholderText = encodeURIComponent(wpConfig.siteName.replace(/\s+/g, '+'));
-          image = `https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=${placeholderText}`;
-        }
-
         // Create summary from excerpt
         const cleanExcerpt = stripHtml(excerpt);
         const summary = truncateAtWord(cleanExcerpt, 200);
@@ -180,18 +199,51 @@ const fetchFromWordPressAPI = async (limit = 20) => {
           id: id,
           title: stripHtml(title),
           summary: summary,
-          image: proxyImageUrl(image),
+          image: image, // Will be processed later
           category: stripHtml(categoryName),
           date: date,
           link: link,
           content: '', // Don't include full content for list view
-          author: stripHtml(authorName)
+          author: stripHtml(authorName),
+          needsOgImage: !image // Flag for posts that need og:image fetch
         };
       } catch (err) {
         console.error('Error parsing WordPress post:', err);
         return null;
       }
     }).filter(article => article !== null && article.title && article.link);
+
+    // Fetch og:image for articles without images (in parallel, max 10 at a time)
+    const articlesNeedingImages = articles.filter(a => a.needsOgImage);
+    if (articlesNeedingImages.length > 0) {
+      console.log(`🖼️ Fetching og:image for ${articlesNeedingImages.length} articles without images...`);
+
+      // Process in batches to avoid overwhelming the server
+      const batchSize = 10;
+      for (let i = 0; i < articlesNeedingImages.length; i += batchSize) {
+        const batch = articlesNeedingImages.slice(i, i + batchSize);
+        const ogImagePromises = batch.map(async (article) => {
+          const ogImage = await fetchOgImage(article.link);
+          if (ogImage) {
+            article.image = ogImage;
+            article.needsOgImage = false;
+          }
+        });
+        await Promise.all(ogImagePromises);
+      }
+    }
+
+    // Apply placeholder and proxy to all images
+    const placeholderText = encodeURIComponent(wpConfig.siteName.replace(/\s+/g, '+'));
+    const placeholder = `https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=${placeholderText}`;
+
+    articles.forEach(article => {
+      if (!article.image) {
+        article.image = placeholder;
+      }
+      article.image = proxyImageUrl(article.image);
+      delete article.needsOgImage; // Clean up internal flag
+    });
 
     const articlesWithImages = articles.filter(a => !a.image.includes('placeholder')).length;
     console.log(`Successfully parsed ${articles.length} articles (${articlesWithImages} with images)`);
