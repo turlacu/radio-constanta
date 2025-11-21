@@ -143,7 +143,30 @@ const fetchFromWordPressAPI = async (limit = 20) => {
           }
         }
 
-        // Use placeholder if no image
+        // Fallback: Try to extract first image from content if no featured media
+        if (!image && content) {
+          const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+          if (imgMatch && imgMatch[1]) {
+            // Get the image URL and optimize it
+            let contentImage = imgMatch[1];
+            // If it's a WordPress image, add size params
+            if (contentImage.includes('wp-content') || contentImage.includes('wp.com')) {
+              const baseUrl = contentImage.split('?')[0];
+              contentImage = `${baseUrl}?w=400&quality=80`;
+            }
+            image = contentImage;
+          }
+        }
+
+        // Fallback: Try to extract image from excerpt
+        if (!image && excerpt) {
+          const imgMatch = excerpt.match(/<img[^>]+src=["']([^"']+)["']/i);
+          if (imgMatch && imgMatch[1]) {
+            image = imgMatch[1];
+          }
+        }
+
+        // Use placeholder if still no image
         if (!image) {
           const placeholderText = encodeURIComponent(wpConfig.siteName.replace(/\s+/g, '+'));
           image = `https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=${placeholderText}`;
