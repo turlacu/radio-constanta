@@ -320,4 +320,35 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST /api/news/refresh-cache - Force refresh the news cache
+router.post('/refresh-cache', async (req, res) => {
+  try {
+    console.log('🔄 Manual cache refresh requested');
+
+    // Clear existing cache
+    cachedArticles = null;
+    cacheTimestamp = null;
+
+    // Fetch fresh articles
+    const articles = await fetchFromWordPressAPI(100);
+    cachedArticles = articles;
+    cacheTimestamp = Date.now();
+
+    console.log(`✅ Cache refreshed: ${articles.length} articles from new source`);
+
+    res.json({
+      success: true,
+      message: `Cache refreshed successfully. Loaded ${articles.length} articles.`,
+      articleCount: articles.length
+    });
+  } catch (error) {
+    console.error('❌ Cache refresh failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to refresh cache',
+      message: error.message
+    });
+  }
+});
+
 export default router;
