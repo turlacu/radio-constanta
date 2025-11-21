@@ -140,60 +140,6 @@ router.post('/login', authLimiter, async (req, res) => {
   }
 });
 
-// Change admin password endpoint
-router.post('/change-password', authenticateAdmin, async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-
-    // Validation
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Current password and new password are required' });
-    }
-
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: 'New password must be at least 8 characters long' });
-    }
-
-    // Get current password hash
-    const currentPasswordHash = await getPasswordHash();
-
-    // Verify current password
-    const isValid = await bcrypt.compare(currentPassword, currentPasswordHash);
-    if (!isValid) {
-      return res.status(401).json({ error: 'Current password is incorrect' });
-    }
-
-    // Hash new password
-    const newPasswordHash = await bcrypt.hash(newPassword, 10);
-
-    // Read current settings
-    let settings = {};
-    try {
-      const data = await fs.readFile(SETTINGS_FILE, 'utf8');
-      settings = JSON.parse(data);
-    } catch (error) {
-      // Settings file doesn't exist, create new structure
-      settings = {};
-    }
-
-    // Update password hash in settings
-    if (!settings.security) {
-      settings.security = {};
-    }
-    settings.security.passwordHash = newPasswordHash;
-
-    // Save settings
-    await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
-
-    logger.info('[Security]', 'Admin password changed successfully');
-
-    res.json({ success: true, message: 'Password changed successfully' });
-  } catch (error) {
-    logger.error('[Security]', 'Change password error:', error);
-    res.status(500).json({ error: 'Failed to change password' });
-  }
-});
-
 // Get admin settings
 router.get('/settings', authenticateAdmin, async (req, res) => {
   try {
