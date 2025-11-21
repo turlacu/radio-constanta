@@ -1,6 +1,18 @@
 {
   "weatherProvider": "openmeteo",
   "weatherApiKey": "",
+  "newsSource": {
+    "wordpressApiUrl": "https://www.radioconstanta.ro/wp-json/wp/v2/posts",
+    "siteDomain": "radioconstanta.ro",
+    "siteName": "Radio Constanța",
+    "allowedImageDomains": [
+      "i0.wp.com",
+      "i1.wp.com",
+      "i2.wp.com",
+      "radioconstanta.ro",
+      "www.radioconstanta.ro"
+    ]
+  },
   "radioStreams": {
     "fm": {
       "mp3_128": {

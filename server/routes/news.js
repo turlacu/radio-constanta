@@ -1,9 +1,37 @@
 import express from 'express';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-// WordPress REST API endpoint - much faster than RSS
-const WP_API_URL = 'https://www.radioconstanta.ro/wp-json/wp/v2/posts';
+// Settings file path
+const SETTINGS_FILE = path.join(__dirname, '../data/admin-settings.json');
+
+// Default WordPress REST API endpoint (fallback)
+const DEFAULT_WP_API_URL = 'https://www.radioconstanta.ro/wp-json/wp/v2/posts';
+const DEFAULT_SITE_NAME = 'Radio Constanța';
+
+// Get WordPress API URL from settings
+async function getWordPressConfig() {
+  try {
+    const data = await fs.readFile(SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+    return {
+      apiUrl: settings.newsSource?.wordpressApiUrl || DEFAULT_WP_API_URL,
+      siteName: settings.newsSource?.siteName || DEFAULT_SITE_NAME
+    };
+  } catch (error) {
+    // Settings file doesn't exist or is invalid - use defaults
+    return {
+      apiUrl: DEFAULT_WP_API_URL,
+      siteName: DEFAULT_SITE_NAME
+    };
+  }
+}
 
 // In-memory cache
 let cachedArticles = null;
@@ -64,10 +92,12 @@ const proxyImageUrl = (imageUrl) => {
 // Fetch articles from WordPress REST API
 const fetchFromWordPressAPI = async (limit = 20) => {
   try {
-    console.log('Fetching from WordPress REST API...');
+    // Get WordPress config from settings
+    const wpConfig = await getWordPressConfig();
+    console.log(`Fetching from WordPress REST API: ${wpConfig.apiUrl}`);
 
     // Use _embed to get featured images and author info in one request
-    const url = `${WP_API_URL}?per_page=${limit}&_embed`;
+    const url = `${wpConfig.apiUrl}?per_page=${limit}&_embed`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -88,7 +118,7 @@ const fetchFromWordPressAPI = async (limit = 20) => {
         const id = post.id?.toString() || `post-${Date.now()}`;
 
         // Extract author name from embedded data
-        const authorName = post._embedded?.author?.[0]?.name || 'Radio Constanta';
+        const authorName = post._embedded?.author?.[0]?.name || wpConfig.siteName;
 
         // Extract category name from embedded data
         const categories = post._embedded?.['wp:term']?.[0] || [];
@@ -115,7 +145,8 @@ const fetchFromWordPressAPI = async (limit = 20) => {
 
         // Use placeholder if no image
         if (!image) {
-          image = 'https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=Radio+Constanta';
+          const placeholderText = encodeURIComponent(wpConfig.siteName.replace(/\s+/g, '+'));
+          image = `https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=${placeholderText}`;
         }
 
         // Create summary from excerpt

@@ -773,6 +773,7 @@ export default function Admin() {
     { id: 'weather', name: 'Weather', icon: 'CloudSun' },
     { id: 'streams', name: 'Radio Streams', icon: 'Radio' },
     { id: 'covers', name: 'Cover Scheduling', icon: 'Images' },
+    { id: 'news', name: 'News Source', icon: 'Newspaper' },
     { id: 'time', name: 'Time Sync', icon: 'Clock' }
   ];
 
@@ -801,6 +802,11 @@ export default function Admin() {
     Clock: () => (
       <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
         <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/>
+      </svg>
+    ),
+    Newspaper: () => (
+      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,160H40V56H216V200ZM184,96a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,96Zm0,32a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,128Zm0,32a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h96A8,8,0,0,1,184,160Z"/>
       </svg>
     ),
     SignOut: () => (
@@ -1669,6 +1675,222 @@ export default function Admin() {
                     </div>
                       </div>
                     )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* News Source Tab */}
+            {activeTab === 'news' && (
+              <div>
+                <div className="mb-6">
+                  <Heading level={3} className="text-2xl">News Source Configuration</Heading>
+                  <Body size="small" opacity="secondary" className="mt-2">
+                    Configure WordPress API and news source settings
+                  </Body>
+                </div>
+
+                <div className="space-y-6">
+                  {/* WordPress API URL */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <Heading level={6} className="mb-4 text-base">WordPress API</Heading>
+                    <div className="space-y-4">
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                          WordPress REST API URL
+                        </Body>
+                        <input
+                          type="text"
+                          value={settings.newsSource?.wordpressApiUrl || ''}
+                          onChange={(e) => {
+                            const newUrl = e.target.value;
+                            // Auto-extract domain from URL
+                            let domain = '';
+                            try {
+                              const urlObj = new URL(newUrl.replace('/wp-json/wp/v2/posts', ''));
+                              domain = urlObj.hostname.replace('www.', '');
+                            } catch {
+                              // Invalid URL, keep domain empty
+                            }
+                            setSettings({
+                              ...settings,
+                              newsSource: {
+                                ...settings.newsSource,
+                                wordpressApiUrl: newUrl,
+                                siteDomain: domain || settings.newsSource?.siteDomain || '',
+                                // Auto-update allowed image domains
+                                allowedImageDomains: domain ? [
+                                  'i0.wp.com',
+                                  'i1.wp.com',
+                                  'i2.wp.com',
+                                  domain,
+                                  `www.${domain}`
+                                ] : settings.newsSource?.allowedImageDomains || []
+                              }
+                            });
+                          }}
+                          placeholder="https://www.example.com/wp-json/wp/v2/posts"
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                        />
+                        <Body size="small" opacity="secondary" className="mt-1 text-xs">
+                          Full URL to your WordPress REST API posts endpoint
+                        </Body>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Site Configuration */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <Heading level={6} className="mb-4 text-base">Site Configuration</Heading>
+                    <div className="space-y-4">
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                          Site Name
+                        </Body>
+                        <input
+                          type="text"
+                          value={settings.newsSource?.siteName || ''}
+                          onChange={(e) => setSettings({
+                            ...settings,
+                            newsSource: {
+                              ...settings.newsSource,
+                              siteName: e.target.value
+                            }
+                          })}
+                          placeholder="Radio Constanța"
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                        />
+                        <Body size="small" opacity="secondary" className="mt-1 text-xs">
+                          Display name for the news source (used as fallback author name)
+                        </Body>
+                      </div>
+
+                      <div>
+                        <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                          Site Domain
+                        </Body>
+                        <input
+                          type="text"
+                          value={settings.newsSource?.siteDomain || ''}
+                          onChange={(e) => {
+                            const domain = e.target.value;
+                            setSettings({
+                              ...settings,
+                              newsSource: {
+                                ...settings.newsSource,
+                                siteDomain: domain,
+                                // Auto-update allowed image domains
+                                allowedImageDomains: domain ? [
+                                  'i0.wp.com',
+                                  'i1.wp.com',
+                                  'i2.wp.com',
+                                  domain,
+                                  `www.${domain}`
+                                ] : settings.newsSource?.allowedImageDomains || []
+                              }
+                            });
+                          }}
+                          placeholder="radioconstanta.ro"
+                          className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                        />
+                        <Body size="small" opacity="secondary" className="mt-1 text-xs">
+                          Domain used for article URL validation (without www)
+                        </Body>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Image Proxy Domains */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <Heading level={6} className="mb-4 text-base">Allowed Image Domains</Heading>
+                    <div className="space-y-4">
+                      <Body size="small" opacity="secondary" className="text-xs">
+                        These domains are allowed for image proxying. WordPress CDN domains (i0-i2.wp.com) are included by default.
+                      </Body>
+                      <div className="flex flex-wrap gap-2">
+                        {(settings.newsSource?.allowedImageDomains || []).map((domain, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 px-3 py-1 bg-bg-tertiary border border-border rounded-lg text-sm"
+                          >
+                            <span>{domain}</span>
+                            <button
+                              onClick={() => {
+                                const newDomains = [...(settings.newsSource?.allowedImageDomains || [])];
+                                newDomains.splice(index, 1);
+                                setSettings({
+                                  ...settings,
+                                  newsSource: {
+                                    ...settings.newsSource,
+                                    allowedImageDomains: newDomains
+                                  }
+                                });
+                              }}
+                              className="text-text-tertiary hover:text-error transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          id="newImageDomain"
+                          placeholder="example.com"
+                          className="flex-1 px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const input = e.target;
+                              const newDomain = input.value.trim();
+                              if (newDomain && !(settings.newsSource?.allowedImageDomains || []).includes(newDomain)) {
+                                setSettings({
+                                  ...settings,
+                                  newsSource: {
+                                    ...settings.newsSource,
+                                    allowedImageDomains: [...(settings.newsSource?.allowedImageDomains || []), newDomain]
+                                  }
+                                });
+                                input.value = '';
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => {
+                            const input = document.getElementById('newImageDomain');
+                            const newDomain = input.value.trim();
+                            if (newDomain && !(settings.newsSource?.allowedImageDomains || []).includes(newDomain)) {
+                              setSettings({
+                                ...settings,
+                                newsSource: {
+                                  ...settings.newsSource,
+                                  allowedImageDomains: [...(settings.newsSource?.allowedImageDomains || []), newDomain]
+                                }
+                              });
+                              input.value = '';
+                            }
+                          }}
+                          className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          Add Domain
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Info Box */}
+                  <div className="rounded-2xl bg-blue-500/10 border border-blue-500/30 p-6">
+                    <Heading level={6} className="mb-3 text-base text-blue-400">How it works</Heading>
+                    <Body size="small" className="text-xs text-blue-300 space-y-2">
+                      <p>1. Enter your WordPress REST API URL (usually: yoursite.com/wp-json/wp/v2/posts)</p>
+                      <p>2. The site domain will be auto-extracted and used for article validation</p>
+                      <p>3. Image domains are auto-configured to include WordPress CDN and your site</p>
+                      <p>4. Click "Save All Settings" to apply changes</p>
+                      <p className="mt-4 text-yellow-400">Note: After saving, the news cache will refresh within 10 minutes.</p>
+                    </Body>
                   </div>
                 </div>
               </div>
