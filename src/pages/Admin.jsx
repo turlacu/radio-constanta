@@ -53,6 +53,10 @@ export default function Admin() {
   const [syncMessage, setSyncMessage] = useState('');
   const [testingServerId, setTestingServerId] = useState(null);
 
+  // News cache refresh state
+  const [isRefreshingNews, setIsRefreshingNews] = useState(false);
+  const [newsRefreshMessage, setNewsRefreshMessage] = useState('');
+
   // Server time state (Romania timezone)
   const [serverTime, setServerTime] = useState(new Date());
 
@@ -1881,6 +1885,69 @@ export default function Admin() {
                     </div>
                   </div>
 
+                  {/* Refresh Cache */}
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    <Heading level={6} className="mb-4 text-base">Refresh News Cache</Heading>
+                    <div className="space-y-4">
+                      <Body size="small" opacity="secondary" className="text-xs">
+                        After changing the WordPress API URL, click the button below to immediately load news from the new source.
+                      </Body>
+                      <button
+                        onClick={async () => {
+                          setIsRefreshingNews(true);
+                          setNewsRefreshMessage('');
+                          try {
+                            const token = localStorage.getItem('adminToken');
+                            const response = await fetch('/api/news/refresh-cache', {
+                              method: 'POST',
+                              headers: {
+                                'Authorization': `Bearer ${token}`
+                              }
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                              setNewsRefreshMessage(`✓ ${data.message}`);
+                            } else {
+                              setNewsRefreshMessage(`✗ ${data.message || 'Failed to refresh cache'}`);
+                            }
+                          } catch (error) {
+                            setNewsRefreshMessage(`✗ Error: ${error.message}`);
+                          } finally {
+                            setIsRefreshingNews(false);
+                          }
+                        }}
+                        disabled={isRefreshingNews}
+                        className="w-full px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm flex items-center justify-center gap-2"
+                      >
+                        {isRefreshingNews ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                            </svg>
+                            Refreshing...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Refresh News Cache Now
+                          </>
+                        )}
+                      </button>
+                      {newsRefreshMessage && (
+                        <div className={`p-3 rounded-lg text-xs ${
+                          newsRefreshMessage.startsWith('✓')
+                            ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+                            : 'bg-red-500/10 border border-red-500/30 text-red-400'
+                        }`}>
+                          {newsRefreshMessage}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Info Box */}
                   <div className="rounded-2xl bg-blue-500/10 border border-blue-500/30 p-6">
                     <Heading level={6} className="mb-3 text-base text-blue-400">How it works</Heading>
@@ -1889,7 +1956,7 @@ export default function Admin() {
                       <p>2. The site domain will be auto-extracted and used for article validation</p>
                       <p>3. Image domains are auto-configured to include WordPress CDN and your site</p>
                       <p>4. Click "Save All Settings" to apply changes</p>
-                      <p className="mt-4 text-yellow-400">Note: After saving, the news cache will refresh within 10 minutes.</p>
+                      <p>5. Click "Refresh News Cache Now" to immediately load news from the new source</p>
                     </Body>
                   </div>
                 </div>
