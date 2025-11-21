@@ -1,7 +1,31 @@
 import express from 'express';
 import * as cheerio from 'cheerio';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
+
+// Settings file path
+const SETTINGS_FILE = path.join(__dirname, '../data/admin-settings.json');
+
+// Default site domain (fallback)
+const DEFAULT_SITE_DOMAIN = 'radioconstanta.ro';
+
+// Get site domain from settings
+async function getSiteDomain() {
+  try {
+    const data = await fs.readFile(SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+    return settings.newsSource?.siteDomain || DEFAULT_SITE_DOMAIN;
+  } catch (error) {
+    // Settings file doesn't exist or is invalid - use default
+    return DEFAULT_SITE_DOMAIN;
+  }
+}
 
 // Helper to proxy external image URLs through our server
 // This prevents tracking prevention errors from third-party CDNs
@@ -41,9 +65,12 @@ router.get('/', async (req, res) => {
       return res.status(400).json({ error: 'URL parameter is required' });
     }
 
-    // Validate URL is from radioconstanta.ro
-    if (!url.includes('radioconstanta.ro')) {
-      return res.status(400).json({ error: 'Invalid URL domain' });
+    // Get allowed site domain from settings
+    const siteDomain = await getSiteDomain();
+
+    // Validate URL is from the configured site domain
+    if (!url.includes(siteDomain)) {
+      return res.status(400).json({ error: `Invalid URL domain. Expected: ${siteDomain}` });
     }
 
     console.log(`Fetching full article from: ${url}`);
