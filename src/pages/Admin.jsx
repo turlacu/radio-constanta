@@ -38,18 +38,6 @@ export default function Admin() {
   // Active tab state
   const [activeTab, setActiveTab] = useState('statistics');
 
-  // Password change state
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState('');
-  const [passwordSuccess, setPasswordSuccess] = useState('');
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // NTP Server modal state
   const [showNtpModal, setShowNtpModal] = useState(false);
@@ -148,64 +136,6 @@ export default function Admin() {
     setIsAuthenticated(false);
     setSettings(null);
     setPassword('');
-  };
-
-  const handlePasswordChange = async (e) => {
-    e.preventDefault();
-    setPasswordError('');
-    setPasswordSuccess('');
-
-    // Validation
-    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
-      setPasswordError('All fields are required');
-      return;
-    }
-
-    if (passwordForm.newPassword.length < 8) {
-      setPasswordError('New password must be at least 8 characters long');
-      return;
-    }
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordError('New password and confirm password do not match');
-      return;
-    }
-
-    setIsChangingPassword(true);
-
-    try {
-      const response = await fetch('/api/admin/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setPasswordSuccess('Password changed successfully!');
-        setPasswordForm({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        });
-        // Clear success message after 5 seconds
-        setTimeout(() => setPasswordSuccess(''), 5000);
-      } else {
-        setPasswordError(data.error || 'Failed to change password');
-      }
-    } catch (error) {
-      console.error('Error changing password:', error);
-      setPasswordError('Failed to change password. Please try again.');
-    } finally {
-      setIsChangingPassword(false);
-    }
   };
 
   const handleSaveSettings = async () => {
@@ -843,9 +773,7 @@ export default function Admin() {
     { id: 'weather', name: 'Weather', icon: 'CloudSun' },
     { id: 'streams', name: 'Radio Streams', icon: 'Radio' },
     { id: 'covers', name: 'Cover Scheduling', icon: 'Images' },
-    { id: 'api', name: 'API Settings', icon: 'Database' },
-    { id: 'time', name: 'Time Sync', icon: 'Clock' },
-    { id: 'security', name: 'Security', icon: 'Lock' }
+    { id: 'time', name: 'Time Sync', icon: 'Clock' }
   ];
 
   // Phosphor icons (inline SVG for simplicity)
@@ -870,19 +798,9 @@ export default function Admin() {
         <path d="M216,40H72A16,16,0,0,0,56,56V72H40A16,16,0,0,0,24,88V200a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V184h16a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM72,56H216v62.75l-10.07-10.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L72,109.37ZM184,200H40V88H56v80a16,16,0,0,0,16,16H184Zm32-32H72V132l36-36,49.66,49.66a8,8,0,0,0,11.31,0L194.63,120,216,141.38V168ZM160,84a12,12,0,1,1,12,12A12,12,0,0,1,160,84Z"/>
       </svg>
     ),
-    Database: () => (
-      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
-        <path d="M128,24C74.17,24,32,48.6,32,80v96c0,31.4,42.17,56,96,56s96-24.6,96-56V80C224,48.6,181.83,24,128,24Zm80,104c0,9.62-7.88,19.43-21.61,26.92C170.93,163.35,150.19,168,128,168s-42.93-4.65-58.39-13.08C55.88,147.43,48,137.62,48,128V111.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64ZM69.61,53.08C85.07,44.65,105.81,40,128,40s42.93,4.65,58.39,13.08C200.12,60.57,208,70.38,208,80s-7.88,19.43-21.61,26.92C170.93,115.35,150.19,120,128,120s-42.93-4.65-58.39-13.08C55.88,99.43,48,89.62,48,80S55.88,60.57,69.61,53.08ZM186.39,202.92C170.93,211.35,150.19,216,128,216s-42.93-4.65-58.39-13.08C55.88,195.43,48,185.62,48,176V159.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64V176C208,185.62,200.12,195.43,186.39,202.92Z"/>
-      </svg>
-    ),
     Clock: () => (
       <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
         <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/>
-      </svg>
-    ),
-    Lock: () => (
-      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
-        <path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-68-56a12,12,0,1,1-12-12A12,12,0,0,1,140,152Z"/>
       </svg>
     ),
     SignOut: () => (
@@ -1756,37 +1674,6 @@ export default function Admin() {
               </div>
             )}
 
-            {/* API Settings Tab */}
-            {activeTab === 'api' && (
-              <div>
-                <div className="mb-6">
-                  <Heading level={3} className="text-2xl">API Settings</Heading>
-                  <Body size="small" opacity="secondary" className="mt-2">
-                    Configure API endpoints and external integrations
-                  </Body>
-                </div>
-
-                <div className="space-y-6">
-                  {/* API Base URL */}
-                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
-                    <Heading level={6} className="mb-4 text-base">API Base URL</Heading>
-                    <div className="space-y-4">
-                      <Body size="small" opacity="secondary" className="text-xs">
-                        Optional base URL for API endpoints (leave empty for relative paths)
-                      </Body>
-                      <input
-                        type="text"
-                        value={settings.apiBaseUrl || ''}
-                        onChange={(e) => setSettings({ ...settings, apiBaseUrl: e.target.value })}
-                        placeholder="https://your-domain.com or leave empty"
-                        className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Time Synchronization Tab */}
             {activeTab === 'time' && (
               <div>
@@ -2020,154 +1907,6 @@ export default function Admin() {
                       <div>• <span className="font-medium">ro.pool.ntp.org</span> - Romania NTP Pool</div>
                       <div>• <span className="font-medium">europe.pool.ntp.org</span> - European NTP Pool</div>
                     </Body>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Security Tab */}
-            {activeTab === 'security' && (
-              <div>
-                <div className="mb-6">
-                  <Heading level={3} className="text-2xl">Security Settings</Heading>
-                  <Body size="small" opacity="secondary" className="mt-2">
-                    Change your admin password and manage security settings
-                  </Body>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Change Password */}
-                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
-                    <Heading level={6} className="mb-4 text-base">Change Password</Heading>
-
-                    <form onSubmit={handlePasswordChange} className="space-y-4">
-                      {/* Current Password */}
-                      <div>
-                        <Body size="small" opacity="secondary" className="mb-2 text-xs">Current Password</Body>
-                        <div className="relative">
-                          <input
-                            type={showCurrentPassword ? "text" : "password"}
-                            value={passwordForm.currentPassword}
-                            onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                            placeholder="Enter current password"
-                            className="w-full px-3 py-2 pr-10 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary transition-colors"
-                          >
-                            {showCurrentPassword ? (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                              </svg>
-                            ) : (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* New Password */}
-                      <div>
-                        <Body size="small" opacity="secondary" className="mb-2 text-xs">New Password</Body>
-                        <div className="relative">
-                          <input
-                            type={showNewPassword ? "text" : "password"}
-                            value={passwordForm.newPassword}
-                            onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                            placeholder="Enter new password (min 8 characters)"
-                            className="w-full px-3 py-2 pr-10 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary transition-colors"
-                          >
-                            {showNewPassword ? (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                              </svg>
-                            ) : (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-                        <Body size="small" opacity="secondary" className="mt-1 text-xs">
-                          Minimum 8 characters required
-                        </Body>
-                      </div>
-
-                      {/* Confirm Password */}
-                      <div>
-                        <Body size="small" opacity="secondary" className="mb-2 text-xs">Confirm New Password</Body>
-                        <div className="relative">
-                          <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={passwordForm.confirmPassword}
-                            onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                            placeholder="Confirm new password"
-                            className="w-full px-3 py-2 pr-10 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary transition-colors"
-                          >
-                            {showConfirmPassword ? (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                              </svg>
-                            ) : (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Error Message */}
-                      {passwordError && (
-                        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                          <Body size="small" className="text-xs text-red-400">
-                            {passwordError}
-                          </Body>
-                        </div>
-                      )}
-
-                      {/* Success Message */}
-                      {passwordSuccess && (
-                        <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                          <Body size="small" className="text-xs text-green-400">
-                            {passwordSuccess}
-                          </Body>
-                        </div>
-                      )}
-
-                      {/* Submit Button */}
-                      <button
-                        type="submit"
-                        disabled={isChangingPassword}
-                        className="w-full px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-                      >
-                        {isChangingPassword ? 'Changing Password...' : 'Change Password'}
-                      </button>
-                    </form>
-
-                    {/* Security Notes */}
-                    <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                      <Body size="small" className="text-xs text-blue-400">
-                        Your current session will remain active after changing your password. The new password will be required for future logins.
-                      </Body>
-                    </div>
                   </div>
                 </div>
               </div>
