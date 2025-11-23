@@ -51,9 +51,9 @@ EXPOSE 3001
 # Set environment to production
 ENV NODE_ENV=production
 
-# Health check
+# Health check (lightweight endpoint, no logging)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/api/news || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/api/health || exit 1
 
 # Start the server
 CMD ["npm", "start"]
