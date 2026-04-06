@@ -69,8 +69,31 @@ const upload = multer({
   }
 });
 
+const FALLBACK_PASSWORD_HASH = '$2b$10$K2wPm5W9ZMUoWo8HPVCnMORGDjANxJNcKUK4v5FMb8q2TvjM5rIom'; // default: "admin123"
+
+function normalizePasswordHash(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  const trimmed = value.trim();
+
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
+function isBcryptHash(value) {
+  return /^\$2[aby]\$\d{2}\$/.test(value);
+}
+
 // Admin password from environment variable (fallback)
-const DEFAULT_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '$2b$10$K2wPm5W9ZMUoWo8HPVCnMORGDjANxJNcKUK4v5FMb8q2TvjM5rIom'; // default: "admin123"
+const DEFAULT_PASSWORD_HASH = normalizePasswordHash(process.env.ADMIN_PASSWORD_HASH) || FALLBACK_PASSWORD_HASH;
 
 const SETTINGS_FILE = path.join(__dirname, '../data/admin-settings.json');
 const COVERS_DIR = path.join(__dirname, '../data/covers');
@@ -83,7 +106,7 @@ async function getPasswordHash() {
 
     // Check if password hash exists in settings file
     if (settings.security && settings.security.passwordHash) {
-      return settings.security.passwordHash;
+      return normalizePasswordHash(settings.security.passwordHash);
     }
   } catch (error) {
     // Settings file doesn't exist or doesn't have password - use env var
@@ -116,6 +139,14 @@ router.post('/login', authLimiter, async (req, res) => {
 
     // Get password hash from settings or environment
     const passwordHash = await getPasswordHash();
+
+    if (!isBcryptHash(passwordHash)) {
+      logger.error(
+        '[Auth]',
+        'Configured admin password hash is invalid. Check ADMIN_PASSWORD_HASH or server/data/admin-settings.json.'
+      );
+      return res.status(500).json({ error: 'Admin password is misconfigured' });
+    }
 
     // Compare password with hash
     const isValid = await bcrypt.compare(password, passwordHash);

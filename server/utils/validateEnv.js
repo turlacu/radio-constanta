@@ -13,6 +13,23 @@ export function validateEnvironment() {
   const errors = [];
   const warnings = [];
 
+  const normalizeValue = value => {
+    if (typeof value !== 'string') {
+      return '';
+    }
+
+    const trimmed = value.trim();
+
+    if (
+      (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'"))
+    ) {
+      return trimmed.slice(1, -1).trim();
+    }
+
+    return trimmed;
+  };
+
   // Check NODE_ENV
   const validEnvs = ['development', 'production', 'test'];
   const nodeEnv = process.env.NODE_ENV || 'development';
@@ -41,9 +58,11 @@ export function validateEnvironment() {
 
   // Check ADMIN_PASSWORD_HASH in production
   if (nodeEnv === 'production') {
-    const passwordHash = process.env.ADMIN_PASSWORD_HASH;
-    if (passwordHash && !passwordHash.startsWith('$2b$') && !passwordHash.startsWith('$2a$')) {
-      warnings.push('ADMIN_PASSWORD_HASH does not appear to be a bcrypt hash');
+    const passwordHash = normalizeValue(process.env.ADMIN_PASSWORD_HASH);
+    if (passwordHash && !/^\$2[aby]\$\d{2}\$/.test(passwordHash)) {
+      warnings.push(
+        'ADMIN_PASSWORD_HASH does not appear to be a valid bcrypt hash. In Coolify, wrap it in quotes to prevent $ expansion.'
+      );
     }
   }
 

@@ -85,6 +85,9 @@ Coolify is a self-hosted PaaS that makes deploying Docker apps easy.
    - `NODE_ENV=production` (already set in Dockerfile)
    - `PORT=3001` (if you want to change the port)
    - `ADMIN_PASSWORD_HASH` - Custom admin password hash
+     - In Coolify, wrap bcrypt hashes in quotes, for example:
+       `ADMIN_PASSWORD_HASH='$2b$10$...'`
+     - This prevents the `$` characters in bcrypt hashes from being interpreted or truncated
    - `JWT_SECRET` - Custom JWT secret
 
 8. **Domain configuration** (optional)
