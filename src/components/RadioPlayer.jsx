@@ -43,7 +43,6 @@ export default function RadioPlayer({ radioState }) {
   const activeStationButtonClass = textColor === 'dark'
     ? 'border-gray-900/18 bg-transparent text-gray-900 shadow-none'
     : 'border-white/16 bg-transparent text-text-primary shadow-none';
-  const qualityHint = selectedQuality === 'flac' ? 'Lossless activ' : 'Streaming comprimat';
   const desktopCoverClass = 'max-w-[clamp(21rem,28vw,31rem)] 3xl:max-w-[33rem] 4k:max-w-[36rem]';
   const desktopBlockHeightClass = 'max-h-[clamp(21rem,28vw,31rem)] 3xl:max-h-[33rem] 4k:max-h-[36rem]';
   const desktopMetaClass = `${textTertiaryClass} text-[12px] font-medium 3xl:text-[14px]`;
@@ -147,7 +146,7 @@ export default function RadioPlayer({ radioState }) {
               <SpectrumVisualizer
                 analyserRef={audioAnalyserRef}
                 isPlaying={isPlaying}
-                className="mb-4 h-11 w-[11rem] 3xl:w-[13rem]"
+                className="mb-4 h-10 w-[8.5rem] 3xl:w-[10rem]"
               />
 
               <div className="flex w-full max-w-[32rem] items-center justify-end gap-5 3xl:max-w-[36rem] 3xl:gap-6">
@@ -173,12 +172,12 @@ export default function RadioPlayer({ radioState }) {
                   )}
                 </motion.button>
 
-                <div className="min-w-0 flex-1 text-right">
-                  <Heading level={2} color="custom" className={`mb-1 !text-4xl !leading-tight 3xl:!text-5xl ${textPrimaryClass}`}>
+                <div className="min-w-0 flex flex-1 flex-col items-end text-right">
+                  <Heading level={2} color="custom" className={`mb-1 w-full text-right !text-4xl !leading-tight 3xl:!text-5xl ${textPrimaryClass}`}>
                     {currentStation.name}
                   </Heading>
-                  <Body size="normal" weight="medium" opacity="custom" className={`${textSecondaryClass} min-h-[1.5rem] text-lg 3xl:text-xl`}>
-                    {metadata || 'Radio regional live din Constanța'}
+                  <Body size="normal" weight="medium" opacity="custom" className={`${textSecondaryClass} min-h-[1.5rem] w-full text-right text-lg 3xl:text-xl`}>
+                    {metadata || 'Primul radio din Dobrogea'}
                   </Body>
                 </div>
               </div>
@@ -193,8 +192,6 @@ export default function RadioPlayer({ radioState }) {
                 role="status"
                 aria-label="Stream information"
               >
-                <span>{qualityHint}</span>
-                <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
                 <span>{streamInfo.sampleRate}</span>
                 <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
                 <span>{streamInfo.channels}</span>
@@ -237,14 +234,6 @@ export default function RadioPlayer({ radioState }) {
                 );
               })}
             </motion.div>
-
-            <Body
-              size="small"
-              opacity="custom"
-              className={`mt-5 max-w-[18rem] text-right text-sm leading-relaxed ${textTertiaryClass}`}
-            >
-              Calitatea streamului se schimbă din Setări și este memorată pentru următoarea vizită.
-            </Body>
           </motion.div>
         </div>
       </ResponsiveContainer>
