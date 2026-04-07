@@ -136,6 +136,9 @@ function AppContent() {
   const desktopActionSurfaceClass = desktopUiTone === 'dark'
     ? 'border-gray-900/18 bg-gray-900/10 text-gray-900 hover:bg-gray-900/16'
     : 'border-white/20 bg-white/12 text-white hover:bg-white/18';
+  const desktopUiBorderColor = desktopUiTone === 'dark'
+    ? 'rgba(17, 24, 39, 0.18)'
+    : 'rgba(255, 255, 255, 0.20)';
 
   // Generate floating particles for background animation
   const floatingParticles = useMemo(() => {
@@ -873,6 +876,7 @@ function AppContent() {
                 <motion.button
                   onClick={() => setShowSettingsModal(true)}
                   className={`flex h-12 w-12 items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${desktopActionSurfaceClass}`}
+                  style={{ borderColor: desktopUiBorderColor }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label="Settings"
@@ -887,6 +891,7 @@ function AppContent() {
                 <motion.button
                   onClick={() => setShowNews(!showNews)}
                   className={`flex h-12 w-12 items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${desktopActionSurfaceClass}`}
+                  style={{ borderColor: desktopUiBorderColor }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label={showNews ? 'Hide news' : 'Show news'}

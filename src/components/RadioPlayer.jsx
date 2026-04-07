@@ -35,6 +35,10 @@ export default function RadioPlayer({ radioState }) {
   const weatherTextColor = useWeatherTextColor();
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
+  const buttonBorderColor =
+    textColor === 'dark' ? 'rgba(17, 24, 39, 0.18)' : 'rgba(255, 255, 255, 0.18)';
+  const strongButtonBorderColor =
+    textColor === 'dark' ? 'rgba(17, 24, 39, 0.28)' : 'rgba(255, 255, 255, 0.24)';
   const textPrimaryClass = textColor === 'dark' ? 'text-gray-900' : 'text-text-primary';
   const textSecondaryClass = textColor === 'dark' ? 'text-gray-700' : 'text-text-secondary';
   const textTertiaryClass = textColor === 'dark' ? 'text-gray-600' : 'text-text-tertiary';
@@ -143,8 +147,9 @@ export default function RadioPlayer({ radioState }) {
           <motion.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className={`absolute right-4 top-4 flex items-center gap-1.5 rounded-xl border bg-error/95 px-3 py-1.5 text-white backdrop-blur-sm 3xl:right-6 3xl:top-6 ${textColor === 'dark' ? 'border-gray-900/18' : 'border-white/20'}`}
-          >
+              className={`absolute right-4 top-4 flex items-center gap-1.5 rounded-xl border bg-error/95 px-3 py-1.5 text-white backdrop-blur-sm 3xl:right-6 3xl:top-6 ${textColor === 'dark' ? 'border-gray-900/18' : 'border-white/20'}`}
+              style={{ borderColor: textColor === 'dark' ? 'rgba(17, 24, 39, 0.18)' : 'rgba(255, 255, 255, 0.20)' }}
+            >
             <motion.span
               animate={{ opacity: [1, 0.5, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
@@ -181,14 +186,15 @@ export default function RadioPlayer({ radioState }) {
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.25 + index * 0.03 }}
             tabIndex={0}
-            className={`relative flex-1 rounded-lg border px-3 py-2 text-[12px] font-medium transition-all focusable 4k:rounded-xl 4k:px-5 4k:py-3 4k:text-[18px] ${
-              isActive
-                ? activeMobileQualityClass
-                : inactiveMobileQualityClass
-            }`}
-            aria-pressed={isActive}
-            aria-label={`Switch to ${quality.label} quality`}
-          >
+                          className={`relative flex-1 rounded-lg border px-3 py-2 text-[12px] font-medium transition-all focusable 4k:rounded-xl 4k:px-5 4k:py-3 4k:text-[18px] ${
+                            isActive
+                              ? activeMobileQualityClass
+                              : inactiveMobileQualityClass
+                          }`}
+                          style={{ borderColor: isActive ? strongButtonBorderColor : buttonBorderColor }}
+                          aria-pressed={isActive}
+                          aria-label={`Switch to ${quality.label} quality`}
+                        >
             {quality.label}
           </motion.button>
         );
@@ -232,6 +238,7 @@ export default function RadioPlayer({ radioState }) {
                   width: `${desktopMetrics.playButton}px`,
                   height: `${desktopMetrics.playButton}px`,
                   top: `${Math.round((desktopMetrics.coverSize - desktopMetrics.playButton) / 2)}px`,
+                  borderColor: buttonBorderColor,
                 }}
                 aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
               >
@@ -309,7 +316,12 @@ export default function RadioPlayer({ radioState }) {
                     <span>{streamInfo.channels}</span>
                     <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
                     <span>{streamInfo.bitrate}</span>
-                    <span className={`rounded-full border px-2.5 py-1 ${desktopAccentBorderClass} ${textColor === 'dark' ? 'bg-gray-900/8' : 'bg-white/8'}`}>{streamInfo.format}</span>
+                    <span
+                      className={`rounded-full border px-2.5 py-1 ${desktopAccentBorderClass} ${textColor === 'dark' ? 'bg-gray-900/8' : 'bg-white/8'}`}
+                      style={{ borderColor: buttonBorderColor }}
+                    >
+                      {streamInfo.format}
+                    </span>
                   </motion.div>
                 )}
 
@@ -339,6 +351,7 @@ export default function RadioPlayer({ radioState }) {
                             ? activeStationButtonClass
                             : inactiveButtonClass
                         }`}
+                        style={{ borderColor: isActive ? strongButtonBorderColor : buttonBorderColor }}
                         aria-pressed={isActive}
                         aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
                       >
@@ -422,14 +435,15 @@ export default function RadioPlayer({ radioState }) {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.2 + index * 0.05 }}
                 tabIndex={0}
-                className={`relative flex-1 rounded-[10px] border px-4 py-3 text-[14px] font-semibold transition-all focusable 4k:rounded-[14px] 4k:px-6 4k:py-5 4k:text-[20px] ${
-                  isActive
-                    ? activeMobileStationClass
-                    : inactiveMobileStationClass
-                }`}
-                aria-pressed={isActive}
-                aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
-              >
+                    className={`relative flex-1 rounded-[10px] border px-4 py-3 text-[14px] font-semibold transition-all focusable 4k:rounded-[14px] 4k:px-6 4k:py-5 4k:text-[20px] ${
+                      isActive
+                        ? activeMobileStationClass
+                        : inactiveMobileStationClass
+                    }`}
+                    style={{ borderColor: isActive ? strongButtonBorderColor : buttonBorderColor }}
+                    aria-pressed={isActive}
+                    aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
+                  >
                 {station.id === 'fm' ? 'FM' : 'Folclor'}
               </motion.button>
             );
