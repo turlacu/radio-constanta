@@ -51,7 +51,7 @@ export default function RadioPlayer({ radioState }) {
         coverSize: 430,
         playerWidth: 456,
         gap: 54,
-        playButton: 92,
+        playButton: 74,
         titleWidth: 328,
         visualizerWidth: 162,
         visualizerHeight: 34,
@@ -63,7 +63,7 @@ export default function RadioPlayer({ radioState }) {
         coverSize: 396,
         playerWidth: 430,
         gap: 44,
-        playButton: 88,
+        playButton: 70,
         titleWidth: 306,
         visualizerWidth: 148,
         visualizerHeight: 32,
@@ -75,7 +75,7 @@ export default function RadioPlayer({ radioState }) {
         coverSize: 348,
         playerWidth: 392,
         gap: 32,
-        playButton: 80,
+        playButton: 64,
         titleWidth: 284,
         visualizerWidth: 128,
         visualizerHeight: 28,
@@ -228,7 +228,7 @@ export default function RadioPlayer({ radioState }) {
                     onClick={togglePlay}
                     disabled={isLoading}
                     tabIndex={0}
-                    className="relative flex shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all disabled:opacity-40"
+                    className="relative flex shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/12 text-white backdrop-blur-md transition-all hover:bg-white/18 disabled:opacity-40"
                     style={{
                       width: `${desktopMetrics.playButton}px`,
                       height: `${desktopMetrics.playButton}px`,

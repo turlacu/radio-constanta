@@ -7,7 +7,7 @@ import { DeviceContext } from '../App';
 
 export default function News({ radioState }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.screenWidth >= 768;
+  const isSplitScreen = !device?.isPortrait;
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -771,6 +771,7 @@ function AppContent() {
 
   const showDesktopWeatherCard = !showNews && isPlaying && settings.backgroundAnimation === 'weather';
   const desktopWeatherCardWidth = Math.min(520, Math.max(260, Math.round((device.screenWidth || 0) * 0.28)));
+  const desktopNewsRailWidth = Math.min(544, Math.max(352, Math.round((device.screenWidth || 0) * 0.34)));
 
   // Preload weather data on wide displays so it is ready when playback starts.
   useEffect(() => {
@@ -881,9 +882,10 @@ function AppContent() {
                 <div
                   className={`relative overflow-hidden transition-all duration-500 ${
                     showNews
-                      ? 'h-full w-[clamp(22rem,34vw,34rem)] border-r border-border'
+                      ? 'h-full border-r border-border'
                       : 'h-full w-full'
                   }`}
+                  style={showNews ? { width: `${desktopNewsRailWidth}px` } : undefined}
                 >
                   {/* Floating particles animation - only show for minimal background */}
                   {!showNews && isPlaying && settings.backgroundAnimation === 'minimal' && (
@@ -954,7 +956,8 @@ function AppContent() {
                       animate={{ x: 0, opacity: 1 }}
                       exit={{ x: '100%', opacity: 0 }}
                       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-                      className="absolute inset-y-0 right-0 left-[clamp(22rem,34vw,34rem)] overflow-y-auto scrollbar-hide relative flex items-center justify-center bg-bg-secondary"
+                      className="absolute inset-y-0 right-0 overflow-y-auto scrollbar-hide relative flex items-center justify-center bg-bg-secondary"
+                      style={{ left: `${desktopNewsRailWidth}px` }}
                     >
                       <News radioState={radioState} />
                     </motion.div>
