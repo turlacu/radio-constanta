@@ -37,6 +37,7 @@ export default function RadioPlayer({ radioState }) {
   const textSecondaryClass = textColor === 'dark' ? 'text-gray-700' : 'text-text-secondary';
   const textTertiaryClass = textColor === 'dark' ? 'text-gray-600' : 'text-text-tertiary';
   const useWeatherButtonTone = showWeatherBackground;
+  const coverBorderClass = textColor === 'dark' ? 'border-gray-900/18' : 'border-white/20';
   const desktopAccentBorderClass = textColor === 'dark' ? 'border-gray-900/18' : 'border-white/18';
   const desktopAccentSurfaceClass = textColor === 'dark' ? 'bg-gray-900/10 hover:bg-gray-900/16' : 'bg-white/12 hover:bg-white/18';
   const desktopButtonTextClass = textColor === 'dark' ? 'text-gray-900' : 'text-white';
@@ -140,7 +141,7 @@ export default function RadioPlayer({ radioState }) {
         : 'relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12'}
       style={desktop ? { width: `${desktopMetrics.coverSize}px` } : undefined}
     >
-      <div className="relative w-full aspect-square overflow-hidden rounded-[22px] border border-white/20 shadow-[0_18px_42px_rgba(15,20,25,0.14)] 3xl:rounded-[28px]">
+      <div className={`relative w-full aspect-square overflow-hidden rounded-[22px] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] 3xl:rounded-[28px] ${coverBorderClass}`}>
         <motion.img
           key={currentStation.coverArt}
           src={currentStation.coverArt}
