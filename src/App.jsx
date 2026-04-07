@@ -11,6 +11,7 @@ import WeatherCard from './components/WeatherCard';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { createFloatingParticles } from './utils/createFloatingParticles';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
+import { getWeatherManager } from './modules/weather/WeatherManager';
 import { getLosslessStreamUrl, getLosslessFormatLabel } from './utils/osDetection';
 import analytics from './utils/analytics';
 
@@ -661,6 +662,56 @@ function AppContent() {
 
   // Split-screen layout for screens larger than small tablet portrait (768px+)
   const showSplitScreen = device.screenWidth >= 768;
+
+  // Preload weather data on wide displays so it is ready when playback starts.
+  useEffect(() => {
+    if (!showSplitScreen || settings.backgroundAnimation !== 'weather') {
+      return;
+    }
+
+    const weatherManager = getWeatherManager();
+    let cancelled = false;
+
+    const preloadWeather = async () => {
+      try {
+        weatherManager.location = {
+          lat: settings.weatherLocation.lat,
+          lon: settings.weatherLocation.lon,
+          name: settings.weatherLocation.name
+        };
+
+        if (settings.weatherMode === 'manual') {
+          const isNight = settings.manualWeatherState.timeOfDay === 'night';
+          weatherManager.setManualWeather(settings.manualWeatherState.weatherType, isNight);
+          return;
+        }
+
+        weatherManager.isAutoMode = true;
+
+        if (weatherManager.currentWeather) {
+          await weatherManager.fetchWeather();
+        } else {
+          await weatherManager.initialize(true);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Failed to preload weather:', error);
+        }
+      }
+    };
+
+    preloadWeather();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    showSplitScreen,
+    settings.backgroundAnimation,
+    settings.weatherMode,
+    settings.weatherLocation,
+    settings.manualWeatherState
+  ]);
 
   return (
     <DeviceContext.Provider value={device}>
