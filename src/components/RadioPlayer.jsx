@@ -21,10 +21,16 @@ export default function RadioPlayer({ radioState }) {
     switchQuality,
     showWeatherBackground,
     audioAnalyserRef,
+    forceCompactLayout,
   } = radioState;
 
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.screenWidth >= 768;
+  const isDesktopShell = (
+    (device?.screenWidth || 0) >= 1180
+    && (device?.screenHeight || 0) >= 760
+    && !device?.isPortrait
+  );
+  const isSplitScreen = isDesktopShell && !forceCompactLayout;
   const weatherTextColor = useWeatherTextColor();
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
@@ -34,7 +40,12 @@ export default function RadioPlayer({ radioState }) {
   const inactiveButtonClass = textColor === 'dark'
     ? 'bg-white/18 text-gray-900 border border-gray-900/12 hover:bg-white/26'
     : 'bg-bg-secondary/88 text-text-secondary border border-border hover:bg-bg-tertiary';
+  const activeStationButtonClass = textColor === 'dark'
+    ? 'border-gray-900/18 bg-transparent text-gray-900 shadow-none'
+    : 'border-white/16 bg-transparent text-text-primary shadow-none';
   const qualityHint = selectedQuality === 'flac' ? 'Lossless activ' : 'Streaming comprimat';
+  const desktopCoverClass = 'max-w-[clamp(21rem,28vw,31rem)] 3xl:max-w-[33rem] 4k:max-w-[36rem]';
+  const desktopBlockHeightClass = 'max-h-[clamp(21rem,28vw,31rem)] 3xl:max-h-[33rem] 4k:max-h-[36rem]';
 
   const renderCoverArt = (desktop = false) => (
     <motion.div
@@ -42,7 +53,7 @@ export default function RadioPlayer({ radioState }) {
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
       className={desktop
-        ? 'relative w-full max-w-[26rem] 3xl:max-w-[30rem] 4k:max-w-[36rem]'
+        ? `relative w-full ${desktopCoverClass}`
         : 'relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12'}
     >
       <div className="relative w-full aspect-square overflow-hidden rounded-[22px] border border-white/25 shadow-[0_28px_80px_rgba(15,20,25,0.25)] 3xl:rounded-[28px]">
@@ -118,53 +129,57 @@ export default function RadioPlayer({ radioState }) {
   if (isSplitScreen) {
     return (
       <ResponsiveContainer section="radio" className="justify-center">
-        <div className="grid w-full max-w-[1100px] grid-cols-[minmax(18rem,24rem)_minmax(24rem,1fr)] items-center gap-10 3xl:max-w-[1320px] 3xl:gap-16">
-          <div className="flex justify-center">
+        <div className="grid w-full max-w-[1480px] grid-cols-[minmax(18rem,31rem)_minmax(5rem,1fr)_minmax(24rem,36rem)] items-center gap-8 3xl:gap-12 4k:gap-16">
+          <div className="flex justify-start">
             {renderCoverArt(true)}
           </div>
+
+          <div aria-hidden="true" />
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
-            className="flex w-full max-w-[42rem] flex-col items-start"
+            className={`flex w-full max-w-[36rem] justify-between justify-self-end ${desktopBlockHeightClass}`}
           >
-            <SpectrumVisualizer
-              analyserRef={audioAnalyserRef}
-              isPlaying={isPlaying}
-              className="mb-3 h-12 max-w-[14rem] 3xl:max-w-[16rem]"
-            />
+            <div className="w-full">
+              <SpectrumVisualizer
+                analyserRef={audioAnalyserRef}
+                isPlaying={isPlaying}
+                className="mb-2 ml-auto h-11 max-w-[15rem] 3xl:max-w-[17rem]"
+              />
 
-            <div className="mb-6 flex w-full items-center gap-5 3xl:mb-8 3xl:gap-6">
-              <motion.button
-                whileHover={{ scale: isLoading ? 1 : 1.05 }}
-                whileTap={{ scale: isLoading ? 1 : 0.95 }}
-                onClick={togglePlay}
-                disabled={isLoading}
-                tabIndex={0}
-                className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all disabled:opacity-40 3xl:h-24 3xl:w-24 4k:h-28 4k:w-28"
-                aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
-              >
-                {isLoading ? (
-                  <Loader size="small" />
-                ) : isPlaying ? (
-                  <svg className="h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                  </svg>
-                ) : (
-                  <svg className="ml-1 h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                )}
-              </motion.button>
+              <div className="flex w-full items-center gap-5 3xl:gap-6">
+                <motion.button
+                  whileHover={{ scale: isLoading ? 1 : 1.05 }}
+                  whileTap={{ scale: isLoading ? 1 : 0.95 }}
+                  onClick={togglePlay}
+                  disabled={isLoading}
+                  tabIndex={0}
+                  className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all disabled:opacity-40 3xl:h-24 3xl:w-24 4k:h-28 4k:w-28"
+                  aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
+                >
+                  {isLoading ? (
+                    <Loader size="small" />
+                  ) : isPlaying ? (
+                    <svg className="h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                    </svg>
+                  ) : (
+                    <svg className="ml-1 h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  )}
+                </motion.button>
 
-              <div className="min-w-0 flex-1">
-                <Heading level={2} color="custom" className={`mb-2 !text-4xl !leading-tight 3xl:!text-5xl ${textPrimaryClass}`}>
-                  {currentStation.name}
-                </Heading>
-                <Body size="normal" weight="medium" opacity="custom" className={`${textSecondaryClass} min-h-[1.75rem] text-lg 3xl:text-xl`}>
-                  {metadata || 'Radio regional live din Constanța'}
-                </Body>
+                <div className="min-w-0 flex-1">
+                  <Heading level={2} color="custom" className={`mb-2 !text-4xl !leading-tight 3xl:!text-5xl ${textPrimaryClass}`}>
+                    {currentStation.name}
+                  </Heading>
+                  <Body size="normal" weight="medium" opacity="custom" className={`${textSecondaryClass} min-h-[1.5rem] text-lg 3xl:text-xl`}>
+                    {metadata || 'Radio regional live din Constanța'}
+                  </Body>
+                </div>
               </div>
             </div>
 
@@ -173,7 +188,7 @@ export default function RadioPlayer({ radioState }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className={`mb-5 flex flex-wrap items-center gap-2 text-[12px] font-medium 3xl:mb-6 3xl:text-[14px] ${textTertiaryClass}`}
+                className={`flex flex-wrap items-center gap-2 text-[12px] font-medium 3xl:text-[14px] ${textTertiaryClass}`}
                 role="status"
                 aria-label="Stream information"
               >
@@ -210,7 +225,7 @@ export default function RadioPlayer({ radioState }) {
                     tabIndex={0}
                     className={`relative flex-1 rounded-[12px] border px-4 py-3 text-[14px] font-semibold transition-all 3xl:px-5 3xl:py-3.5 3xl:text-[16px] ${
                       isActive
-                        ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
+                        ? activeStationButtonClass
                         : inactiveButtonClass
                     }`}
                     aria-pressed={isActive}
@@ -300,7 +315,7 @@ export default function RadioPlayer({ radioState }) {
                 tabIndex={0}
                 className={`relative flex-1 rounded-[10px] border px-4 py-3 text-[14px] font-semibold transition-all focusable 4k:rounded-[14px] 4k:px-6 4k:py-5 4k:text-[20px] ${
                   isActive
-                    ? 'border-primary bg-primary text-white hover:bg-primary-dark'
+                    ? 'border-primary/40 bg-transparent text-primary hover:bg-primary/5'
                     : 'border-border bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
                 }`}
                 aria-pressed={isActive}

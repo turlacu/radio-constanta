@@ -44,6 +44,8 @@ const STATIONS = {
 };
 
 const QUALITY_STORAGE_KEY = 'preferredStreamQuality';
+const DESKTOP_LAYOUT_MIN_WIDTH = 1180;
+const DESKTOP_LAYOUT_MIN_HEIGHT = 760;
 
 const getPreferredDefaultQuality = (stationId, qualities = []) => {
   if (qualities.some((quality) => quality.id === 'flac')) {
@@ -768,11 +770,16 @@ function AppContent() {
     resumeRadio,
     restoreRadio,
     showWeatherBackground: !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is visible
-    audioAnalyserRef: analyserRef
+    audioAnalyserRef: analyserRef,
+    forceCompactLayout: showNews
   };
 
   // Split-screen layout for screens larger than small tablet portrait (768px+)
-  const showSplitScreen = device.screenWidth >= 768;
+  const showSplitScreen = (
+    device.screenWidth >= DESKTOP_LAYOUT_MIN_WIDTH
+    && device.screenHeight >= DESKTOP_LAYOUT_MIN_HEIGHT
+    && !device.isPortrait
+  );
   const showDesktopWeatherCard = !showNews && isPlaying && settings.backgroundAnimation === 'weather';
 
   // Preload weather data on wide displays so it is ready when playback starts.
@@ -927,20 +934,22 @@ function AppContent() {
 
                   <div
                     className={`relative z-10 h-full w-full ${
-                      showDesktopWeatherCard
-                        ? isUltraWide
-                          ? 'grid grid-cols-[clamp(24rem,28vw,40rem)_minmax(0,1fr)_clamp(16rem,18vw,24rem)]'
-                          : 'grid grid-rows-[minmax(0,1fr)_auto]'
-                        : 'flex items-center justify-center'
+                      isUltraWide
+                        ? 'grid grid-cols-[clamp(24rem,28vw,40rem)_minmax(0,1fr)_clamp(16rem,18vw,24rem)]'
+                        : 'grid grid-rows-[minmax(0,1fr)_auto]'
                     }`}
                   >
-                    {showDesktopWeatherCard && isUltraWide && (
+                    {isUltraWide && (
                       <motion.div
-                        initial={{ opacity: 0, x: -24 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -24 }}
-                        transition={{ delay: 0.2, duration: 0.45 }}
-                        className="z-20 flex min-h-0 items-end px-6 pb-8 pt-24 3xl:px-10 3xl:pb-10"
+                        initial={false}
+                        animate={{
+                          opacity: showDesktopWeatherCard ? 1 : 0,
+                          x: showDesktopWeatherCard ? 0 : -24
+                        }}
+                        transition={{ delay: showDesktopWeatherCard ? 0.2 : 0, duration: 0.45 }}
+                        className={`z-20 flex min-h-0 items-end px-6 pb-8 pt-24 3xl:px-10 3xl:pb-10 ${
+                          showDesktopWeatherCard ? 'pointer-events-auto' : 'pointer-events-none'
+                        }`}
                       >
                         <WeatherCard className="max-w-[40rem]" />
                       </motion.div>
@@ -948,23 +957,25 @@ function AppContent() {
 
                     <div
                       className={`min-h-0 ${
-                        showDesktopWeatherCard
-                          ? isUltraWide
-                            ? 'col-start-2 flex items-center justify-center px-6 py-10 3xl:px-10'
-                            : 'flex items-center justify-center px-6 pt-24 pb-8 3xl:px-10'
-                          : 'flex h-full w-full items-center justify-center'
+                        isUltraWide
+                          ? 'col-start-2 flex items-center justify-center px-6 py-10 3xl:px-10'
+                          : 'flex items-center justify-center px-6 pt-24 pb-8 3xl:px-10'
                       }`}
                     >
                       <Radio radioState={radioState} />
                     </div>
 
-                    {showDesktopWeatherCard && !isUltraWide && (
+                    {!isUltraWide && (
                       <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        transition={{ delay: 0.25, duration: 0.45 }}
-                        className="z-20 flex justify-start px-6 pb-6 pt-2 3xl:px-10 3xl:pb-8"
+                        initial={false}
+                        animate={{
+                          opacity: showDesktopWeatherCard ? 1 : 0,
+                          y: showDesktopWeatherCard ? 0 : 20
+                        }}
+                        transition={{ delay: showDesktopWeatherCard ? 0.25 : 0, duration: 0.45 }}
+                        className={`z-20 flex justify-start px-6 pb-6 pt-2 3xl:px-10 3xl:pb-8 ${
+                          showDesktopWeatherCard ? 'pointer-events-auto' : 'pointer-events-none'
+                        }`}
                       >
                         <WeatherCard className="max-w-[40rem]" />
                       </motion.div>
