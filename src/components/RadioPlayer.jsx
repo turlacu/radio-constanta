@@ -32,7 +32,7 @@ export default function RadioPlayer({ radioState }) {
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
   const weatherTextColor = useWeatherTextColor();
 
-  const textColor = weatherTextColor;
+  const textColor = showWeatherBackground ? weatherTextColor : 'light';
   const textPrimaryClass = textColor === 'dark' ? 'text-gray-900' : 'text-text-primary';
   const textSecondaryClass = textColor === 'dark' ? 'text-gray-700' : 'text-text-secondary';
   const textTertiaryClass = textColor === 'dark' ? 'text-gray-600' : 'text-text-tertiary';
