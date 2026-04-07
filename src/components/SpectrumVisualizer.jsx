@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { clsx } from 'clsx';
 
+const BAR_COUNT = 29;
+
 export default function SpectrumVisualizer({
   analyserRef,
   isPlaying,
   className
 }) {
   const canvasRef = useRef(null);
-  const smoothedValuesRef = useRef(Array(36).fill(0.08));
+  const smoothedValuesRef = useRef(Array(BAR_COUNT).fill(0.08));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -60,9 +62,9 @@ export default function SpectrumVisualizer({
         analyser.getByteFrequencyData(buffer);
 
         const overallEnergy = buffer.reduce((sum, value) => sum + value, 0) / (buffer.length * 255 || 1);
-        const visualValues = Array.from({ length: 36 }, (_, index) => {
-          const start = Math.floor(Math.pow(index / 36, 1.85) * (buffer.length - 1));
-          const end = Math.max(start + 1, Math.floor(Math.pow((index + 1) / 36, 1.85) * buffer.length));
+        const visualValues = Array.from({ length: BAR_COUNT }, (_, index) => {
+          const start = Math.floor(Math.pow(index / BAR_COUNT, 1.85) * (buffer.length - 1));
+          const end = Math.max(start + 1, Math.floor(Math.pow((index + 1) / BAR_COUNT, 1.85) * buffer.length));
           const slice = buffer.slice(start, end);
           const sliceAverage = slice.length
             ? slice.reduce((sum, value) => sum + value, 0) / (slice.length * 255)
@@ -80,7 +82,7 @@ export default function SpectrumVisualizer({
         drawBars(visualValues, 0.92);
       } else {
         idlePhase += 0.06;
-        const idleValues = Array.from({ length: 36 }, (_, index) => {
+        const idleValues = Array.from({ length: BAR_COUNT }, (_, index) => {
           return 0.05 + Math.max(0, Math.sin(idlePhase + index * 0.28)) * 0.08;
         });
 
