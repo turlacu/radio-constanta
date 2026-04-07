@@ -308,10 +308,11 @@ export class WeatherManager {
   setPlaceholderWeather() {
     const hour = new Date().getHours();
     const isDay = hour >= TIME_CONFIG.dayStart && hour < TIME_CONFIG.dayEnd;
+    const placeholderConditionCode = this.weatherProvider === 'openmeteo' ? 0 : 800;
 
     this.currentWeather = {
       condition: 'clear',
-      conditionCode: 800,
+      conditionCode: placeholderConditionCode,
       description: 'clear sky',
       temp: 22,
       humidity: 60,

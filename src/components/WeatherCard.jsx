@@ -59,7 +59,7 @@ export default function WeatherCard() {
           feelsLike: weather.temp, // Open-Meteo doesn't provide feels_like in current implementation
           humidity: weather.humidity,
           windSpeed: Math.round(weather.windSpeed),
-          condition: getConditionFromCode(weather.conditionCode, weatherManager.weatherProvider),
+          condition: resolveConditionLabel(weather, weatherManager.weatherProvider),
           icon: getWeatherIconFromCode(weather.conditionCode, weatherManager.weatherProvider, visualState.isNight)
         });
 
@@ -77,7 +77,7 @@ export default function WeatherCard() {
         feelsLike: currentWeather.temp,
         humidity: currentWeather.humidity,
         windSpeed: Math.round(currentWeather.windSpeed),
-        condition: getConditionFromCode(currentWeather.conditionCode, weatherManager.weatherProvider),
+        condition: resolveConditionLabel(currentWeather, weatherManager.weatherProvider),
         icon: getWeatherIconFromCode(currentWeather.conditionCode, weatherManager.weatherProvider, currentVisualState.isNight)
       });
       setIsLoading(false);
@@ -130,6 +130,45 @@ export default function WeatherCard() {
       95: 'Furtună', 96: 'Furtună', 99: 'Furtună'
     };
     return wmoMap[code] || 'Necunoscut';
+  };
+
+  const translateWmoDescription = (description) => {
+    const normalized = description.toLowerCase();
+    const descriptionMap = {
+      'clear sky': 'Senin',
+      'mainly clear': 'Predominant Senin',
+      'partly cloudy': 'Parțial Noros',
+      overcast: 'Înnorat',
+      fog: 'Ceață',
+      'depositing rime fog': 'Ceață',
+      'light drizzle': 'Burniță Ușoară',
+      'moderate drizzle': 'Burniță',
+      'dense drizzle': 'Burniță Abundentă',
+      'slight rain': 'Ploaie Ușoară',
+      'moderate rain': 'Ploaie',
+      'heavy rain': 'Ploaie Torențială',
+      'slight snow': 'Ninsoare Ușoară',
+      'moderate snow': 'Ninsoare',
+      'heavy snow': 'Ninsoare Abundentă',
+      thunderstorm: 'Furtună'
+    };
+
+    return descriptionMap[normalized] || description;
+  };
+
+  const resolveConditionLabel = (weather, provider) => {
+    const mapped = getConditionFromCode(weather.conditionCode, provider);
+    if (mapped !== 'Necunoscut') {
+      return mapped;
+    }
+
+    if (weather.description) {
+      return provider === 'openmeteo'
+        ? translateWmoDescription(weather.description)
+        : translateOWMCondition(weather.description);
+    }
+
+    return 'Necunoscut';
   };
 
   const translateOWMCondition = (condition) => {
