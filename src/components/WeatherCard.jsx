@@ -301,9 +301,9 @@ export default function WeatherCard({ className = '' }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
       className={clsx(
-        'w-full max-w-[32rem] rounded-[28px] border border-white/12 bg-black/18 px-5 py-4 backdrop-blur-xl shadow-2xl',
-        'flex flex-wrap items-center gap-x-4 gap-y-3',
-        'min-[1800px]:max-w-[26rem] 4k:max-w-[30rem] 4k:px-6 4k:py-5',
+        'w-full max-w-[32rem] px-2 py-1',
+        'flex items-center gap-4',
+        'min-[1800px]:max-w-[26rem] 4k:max-w-[30rem]',
         textColorClass,
         className
       )}
@@ -328,14 +328,14 @@ export default function WeatherCard({ className = '' }) {
       <div className={`hidden h-12 w-px sm:block ${textColor === 'dark' ? 'bg-gray-900/30' : 'bg-white/30'}`}></div>
 
       {/* Date and Location */}
-      <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+      <div className="min-w-0 flex-1 flex flex-col gap-1">
         <div className="text-sm font-medium opacity-95 tracking-wide min-[1800px]:text-base 4k:text-lg">
           {getCurrentDate()}
         </div>
-        <div className="flex items-start gap-1.5 text-sm font-medium opacity-95 tracking-wide min-[1800px]:text-base 4k:text-lg">
+        <div className="flex items-center gap-1.5 text-sm font-medium opacity-95 tracking-wide min-[1800px]:text-base 4k:text-lg">
           {/* Only show location icon and location in auto mode */}
-          {!isManualMode && <div className="mt-0.5 shrink-0"><PhosphorIcons.MapPin /></div>}
-          <span className="min-w-0 break-words">
+          {!isManualMode && <div className="shrink-0"><PhosphorIcons.MapPin /></div>}
+          <span className="min-w-0 truncate">
             {displayCondition}
             {!isManualMode && `, ${weatherData.location}`}
           </span>
