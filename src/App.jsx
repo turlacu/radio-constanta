@@ -40,7 +40,7 @@ const STATIONS = {
     qualities: [
       { id: 'mp3_128', label: '128 kbps', format: 'MP3', bitrate: '128 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-am' }
     ],
-    defaultQuality: 'mp3_128'
+    defaultQuality: 'flac'
   }
 };
 
