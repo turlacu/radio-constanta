@@ -38,7 +38,7 @@ const PhosphorIcons = {
   ),
 };
 
-export default function WeatherCard({ className = '' }) {
+export default function WeatherCard({ className = '', style }) {
   const settings = useSettings();
   const [weatherData, setWeatherData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -250,6 +250,7 @@ export default function WeatherCard({ className = '' }) {
           'w-full max-w-[32rem] bg-bg-tertiary/60 backdrop-blur-xl rounded-3xl p-8 border border-border/30 shadow-2xl',
           className
         )}
+        style={style}
       >
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-bg-secondary/50 rounded w-3/4"></div>
@@ -307,6 +308,7 @@ export default function WeatherCard({ className = '' }) {
         textColorClass,
         className
       )}
+      style={style}
     >
       {/* Temperature - Only show in auto mode */}
       {!isManualMode && (

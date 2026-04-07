@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Loader from './Loader';
 import SpectrumVisualizer from './SpectrumVisualizer';
@@ -25,12 +25,11 @@ export default function RadioPlayer({ radioState }) {
   } = radioState;
 
   const device = useContext(DeviceContext);
-  const isDesktopShell = (
-    (device?.screenWidth || 0) >= 980
-    && (device?.screenHeight || 0) >= 620
-    && !device?.isPortrait
-  );
+  const isDesktopShell = !device?.isPortrait;
   const isSplitScreen = isDesktopShell && !forceCompactLayout;
+  const viewportWidth = device?.screenWidth || 0;
+  const viewportHeight = device?.screenHeight || 0;
+  const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
   const weatherTextColor = useWeatherTextColor();
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
@@ -43,10 +42,61 @@ export default function RadioPlayer({ radioState }) {
   const activeStationButtonClass = textColor === 'dark'
     ? 'border-gray-900/18 bg-transparent text-gray-900 shadow-none'
     : 'border-white/16 bg-transparent text-text-primary shadow-none';
-  const desktopCoverClass = 'max-w-[clamp(18rem,25vw,29rem)] 3xl:max-w-[31rem] 4k:max-w-[34rem]';
-  const desktopBlockHeightClass = 'max-h-[clamp(18rem,25vw,29rem)] 3xl:max-h-[31rem] 4k:max-h-[34rem]';
   const desktopMetaClass = `${textTertiaryClass} text-[11px] font-medium xl:text-[12px] 3xl:text-[13px]`;
-  const desktopTitleClass = '!text-[2.35rem] xl:!text-[2.65rem] 3xl:!text-[3.35rem]';
+  const desktopMetrics = useMemo(() => {
+    const minViewport = Math.max(560, Math.min(viewportWidth || 1280, viewportHeight || 720));
+    const profile = aspectRatio >= 1.9 ? 'ultrawide' : aspectRatio >= 1.25 ? 'wide' : 'square';
+    const baseMetrics = {
+      ultrawide: {
+        coverSize: 430,
+        playerWidth: 432,
+        gap: 54,
+        playButton: 92,
+        titleWidth: 294,
+        visualizerWidth: 162,
+        visualizerHeight: 34,
+        titleSize: 42,
+        subtitleSize: 21,
+        buttonRailWidth: 190,
+      },
+      wide: {
+        coverSize: 396,
+        playerWidth: 404,
+        gap: 44,
+        playButton: 88,
+        titleWidth: 272,
+        visualizerWidth: 148,
+        visualizerHeight: 32,
+        titleSize: 39,
+        subtitleSize: 19,
+        buttonRailWidth: 182,
+      },
+      square: {
+        coverSize: 348,
+        playerWidth: 362,
+        gap: 32,
+        playButton: 80,
+        titleWidth: 240,
+        visualizerWidth: 128,
+        visualizerHeight: 28,
+        titleSize: 34,
+        subtitleSize: 17,
+        buttonRailWidth: 170,
+      }
+    };
+
+    const scale = Math.min(1.14, Math.max(0.68, minViewport / 940));
+    const metrics = Object.fromEntries(
+      Object.entries(baseMetrics[profile]).map(([key, value]) => [key, Math.round(value * scale)])
+    );
+
+    return {
+      ...metrics,
+      profile,
+      stageWidth: metrics.coverSize + metrics.playerWidth + metrics.gap,
+    };
+  }, [aspectRatio, viewportHeight, viewportWidth]);
+  const desktopTitleClass = '!leading-[0.96]';
 
   const renderCoverArt = (desktop = false) => (
     <motion.div
@@ -54,8 +104,9 @@ export default function RadioPlayer({ radioState }) {
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
       className={desktop
-        ? `relative w-full ${desktopCoverClass}`
+        ? 'relative shrink-0'
         : 'relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12'}
+      style={desktop ? { width: `${desktopMetrics.coverSize}px` } : undefined}
     >
       <div className="relative w-full aspect-square overflow-hidden rounded-[22px] border border-white/20 shadow-[0_18px_42px_rgba(15,20,25,0.14)] 3xl:rounded-[28px]">
         <motion.img
@@ -130,34 +181,58 @@ export default function RadioPlayer({ radioState }) {
   if (isSplitScreen) {
     return (
       <ResponsiveContainer section="radio" className="justify-center">
-        <div className="grid w-full max-w-[1380px] grid-cols-[minmax(16rem,29rem)_minmax(2rem,4vw)_minmax(18rem,30rem)] items-center gap-4 xl:gap-6 3xl:max-w-[1480px] 3xl:gap-10 4k:gap-14">
-          <div className="flex justify-start">
-            {renderCoverArt(true)}
-          </div>
-
-          <div aria-hidden="true" />
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 }}
-            className={`flex w-full max-w-[clamp(18rem,28vw,30rem)] flex-col items-end justify-center justify-self-end ${desktopBlockHeightClass}`}
+        <div className="mx-auto flex w-full items-center justify-center">
+          <div
+            className="flex items-center justify-center"
+            style={{
+              gap: `${desktopMetrics.gap}px`,
+              width: `min(100%, ${desktopMetrics.stageWidth}px)`,
+            }}
           >
-            <div className="flex w-full flex-col items-end">
+            <div className="flex shrink-0 justify-start">
+            {renderCoverArt(true)}
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
+              className="flex shrink-0 flex-col items-end justify-center"
+              style={{
+                width: `${desktopMetrics.playerWidth}px`,
+                minHeight: `${Math.round(desktopMetrics.coverSize * 0.72)}px`,
+                maxHeight: `${desktopMetrics.coverSize}px`,
+              }}
+            >
+              <div className="flex w-full flex-col items-end">
               <SpectrumVisualizer
                 analyserRef={audioAnalyserRef}
                 isPlaying={isPlaying}
-                className="mb-3 h-9 w-[clamp(7rem,11vw,12.75rem)] 3xl:h-11 3xl:w-[14rem]"
+                className="mb-3 shrink-0"
+                style={{
+                  width: `${desktopMetrics.visualizerWidth}px`,
+                  height: `${desktopMetrics.visualizerHeight}px`,
+                }}
               />
 
-              <div className="ml-auto flex w-fit items-center justify-end gap-3 3xl:gap-4">
+                <div
+                  className="ml-auto inline-grid items-center justify-end"
+                  style={{
+                    columnGap: `${Math.max(12, Math.round(desktopMetrics.playButton * 0.18))}px`,
+                    gridTemplateColumns: `${desktopMetrics.playButton}px ${desktopMetrics.titleWidth}px`,
+                  }}
+                >
                 <motion.button
                   whileHover={{ scale: isLoading ? 1 : 1.05 }}
                   whileTap={{ scale: isLoading ? 1 : 0.95 }}
                   onClick={togglePlay}
                   disabled={isLoading}
                   tabIndex={0}
-                  className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all disabled:opacity-40 3xl:h-24 3xl:w-24 4k:h-28 4k:w-28"
+                  className="relative flex shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all disabled:opacity-40"
+                  style={{
+                    width: `${desktopMetrics.playButton}px`,
+                    height: `${desktopMetrics.playButton}px`,
+                  }}
                   aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
                 >
                   {isLoading ? (
@@ -173,13 +248,25 @@ export default function RadioPlayer({ radioState }) {
                   )}
                 </motion.button>
 
-                <div className="flex max-w-[clamp(14rem,20vw,27rem)] flex-col items-end text-right 3xl:max-w-[31rem]">
-                  <Heading level={2} color="custom" className={`mb-1 whitespace-nowrap text-right !leading-tight ${desktopTitleClass} ${textPrimaryClass}`}>
+                  <div className="flex min-w-0 flex-col items-end text-right" style={{ width: `${desktopMetrics.titleWidth}px` }}>
+                    <Heading
+                      level={2}
+                      color="custom"
+                      className={`mb-1 whitespace-nowrap text-right ${desktopTitleClass} ${textPrimaryClass}`}
+                      style={{ fontSize: `${desktopMetrics.titleSize}px` }}
+                    >
                     Radio Constanța
-                  </Heading>
-                  <Body size="normal" weight="medium" opacity="custom" className={`${textSecondaryClass} min-h-[1.5rem] text-right text-lg 3xl:text-xl`}>
+                    </Heading>
+                    <Body
+                      size="normal"
+                      weight="medium"
+                      opacity="custom"
+                      className={`${textSecondaryClass} min-h-[1.5rem] whitespace-nowrap text-right`}
+                      style={{ fontSize: `${desktopMetrics.subtitleSize}px`, lineHeight: 1.25 }}
+                    >
                     {metadata || 'Primul radio din Dobrogea'}
-                  </Body>
+                    </Body>
+                  </div>
                 </div>
               </div>
             </div>
@@ -189,10 +276,10 @@ export default function RadioPlayer({ radioState }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className={`mt-4 flex flex-wrap items-center justify-end gap-2 text-right ${desktopMetaClass}`}
-                role="status"
-                aria-label="Stream information"
-              >
+              className={`mt-4 flex flex-wrap items-center justify-end gap-2 text-right ${desktopMetaClass}`}
+              role="status"
+              aria-label="Stream information"
+            >
                 <span>{streamInfo.sampleRate}</span>
                 <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
                 <span>{streamInfo.channels}</span>
@@ -206,7 +293,8 @@ export default function RadioPlayer({ radioState }) {
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="mt-5 flex w-full max-w-[11rem] justify-end gap-2 3xl:max-w-[13rem] 3xl:gap-3"
+              className="mt-5 flex justify-end gap-2"
+              style={{ width: `${desktopMetrics.buttonRailWidth}px` }}
               role="group"
               aria-label="Station selection"
             >
@@ -222,7 +310,7 @@ export default function RadioPlayer({ radioState }) {
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.24 + index * 0.05 }}
                     tabIndex={0}
-                    className={`relative min-w-[5rem] flex-1 rounded-[12px] border px-4 py-3 text-[14px] font-semibold transition-all 3xl:min-w-[5.5rem] 3xl:px-5 3xl:py-3.5 3xl:text-[16px] ${
+                    className={`relative min-w-0 flex-1 rounded-[12px] border px-4 py-3 text-[14px] font-semibold transition-all ${
                       isActive
                         ? activeStationButtonClass
                         : inactiveButtonClass
@@ -235,7 +323,8 @@ export default function RadioPlayer({ radioState }) {
                 );
               })}
             </motion.div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </ResponsiveContainer>
     );

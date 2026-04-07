@@ -6,7 +6,8 @@ const BAR_COUNT = 29;
 export default function SpectrumVisualizer({
   analyserRef,
   isPlaying,
-  className
+  className,
+  style
 }) {
   const canvasRef = useRef(null);
   const smoothedValuesRef = useRef(Array(BAR_COUNT).fill(0.08));
@@ -109,6 +110,7 @@ export default function SpectrumVisualizer({
     <canvas
       ref={canvasRef}
       className={clsx(className || 'h-14 w-full')}
+      style={style}
       aria-hidden="true"
     />
   );

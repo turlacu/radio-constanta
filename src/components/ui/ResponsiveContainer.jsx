@@ -23,14 +23,14 @@ export default function ResponsiveContainer({
   ...props
 }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.screenWidth >= 768;
+  const isSplitScreen = !device?.isPortrait;
 
   // Base padding for different sections (using CSS variables)
   const paddingClasses = {
     radio: noPadding
       ? ''
       : isSplitScreen
-      ? 'w-full px-4 py-6 lg:px-6 lg:py-8 3xl:px-8 3xl:py-10'
+      ? 'w-full px-5 py-8 lg:px-8 lg:py-10 3xl:px-10 3xl:py-12'
       : 'px-4 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 tv:px-12 tv:py-12',
     news: noPadding
       ? ''
