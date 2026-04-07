@@ -44,8 +44,8 @@ const STATIONS = {
 };
 
 const QUALITY_STORAGE_KEY = 'preferredStreamQuality';
-const DESKTOP_LAYOUT_MIN_WIDTH = 1180;
-const DESKTOP_LAYOUT_MIN_HEIGHT = 760;
+const DESKTOP_LAYOUT_MIN_WIDTH = 980;
+const DESKTOP_LAYOUT_MIN_HEIGHT = 620;
 
 const getPreferredDefaultQuality = (stationId, qualities = []) => {
   if (qualities.some((quality) => quality.id === 'flac')) {

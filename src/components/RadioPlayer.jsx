@@ -26,8 +26,8 @@ export default function RadioPlayer({ radioState }) {
 
   const device = useContext(DeviceContext);
   const isDesktopShell = (
-    (device?.screenWidth || 0) >= 1180
-    && (device?.screenHeight || 0) >= 760
+    (device?.screenWidth || 0) >= 980
+    && (device?.screenHeight || 0) >= 620
     && !device?.isPortrait
   );
   const isSplitScreen = isDesktopShell && !forceCompactLayout;
@@ -43,10 +43,10 @@ export default function RadioPlayer({ radioState }) {
   const activeStationButtonClass = textColor === 'dark'
     ? 'border-gray-900/18 bg-transparent text-gray-900 shadow-none'
     : 'border-white/16 bg-transparent text-text-primary shadow-none';
-  const desktopCoverClass = 'max-w-[clamp(21rem,28vw,31rem)] 3xl:max-w-[33rem] 4k:max-w-[36rem]';
-  const desktopBlockHeightClass = 'max-h-[clamp(21rem,28vw,31rem)] 3xl:max-h-[33rem] 4k:max-h-[36rem]';
-  const desktopMetaClass = `${textTertiaryClass} text-[12px] font-medium 3xl:text-[14px]`;
-  const desktopTitleClass = '!text-4xl 3xl:!text-5xl';
+  const desktopCoverClass = 'max-w-[clamp(18rem,25vw,29rem)] 3xl:max-w-[31rem] 4k:max-w-[34rem]';
+  const desktopBlockHeightClass = 'max-h-[clamp(18rem,25vw,29rem)] 3xl:max-h-[31rem] 4k:max-h-[34rem]';
+  const desktopMetaClass = `${textTertiaryClass} text-[11px] font-medium xl:text-[12px] 3xl:text-[13px]`;
+  const desktopTitleClass = '!text-[2.35rem] xl:!text-[2.65rem] 3xl:!text-[3.35rem]';
 
   const renderCoverArt = (desktop = false) => (
     <motion.div
@@ -130,7 +130,7 @@ export default function RadioPlayer({ radioState }) {
   if (isSplitScreen) {
     return (
       <ResponsiveContainer section="radio" className="justify-center">
-        <div className="grid w-full max-w-[1480px] grid-cols-[minmax(18rem,31rem)_minmax(5rem,1fr)_minmax(24rem,36rem)] items-center gap-8 3xl:gap-12 4k:gap-16">
+        <div className="grid w-full max-w-[1380px] grid-cols-[minmax(16rem,29rem)_minmax(2rem,4vw)_minmax(18rem,30rem)] items-center gap-4 xl:gap-6 3xl:max-w-[1480px] 3xl:gap-10 4k:gap-14">
           <div className="flex justify-start">
             {renderCoverArt(true)}
           </div>
@@ -141,13 +141,13 @@ export default function RadioPlayer({ radioState }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
-            className={`flex w-full max-w-[36rem] flex-col items-end justify-center justify-self-end ${desktopBlockHeightClass}`}
+            className={`flex w-full max-w-[clamp(18rem,28vw,30rem)] flex-col items-end justify-center justify-self-end ${desktopBlockHeightClass}`}
           >
             <div className="flex w-full flex-col items-end">
               <SpectrumVisualizer
                 analyserRef={audioAnalyserRef}
                 isPlaying={isPlaying}
-                className="mb-3 h-10 w-[12.75rem] 3xl:h-12 3xl:w-[14.25rem]"
+                className="mb-3 h-9 w-[clamp(7rem,11vw,12.75rem)] 3xl:h-11 3xl:w-[14rem]"
               />
 
               <div className="ml-auto flex w-fit items-center justify-end gap-3 3xl:gap-4">
@@ -173,7 +173,7 @@ export default function RadioPlayer({ radioState }) {
                   )}
                 </motion.button>
 
-                <div className="flex max-w-[27rem] flex-col items-end text-right 3xl:max-w-[31rem]">
+                <div className="flex max-w-[clamp(14rem,20vw,27rem)] flex-col items-end text-right 3xl:max-w-[31rem]">
                   <Heading level={2} color="custom" className={`mb-1 whitespace-nowrap text-right !leading-tight ${desktopTitleClass} ${textPrimaryClass}`}>
                     Radio Constanța
                   </Heading>
