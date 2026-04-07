@@ -146,27 +146,27 @@ export default function RadioPlayer({ radioState }) {
               <SpectrumVisualizer
                 analyserRef={audioAnalyserRef}
                 isPlaying={isPlaying}
-                className="mb-3 h-9 w-[6rem] 3xl:w-[7rem]"
+                className="mb-3 h-8 w-[4.75rem] 3xl:w-[5.5rem]"
               />
 
-              <div className="flex w-full max-w-[32rem] items-center justify-end gap-4 3xl:max-w-[36rem] 3xl:gap-5">
+              <div className="flex w-full max-w-[32rem] items-center justify-end gap-3 3xl:max-w-[36rem] 3xl:gap-4">
                 <motion.button
                   whileHover={{ scale: isLoading ? 1 : 1.05 }}
                   whileTap={{ scale: isLoading ? 1 : 0.95 }}
                   onClick={togglePlay}
                   disabled={isLoading}
                   tabIndex={0}
-                  className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all disabled:opacity-40 3xl:h-20 3xl:w-20 4k:h-24 4k:w-24"
+                  className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all disabled:opacity-40 3xl:h-24 3xl:w-24 4k:h-28 4k:w-28"
                   aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
                 >
                   {isLoading ? (
                     <Loader size="small" />
                   ) : isPlaying ? (
-                    <svg className="h-7 w-7 3xl:h-8 3xl:w-8 4k:h-9 4k:w-9" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg className="h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                     </svg>
                   ) : (
-                    <svg className="ml-1 h-7 w-7 3xl:h-8 3xl:w-8 4k:h-9 4k:w-9" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg className="ml-1 h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   )}
