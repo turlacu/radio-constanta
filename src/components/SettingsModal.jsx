@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
-import { Button, Heading, Body, Card } from './ui';
+import { Heading, Body } from './ui';
 
 // Phosphor Icon SVGs
 const PhosphorIcons = {
@@ -34,7 +34,13 @@ const PhosphorIcons = {
   ),
 };
 
-export default function SettingsModal({ isOpen, onClose }) {
+export default function SettingsModal({
+  isOpen,
+  onClose,
+  stations = [],
+  selectedQualities = {},
+  onQualityChange = () => {}
+}) {
   const {
     backgroundAnimation,
     setBackgroundAnimation,
@@ -75,6 +81,12 @@ export default function SettingsModal({ isOpen, onClose }) {
     { value: 'medium', label: 'Medie', description: 'Performanță echilibrată (recomandat)' },
     { value: 'high', label: 'Ridicată', description: 'Efecte complete, pentru dispozitive performante' }
   ];
+
+  const qualityDescriptions = {
+    flac: 'Lossless, calitate maximă',
+    mp3_256: 'Compresie redusă, echilibru bun',
+    mp3_128: 'Consum redus de date'
+  };
 
   const handleLocationChange = async () => {
     if (!locationInput.trim()) return;
@@ -259,6 +271,50 @@ export default function SettingsModal({ isOpen, onClose }) {
                         <div className="font-medium text-text-primary">{option.label}</div>
                         <div className="text-xs text-text-tertiary mt-1">{option.description}</div>
                       </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Heading level={5} className="mb-3">Calitate Stream</Heading>
+                  <div className="space-y-3">
+                    {stations.map((station) => (
+                      <div key={station.id} className="rounded-2xl border border-border bg-bg-tertiary/40 p-4">
+                        <div className="mb-3">
+                          <div className="font-medium text-text-primary">
+                            {station.id === 'fm' ? 'Radio Constanța FM' : 'Radio Constanța Folclor'}
+                          </div>
+                          <div className="mt-1 text-xs text-text-tertiary">
+                            Preferința este salvată în browser și reaplicată automat.
+                          </div>
+                        </div>
+
+                        <div className="grid gap-2">
+                          {station.qualities.map((quality) => {
+                            const isActive = selectedQualities[station.id] === quality.id;
+
+                            return (
+                              <button
+                                key={quality.id}
+                                onClick={() => onQualityChange(station.id, quality.id)}
+                                className={`rounded-xl border p-3 text-left transition-all ${
+                                  isActive
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:border-primary/50'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="font-medium text-text-primary">{quality.label}</div>
+                                  <div className="text-xs text-text-tertiary">{quality.format}</div>
+                                </div>
+                                <div className="mt-1 text-xs text-text-tertiary">
+                                  {qualityDescriptions[quality.id] || quality.bitrate}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

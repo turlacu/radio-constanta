@@ -29,7 +29,7 @@ const STATIONS = {
       { id: 'mp3_256', label: '256 kbps', format: 'MP3', bitrate: '256 kbps', url: 'https://live.radioconstanta.ro/stream-256' },
       { id: 'flac', label: 'Lossless', format: 'FLAC', bitrate: '1024 kbps', url: 'https://live.radioconstanta.ro/stream-flac' }
     ],
-    defaultQuality: 'mp3_128'
+    defaultQuality: 'flac'
   },
   folclor: {
     id: 'folclor',
@@ -40,6 +40,30 @@ const STATIONS = {
       { id: 'mp3_128', label: '128 kbps', format: 'MP3', bitrate: '128 kbps', url: 'https://stream4.srr.ro:8443/radio-constanta-am' }
     ],
     defaultQuality: 'mp3_128'
+  }
+};
+
+const QUALITY_STORAGE_KEY = 'preferredStreamQuality';
+
+const getPreferredDefaultQuality = (stationId, qualities = []) => {
+  if (qualities.some((quality) => quality.id === 'flac')) {
+    return 'flac';
+  }
+
+  return qualities[0]?.id || STATIONS[stationId].defaultQuality;
+};
+
+const readStoredQualityPreferences = () => {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+
+  try {
+    const stored = localStorage.getItem(QUALITY_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (error) {
+    console.warn('Failed to read stored quality preferences:', error);
+    return {};
   }
 };
 
@@ -66,8 +90,8 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStation, setCurrentStation] = useState(STATIONS.fm);
   const [selectedQuality, setSelectedQuality] = useState({
-    fm: STATIONS.fm.defaultQuality,
-    folclor: STATIONS.folclor.defaultQuality
+    fm: readStoredQualityPreferences().fm || STATIONS.fm.defaultQuality,
+    folclor: readStoredQualityPreferences().folclor || STATIONS.folclor.defaultQuality
   });
   const [metadata, setMetadata] = useState('');
   const [streamInfo, setStreamInfo] = useState(null);
@@ -75,6 +99,9 @@ function AppContent() {
   const isSwitchingRef = useRef(false);
   const isSwitchingQualityRef = useRef(false);
   const detectedSampleRateRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const audioSourceNodeRef = useRef(null);
+  const analyserRef = useRef(null);
 
   // Dynamic cover art state
   const [dynamicCovers, setDynamicCovers] = useState({
@@ -293,16 +320,28 @@ function AppContent() {
         ...STATIONS.fm,
         coverArt: dynamicCovers.fm,
         qualities: fmQualities,
-        defaultQuality: fmQualities[0]?.id || STATIONS.fm.defaultQuality
+        defaultQuality: getPreferredDefaultQuality('fm', fmQualities)
       },
       folclor: {
         ...STATIONS.folclor,
         coverArt: dynamicCovers.folclor,
         qualities: folclorQualities,
-        defaultQuality: folclorQualities[0]?.id || STATIONS.folclor.defaultQuality
+        defaultQuality: getPreferredDefaultQuality('folclor', folclorQualities)
       }
     };
   }, [dynamicCovers, dynamicStreams]);
+
+  const resolveQualityForStation = (stationId, preferredQualityId) => {
+    const station = stationsWithDynamicCovers[stationId];
+    if (!station) {
+      return null;
+    }
+
+    return station.qualities.find((quality) => quality.id === preferredQualityId)
+      || station.qualities.find((quality) => quality.id === station.defaultQuality)
+      || station.qualities[0]
+      || null;
+  };
 
   // Update current station when covers change
   useEffect(() => {
@@ -311,6 +350,25 @@ function AppContent() {
     );
   }, [stationsWithDynamicCovers]);
 
+  useEffect(() => {
+    setSelectedQuality((prev) => {
+      const next = {
+        fm: resolveQualityForStation('fm', prev.fm)?.id || stationsWithDynamicCovers.fm.defaultQuality,
+        folclor: resolveQualityForStation('folclor', prev.folclor)?.id || stationsWithDynamicCovers.folclor.defaultQuality
+      };
+
+      if (next.fm === prev.fm && next.folclor === prev.folclor) {
+        return prev;
+      }
+
+      return next;
+    });
+  }, [stationsWithDynamicCovers]);
+
+  useEffect(() => {
+    localStorage.setItem(QUALITY_STORAGE_KEY, JSON.stringify(selectedQuality));
+  }, [selectedQuality]);
+
   // Helper to log debug info
   const logDebug = (message) => {
     console.log(message);
@@ -318,13 +376,40 @@ function AppContent() {
 
   // Get current quality object for the current station
   const getCurrentQuality = () => {
-    const qualityId = selectedQuality[currentStation.id];
-    return currentStation.qualities.find(q => q.id === qualityId) || currentStation.qualities[0];
+    return resolveQualityForStation(currentStation.id, selectedQuality[currentStation.id]) || currentStation.qualities[0];
   };
 
   // Get stream URL for current station and quality
   const getStreamUrl = () => {
     return getCurrentQuality().url;
+  };
+
+  const ensureAudioAnalyser = () => {
+    const audio = audioRef.current;
+    if (!audio || analyserRef.current || !(window.AudioContext || window.webkitAudioContext)) {
+      return analyserRef.current;
+    }
+
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const audioContext = new AudioContextClass();
+      const sourceNode = audioContext.createMediaElementSource(audio);
+      const analyser = audioContext.createAnalyser();
+
+      analyser.fftSize = 128;
+      analyser.smoothingTimeConstant = 0.82;
+
+      sourceNode.connect(analyser);
+      analyser.connect(audioContext.destination);
+
+      audioContextRef.current = audioContext;
+      audioSourceNodeRef.current = sourceNode;
+      analyserRef.current = analyser;
+    } catch (error) {
+      console.warn('Unable to initialize audio analyser:', error);
+    }
+
+    return analyserRef.current;
   };
 
   // Create Audio element (HTML5 approach - mobile friendly)
@@ -386,6 +471,12 @@ function AppContent() {
       audio.pause();
       audio.src = '';
       audioRef.current = null;
+      analyserRef.current = null;
+      audioSourceNodeRef.current = null;
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
     };
   }, []);
 
@@ -399,8 +490,10 @@ function AppContent() {
       let channels = 'Stereo';
       let sampleRate = detectedSampleRateRef.current || '48.0 kHz';
 
-      // Detect sample rate once and close the context immediately to avoid leaks.
-      if (!detectedSampleRateRef.current && (window.AudioContext || window.webkitAudioContext)) {
+      if (!detectedSampleRateRef.current && audioContextRef.current) {
+        detectedSampleRateRef.current = `${(audioContextRef.current.sampleRate / 1000).toFixed(1)} kHz`;
+        sampleRate = detectedSampleRateRef.current;
+      } else if (!detectedSampleRateRef.current && (window.AudioContext || window.webkitAudioContext)) {
         try {
           const AudioContextClass = window.AudioContext || window.webkitAudioContext;
           const audioContext = new AudioContextClass();
@@ -453,6 +546,11 @@ function AppContent() {
 
     // If paused, start playing
     if (audio.paused) {
+      ensureAudioAnalyser();
+      if (audioContextRef.current?.state === 'suspended') {
+        audioContextRef.current.resume().catch(() => {});
+      }
+
       // Only set src and load if src is different or empty
       if (!audio.src || audio.src !== streamUrl) {
         logDebug(`Setting src: ${streamUrl}`);
@@ -521,8 +619,8 @@ function AppContent() {
         await new Promise(resolve => setTimeout(resolve, 200));
 
         // Get URL for the new station's selected quality
-        const qualityId = selectedQuality[station.id];
-        const quality = station.qualities.find(q => q.id === qualityId) || station.qualities[0];
+        const quality = resolveQualityForStation(station.id, selectedQuality[station.id]) || station.qualities[0];
+        const qualityId = quality?.id || station.defaultQuality;
 
         // Set new src and play
         audio.src = quality.url;
@@ -548,9 +646,13 @@ function AppContent() {
     }
   };
 
-  // Switch quality for current station
-  const switchQuality = async (qualityId) => {
-    if (selectedQuality[currentStation.id] === qualityId) {
+  const setStationQualityPreference = async (stationId, qualityId) => {
+    const station = stationsWithDynamicCovers[stationId];
+    if (!station) {
+      return;
+    }
+
+    if (selectedQuality[stationId] === qualityId) {
       return; // Already selected
     }
 
@@ -559,20 +661,24 @@ function AppContent() {
       return;
     }
 
-    logDebug(`Switching quality to ${qualityId}`);
+    logDebug(`Switching quality for ${stationId} to ${qualityId}`);
     isSwitchingQualityRef.current = true;
 
     try {
       // Update selected quality
       setSelectedQuality(prev => ({
         ...prev,
-        [currentStation.id]: qualityId
+        [stationId]: qualityId
       }));
+
+      if (stationId !== currentStation.id) {
+        return;
+      }
 
       // If currently playing, restart with new quality
       const audio = audioRef.current;
       if (isPlaying && audio) {
-        const quality = currentStation.qualities.find(q => q.id === qualityId);
+        const quality = station.qualities.find(q => q.id === qualityId);
         if (quality) {
           logDebug(`Reloading stream with new quality: ${quality.url}`);
 
@@ -597,7 +703,7 @@ function AppContent() {
             logDebug('✓ Quality switch success');
 
             // Track quality change
-            analytics.trackQualityChange(currentStation.id, qualityId);
+            analytics.trackQualityChange(stationId, qualityId);
           } catch (err) {
             logDebug(`✗ Quality switch failed: ${err.message}`);
             setIsLoading(false);
@@ -656,12 +762,13 @@ function AppContent() {
     availableQualities: currentStation.qualities,
     togglePlay,
     switchStation,
-    switchQuality,
+    switchQuality: setStationQualityPreference,
     pauseRadio,
     stopRadio,
     resumeRadio,
     restoreRadio,
-    showWeatherBackground: !showNews && isPlaying && settings.backgroundAnimation === 'weather' // Track if weather background is visible
+    showWeatherBackground: !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is visible
+    audioAnalyserRef: analyserRef
   };
 
   // Split-screen layout for screens larger than small tablet portrait (768px+)
@@ -899,6 +1006,9 @@ function AppContent() {
         <SettingsModal
           isOpen={showSettingsModal}
           onClose={() => setShowSettingsModal(false)}
+          stations={Object.values(stationsWithDynamicCovers)}
+          selectedQualities={selectedQuality}
+          onQualityChange={setStationQualityPreference}
         />
         </RouteHandler>
       </Router>
