@@ -36,15 +36,44 @@ export default function RadioPlayer({ radioState }) {
   const textPrimaryClass = textColor === 'dark' ? 'text-gray-900' : 'text-text-primary';
   const textSecondaryClass = textColor === 'dark' ? 'text-gray-700' : 'text-text-secondary';
   const textTertiaryClass = textColor === 'dark' ? 'text-gray-600' : 'text-text-tertiary';
+  const useWeatherButtonTone = showWeatherBackground;
   const desktopAccentBorderClass = textColor === 'dark' ? 'border-gray-900/18' : 'border-white/18';
   const desktopAccentSurfaceClass = textColor === 'dark' ? 'bg-gray-900/10 hover:bg-gray-900/16' : 'bg-white/12 hover:bg-white/18';
   const desktopButtonTextClass = textColor === 'dark' ? 'text-gray-900' : 'text-white';
-  const inactiveButtonClass = textColor === 'dark'
-    ? 'bg-white/18 text-gray-900 border border-gray-900/12 hover:bg-white/26'
-    : 'bg-bg-secondary/88 text-text-secondary border border-border hover:bg-bg-tertiary';
-  const activeStationButtonClass = textColor === 'dark'
-    ? 'border-gray-900/18 bg-transparent text-gray-900 shadow-none'
-    : 'border-white/16 bg-transparent text-text-primary shadow-none';
+  const inactiveButtonClass = useWeatherButtonTone
+    ? (textColor === 'dark'
+        ? 'bg-gray-900/10 text-gray-900 border border-gray-900/18 hover:bg-gray-900/16'
+        : 'bg-white/10 text-white/80 border border-white/18 hover:bg-white/16')
+    : (textColor === 'dark'
+        ? 'bg-white/18 text-gray-900 border border-gray-900/12 hover:bg-white/26'
+        : 'bg-bg-secondary/88 text-text-secondary border border-border hover:bg-bg-tertiary');
+  const activeStationButtonClass = useWeatherButtonTone
+    ? (textColor === 'dark'
+        ? 'border-gray-900/28 bg-transparent text-gray-900 shadow-none'
+        : 'border-white/24 bg-transparent text-white shadow-none')
+    : (textColor === 'dark'
+        ? 'border-gray-900/18 bg-transparent text-gray-900 shadow-none'
+        : 'border-white/16 bg-transparent text-text-primary shadow-none');
+  const activeMobileQualityClass = useWeatherButtonTone
+    ? (textColor === 'dark'
+        ? 'border-gray-900/28 bg-gray-900/10 text-gray-900 hover:bg-gray-900/16'
+        : 'border-white/24 bg-white/10 text-white hover:bg-white/16')
+    : 'border-primary bg-bg-tertiary text-text-primary';
+  const inactiveMobileQualityClass = useWeatherButtonTone
+    ? (textColor === 'dark'
+        ? 'border-gray-900/18 bg-gray-900/6 text-gray-700 hover:bg-gray-900/12'
+        : 'border-white/18 bg-white/6 text-white/70 hover:bg-white/12')
+    : 'border-border bg-bg-secondary text-text-tertiary hover:bg-bg-tertiary';
+  const activeMobileStationClass = useWeatherButtonTone
+    ? (textColor === 'dark'
+        ? 'border-gray-900/28 bg-transparent text-gray-900 hover:bg-gray-900/5'
+        : 'border-white/24 bg-transparent text-white hover:bg-white/8')
+    : 'border-primary/40 bg-transparent text-primary hover:bg-primary/5';
+  const inactiveMobileStationClass = useWeatherButtonTone
+    ? (textColor === 'dark'
+        ? 'border-gray-900/18 bg-gray-900/6 text-gray-700 hover:bg-gray-900/12'
+        : 'border-white/18 bg-white/6 text-white/70 hover:bg-white/12')
+    : 'border-border bg-bg-secondary text-text-secondary hover:bg-bg-tertiary';
   const desktopMetaClass = `${textTertiaryClass} text-[11px] font-medium xl:text-[12px] 3xl:text-[13px]`;
   const desktopMetrics = useMemo(() => {
     const minViewport = Math.max(560, Math.min(viewportWidth || 1280, viewportHeight || 720));
@@ -168,8 +197,8 @@ export default function RadioPlayer({ radioState }) {
             tabIndex={0}
             className={`relative flex-1 rounded-lg border px-3 py-2 text-[12px] font-medium transition-all focusable 4k:rounded-xl 4k:px-5 4k:py-3 4k:text-[18px] ${
               isActive
-                ? 'border-primary bg-bg-tertiary text-text-primary'
-                : 'border-border bg-bg-secondary text-text-tertiary hover:bg-bg-tertiary'
+                ? activeMobileQualityClass
+                : inactiveMobileQualityClass
             }`}
             aria-pressed={isActive}
             aria-label={`Switch to ${quality.label} quality`}
@@ -409,8 +438,8 @@ export default function RadioPlayer({ radioState }) {
                 tabIndex={0}
                 className={`relative flex-1 rounded-[10px] border px-4 py-3 text-[14px] font-semibold transition-all focusable 4k:rounded-[14px] 4k:px-6 4k:py-5 4k:text-[20px] ${
                   isActive
-                    ? 'border-primary/40 bg-transparent text-primary hover:bg-primary/5'
-                    : 'border-border bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
+                    ? activeMobileStationClass
+                    : inactiveMobileStationClass
                 }`}
                 aria-pressed={isActive}
                 aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
