@@ -1,4 +1,4 @@
-import { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Loader from './Loader';
 import SpectrumVisualizer from './SpectrumVisualizer';
@@ -27,9 +27,6 @@ export default function RadioPlayer({ radioState }) {
   const device = useContext(DeviceContext);
   const isDesktopShell = !device?.isPortrait;
   const isSplitScreen = isDesktopShell && !forceCompactLayout;
-  const desktopCoverRef = useRef(null);
-  const desktopPlayButtonSlotRef = useRef(null);
-  const [desktopPlayButtonOffset, setDesktopPlayButtonOffset] = useState(0);
   const viewportWidth = device?.screenWidth || 0;
   const viewportHeight = device?.screenHeight || 0;
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
@@ -104,54 +101,6 @@ export default function RadioPlayer({ radioState }) {
   }, [aspectRatio, viewportHeight, viewportWidth]);
   const desktopTitleClass = '!leading-[0.96]';
 
-  useLayoutEffect(() => {
-    if (!isSplitScreen) {
-      setDesktopPlayButtonOffset(0);
-      return undefined;
-    }
-
-    const updatePlayButtonOffset = () => {
-      const coverElement = desktopCoverRef.current;
-      const buttonSlotElement = desktopPlayButtonSlotRef.current;
-
-      if (!coverElement || !buttonSlotElement) {
-        return;
-      }
-
-      const coverRect = coverElement.getBoundingClientRect();
-      const buttonSlotRect = buttonSlotElement.getBoundingClientRect();
-      const nextOffset = Math.round((coverRect.top + coverRect.height / 2) - (buttonSlotRect.top + buttonSlotRect.height / 2));
-
-      setDesktopPlayButtonOffset((previous) => (
-        Math.abs(previous - nextOffset) < 1 ? previous : nextOffset
-      ));
-    };
-
-    updatePlayButtonOffset();
-
-    const resizeObserver = typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(() => {
-          window.requestAnimationFrame(updatePlayButtonOffset);
-        })
-      : null;
-
-    if (resizeObserver) {
-      if (desktopCoverRef.current) {
-        resizeObserver.observe(desktopCoverRef.current);
-      }
-      if (desktopPlayButtonSlotRef.current) {
-        resizeObserver.observe(desktopPlayButtonSlotRef.current);
-      }
-    }
-
-    window.addEventListener('resize', updatePlayButtonOffset);
-
-    return () => {
-      window.removeEventListener('resize', updatePlayButtonOffset);
-      resizeObserver?.disconnect();
-    };
-  }, [isSplitScreen, desktopMetrics.coverSize, desktopMetrics.playButton, viewportWidth, viewportHeight]);
-
   const renderCoverArt = (desktop = false) => (
     <motion.div
       initial={{ scale: 0.95, opacity: 0 }}
@@ -161,7 +110,6 @@ export default function RadioPlayer({ radioState }) {
         ? 'relative shrink-0'
         : 'relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12'}
       style={desktop ? { width: `${desktopMetrics.coverSize}px` } : undefined}
-      ref={desktop ? desktopCoverRef : undefined}
     >
       <div className="relative w-full aspect-square overflow-hidden rounded-[22px] border border-white/20 shadow-[0_18px_42px_rgba(15,20,25,0.14)] 3xl:rounded-[28px]">
         <motion.img
@@ -252,12 +200,39 @@ export default function RadioPlayer({ radioState }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className="flex shrink-0 flex-col items-end justify-center"
+              className="relative flex shrink-0 flex-col items-end justify-center"
               style={{
                 width: `${desktopMetrics.playerWidth}px`,
                 height: `${desktopMetrics.coverSize}px`,
               }}
             >
+              <motion.button
+                whileHover={{ scale: isLoading ? 1 : 1.05 }}
+                whileTap={{ scale: isLoading ? 1 : 0.95 }}
+                onClick={togglePlay}
+                disabled={isLoading}
+                tabIndex={0}
+                className={`absolute left-0 flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
+                style={{
+                  width: `${desktopMetrics.playButton}px`,
+                  height: `${desktopMetrics.playButton}px`,
+                  top: `${Math.round((desktopMetrics.coverSize - desktopMetrics.playButton) / 2)}px`,
+                }}
+                aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
+              >
+                {isLoading ? (
+                  <Loader size="small" />
+                ) : isPlaying ? (
+                  <svg className="h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                  </svg>
+                ) : (
+                  <svg className="ml-1 h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                )}
+              </motion.button>
+
               <div
                 className="flex w-full flex-col items-end justify-center"
                 style={{
@@ -282,35 +257,7 @@ export default function RadioPlayer({ radioState }) {
                     gridTemplateColumns: `${desktopMetrics.playButton}px minmax(0, 1fr)`,
                   }}
                 >
-                  <div ref={desktopPlayButtonSlotRef} className="flex items-center justify-center">
-                    <motion.button
-                      initial={false}
-                      animate={{ y: desktopPlayButtonOffset }}
-                      whileHover={{ y: desktopPlayButtonOffset, scale: isLoading ? 1 : 1.05 }}
-                      whileTap={{ y: desktopPlayButtonOffset, scale: isLoading ? 1 : 0.95 }}
-                      onClick={togglePlay}
-                      disabled={isLoading}
-                      tabIndex={0}
-                      className={`relative flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
-                      style={{
-                        width: `${desktopMetrics.playButton}px`,
-                        height: `${desktopMetrics.playButton}px`,
-                      }}
-                      aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
-                    >
-                      {isLoading ? (
-                        <Loader size="small" />
-                      ) : isPlaying ? (
-                        <svg className="h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                        </svg>
-                      ) : (
-                        <svg className="ml-1 h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      )}
-                    </motion.button>
-                  </div>
+                  <div aria-hidden="true" />
 
                   <div className="flex min-w-0 flex-col items-end text-right" style={{ minWidth: 0, width: '100%' }}>
                     <Heading
