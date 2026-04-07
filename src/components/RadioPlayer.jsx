@@ -46,6 +46,9 @@ export default function RadioPlayer({ radioState }) {
   const desktopCoverClass = 'max-w-[clamp(21rem,28vw,31rem)] 3xl:max-w-[33rem] 4k:max-w-[36rem]';
   const desktopBlockHeightClass = 'max-h-[clamp(21rem,28vw,31rem)] 3xl:max-h-[33rem] 4k:max-h-[36rem]';
   const desktopMetaClass = `${textTertiaryClass} text-[12px] font-medium 3xl:text-[14px]`;
+  const desktopTitleClass = currentStation.id === 'folclor'
+    ? '!text-[2.55rem] 3xl:!text-[3.45rem]'
+    : '!text-4xl 3xl:!text-5xl';
 
   const renderCoverArt = (desktop = false) => (
     <motion.div
@@ -172,8 +175,8 @@ export default function RadioPlayer({ radioState }) {
                   )}
                 </motion.button>
 
-                <div className="flex max-w-[24rem] flex-col items-end text-right 3xl:max-w-[28rem]">
-                  <Heading level={2} color="custom" className={`mb-1 text-right !text-4xl !leading-tight 3xl:!text-5xl ${textPrimaryClass}`}>
+                <div className="flex max-w-[27rem] flex-col items-end text-right 3xl:max-w-[31rem]">
+                  <Heading level={2} color="custom" className={`mb-1 whitespace-nowrap text-right !leading-tight ${desktopTitleClass} ${textPrimaryClass}`}>
                     {currentStation.name}
                   </Heading>
                   <Body size="normal" weight="medium" opacity="custom" className={`${textSecondaryClass} min-h-[1.5rem] text-right text-lg 3xl:text-xl`}>
