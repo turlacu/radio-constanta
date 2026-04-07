@@ -32,49 +32,32 @@ export default function RadioPlayer({ radioState }) {
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
   const weatherTextColor = useWeatherTextColor();
 
-  const textColor = showWeatherBackground ? weatherTextColor : 'light';
+  const textColor = weatherTextColor;
   const textPrimaryClass = textColor === 'dark' ? 'text-gray-900' : 'text-text-primary';
   const textSecondaryClass = textColor === 'dark' ? 'text-gray-700' : 'text-text-secondary';
   const textTertiaryClass = textColor === 'dark' ? 'text-gray-600' : 'text-text-tertiary';
-  const useWeatherButtonTone = showWeatherBackground;
   const coverBorderClass = textColor === 'dark' ? 'border-gray-900/18' : 'border-white/20';
   const desktopAccentBorderClass = textColor === 'dark' ? 'border-gray-900/18' : 'border-white/18';
   const desktopAccentSurfaceClass = textColor === 'dark' ? 'bg-gray-900/10 hover:bg-gray-900/16' : 'bg-white/12 hover:bg-white/18';
   const desktopButtonTextClass = textColor === 'dark' ? 'text-gray-900' : 'text-white';
-  const inactiveButtonClass = useWeatherButtonTone
-    ? (textColor === 'dark'
-        ? 'bg-gray-900/10 text-gray-900 border border-gray-900/18 hover:bg-gray-900/16'
-        : 'bg-white/10 text-white/80 border border-white/18 hover:bg-white/16')
-    : (textColor === 'dark'
-        ? 'bg-white/18 text-gray-900 border border-gray-900/12 hover:bg-white/26'
-        : 'bg-bg-secondary/88 text-text-secondary border border-border hover:bg-bg-tertiary');
-  const activeStationButtonClass = useWeatherButtonTone
-    ? (textColor === 'dark'
-        ? 'border-gray-900/28 bg-transparent text-gray-900 shadow-none'
-        : 'border-white/24 bg-transparent text-white shadow-none')
-    : (textColor === 'dark'
-        ? 'border-gray-900/18 bg-transparent text-gray-900 shadow-none'
-        : 'border-white/16 bg-transparent text-text-primary shadow-none');
-  const activeMobileQualityClass = useWeatherButtonTone
-    ? (textColor === 'dark'
-        ? 'border-gray-900/28 bg-gray-900/10 text-gray-900 hover:bg-gray-900/16'
-        : 'border-white/24 bg-white/10 text-white hover:bg-white/16')
-    : 'border-primary bg-bg-tertiary text-text-primary';
-  const inactiveMobileQualityClass = useWeatherButtonTone
-    ? (textColor === 'dark'
-        ? 'border-gray-900/18 bg-gray-900/6 text-gray-700 hover:bg-gray-900/12'
-        : 'border-white/18 bg-white/6 text-white/70 hover:bg-white/12')
-    : 'border-border bg-bg-secondary text-text-tertiary hover:bg-bg-tertiary';
-  const activeMobileStationClass = useWeatherButtonTone
-    ? (textColor === 'dark'
-        ? 'border-gray-900/28 bg-transparent text-gray-900 hover:bg-gray-900/5'
-        : 'border-white/24 bg-transparent text-white hover:bg-white/8')
-    : 'border-primary/40 bg-transparent text-primary hover:bg-primary/5';
-  const inactiveMobileStationClass = useWeatherButtonTone
-    ? (textColor === 'dark'
-        ? 'border-gray-900/18 bg-gray-900/6 text-gray-700 hover:bg-gray-900/12'
-        : 'border-white/18 bg-white/6 text-white/70 hover:bg-white/12')
-    : 'border-border bg-bg-secondary text-text-secondary hover:bg-bg-tertiary';
+  const inactiveButtonClass = textColor === 'dark'
+    ? 'bg-gray-900/10 text-gray-900 border border-gray-900/18 hover:bg-gray-900/16'
+    : 'bg-white/10 text-white/80 border border-white/18 hover:bg-white/16';
+  const activeStationButtonClass = textColor === 'dark'
+    ? 'border-gray-900/28 bg-transparent text-gray-900 shadow-none'
+    : 'border-white/24 bg-transparent text-white shadow-none';
+  const activeMobileQualityClass = textColor === 'dark'
+    ? 'border-gray-900/28 bg-gray-900/10 text-gray-900 hover:bg-gray-900/16'
+    : 'border-white/24 bg-white/10 text-white hover:bg-white/16';
+  const inactiveMobileQualityClass = textColor === 'dark'
+    ? 'border-gray-900/18 bg-gray-900/6 text-gray-700 hover:bg-gray-900/12'
+    : 'border-white/18 bg-white/6 text-white/70 hover:bg-white/12';
+  const activeMobileStationClass = textColor === 'dark'
+    ? 'border-gray-900/28 bg-transparent text-gray-900 hover:bg-gray-900/5'
+    : 'border-white/24 bg-transparent text-white hover:bg-white/8';
+  const inactiveMobileStationClass = textColor === 'dark'
+    ? 'border-gray-900/18 bg-gray-900/6 text-gray-700 hover:bg-gray-900/12'
+    : 'border-white/18 bg-white/6 text-white/70 hover:bg-white/12';
   const desktopMetaClass = `${textTertiaryClass} text-[11px] font-medium xl:text-[12px] 3xl:text-[13px]`;
   const desktopMetrics = useMemo(() => {
     const minViewport = Math.max(560, Math.min(viewportWidth || 1280, viewportHeight || 720));
@@ -158,7 +141,7 @@ export default function RadioPlayer({ radioState }) {
           <motion.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="absolute right-4 top-4 flex items-center gap-1.5 rounded-xl border border-white/20 bg-error/95 px-3 py-1.5 text-white shadow-lg shadow-black/15 backdrop-blur-sm 3xl:right-6 3xl:top-6"
+            className={`absolute right-4 top-4 flex items-center gap-1.5 rounded-xl border bg-error/95 px-3 py-1.5 text-white backdrop-blur-sm 3xl:right-6 3xl:top-6 ${textColor === 'dark' ? 'border-gray-900/18' : 'border-white/20'}`}
           >
             <motion.span
               animate={{ opacity: [1, 0.5, 1] }}

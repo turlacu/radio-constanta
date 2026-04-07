@@ -130,8 +130,9 @@ function AppContent() {
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
   const showDesktopShell = !device.isPortrait;
-  const useWeatherUiTone = !showNews && isPlaying && settings.backgroundAnimation === 'weather';
-  const desktopUiTone = useWeatherUiTone ? weatherTextColor : 'light';
+  const desktopUiTone = showDesktopShell && settings.backgroundAnimation === 'weather'
+    ? weatherTextColor
+    : 'light';
   const desktopActionSurfaceClass = desktopUiTone === 'dark'
     ? 'border-gray-900/18 bg-gray-900/10 text-gray-900 hover:bg-gray-900/16'
     : 'border-white/20 bg-white/12 text-white hover:bg-white/18';
