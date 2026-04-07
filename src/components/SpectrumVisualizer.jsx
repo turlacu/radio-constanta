@@ -46,7 +46,7 @@ export default function SpectrumVisualizer({
       context.fillStyle = `rgba(255,255,255,${alpha})`;
 
       values.forEach((value, index) => {
-        const normalizedHeight = Math.max(2, value * height);
+        const normalizedHeight = Math.max(3, Math.min(height, value * height * 1.7));
         const x = index * (barWidth + gap);
         const y = height - normalizedHeight;
         context.fillRect(x, y, barWidth, normalizedHeight);
@@ -106,7 +106,7 @@ export default function SpectrumVisualizer({
   return (
     <canvas
       ref={canvasRef}
-      className={clsx('h-14 w-full', className)}
+      className={clsx(className || 'h-14 w-full')}
       aria-hidden="true"
     />
   );
