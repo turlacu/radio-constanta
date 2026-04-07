@@ -36,6 +36,9 @@ export default function RadioPlayer({ radioState }) {
   const textPrimaryClass = textColor === 'dark' ? 'text-gray-900' : 'text-text-primary';
   const textSecondaryClass = textColor === 'dark' ? 'text-gray-700' : 'text-text-secondary';
   const textTertiaryClass = textColor === 'dark' ? 'text-gray-600' : 'text-text-tertiary';
+  const desktopAccentBorderClass = textColor === 'dark' ? 'border-gray-900/18' : 'border-white/18';
+  const desktopAccentSurfaceClass = textColor === 'dark' ? 'bg-gray-900/10 hover:bg-gray-900/16' : 'bg-white/12 hover:bg-white/18';
+  const desktopButtonTextClass = textColor === 'dark' ? 'text-gray-900' : 'text-white';
   const inactiveButtonClass = textColor === 'dark'
     ? 'bg-white/18 text-gray-900 border border-gray-900/12 hover:bg-white/26'
     : 'bg-bg-secondary/88 text-text-secondary border border-border hover:bg-bg-tertiary';
@@ -58,6 +61,7 @@ export default function RadioPlayer({ radioState }) {
         titleSize: 42,
         subtitleSize: 21,
         buttonRailWidth: 190,
+        visualizerOffset: 22,
       },
       wide: {
         coverSize: 396,
@@ -70,6 +74,7 @@ export default function RadioPlayer({ radioState }) {
         titleSize: 39,
         subtitleSize: 19,
         buttonRailWidth: 182,
+        visualizerOffset: 20,
       },
       square: {
         coverSize: 348,
@@ -82,6 +87,7 @@ export default function RadioPlayer({ radioState }) {
         titleSize: 32,
         subtitleSize: 17,
         buttonRailWidth: 170,
+        visualizerOffset: 16,
       }
     };
 
@@ -200,18 +206,19 @@ export default function RadioPlayer({ radioState }) {
               className="flex shrink-0 flex-col items-end justify-center"
               style={{
                 width: `${desktopMetrics.playerWidth}px`,
-                minHeight: `${Math.round(desktopMetrics.coverSize * 0.72)}px`,
-                maxHeight: `${desktopMetrics.coverSize}px`,
+                height: `${desktopMetrics.coverSize}px`,
               }}
             >
-              <div className="flex w-full flex-col items-end">
+              <div className="flex h-full w-full flex-col items-end justify-center">
                 <SpectrumVisualizer
                   analyserRef={audioAnalyserRef}
                   isPlaying={isPlaying}
+                  tone={textColor}
                   className="mb-3 shrink-0"
                   style={{
                     width: `${desktopMetrics.visualizerWidth}px`,
                     height: `${desktopMetrics.visualizerHeight}px`,
+                    transform: `translateY(${desktopMetrics.visualizerOffset}px)`,
                   }}
                 />
 
@@ -228,7 +235,7 @@ export default function RadioPlayer({ radioState }) {
                     onClick={togglePlay}
                     disabled={isLoading}
                     tabIndex={0}
-                    className="relative flex shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/12 text-white backdrop-blur-md transition-all hover:bg-white/18 disabled:opacity-40"
+                    className={`relative flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
                     style={{
                       width: `${desktopMetrics.playButton}px`,
                       height: `${desktopMetrics.playButton}px`,
@@ -284,7 +291,7 @@ export default function RadioPlayer({ radioState }) {
                   <span>{streamInfo.channels}</span>
                   <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
                   <span>{streamInfo.bitrate}</span>
-                  <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1">{streamInfo.format}</span>
+                  <span className={`rounded-full border px-2.5 py-1 ${desktopAccentBorderClass} ${textColor === 'dark' ? 'bg-gray-900/8' : 'bg-white/8'}`}>{streamInfo.format}</span>
                 </motion.div>
               )}
 

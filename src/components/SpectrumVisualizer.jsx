@@ -9,7 +9,8 @@ export default function SpectrumVisualizer({
   analyserRef,
   isPlaying,
   className,
-  style
+  style,
+  tone = 'light'
 }) {
   const canvasRef = useRef(null);
   const smoothedValuesRef = useRef(Array(BAR_COUNT).fill(0.08));
@@ -45,9 +46,10 @@ export default function SpectrumVisualizer({
       const barCount = values.length;
       const gap = 1.25;
       const barWidth = Math.max(1, (width - gap * (barCount - 1)) / barCount);
+      const baseColor = tone === 'dark' ? '17,24,39' : '255,255,255';
 
       context.clearRect(0, 0, width, height);
-      context.fillStyle = `rgba(255,255,255,${alpha})`;
+      context.fillStyle = `rgba(${baseColor},${alpha})`;
 
       values.forEach((value, index) => {
         const normalizedHeight = Math.max(2, Math.min(height, value * height * 1.08));
@@ -56,9 +58,9 @@ export default function SpectrumVisualizer({
         context.fillRect(x, y, barWidth, normalizedHeight);
 
         const peak = Math.max(2, Math.min(height, (peakValuesRef.current[index] || value) * height * 1.08));
-        context.fillStyle = `rgba(255,255,255,${alpha * 0.68})`;
+        context.fillStyle = `rgba(${baseColor},${alpha * 0.68})`;
         context.fillRect(x, Math.max(0, height - peak - 1), barWidth, 1.5);
-        context.fillStyle = `rgba(255,255,255,${alpha})`;
+        context.fillStyle = `rgba(${baseColor},${alpha})`;
       });
     };
 
@@ -136,7 +138,7 @@ export default function SpectrumVisualizer({
       }
       window.removeEventListener('resize', resizeCanvas);
     };
-  }, [analyserRef, isPlaying]);
+  }, [analyserRef, isPlaying, tone]);
 
   return (
     <canvas
