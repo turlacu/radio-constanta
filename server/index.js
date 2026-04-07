@@ -5,10 +5,10 @@ import { fileURLToPath } from 'url';
 import { mkdir, copyFile, access } from 'fs/promises';
 import newsRouter from './routes/news.js';
 import articleRouter from './routes/article.js';
-import streamRouter from './routes/stream.js';
 import imageProxyRouter from './routes/imageProxy.js';
 import adminRouter from './routes/admin.js';
 import analyticsRouter from './routes/analytics.js';
+import weatherRouter from './routes/weather.js';
 import { initializeDatabase as initAnalyticsDB } from './database/analytics.js';
 import { startAnalyticsCronJobs } from './jobs/analytics-cron.js';
 import logger from './utils/logger.js';
@@ -22,6 +22,12 @@ const config = validateEnvironment();
 
 const app = express();
 const PORT = config.port;
+
+// Coolify and similar platforms run the app behind a reverse proxy.
+// Trust the first proxy so req.ip and rate limiting work correctly.
+if (config.nodeEnv === 'production') {
+  app.set('trust proxy', 1);
+}
 
 // Initialize persistent data directories on startup
 const initializeDataDirectories = async () => {
@@ -81,6 +87,7 @@ if (config.nodeEnv === 'production' && !config.allowedOrigins) {
 }
 
 app.use(cors(corsOptions));
+app.use(express.text({ type: 'text/plain' }));
 app.use(express.json());
 
 // Request logging middleware
@@ -95,10 +102,10 @@ app.use('/covers', express.static(path.join(__dirname, 'data/covers')));
 // API Routes
 app.use('/api/news', newsRouter);
 app.use('/api/article', articleRouter);
-app.use('/api/stream', streamRouter);
 app.use('/api/image-proxy', imageProxyRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/weather', weatherRouter);
 
 // Health check endpoint (lightweight, no logging)
 app.get('/api/health', (req, res) => {

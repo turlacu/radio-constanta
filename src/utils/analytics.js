@@ -1,6 +1,13 @@
 // Analytics utility for tracking user events
 // Minimal tracking - only session counts, no personal data
 
+const isDebugEnabled = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
+const debugLog = (...args) => {
+  if (isDebugEnabled) {
+    console.log(...args);
+  }
+};
+
 class AnalyticsClient {
   constructor() {
     this.userId = this.getUserId();
@@ -20,7 +27,7 @@ class AnalyticsClient {
     if (!userId) {
       userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       localStorage.setItem('radio_user_id', userId);
-      console.log('[Analytics] Generated new user ID:', userId.substring(0, 20) + '...');
+      debugLog('[Analytics] Generated new user ID:', userId.substring(0, 20) + '...');
     }
     return userId;
   }
@@ -49,7 +56,7 @@ class AnalyticsClient {
       this.startHeartbeat();
       this.isTracking = true;
 
-      console.log('[Analytics] Stream started:', { station, quality });
+      debugLog('[Analytics] Stream started:', { station, quality });
     } catch (error) {
       console.error('[Analytics] Error tracking stream start:', error);
     }
@@ -71,7 +78,7 @@ class AnalyticsClient {
       this.stopHeartbeat();
       this.isTracking = false;
 
-      console.log('[Analytics] Stream stopped');
+      debugLog('[Analytics] Stream stopped');
     } catch (error) {
       console.error('[Analytics] Error tracking stream stop:', error);
     }
@@ -97,7 +104,7 @@ class AnalyticsClient {
         })
       });
 
-      console.log('[Analytics] Station switched:', newStation);
+      debugLog('[Analytics] Station switched:', newStation);
     } catch (error) {
       console.error('[Analytics] Error tracking station switch:', error);
     }
@@ -122,7 +129,7 @@ class AnalyticsClient {
         })
       });
 
-      console.log('[Analytics] Quality changed:', newQuality);
+      debugLog('[Analytics] Quality changed:', newQuality);
     } catch (error) {
       console.error('[Analytics] Error tracking quality change:', error);
     }
@@ -131,7 +138,6 @@ class AnalyticsClient {
   // Send heartbeat to keep session alive
   async sendHeartbeat() {
     try {
-      console.log('[Analytics] Sending heartbeat...');
       const response = await fetch('/api/analytics/heartbeat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -141,7 +147,7 @@ class AnalyticsClient {
       });
 
       if (response.ok) {
-        console.log('[Analytics] Heartbeat sent successfully');
+        debugLog('[Analytics] Heartbeat sent successfully');
       } else {
         console.error('[Analytics] Heartbeat failed:', response.status, response.statusText);
       }
@@ -162,13 +168,13 @@ class AnalyticsClient {
       this.sendHeartbeat();
     }, 30000); // 30 seconds
 
-    console.log('[Analytics] Heartbeat interval started (30s)');
+    debugLog('[Analytics] Heartbeat interval started (30s)');
   }
 
   // Stop heartbeat interval
   stopHeartbeat() {
     if (this.heartbeatInterval) {
-      console.log('[Analytics] Stopping heartbeat interval');
+      debugLog('[Analytics] Stopping heartbeat interval');
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
     }
@@ -186,7 +192,7 @@ class AnalyticsClient {
         })
       });
 
-      console.log('[Analytics] Article viewed:', title);
+      debugLog('[Analytics] Article viewed:', title);
     } catch (error) {
       console.error('[Analytics] Error tracking article view:', error);
     }

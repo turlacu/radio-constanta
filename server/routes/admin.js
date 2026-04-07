@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import ntpClient from 'ntp-client';
 import rateLimit from 'express-rate-limit';
+import { z } from 'zod';
 import { authenticateAdmin, getJWTSecret } from '../middleware/auth.js';
 import logger from '../utils/logger.js';
 
@@ -92,14 +93,114 @@ function isBcryptHash(value) {
   return /^\$2[aby]\$\d{2}\$/.test(value);
 }
 
-// Admin password from environment variable (fallback)
-const DEFAULT_PASSWORD_HASH = normalizePasswordHash(process.env.ADMIN_PASSWORD_HASH) || FALLBACK_PASSWORD_HASH;
+// Admin password from environment variable
+const ENV_PASSWORD_HASH = normalizePasswordHash(process.env.ADMIN_PASSWORD_HASH);
 
 const SETTINGS_FILE = path.join(__dirname, '../data/admin-settings.json');
 const COVERS_DIR = path.join(__dirname, '../data/covers');
 
-// Get admin password hash (from settings file or environment variable)
+const streamConfigSchema = z.object({
+  enabled: z.boolean(),
+  url: z.string(),
+  label: z.string(),
+  format: z.string(),
+  bitrate: z.string(),
+  alacUrl: z.string().optional(),
+});
+
+const coverSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  label: z.string(),
+  path: z.string(),
+  filename: z.string(),
+  size: z.number().nonnegative(),
+  category: z.enum(['default', 'scheduling']).or(z.string()),
+  uploadedAt: z.string(),
+});
+
+const scheduleSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  coverPath: z.string(),
+  days: z.array(z.number().int().min(0).max(6)),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  priority: z.number().optional(),
+  type: z.enum(['regular', 'news']).optional(),
+  newsHours: z.array(z.number().int().min(0).max(23)).optional(),
+  duration: z.number().positive().optional(),
+});
+
+const coverSchedulingStationSchema = z.object({
+  enabled: z.boolean(),
+  defaultCover: z.string(),
+  transitionEffect: z.string().optional(),
+  transitionDuration: z.number().nonnegative().optional(),
+  covers: z.array(coverSchema).default([]),
+  schedules: z.array(scheduleSchema).default([]),
+});
+
+const ntpServerSchema = z.object({
+  id: z.string(),
+  hostname: z.string().min(1),
+  port: z.number().int().min(1).max(65535),
+  enabled: z.boolean(),
+  priority: z.number().int().min(1),
+});
+
+const adminSettingsSchema = z.object({
+  weatherProvider: z.enum(['openmeteo', 'openweathermap']).default('openmeteo'),
+  weatherApiKey: z.string().default(''),
+  newsSource: z.object({
+    wordpressApiUrl: z.string().url(),
+    siteDomain: z.string().min(1),
+    siteName: z.string().min(1),
+    allowedImageDomains: z.array(z.string().min(1)).default([]),
+  }),
+  radioStreams: z.object({
+    fm: z.object({
+      mp3_128: streamConfigSchema,
+      mp3_256: streamConfigSchema,
+      flac: streamConfigSchema,
+    }),
+    folclor: z.object({
+      mp3_128: streamConfigSchema,
+      mp3_256: streamConfigSchema,
+      flac: streamConfigSchema,
+    }),
+  }),
+  defaultLocation: z.object({
+    lat: z.number().min(-90).max(90),
+    lon: z.number().min(-180).max(180),
+    name: z.string().min(1),
+  }),
+  apiBaseUrl: z.string().default(''),
+  coverScheduling: z.object({
+    fm: coverSchedulingStationSchema,
+    folclor: coverSchedulingStationSchema,
+  }),
+  timeSynchronization: z.object({
+    enabled: z.boolean(),
+    ntpServers: z.array(ntpServerSchema),
+    timezone: z.string().min(1),
+    syncInterval: z.number().int().positive(),
+    lastSync: z.string().nullable(),
+    syncStatus: z.string(),
+  }),
+  security: z.object({
+    passwordHash: z.string().optional(),
+  }).optional(),
+});
+
+// Get admin password hash.
+// In production deployments, an explicit environment variable should win over persisted settings
+// so operators can recover access without editing mounted volumes.
 async function getPasswordHash() {
+  if (ENV_PASSWORD_HASH) {
+    return ENV_PASSWORD_HASH;
+  }
+
   try {
     const data = await fs.readFile(SETTINGS_FILE, 'utf8');
     const settings = JSON.parse(data);
@@ -112,8 +213,8 @@ async function getPasswordHash() {
     // Settings file doesn't exist or doesn't have password - use env var
   }
 
-  // Fallback to environment variable
-  return DEFAULT_PASSWORD_HASH;
+  // Final fallback to built-in default password
+  return FALLBACK_PASSWORD_HASH;
 }
 
 // SSE: Track connected clients for cover updates
@@ -186,20 +287,12 @@ router.get('/settings', authenticateAdmin, async (req, res) => {
 // Update admin settings
 router.put('/settings', authenticateAdmin, async (req, res) => {
   try {
-    const newSettings = req.body;
+    const newSettings = adminSettingsSchema.parse(req.body);
 
-    // Validate settings structure
-    if (!newSettings || typeof newSettings !== 'object') {
-      return res.status(400).json({ error: 'Invalid settings format' });
-    }
-
-    // Log cover scheduling updates
     if (newSettings.coverScheduling) {
       Object.keys(newSettings.coverScheduling).forEach(station => {
         const config = newSettings.coverScheduling[station];
-        logger.info('[Settings]', `${station} cover scheduling:`);
-        logger.info('[Settings]', `  - Enabled: ${config.enabled}`);
-        logger.info('[Settings]', `  - Schedules: ${config.schedules?.length || 0}`);
+        logger.debug('[Settings]', `${station} cover scheduling: enabled=${config.enabled}, schedules=${config.schedules?.length || 0}`);
         if (config.schedules?.length > 0) {
           config.schedules.forEach(s => {
             logger.debug('[Settings]', `    * "${s.name}" (${s.type || 'regular'}) - Days: ${s.days}, Priority: ${s.priority || 0}`);
@@ -218,6 +311,16 @@ router.put('/settings', authenticateAdmin, async (req, res) => {
     logger.info('[Settings]', '✅ Settings saved successfully');
     res.json({ success: true, settings: newSettings });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Invalid settings payload',
+        details: error.issues.map(issue => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
+      });
+    }
+
     logger.error('[Settings]', 'Error writing settings:', error);
     res.status(500).json({ error: 'Failed to update settings' });
   }
@@ -235,7 +338,6 @@ router.get('/public-settings', async (req, res) => {
       defaultLocation: settings.defaultLocation,
       apiBaseUrl: settings.apiBaseUrl,
       weatherProvider: settings.weatherProvider || 'openmeteo',
-      weatherApiKey: settings.weatherApiKey || '',
       coverScheduling: settings.coverScheduling || {}
     });
   } catch (error) {
@@ -368,7 +470,8 @@ router.delete('/covers/:station/:coverId', authenticateAdmin, async (req, res) =
     const cover = covers[coverIndex];
 
     // Delete file from disk with path validation
-    const filePath = path.join(COVERS_DIR, path.basename(cover.path));
+    const relativeCoverPath = cover.path.replace(/^\/covers\//, '');
+    const filePath = path.resolve(COVERS_DIR, relativeCoverPath);
 
     // Validate path is within allowed directory
     if (!validateFilePath(filePath, COVERS_DIR)) {
@@ -391,6 +494,10 @@ router.delete('/covers/:station/:coverId', authenticateAdmin, async (req, res) =
       settings.coverScheduling[station].schedules = settings.coverScheduling[station].schedules.filter(
         schedule => schedule.coverPath !== cover.path
       );
+    }
+
+    if (settings.coverScheduling[station].defaultCover === cover.path) {
+      settings.coverScheduling[station].defaultCover = station === 'fm' ? '/rcfm.png' : '/rcf.png';
     }
 
     // Save settings
@@ -559,6 +666,7 @@ router.get('/covers/stream', (req, res) => {
   const clientId = Date.now();
   coverStreamClients.add(res);
   logger.info('[SSE]', `Client ${clientId} connected. Total clients: ${coverStreamClients.size}`);
+  startCoverChangeMonitoring();
 
   // Send keep-alive ping every 30 seconds
   const keepAliveInterval = setInterval(() => {
@@ -569,6 +677,7 @@ router.get('/covers/stream', (req, res) => {
   req.on('close', () => {
     clearInterval(keepAliveInterval);
     coverStreamClients.delete(res);
+    stopCoverChangeMonitoring();
     logger.info('[SSE]', `Client ${clientId} disconnected. Total clients: ${coverStreamClients.size}`);
   });
 });
@@ -577,7 +686,7 @@ router.get('/covers/stream', (req, res) => {
 let coverCheckInterval = null;
 
 function startCoverChangeMonitoring() {
-  if (coverCheckInterval) {
+  if (coverCheckInterval || coverStreamClients.size === 0) {
     return; // Already running
   }
 
@@ -620,6 +729,10 @@ function startCoverChangeMonitoring() {
           }
         });
 
+        if (coverStreamClients.size === 0) {
+          stopCoverChangeMonitoring();
+        }
+
         console.log(`[SSE] Broadcasted update to ${broadcastCount} client(s)`);
       }
     } catch (error) {
@@ -628,8 +741,12 @@ function startCoverChangeMonitoring() {
   }, 5000); // Check every 5 seconds
 }
 
-// Start monitoring when module loads
-startCoverChangeMonitoring();
+function stopCoverChangeMonitoring() {
+  if (coverCheckInterval && coverStreamClients.size === 0) {
+    clearInterval(coverCheckInterval);
+    coverCheckInterval = null;
+  }
+}
 
 // NTP Time Synchronization Endpoints
 

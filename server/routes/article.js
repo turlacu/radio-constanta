@@ -27,6 +27,15 @@ async function getSiteDomain() {
   }
 }
 
+function isAllowedHostname(hostname, allowedDomain) {
+  const normalizedHostname = hostname.toLowerCase();
+  const normalizedAllowedDomain = allowedDomain.toLowerCase();
+  return (
+    normalizedHostname === normalizedAllowedDomain ||
+    normalizedHostname.endsWith(`.${normalizedAllowedDomain}`)
+  );
+}
+
 // Helper to proxy external image URLs through our server
 // This prevents tracking prevention errors from third-party CDNs
 const proxyImageUrl = (imageUrl) => {
@@ -56,6 +65,48 @@ const proxyImagesInHtml = (html) => {
   );
 };
 
+const sanitizeArticleHtml = (html) => {
+  if (!html) return '';
+
+  const $ = cheerio.load(`<div id="article-root">${html}</div>`);
+  const root = $('#article-root');
+
+  root.find('script, style, iframe, object, embed, form, input, button, textarea, select, link, meta, base').remove();
+
+  root.find('*').each((_, element) => {
+    const attrs = element.attribs || {};
+
+    for (const [name, value] of Object.entries(attrs)) {
+      const normalizedName = name.toLowerCase();
+      const normalizedValue = String(value).trim().toLowerCase();
+
+      if (normalizedName.startsWith('on') || normalizedName === 'style') {
+        $(element).removeAttr(name);
+        continue;
+      }
+
+      if (['href', 'src', 'poster'].includes(normalizedName)) {
+        const isSafeUrl =
+          normalizedValue.startsWith('http://') ||
+          normalizedValue.startsWith('https://') ||
+          normalizedValue.startsWith('/') ||
+          normalizedValue.startsWith('./') ||
+          normalizedValue.startsWith('../') ||
+          normalizedValue.startsWith('mailto:') ||
+          normalizedValue.startsWith('tel:');
+
+        if (!isSafeUrl) {
+          $(element).removeAttr(name);
+        }
+      }
+    }
+  });
+
+  root.find('a[target="_blank"]').attr('rel', 'noopener noreferrer');
+
+  return root.html();
+};
+
 // GET /api/article?url=...
 router.get('/', async (req, res) => {
   try {
@@ -68,8 +119,14 @@ router.get('/', async (req, res) => {
     // Get allowed site domain from settings
     const siteDomain = await getSiteDomain();
 
-    // Validate URL is from the configured site domain
-    if (!url.includes(siteDomain)) {
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
+
+    if (!['http:', 'https:'].includes(parsedUrl.protocol) || !isAllowedHostname(parsedUrl.hostname, siteDomain)) {
       return res.status(400).json({ error: `Invalid URL domain. Expected: ${siteDomain}` });
     }
 
@@ -165,7 +222,7 @@ router.get('/', async (req, res) => {
     }
 
     // Proxy all images to prevent tracking prevention errors
-    const proxiedContent = proxyImagesInHtml(articleContent);
+    const proxiedContent = sanitizeArticleHtml(proxyImagesInHtml(articleContent));
     const proxiedImage = proxyImageUrl(featuredImage);
 
     console.log('Successfully extracted article content');

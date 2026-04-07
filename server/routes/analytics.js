@@ -1,5 +1,4 @@
 import express from 'express';
-import jwt from 'jsonwebtoken';
 import {
   startSession,
   updateHeartbeat,
@@ -14,34 +13,29 @@ import {
   getDatabase,
   cleanupStaleSessions
 } from '../database/analytics.js';
+import { authenticateAdmin } from '../middleware/auth.js';
+import logger from '../utils/logger.js';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-// Middleware to verify JWT token for admin endpoints
-const authenticateAdmin = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'No token provided' });
+function getJsonBody(req) {
+  if (typeof req.body === 'string') {
+    try {
+      return JSON.parse(req.body);
+    } catch {
+      return {};
+    }
   }
 
-  const token = authHeader.substring(7);
-
-  try {
-    jwt.verify(token, JWT_SECRET);
-    next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-};
+  return req.body || {};
+}
 
 // === PUBLIC TRACKING ENDPOINTS ===
 
 // Log stream event (start, stop, switch, quality change)
 router.post('/stream-event', (req, res) => {
   try {
-    const { userId, sessionId, event, station, quality } = req.body;
+    const { userId, sessionId, event, station, quality } = getJsonBody(req);
 
     if (!sessionId || !event) {
       return res.status(400).json({ error: 'Missing required fields: sessionId, event' });
@@ -52,12 +46,12 @@ router.post('/stream-event', (req, res) => {
         if (!station || !quality) {
           return res.status(400).json({ error: 'Missing station or quality for start event' });
         }
-        console.log(`[Analytics] Stream started: ${station} (${quality}) - Session: ${sessionId.substring(0, 30)}... User: ${userId?.substring(0, 20)}...`);
+        logger.debug('[Analytics]', `Stream started: ${station} (${quality}) - Session: ${sessionId.substring(0, 30)}... User: ${userId?.substring(0, 20)}...`);
         startSession(sessionId, userId, station, quality);
         break;
 
       case 'stop':
-        console.log(`[Analytics] Stream stopped - Session: ${sessionId.substring(0, 30)}...`);
+        logger.debug('[Analytics]', `Stream stopped - Session: ${sessionId.substring(0, 30)}...`);
         endSession(sessionId);
         break;
 
@@ -65,7 +59,7 @@ router.post('/stream-event', (req, res) => {
         if (!station) {
           return res.status(400).json({ error: 'Missing station for switch event' });
         }
-        console.log(`[Analytics] Station switched: ${station} - Session: ${sessionId.substring(0, 30)}...`);
+        logger.debug('[Analytics]', `Station switched: ${station} - Session: ${sessionId.substring(0, 30)}...`);
         switchStation(sessionId, userId, station, quality);
         break;
 
@@ -73,7 +67,7 @@ router.post('/stream-event', (req, res) => {
         if (!quality) {
           return res.status(400).json({ error: 'Missing quality for quality change event' });
         }
-        console.log(`[Analytics] Quality changed: ${quality} - Session: ${sessionId.substring(0, 30)}...`);
+        logger.debug('[Analytics]', `Quality changed: ${quality} - Session: ${sessionId.substring(0, 30)}...`);
         changeQuality(sessionId, userId, station, quality);
         break;
 
@@ -91,13 +85,13 @@ router.post('/stream-event', (req, res) => {
 // Update session heartbeat
 router.post('/heartbeat', (req, res) => {
   try {
-    const { sessionId } = req.body;
+    const { sessionId } = getJsonBody(req);
 
     if (!sessionId) {
       return res.status(400).json({ error: 'Missing sessionId' });
     }
 
-    console.log(`[Analytics] Heartbeat received: ${sessionId.substring(0, 30)}...`);
+    logger.debug('[Analytics]', `Heartbeat received: ${sessionId.substring(0, 30)}...`);
     updateHeartbeat(sessionId);
     res.json({ success: true });
   } catch (error) {
@@ -109,7 +103,7 @@ router.post('/heartbeat', (req, res) => {
 // Log article view
 router.post('/article-view', (req, res) => {
   try {
-    const { articleId, title } = req.body;
+    const { articleId, title } = getJsonBody(req);
 
     if (!articleId) {
       return res.status(400).json({ error: 'Missing articleId' });
@@ -205,7 +199,7 @@ router.get('/admin/debug/sessions', authenticateAdmin, (req, res) => {
 // Manual cleanup endpoint - Trigger cleanup of stale sessions
 router.post('/admin/debug/cleanup', authenticateAdmin, (req, res) => {
   try {
-    console.log('[Analytics] Manual cleanup triggered');
+    logger.info('[Analytics]', 'Manual cleanup triggered');
     cleanupStaleSessions();
     res.json({ success: true, message: 'Cleanup completed' });
   } catch (error) {

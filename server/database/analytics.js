@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
+import { BUCHAREST_TIMEZONE, addDaysToDateString, formatDateInTimeZone, getDayRangeInTimeZone } from '../utils/time.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -318,7 +319,7 @@ export function logStreamEvent(sessionId, eventType, station, quality) {
 export function logArticleView(articleId, articleTitle) {
   const db = getDatabase();
   const now = new Date();
-  const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+  const dateStr = formatDateInTimeZone(now, BUCHAREST_TIMEZONE);
 
   try {
     const stmt = db.prepare(`
@@ -449,20 +450,16 @@ export function getDailyStats(startDate, endDate) {
     });
 
     // Generate all dates in range and fill missing ones with live data
-    const start = new Date(startDate);
-    const end = new Date(endDate);
     const result = [];
 
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const dateStr = d.toISOString().split('T')[0];
+    for (let dateStr = startDate; dateStr <= endDate; dateStr = addDaysToDateString(dateStr, 1)) {
 
       if (aggregatedMap[dateStr]) {
         // Use aggregated data
         result.push(aggregatedMap[dateStr]);
       } else {
         // Calculate from listener_sessions for missing dates
-        const dayStart = new Date(dateStr + 'T00:00:00Z').getTime();
-        const dayEnd = new Date(dateStr + 'T23:59:59Z').getTime();
+        const { start: dayStart, end: dayEnd } = getDayRangeInTimeZone(dateStr, BUCHAREST_TIMEZONE);
 
         // Count sessions by station
         const stationStats = db.prepare(`
@@ -531,9 +528,8 @@ export function getDailyStats(startDate, endDate) {
 // Get today's stats (live + historical)
 export function getTodayStats() {
   const db = getDatabase();
-  const today = new Date().toISOString().split('T')[0];
-  const todayStart = new Date(today).getTime();
-  const tomorrowStart = todayStart + (24 * 60 * 60 * 1000);
+  const today = formatDateInTimeZone(new Date(), BUCHAREST_TIMEZONE);
+  const { start: todayStart, end: tomorrowStart } = getDayRangeInTimeZone(today, BUCHAREST_TIMEZONE);
 
   try {
     // Get current live stats (for current listeners count)
@@ -611,9 +607,7 @@ export function getTodayStats() {
 // Get most viewed articles
 export function getMostViewedArticles(limit = 10, days = 30) {
   const db = getDatabase();
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - days);
-  const cutoffDateStr = cutoffDate.toISOString().split('T')[0];
+  const cutoffDateStr = addDaysToDateString(formatDateInTimeZone(new Date(), BUCHAREST_TIMEZONE), -days);
 
   try {
     const stmt = db.prepare(`
@@ -641,14 +635,13 @@ export function aggregateDailyStats(dateStr) {
   const db = getDatabase();
 
   try {
-    const startOfDay = new Date(dateStr + 'T00:00:00Z').getTime();
-    const endOfDay = new Date(dateStr + 'T23:59:59Z').getTime();
+    const { start: startOfDay, end: endOfDay } = getDayRangeInTimeZone(dateStr, BUCHAREST_TIMEZONE);
 
     // Count total unique sessions that day
     const totalSessions = db.prepare(`
       SELECT COUNT(DISTINCT session_id) as count
       FROM stream_events
-      WHERE timestamp >= ? AND timestamp <= ?
+      WHERE timestamp >= ? AND timestamp < ?
         AND event_type = 'start'
     `).get(startOfDay, endOfDay);
 
@@ -658,7 +651,7 @@ export function aggregateDailyStats(dateStr) {
         station,
         COUNT(*) as count
       FROM stream_events
-      WHERE timestamp >= ? AND timestamp <= ?
+      WHERE timestamp >= ? AND timestamp < ?
         AND event_type IN ('start', 'switch_station')
       GROUP BY station
     `).all(startOfDay, endOfDay);
@@ -669,7 +662,7 @@ export function aggregateDailyStats(dateStr) {
         quality,
         COUNT(*) as count
       FROM stream_events
-      WHERE timestamp >= ? AND timestamp <= ?
+      WHERE timestamp >= ? AND timestamp < ?
         AND event_type IN ('start', 'change_quality')
       GROUP BY quality
     `).all(startOfDay, endOfDay);

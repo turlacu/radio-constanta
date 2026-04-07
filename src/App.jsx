@@ -73,6 +73,7 @@ function AppContent() {
   const audioRef = useRef(null);
   const isSwitchingRef = useRef(false);
   const isSwitchingQualityRef = useRef(false);
+  const detectedSampleRateRef = useRef(null);
 
   // Dynamic cover art state
   const [dynamicCovers, setDynamicCovers] = useState({
@@ -391,14 +392,16 @@ function AppContent() {
     const updateStreamInfo = () => {
       const quality = getCurrentQuality();
       let channels = 'Stereo';
-      let sampleRate = '48.0 kHz';
+      let sampleRate = detectedSampleRateRef.current || '48.0 kHz';
 
-      // Use Audio Context API for sample rate detection
-      if (window.AudioContext || window.webkitAudioContext) {
+      // Detect sample rate once and close the context immediately to avoid leaks.
+      if (!detectedSampleRateRef.current && (window.AudioContext || window.webkitAudioContext)) {
         try {
           const AudioContextClass = window.AudioContext || window.webkitAudioContext;
           const audioContext = new AudioContextClass();
-          sampleRate = `${(audioContext.sampleRate / 1000).toFixed(1)} kHz`;
+          detectedSampleRateRef.current = `${(audioContext.sampleRate / 1000).toFixed(1)} kHz`;
+          sampleRate = detectedSampleRateRef.current;
+          audioContext.close().catch(() => {});
         } catch (e) {
           console.log('AudioContext not available:', e);
         }

@@ -1,6 +1,6 @@
-# 📻 Radio Constanța - Mobile Web App
+# Radio Constanța Web App
 
-Modern, mobile-first dark mode web application for Radio Constanța featuring live radio streaming and latest news.
+Modern web app for Radio Constanța with live radio streaming, news, admin-managed station settings, cover scheduling, and weather-driven backgrounds.
 
 ![Radio Constanța](https://via.placeholder.com/800x400/0C0C0C/00BFFF?text=Radio+Constanta)
 
@@ -13,15 +13,24 @@ Modern, mobile-first dark mode web application for Radio Constanța featuring li
 - ⚡ **Fast & Smooth** - Built with React + Vite for lightning-fast performance
 - 🎨 **Modern UI** - Clean design with smooth animations
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **React 18** - UI library
-- **Vite** - Build tool and dev server
-- **Tailwind CSS** - Styling
-- **Framer Motion** - Animations
-- **React Router** - Navigation
+- React 18
+- Vite
+- Tailwind CSS
+- Framer Motion
+- React Router
+- Express
+- SQLite via `better-sqlite3`
 
-## 🚀 Getting Started
+## Deployment
+
+For the current production deployment flow, use:
+
+- `COOLIFY.md` for Coolify
+- `DEPLOY.md` for the broader deployment notes
+
+## Getting Started
 
 ### Prerequisites
 
@@ -36,34 +45,31 @@ Modern, mobile-first dark mode web application for Radio Constanța featuring li
 npm install
 ```
 
-2. **Configure radio stream URLs:**
-
-Edit `src/components/RadioPlayer.jsx` and add your stream URLs:
-
-```javascript
-const STATIONS = [
-  {
-    id: 'fm',
-    name: 'Radio Constanța FM',
-    streamUrl: 'YOUR_FM_STREAM_URL_HERE', // Add your stream URL
-    // ...
-  },
-  {
-    id: 'folclor',
-    name: 'Radio Constanța Folclor',
-    streamUrl: 'YOUR_FOLCLOR_STREAM_URL_HERE', // Add your stream URL
-    // ...
-  }
-];
-```
-
-3. **Run development server:**
+2. **Run the frontend dev server:**
 
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`
+3. **Run the backend server in a second terminal:**
+
+```bash
+npm run dev:server
+```
+
+The app expects the API server on `http://localhost:3001` in development.
+
+4. **Configure streams and admin settings:**
+
+- Start the app, open `/admin`, and sign in.
+- Update stream URLs from the admin settings UI instead of editing frontend source files.
+- Settings are stored in `server/data/admin-settings.json`.
+
+Default fallback admin password:
+
+```text
+admin123
+```
 
 ### Building for Production
 
@@ -153,69 +159,25 @@ npx cap open android
 
 3. **Build APK in Android Studio**
 
-## 📰 Setting Up Real News Feed
+## Runtime Notes
 
-Currently, the app uses mock data. To fetch real news from radioconstanta.ro:
+### News
 
-### Option 1: Backend Proxy (Recommended)
+- News is already fetched server-side from the configured WordPress API.
+- The source is managed from admin settings.
+- Manual cache refresh is an authenticated admin action.
 
-Create a simple Node.js backend:
+### Weather
 
-```javascript
-// server.js
-const express = require('express');
-const axios = require('axios');
-const cheerio = require('cheerio');
-const cors = require('cors');
+- Open-Meteo works without an API key.
+- If you switch to OpenWeatherMap, the API key is stored server-side and requests go through `/api/weather/current`.
+- The public settings endpoint no longer exposes the weather API key.
 
-const app = express();
-app.use(cors());
+### Settings Validation
 
-app.get('/api/news', async (req, res) => {
-  try {
-    const { data } = await axios.get('https://www.radioconstanta.ro/articole/stiri/actualitate/');
-    const $ = cheerio.load(data);
-    const articles = [];
-
-    // Parse HTML - adjust selectors based on actual website structure
-    $('.article-selector').each((i, elem) => {
-      articles.push({
-        title: $(elem).find('.title-selector').text(),
-        link: $(elem).find('a').attr('href'),
-        image: $(elem).find('img').attr('src'),
-        // ... extract other fields
-      });
-    });
-
-    res.json({ articles });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch news' });
-  }
-});
-
-app.listen(3001, () => console.log('Proxy running on port 3001'));
-```
-
-Then update `src/utils/fetchNews.js` to call your backend:
-
-```javascript
-export const fetchNews = async (page = 1, limit = 20) => {
-  const response = await fetch(`http://localhost:3001/api/news?page=${page}&limit=${limit}`);
-  return response.json();
-};
-```
-
-### Option 2: RSS Feed
-
-If Radio Constanța provides an RSS feed, use a library like `rss-parser`:
-
-```bash
-npm install rss-parser
-```
-
-### Option 3: Official API
-
-Contact Radio Constanța to request API access for official integration.
+- Admin settings writes are schema-validated on the server.
+- Invalid payloads now fail with `400 Invalid settings payload` instead of being saved partially.
+- If you edit `server/data/admin-settings.json` manually, keep the structure aligned with `server/admin-settings.template.json`.
 
 ## 🎨 Customization
 
@@ -242,7 +204,7 @@ Edit `index.html` to change fonts:
 
 ### Station Art
 
-Replace placeholder images in `src/components/RadioPlayer.jsx`:
+Replace the fallback public images in `public/` or update cover/default-cover settings from the admin UI.
 
 ```javascript
 coverArt: '/path/to/your/station-artwork.jpg'
@@ -279,7 +241,7 @@ radio-constanta/
 
 ### Stream URLs
 
-Update stream URLs in `src/components/RadioPlayer.jsx`
+- Update stream URLs from the admin panel
 
 ### News Source
 
@@ -299,7 +261,7 @@ Update `index.html` for SEO and PWA:
 
 ### Audio not playing
 
-- Check that stream URLs are correct and accessible
+- Check that configured stream URLs in admin settings are correct and accessible
 - Ensure CORS is properly configured on the stream server
 - Test stream URLs directly in browser
 

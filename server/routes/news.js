@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { authenticateAdmin } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -386,7 +387,7 @@ router.get('/', (req, res) => {
 });
 
 // POST /api/news/refresh-cache - Force refresh the news cache (admin only)
-router.post('/refresh-cache', async (req, res) => {
+router.post('/refresh-cache', authenticateAdmin, async (req, res) => {
   try {
     console.log('🔄 Manual cache refresh requested');
 
