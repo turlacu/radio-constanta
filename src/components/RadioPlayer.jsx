@@ -240,6 +240,7 @@ export default function RadioPlayer({ radioState }) {
                     style={{
                       width: `${desktopMetrics.playButton}px`,
                       height: `${desktopMetrics.playButton}px`,
+                      transform: `translateY(${Math.round(desktopMetrics.playButton * 0.42)}px)`,
                     }}
                     aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
                   >
