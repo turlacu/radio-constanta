@@ -146,7 +146,7 @@ export default function RadioPlayer({ radioState }) {
               <SpectrumVisualizer
                 analyserRef={audioAnalyserRef}
                 isPlaying={isPlaying}
-                className="mb-3 h-7 w-[4.25rem] 3xl:h-8 3xl:w-[4.75rem]"
+                className="mb-3 h-10 w-[12.75rem] 3xl:h-12 3xl:w-[14.25rem]"
               />
 
               <div className="ml-auto flex w-fit items-center justify-end gap-3 3xl:gap-4">
