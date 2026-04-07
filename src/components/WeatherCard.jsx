@@ -301,9 +301,9 @@ export default function WeatherCard({ className = '' }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
       className={clsx(
-        'w-full max-w-[32rem] px-2 py-1',
+        'w-full max-w-[40rem] px-2 py-1',
         'flex items-center gap-4',
-        'min-[1800px]:max-w-[26rem] 4k:max-w-[30rem]',
+        'min-[1800px]:max-w-[40rem] 4k:max-w-[44rem]',
         textColorClass,
         className
       )}
@@ -335,7 +335,7 @@ export default function WeatherCard({ className = '' }) {
         <div className="flex items-center gap-1.5 text-sm font-medium opacity-95 tracking-wide min-[1800px]:text-base 4k:text-lg">
           {/* Only show location icon and location in auto mode */}
           {!isManualMode && <div className="shrink-0"><PhosphorIcons.MapPin /></div>}
-          <span className="min-w-0 truncate">
+          <span className="min-w-0 whitespace-nowrap">
             {displayCondition}
             {!isManualMode && `, ${weatherData.location}`}
           </span>

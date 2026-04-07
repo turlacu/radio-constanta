@@ -822,7 +822,7 @@ function AppContent() {
                     className={`relative z-10 h-full w-full ${
                       showDesktopWeatherCard
                         ? isUltraWide
-                          ? 'grid grid-cols-[clamp(18rem,22vw,26rem)_minmax(0,1fr)_clamp(18rem,22vw,26rem)]'
+                          ? 'grid grid-cols-[clamp(24rem,28vw,40rem)_minmax(0,1fr)_clamp(16rem,18vw,24rem)]'
                           : 'grid grid-rows-[minmax(0,1fr)_auto]'
                         : 'flex items-center justify-center'
                     }`}
@@ -835,7 +835,7 @@ function AppContent() {
                         transition={{ delay: 0.2, duration: 0.45 }}
                         className="z-20 flex min-h-0 items-end px-6 pb-8 pt-24 3xl:px-10 3xl:pb-10"
                       >
-                        <WeatherCard className="max-w-[26rem]" />
+                        <WeatherCard className="max-w-[40rem]" />
                       </motion.div>
                     )}
 
@@ -859,7 +859,7 @@ function AppContent() {
                         transition={{ delay: 0.25, duration: 0.45 }}
                         className="z-20 flex justify-start px-6 pb-6 pt-2 3xl:px-10 3xl:pb-8"
                       >
-                        <WeatherCard className="max-w-[34rem]" />
+                        <WeatherCard className="max-w-[40rem]" />
                       </motion.div>
                     )}
                   </div>
