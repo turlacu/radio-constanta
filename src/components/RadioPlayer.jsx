@@ -4,6 +4,7 @@ import Loader from './Loader';
 import SpectrumVisualizer from './SpectrumVisualizer';
 import { ResponsiveContainer, Heading, Body, Caption } from './ui';
 import { useWeatherTextColor } from '../hooks/useWeatherTextColor';
+import { useSettings } from '../contexts/SettingsContext';
 import { DeviceContext } from '../App';
 
 export default function RadioPlayer({ radioState }) {
@@ -25,6 +26,7 @@ export default function RadioPlayer({ radioState }) {
   } = radioState;
 
   const device = useContext(DeviceContext);
+  const settings = useSettings();
   const isDesktopShell = !device?.isPortrait;
   const isSplitScreen = isDesktopShell && !forceCompactLayout;
   const viewportWidth = device?.screenWidth || 0;
@@ -33,19 +35,20 @@ export default function RadioPlayer({ radioState }) {
   const weatherTextColor = useWeatherTextColor();
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
+  const borderTone = (isDesktopShell && settings.backgroundAnimation === 'weather') ? weatherTextColor : 'light';
   const textPrimaryClass = textColor === 'dark' ? 'text-gray-900' : 'text-text-primary';
   const textSecondaryClass = textColor === 'dark' ? 'text-gray-700' : 'text-text-secondary';
   const textTertiaryClass = textColor === 'dark' ? 'text-gray-600' : 'text-text-tertiary';
-  const coverBorderClass = textColor === 'dark' ? 'border-gray-900/18' : 'border-white/20';
-  const desktopAccentBorderClass = textColor === 'dark' ? 'border-gray-900/18' : 'border-white/18';
+  const coverBorderClass = borderTone === 'dark' ? 'border-gray-900/18' : 'border-white/20';
+  const desktopAccentBorderClass = borderTone === 'dark' ? 'border-gray-900/18' : 'border-white/18';
   const desktopAccentSurfaceClass = textColor === 'dark' ? 'bg-gray-900/10 hover:bg-gray-900/16' : 'bg-white/12 hover:bg-white/18';
   const desktopButtonTextClass = textColor === 'dark' ? 'text-gray-900' : 'text-white';
   const inactiveButtonClass = textColor === 'dark'
-    ? 'bg-gray-900/10 text-gray-900 border border-gray-900/18 hover:bg-gray-900/16'
-    : 'bg-white/10 text-white/80 border border-white/18 hover:bg-white/16';
+    ? `bg-gray-900/10 text-gray-900 border ${borderTone === 'dark' ? 'border-gray-900/18' : 'border-white/18'} hover:bg-gray-900/16`
+    : `bg-white/10 text-white/80 border ${borderTone === 'dark' ? 'border-gray-900/18' : 'border-white/18'} hover:bg-white/16`;
   const activeStationButtonClass = textColor === 'dark'
-    ? 'border-gray-900/28 bg-transparent text-gray-900 shadow-none'
-    : 'border-white/24 bg-transparent text-white shadow-none';
+    ? `${borderTone === 'dark' ? 'border-gray-900/28' : 'border-white/24'} bg-transparent text-gray-900 shadow-none`
+    : `${borderTone === 'dark' ? 'border-gray-900/28' : 'border-white/24'} bg-transparent text-white shadow-none`;
   const activeMobileQualityClass = textColor === 'dark'
     ? 'border-gray-900/28 bg-gray-900/10 text-gray-900 hover:bg-gray-900/16'
     : 'border-white/24 bg-white/10 text-white hover:bg-white/16';
@@ -141,7 +144,7 @@ export default function RadioPlayer({ radioState }) {
           <motion.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className={`absolute right-4 top-4 flex items-center gap-1.5 rounded-xl border bg-error/95 px-3 py-1.5 text-white backdrop-blur-sm 3xl:right-6 3xl:top-6 ${textColor === 'dark' ? 'border-gray-900/18' : 'border-white/20'}`}
+            className={`absolute right-4 top-4 flex items-center gap-1.5 rounded-xl border bg-error/95 px-3 py-1.5 text-white backdrop-blur-sm 3xl:right-6 3xl:top-6 ${borderTone === 'dark' ? 'border-gray-900/18' : 'border-white/20'}`}
           >
             <motion.span
               animate={{ opacity: [1, 0.5, 1] }}
