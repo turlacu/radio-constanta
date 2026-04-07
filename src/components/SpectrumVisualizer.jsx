@@ -7,6 +7,7 @@ export default function SpectrumVisualizer({
   className
 }) {
   const canvasRef = useRef(null);
+  const smoothedValuesRef = useRef(Array(36).fill(0.08));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -36,14 +37,14 @@ export default function SpectrumVisualizer({
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
       const barCount = values.length;
-      const gap = 2;
-      const barWidth = Math.max(2, (width - gap * (barCount - 1)) / barCount);
+      const gap = 2.5;
+      const barWidth = Math.max(1.5, (width - gap * (barCount - 1)) / barCount);
 
       context.clearRect(0, 0, width, height);
       context.fillStyle = `rgba(255,255,255,${alpha})`;
 
       values.forEach((value, index) => {
-        const normalizedHeight = Math.max(3, value * height);
+        const normalizedHeight = Math.max(2, value * height);
         const x = index * (barWidth + gap);
         const y = height - normalizedHeight;
         context.fillRect(x, y, barWidth, normalizedHeight);
@@ -58,15 +59,28 @@ export default function SpectrumVisualizer({
         const buffer = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(buffer);
 
-        const visualValues = Array.from({ length: 32 }, (_, index) => {
-          const sampleIndex = Math.min(buffer.length - 1, index * 2);
-          return Math.max(0.08, buffer[sampleIndex] / 255);
+        const overallEnergy = buffer.reduce((sum, value) => sum + value, 0) / (buffer.length * 255 || 1);
+        const visualValues = Array.from({ length: 36 }, (_, index) => {
+          const start = Math.floor(Math.pow(index / 36, 1.85) * (buffer.length - 1));
+          const end = Math.max(start + 1, Math.floor(Math.pow((index + 1) / 36, 1.85) * buffer.length));
+          const slice = buffer.slice(start, end);
+          const sliceAverage = slice.length
+            ? slice.reduce((sum, value) => sum + value, 0) / (slice.length * 255)
+            : 0;
+          const weightedAverage = sliceAverage * (1 - index / 52);
+          const trailingMotion = overallEnergy * 0.22 * (0.45 + Math.sin(performance.now() / 260 + index * 0.75) * 0.55);
+          return Math.max(0.05, weightedAverage + trailingMotion);
+        }).map((value, index) => {
+          const previous = smoothedValuesRef.current[index] || 0.08;
+          const smoothed = previous * 0.74 + value * 0.26;
+          smoothedValuesRef.current[index] = smoothed;
+          return smoothed;
         });
 
         drawBars(visualValues, 0.92);
       } else {
         idlePhase += 0.06;
-        const idleValues = Array.from({ length: 32 }, (_, index) => {
+        const idleValues = Array.from({ length: 36 }, (_, index) => {
           return 0.05 + Math.max(0, Math.sin(idlePhase + index * 0.28)) * 0.08;
         });
 

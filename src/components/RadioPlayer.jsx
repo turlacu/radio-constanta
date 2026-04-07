@@ -46,6 +46,7 @@ export default function RadioPlayer({ radioState }) {
   const qualityHint = selectedQuality === 'flac' ? 'Lossless activ' : 'Streaming comprimat';
   const desktopCoverClass = 'max-w-[clamp(21rem,28vw,31rem)] 3xl:max-w-[33rem] 4k:max-w-[36rem]';
   const desktopBlockHeightClass = 'max-h-[clamp(21rem,28vw,31rem)] 3xl:max-h-[33rem] 4k:max-h-[36rem]';
+  const desktopMetaClass = `${textTertiaryClass} text-[12px] font-medium 3xl:text-[14px]`;
 
   const renderCoverArt = (desktop = false) => (
     <motion.div
@@ -56,7 +57,7 @@ export default function RadioPlayer({ radioState }) {
         ? `relative w-full ${desktopCoverClass}`
         : 'relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12'}
     >
-      <div className="relative w-full aspect-square overflow-hidden rounded-[22px] border border-white/25 shadow-[0_28px_80px_rgba(15,20,25,0.25)] 3xl:rounded-[28px]">
+      <div className="relative w-full aspect-square overflow-hidden rounded-[22px] border border-white/20 shadow-[0_18px_42px_rgba(15,20,25,0.14)] 3xl:rounded-[28px]">
         <motion.img
           key={currentStation.coverArt}
           src={currentStation.coverArt}
@@ -140,16 +141,16 @@ export default function RadioPlayer({ radioState }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
-            className={`flex w-full max-w-[36rem] flex-col items-start justify-between justify-self-end ${desktopBlockHeightClass}`}
+            className={`flex w-full max-w-[36rem] flex-col items-end justify-center justify-self-end ${desktopBlockHeightClass}`}
           >
-            <div className="w-full">
+            <div className="flex w-full flex-col items-end">
               <SpectrumVisualizer
                 analyserRef={audioAnalyserRef}
                 isPlaying={isPlaying}
-                className="mb-2 ml-auto h-11 max-w-[15rem] 3xl:max-w-[17rem]"
+                className="mb-4 h-11 w-[11rem] 3xl:w-[13rem]"
               />
 
-              <div className="flex w-full items-center gap-5 3xl:gap-6">
+              <div className="flex w-full max-w-[32rem] items-center justify-end gap-5 3xl:max-w-[36rem] 3xl:gap-6">
                 <motion.button
                   whileHover={{ scale: isLoading ? 1 : 1.05 }}
                   whileTap={{ scale: isLoading ? 1 : 0.95 }}
@@ -172,8 +173,8 @@ export default function RadioPlayer({ radioState }) {
                   )}
                 </motion.button>
 
-                <div className="min-w-0 flex-1">
-                  <Heading level={2} color="custom" className={`mb-2 !text-4xl !leading-tight 3xl:!text-5xl ${textPrimaryClass}`}>
+                <div className="min-w-0 flex-1 text-right">
+                  <Heading level={2} color="custom" className={`mb-1 !text-4xl !leading-tight 3xl:!text-5xl ${textPrimaryClass}`}>
                     {currentStation.name}
                   </Heading>
                   <Body size="normal" weight="medium" opacity="custom" className={`${textSecondaryClass} min-h-[1.5rem] text-lg 3xl:text-xl`}>
@@ -188,18 +189,18 @@ export default function RadioPlayer({ radioState }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className={`flex flex-wrap items-center gap-2 text-[12px] font-medium 3xl:text-[14px] ${textTertiaryClass}`}
+                className={`mt-4 flex flex-wrap items-center justify-end gap-2 text-right ${desktopMetaClass}`}
                 role="status"
                 aria-label="Stream information"
               >
-                <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1">{streamInfo.format}</span>
-                <span>{streamInfo.bitrate}</span>
-                <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
-                <span>{streamInfo.channels}</span>
+                <span>{qualityHint}</span>
                 <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
                 <span>{streamInfo.sampleRate}</span>
                 <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
-                <span>{qualityHint}</span>
+                <span>{streamInfo.channels}</span>
+                <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                <span>{streamInfo.bitrate}</span>
+                <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1">{streamInfo.format}</span>
               </motion.div>
             )}
 
@@ -207,7 +208,7 @@ export default function RadioPlayer({ radioState }) {
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="mt-5 flex w-full max-w-[15rem] gap-2 3xl:max-w-[17rem] 3xl:gap-3"
+              className="mt-5 flex w-full max-w-[11rem] justify-end gap-2 3xl:max-w-[13rem] 3xl:gap-3"
               role="group"
               aria-label="Station selection"
             >
@@ -223,7 +224,7 @@ export default function RadioPlayer({ radioState }) {
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.24 + index * 0.05 }}
                     tabIndex={0}
-                    className={`relative flex-1 rounded-[12px] border px-4 py-3 text-[14px] font-semibold transition-all 3xl:px-5 3xl:py-3.5 3xl:text-[16px] ${
+                    className={`relative min-w-[5rem] flex-1 rounded-[12px] border px-4 py-3 text-[14px] font-semibold transition-all 3xl:min-w-[5.5rem] 3xl:px-5 3xl:py-3.5 3xl:text-[16px] ${
                       isActive
                         ? activeStationButtonClass
                         : inactiveButtonClass
@@ -237,7 +238,11 @@ export default function RadioPlayer({ radioState }) {
               })}
             </motion.div>
 
-            <Body size="small" opacity="custom" className={`mt-4 max-w-[22rem] text-sm ${textTertiaryClass}`}>
+            <Body
+              size="small"
+              opacity="custom"
+              className={`mt-5 max-w-[18rem] text-right text-sm leading-relaxed ${textTertiaryClass}`}
+            >
               Calitatea streamului se schimbă din Setări și este memorată pentru următoarea vizită.
             </Body>
           </motion.div>
