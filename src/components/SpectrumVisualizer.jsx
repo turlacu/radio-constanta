@@ -50,12 +50,12 @@ export default function SpectrumVisualizer({
       context.fillStyle = `rgba(255,255,255,${alpha})`;
 
       values.forEach((value, index) => {
-        const normalizedHeight = Math.max(2, Math.min(height, value * height * 1.55));
+        const normalizedHeight = Math.max(2, Math.min(height, value * height * 1.08));
         const x = index * (barWidth + gap);
         const y = height - normalizedHeight;
         context.fillRect(x, y, barWidth, normalizedHeight);
 
-        const peak = Math.max(2, Math.min(height, (peakValuesRef.current[index] || value) * height * 1.55));
+        const peak = Math.max(2, Math.min(height, (peakValuesRef.current[index] || value) * height * 1.08));
         context.fillStyle = `rgba(255,255,255,${alpha * 0.68})`;
         context.fillRect(x, Math.max(0, height - peak - 1), barWidth, 1.5);
         context.fillStyle = `rgba(255,255,255,${alpha})`;
@@ -93,24 +93,22 @@ export default function SpectrumVisualizer({
           }
 
           const average = slice.reduce((sum, value) => sum + value, 0) / slice.length;
-          const peak = Math.max(...slice);
-          const weightedEnergy = average * 0.72 + peak * 0.28;
+          const rms = Math.sqrt(slice.reduce((sum, value) => sum + value * value, 0) / slice.length);
+          const weightedEnergy = average * 0.45 + rms * 0.55;
           const normalized = weightedEnergy / 255;
 
-          // Keep some presence in the upper bars without forcing them.
-          const contourCompensation = 1 + index * 0.012;
-          return Math.max(0.03, Math.min(0.86, Math.pow(normalized, 1.12) * contourCompensation));
+          return Math.max(0.02, Math.min(0.72, Math.pow(normalized, 1.48)));
         }).map((value, index) => {
           const previous = smoothedValuesRef.current[index] || 0.08;
           const smoothed = value > previous
-            ? previous * 0.46 + value * 0.54
-            : previous * 0.84 + value * 0.16;
+            ? previous * 0.58 + value * 0.42
+            : previous * 0.88 + value * 0.12;
           smoothedValuesRef.current[index] = smoothed;
 
           const previousPeak = peakValuesRef.current[index] || smoothed;
           peakValuesRef.current[index] = smoothed > previousPeak
             ? smoothed
-            : Math.max(smoothed, previousPeak - 0.018);
+            : Math.max(smoothed, previousPeak - 0.026);
 
           return smoothed;
         });
