@@ -49,10 +49,10 @@ export default function RadioPlayer({ radioState }) {
     const baseMetrics = {
       ultrawide: {
         coverSize: 430,
-        playerWidth: 432,
+        playerWidth: 456,
         gap: 54,
         playButton: 92,
-        titleWidth: 294,
+        titleWidth: 328,
         visualizerWidth: 162,
         visualizerHeight: 34,
         titleSize: 42,
@@ -61,10 +61,10 @@ export default function RadioPlayer({ radioState }) {
       },
       wide: {
         coverSize: 396,
-        playerWidth: 404,
+        playerWidth: 430,
         gap: 44,
         playButton: 88,
-        titleWidth: 272,
+        titleWidth: 306,
         visualizerWidth: 148,
         visualizerHeight: 32,
         titleSize: 39,
@@ -73,13 +73,13 @@ export default function RadioPlayer({ radioState }) {
       },
       square: {
         coverSize: 348,
-        playerWidth: 362,
+        playerWidth: 392,
         gap: 32,
         playButton: 80,
-        titleWidth: 240,
+        titleWidth: 284,
         visualizerWidth: 128,
         visualizerHeight: 28,
-        titleSize: 34,
+        titleSize: 32,
         subtitleSize: 17,
         buttonRailWidth: 170,
       }
@@ -216,10 +216,10 @@ export default function RadioPlayer({ radioState }) {
                 />
 
                 <div
-                  className="ml-auto inline-grid items-center justify-end"
+                  className="ml-auto grid w-full items-center justify-end"
                   style={{
                     columnGap: `${Math.max(12, Math.round(desktopMetrics.playButton * 0.18))}px`,
-                    gridTemplateColumns: `${desktopMetrics.playButton}px ${desktopMetrics.titleWidth}px`,
+                    gridTemplateColumns: `${desktopMetrics.playButton}px minmax(0, 1fr)`,
                   }}
                 >
                   <motion.button
@@ -248,7 +248,7 @@ export default function RadioPlayer({ radioState }) {
                     )}
                   </motion.button>
 
-                  <div className="flex min-w-0 flex-col items-end text-right" style={{ width: `${desktopMetrics.titleWidth}px` }}>
+                  <div className="flex min-w-0 flex-col items-end text-right" style={{ minWidth: 0, width: '100%' }}>
                     <Heading
                       level={2}
                       color="custom"
