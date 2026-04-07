@@ -87,6 +87,10 @@ function AppContent() {
 
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
+  const screenAspectRatio = device.screenHeight > 0
+    ? device.screenWidth / device.screenHeight
+    : 1;
+  const isUltraWide = screenAspectRatio >= 2.1;
 
   // Generate floating particles for background animation
   const floatingParticles = useMemo(() => {
@@ -662,6 +666,7 @@ function AppContent() {
 
   // Split-screen layout for screens larger than small tablet portrait (768px+)
   const showSplitScreen = device.screenWidth >= 768;
+  const showDesktopWeatherCard = !showNews && isPlaying && settings.backgroundAnimation === 'weather';
 
   // Preload weather data on wide displays so it is ready when playback starts.
   useEffect(() => {
@@ -766,11 +771,11 @@ function AppContent() {
                 </motion.button>
               </div>
 
-              {/* Content Container - Always 16:9 aspect ratio */}
-              <div className="w-full h-screen flex overflow-hidden transition-all duration-500 max-w-[177.78vh]">
+              {/* Content Container */}
+              <div className="w-full h-screen flex overflow-hidden transition-all duration-500 max-w-[min(2400px,calc(100vw-3rem))] 3xl:max-w-[min(3000px,calc(100vw-4rem))]">
                 {/* Radio Section */}
                 <div
-                  className={`overflow-hidden relative flex items-center justify-center transition-all duration-500 ${
+                  className={`overflow-hidden relative transition-all duration-500 ${
                     showNews ? 'w-[35%] border-r border-border' : 'w-full'
                   }`}
                 >
@@ -813,21 +818,51 @@ function AppContent() {
                     </>
                   )}
 
-                  {/* Radio Player - Always centered */}
-                  <Radio radioState={radioState} />
+                  <div
+                    className={`relative z-10 h-full w-full ${
+                      showDesktopWeatherCard
+                        ? isUltraWide
+                          ? 'grid grid-cols-[clamp(18rem,22vw,26rem)_minmax(0,1fr)_clamp(18rem,22vw,26rem)]'
+                          : 'grid grid-rows-[minmax(0,1fr)_auto]'
+                        : 'flex items-center justify-center'
+                    }`}
+                  >
+                    {showDesktopWeatherCard && isUltraWide && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -24 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -24 }}
+                        transition={{ delay: 0.2, duration: 0.45 }}
+                        className="z-20 flex min-h-0 items-end px-6 pb-8 pt-24 3xl:px-10 3xl:pb-10"
+                      >
+                        <WeatherCard className="max-w-[26rem]" />
+                      </motion.div>
+                    )}
 
-                  {/* Weather Card - Bottom left corner, only show when not in news mode */}
-                  {!showNews && isPlaying && settings.backgroundAnimation === 'weather' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 20 }}
-                      transition={{ delay: 0.3, duration: 0.5 }}
-                      className="absolute bottom-6 left-6 z-20"
+                    <div
+                      className={`min-h-0 ${
+                        showDesktopWeatherCard
+                          ? isUltraWide
+                            ? 'col-start-2 flex items-center justify-center px-6 py-10 3xl:px-10'
+                            : 'flex items-center justify-center px-6 pt-24 pb-8 3xl:px-10'
+                          : 'flex h-full w-full items-center justify-center'
+                      }`}
                     >
-                      <WeatherCard />
-                    </motion.div>
-                  )}
+                      <Radio radioState={radioState} />
+                    </div>
+
+                    {showDesktopWeatherCard && !isUltraWide && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        transition={{ delay: 0.25, duration: 0.45 }}
+                        className="z-20 flex justify-start px-6 pb-6 pt-2 3xl:px-10 3xl:pb-8"
+                      >
+                        <WeatherCard className="max-w-[34rem]" />
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
 
                 {/* News Section - Slide in from right */}

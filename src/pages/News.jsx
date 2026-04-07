@@ -122,7 +122,7 @@ export default function News({ radioState }) {
     }>
       {/* Subtle ambient glow accents */}
       {isSplitScreen ? (
-        <div className="absolute inset-x-0 top-0 bottom-0 min-h-[300vh] pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl opacity-60" />
           <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-3xl opacity-60" />
         </div>

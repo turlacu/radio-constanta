@@ -5,8 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { clsx } from 'clsx';
 import { useSettings } from '../contexts/SettingsContext';
-import { Heading, Body } from './ui';
 import { getWeatherManager } from '../modules/weather/WeatherManager';
 import { useWeatherTextColor } from '../hooks/useWeatherTextColor';
 
@@ -38,7 +38,7 @@ const PhosphorIcons = {
   ),
 };
 
-export default function WeatherCard() {
+export default function WeatherCard({ className = '' }) {
   const settings = useSettings();
   const [weatherData, setWeatherData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -246,7 +246,10 @@ export default function WeatherCard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-bg-tertiary/60 backdrop-blur-xl rounded-3xl p-8 border border-border/30 shadow-2xl"
+        className={clsx(
+          'w-full max-w-[32rem] bg-bg-tertiary/60 backdrop-blur-xl rounded-3xl p-8 border border-border/30 shadow-2xl',
+          className
+        )}
       >
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-bg-secondary/50 rounded w-3/4"></div>
@@ -297,17 +300,23 @@ export default function WeatherCard() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className={`flex items-center gap-4 ${textColorClass} drop-shadow-2xl`}
+      className={clsx(
+        'w-full max-w-[32rem] rounded-[28px] border border-white/12 bg-black/18 px-5 py-4 backdrop-blur-xl shadow-2xl',
+        'flex flex-wrap items-center gap-x-4 gap-y-3',
+        'min-[1800px]:max-w-[26rem] 4k:max-w-[30rem] 4k:px-6 4k:py-5',
+        textColorClass,
+        className
+      )}
     >
       {/* Temperature - Only show in auto mode */}
       {!isManualMode && (
-        <div className="text-5xl font-light leading-none tracking-tight">
+        <div className="shrink-0 text-4xl font-light leading-none tracking-tight min-[1800px]:text-5xl 4k:text-6xl">
           {weatherData.temperature}°
         </div>
       )}
 
       {/* Icon */}
-      <div className="leading-none">
+      <div className="shrink-0 leading-none">
         {PhosphorIcons[displayIcon] ? (
           PhosphorIcons[displayIcon]()
         ) : (
@@ -316,17 +325,17 @@ export default function WeatherCard() {
       </div>
 
       {/* Divider */}
-      <div className={`w-px h-12 ${textColor === 'dark' ? 'bg-gray-900/30' : 'bg-white/30'}`}></div>
+      <div className={`hidden h-12 w-px sm:block ${textColor === 'dark' ? 'bg-gray-900/30' : 'bg-white/30'}`}></div>
 
       {/* Date and Location */}
-      <div className="flex flex-col gap-1.5">
-        <div className="text-sm font-medium opacity-95 tracking-wide">
+      <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+        <div className="text-sm font-medium opacity-95 tracking-wide min-[1800px]:text-base 4k:text-lg">
           {getCurrentDate()}
         </div>
-        <div className="text-sm font-medium opacity-95 flex items-center gap-1.5 tracking-wide">
+        <div className="flex items-start gap-1.5 text-sm font-medium opacity-95 tracking-wide min-[1800px]:text-base 4k:text-lg">
           {/* Only show location icon and location in auto mode */}
-          {!isManualMode && <PhosphorIcons.MapPin />}
-          <span>
+          {!isManualMode && <div className="mt-0.5 shrink-0"><PhosphorIcons.MapPin /></div>}
+          <span className="min-w-0 break-words">
             {displayCondition}
             {!isManualMode && `, ${weatherData.location}`}
           </span>

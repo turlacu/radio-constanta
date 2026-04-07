@@ -30,7 +30,7 @@ export default function ResponsiveContainer({
     radio: noPadding
       ? ''
       : isSplitScreen
-      ? 'px-4 py-6'
+      ? 'w-full px-4 py-6 lg:px-6 lg:py-8 3xl:px-8 3xl:py-10'
       : 'px-4 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 tv:px-12 tv:py-12',
     news: noPadding
       ? ''
@@ -48,7 +48,7 @@ export default function ResponsiveContainer({
   // Height classes for different sections
   const heightClasses = {
     radio: isSplitScreen
-      ? 'h-full'
+      ? 'h-full min-h-0'
       : device?.isTablet || device?.isDesktop
       ? 'min-h-[calc(100vh-100px)]'
       : 'min-h-[calc(100vh-80px)]',

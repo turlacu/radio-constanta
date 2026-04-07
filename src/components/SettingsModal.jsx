@@ -209,7 +209,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
         {/* Backdrop */}
         <motion.div
           className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -221,7 +221,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
         {/* Modal - Wide TV-friendly layout */}
         <motion.div
-          className="relative w-full max-w-6xl rounded-2xl bg-bg-secondary border border-border shadow-2xl overflow-hidden"
+          className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-bg-secondary shadow-2xl md:max-h-[calc(100vh-3rem)]"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -238,9 +238,9 @@ export default function SettingsModal({ isOpen, onClose }) {
             </button>
           </div>
 
-          {/* Content - Grid layout, no scrolling */}
-          <div className="p-6">
-            <div className="grid grid-cols-3 gap-6">
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
               {/* Column 1: Background Animation */}
               <div className="space-y-4">
                 <div>
