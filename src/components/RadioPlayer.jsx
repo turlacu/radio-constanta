@@ -61,7 +61,6 @@ export default function RadioPlayer({ radioState }) {
         titleSize: 42,
         subtitleSize: 21,
         buttonRailWidth: 190,
-        visualizerOffset: 22,
       },
       wide: {
         coverSize: 396,
@@ -74,7 +73,6 @@ export default function RadioPlayer({ radioState }) {
         titleSize: 39,
         subtitleSize: 19,
         buttonRailWidth: 182,
-        visualizerOffset: 20,
       },
       square: {
         coverSize: 348,
@@ -87,7 +85,6 @@ export default function RadioPlayer({ radioState }) {
         titleSize: 32,
         subtitleSize: 17,
         buttonRailWidth: 170,
-        visualizerOffset: 16,
       }
     };
 
@@ -209,16 +206,20 @@ export default function RadioPlayer({ radioState }) {
                 height: `${desktopMetrics.coverSize}px`,
               }}
             >
-              <div className="flex h-full w-full flex-col items-end justify-center">
+              <div
+                className="flex w-full flex-col items-end justify-center"
+                style={{
+                  rowGap: `${Math.max(12, Math.round(desktopMetrics.playButton * 0.18))}px`,
+                }}
+              >
                 <SpectrumVisualizer
                   analyserRef={audioAnalyserRef}
                   isPlaying={isPlaying}
                   tone={textColor}
-                  className="mb-3 shrink-0"
+                  className="shrink-0"
                   style={{
                     width: `${desktopMetrics.visualizerWidth}px`,
                     height: `${desktopMetrics.visualizerHeight}px`,
-                    transform: `translateY(${desktopMetrics.visualizerOffset}px)`,
                   }}
                 />
 
@@ -275,60 +276,60 @@ export default function RadioPlayer({ radioState }) {
                     </Body>
                   </div>
                 </div>
-              </div>
 
-              {streamInfo && (
+                {streamInfo && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className={`flex flex-wrap items-center justify-end gap-2 text-right ${desktopMetaClass}`}
+                    role="status"
+                    aria-label="Stream information"
+                  >
+                    <span>{streamInfo.sampleRate}</span>
+                    <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                    <span>{streamInfo.channels}</span>
+                    <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                    <span>{streamInfo.bitrate}</span>
+                    <span className={`rounded-full border px-2.5 py-1 ${desktopAccentBorderClass} ${textColor === 'dark' ? 'bg-gray-900/8' : 'bg-white/8'}`}>{streamInfo.format}</span>
+                  </motion.div>
+                )}
+
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 }}
-                  className={`mt-4 flex flex-wrap items-center justify-end gap-2 text-right ${desktopMetaClass}`}
-                  role="status"
-                  aria-label="Stream information"
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex justify-end gap-2"
+                  style={{ width: `${desktopMetrics.buttonRailWidth}px` }}
+                  role="group"
+                  aria-label="Station selection"
                 >
-                  <span>{streamInfo.sampleRate}</span>
-                  <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
-                  <span>{streamInfo.channels}</span>
-                  <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
-                  <span>{streamInfo.bitrate}</span>
-                  <span className={`rounded-full border px-2.5 py-1 ${desktopAccentBorderClass} ${textColor === 'dark' ? 'bg-gray-900/8' : 'bg-white/8'}`}>{streamInfo.format}</span>
+                  {stations.map((station, index) => {
+                    const isActive = currentStation.id === station.id;
+                    return (
+                      <motion.button
+                        key={station.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => switchStation(station)}
+                        initial={{ x: -10, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.24 + index * 0.05 }}
+                        tabIndex={0}
+                        className={`relative min-w-0 flex-1 rounded-[12px] border px-4 py-3 text-[14px] font-semibold transition-all ${
+                          isActive
+                            ? activeStationButtonClass
+                            : inactiveButtonClass
+                        }`}
+                        aria-pressed={isActive}
+                        aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
+                      >
+                        {station.id === 'fm' ? 'FM' : 'Folclor'}
+                      </motion.button>
+                    );
+                  })}
                 </motion.div>
-              )}
-
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="mt-5 flex justify-end gap-2"
-                style={{ width: `${desktopMetrics.buttonRailWidth}px` }}
-                role="group"
-                aria-label="Station selection"
-              >
-                {stations.map((station, index) => {
-                  const isActive = currentStation.id === station.id;
-                  return (
-                    <motion.button
-                      key={station.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => switchStation(station)}
-                      initial={{ x: -10, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.24 + index * 0.05 }}
-                      tabIndex={0}
-                      className={`relative min-w-0 flex-1 rounded-[12px] border px-4 py-3 text-[14px] font-semibold transition-all ${
-                        isActive
-                          ? activeStationButtonClass
-                          : inactiveButtonClass
-                      }`}
-                      aria-pressed={isActive}
-                      aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
-                    >
-                      {station.id === 'fm' ? 'FM' : 'Folclor'}
-                    </motion.button>
-                  );
-                })}
-              </motion.div>
+              </div>
             </motion.div>
           </div>
         </div>
