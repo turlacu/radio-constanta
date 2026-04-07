@@ -39,8 +39,8 @@ export default function SpectrumVisualizer({
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
       const barCount = values.length;
-      const gap = 2.5;
-      const barWidth = Math.max(1.5, (width - gap * (barCount - 1)) / barCount);
+      const gap = 1.1;
+      const barWidth = Math.max(1, (width - gap * (barCount - 1)) / barCount);
 
       context.clearRect(0, 0, width, height);
       context.fillStyle = `rgba(255,255,255,${alpha})`;

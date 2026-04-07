@@ -146,10 +146,10 @@ export default function RadioPlayer({ radioState }) {
               <SpectrumVisualizer
                 analyserRef={audioAnalyserRef}
                 isPlaying={isPlaying}
-                className="mb-3 h-5 w-[3rem] 3xl:w-[3.5rem]"
+                className="mb-3 h-5 w-[5rem] 3xl:w-[5.75rem]"
               />
 
-              <div className="flex w-full max-w-[32rem] items-center justify-end gap-4 3xl:max-w-[36rem] 3xl:gap-5">
+              <div className="ml-auto flex w-fit items-center justify-end gap-3 3xl:gap-4">
                 <motion.button
                   whileHover={{ scale: isLoading ? 1 : 1.05 }}
                   whileTap={{ scale: isLoading ? 1 : 0.95 }}
@@ -172,11 +172,11 @@ export default function RadioPlayer({ radioState }) {
                   )}
                 </motion.button>
 
-                <div className="min-w-0 flex flex-1 flex-col items-end text-right">
-                  <Heading level={2} color="custom" className={`mb-1 w-full text-right !text-4xl !leading-tight 3xl:!text-5xl ${textPrimaryClass}`}>
+                <div className="flex max-w-[24rem] flex-col items-end text-right 3xl:max-w-[28rem]">
+                  <Heading level={2} color="custom" className={`mb-1 text-right !text-4xl !leading-tight 3xl:!text-5xl ${textPrimaryClass}`}>
                     {currentStation.name}
                   </Heading>
-                  <Body size="normal" weight="medium" opacity="custom" className={`${textSecondaryClass} min-h-[1.5rem] w-full text-right text-lg 3xl:text-xl`}>
+                  <Body size="normal" weight="medium" opacity="custom" className={`${textSecondaryClass} min-h-[1.5rem] text-right text-lg 3xl:text-xl`}>
                     {metadata || 'Primul radio din Dobrogea'}
                   </Body>
                 </div>
