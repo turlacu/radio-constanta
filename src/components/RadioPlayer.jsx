@@ -140,7 +140,7 @@ export default function RadioPlayer({ radioState }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
-            className={`flex w-full max-w-[36rem] justify-between justify-self-end ${desktopBlockHeightClass}`}
+            className={`flex w-full max-w-[36rem] flex-col items-start justify-between justify-self-end ${desktopBlockHeightClass}`}
           >
             <div className="w-full">
               <SpectrumVisualizer
@@ -207,7 +207,7 @@ export default function RadioPlayer({ radioState }) {
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="flex w-full max-w-[15rem] gap-2 3xl:max-w-[17rem] 3xl:gap-3"
+              className="mt-5 flex w-full max-w-[15rem] gap-2 3xl:max-w-[17rem] 3xl:gap-3"
               role="group"
               aria-label="Station selection"
             >
@@ -237,7 +237,7 @@ export default function RadioPlayer({ radioState }) {
               })}
             </motion.div>
 
-            <Body size="small" opacity="custom" className={`mt-4 text-sm ${textTertiaryClass}`}>
+            <Body size="small" opacity="custom" className={`mt-4 max-w-[22rem] text-sm ${textTertiaryClass}`}>
               Calitatea streamului se schimbă din Setări și este memorată pentru următoarea vizită.
             </Body>
           </motion.div>
