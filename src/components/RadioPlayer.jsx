@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react';
+import { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import Loader from './Loader';
 import SpectrumVisualizer from './SpectrumVisualizer';
@@ -27,6 +27,9 @@ export default function RadioPlayer({ radioState }) {
   const device = useContext(DeviceContext);
   const isDesktopShell = !device?.isPortrait;
   const isSplitScreen = isDesktopShell && !forceCompactLayout;
+  const desktopCoverRef = useRef(null);
+  const desktopPlayButtonRef = useRef(null);
+  const [desktopPlayButtonOffset, setDesktopPlayButtonOffset] = useState(0);
   const viewportWidth = device?.screenWidth || 0;
   const viewportHeight = device?.screenHeight || 0;
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
@@ -101,6 +104,54 @@ export default function RadioPlayer({ radioState }) {
   }, [aspectRatio, viewportHeight, viewportWidth]);
   const desktopTitleClass = '!leading-[0.96]';
 
+  useLayoutEffect(() => {
+    if (!isSplitScreen) {
+      setDesktopPlayButtonOffset(0);
+      return undefined;
+    }
+
+    const updatePlayButtonOffset = () => {
+      const coverElement = desktopCoverRef.current;
+      const buttonElement = desktopPlayButtonRef.current;
+
+      if (!coverElement || !buttonElement) {
+        return;
+      }
+
+      const coverRect = coverElement.getBoundingClientRect();
+      const buttonRect = buttonElement.getBoundingClientRect();
+      const nextOffset = Math.round((coverRect.top + coverRect.height / 2) - (buttonRect.top + buttonRect.height / 2));
+
+      setDesktopPlayButtonOffset((previous) => (
+        Math.abs(previous - nextOffset) < 1 ? previous : nextOffset
+      ));
+    };
+
+    updatePlayButtonOffset();
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => {
+          window.requestAnimationFrame(updatePlayButtonOffset);
+        })
+      : null;
+
+    if (resizeObserver) {
+      if (desktopCoverRef.current) {
+        resizeObserver.observe(desktopCoverRef.current);
+      }
+      if (desktopPlayButtonRef.current) {
+        resizeObserver.observe(desktopPlayButtonRef.current);
+      }
+    }
+
+    window.addEventListener('resize', updatePlayButtonOffset);
+
+    return () => {
+      window.removeEventListener('resize', updatePlayButtonOffset);
+      resizeObserver?.disconnect();
+    };
+  }, [isSplitScreen, desktopMetrics.coverSize, desktopMetrics.playButton, viewportWidth, viewportHeight]);
+
   const renderCoverArt = (desktop = false) => (
     <motion.div
       initial={{ scale: 0.95, opacity: 0 }}
@@ -110,6 +161,7 @@ export default function RadioPlayer({ radioState }) {
         ? 'relative shrink-0'
         : 'relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12'}
       style={desktop ? { width: `${desktopMetrics.coverSize}px` } : undefined}
+      ref={desktop ? desktopCoverRef : undefined}
     >
       <div className="relative w-full aspect-square overflow-hidden rounded-[22px] border border-white/20 shadow-[0_18px_42px_rgba(15,20,25,0.14)] 3xl:rounded-[28px]">
         <motion.img
@@ -231,8 +283,10 @@ export default function RadioPlayer({ radioState }) {
                   }}
                 >
                   <motion.button
-                    whileHover={{ scale: isLoading ? 1 : 1.05 }}
-                    whileTap={{ scale: isLoading ? 1 : 0.95 }}
+                    initial={false}
+                    animate={{ y: desktopPlayButtonOffset }}
+                    whileHover={{ y: desktopPlayButtonOffset, scale: isLoading ? 1 : 1.05 }}
+                    whileTap={{ y: desktopPlayButtonOffset, scale: isLoading ? 1 : 0.95 }}
                     onClick={togglePlay}
                     disabled={isLoading}
                     tabIndex={0}
@@ -240,8 +294,8 @@ export default function RadioPlayer({ radioState }) {
                     style={{
                       width: `${desktopMetrics.playButton}px`,
                       height: `${desktopMetrics.playButton}px`,
-                      transform: `translateY(${Math.round(desktopMetrics.playButton * 0.42)}px)`,
                     }}
+                    ref={desktopPlayButtonRef}
                     aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
                   >
                     {isLoading ? (

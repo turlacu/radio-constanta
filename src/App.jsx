@@ -68,6 +68,19 @@ const readStoredQualityPreferences = () => {
   }
 };
 
+const getInitialStationQuality = (stationId) => {
+  const storedPreferences = readStoredQualityPreferences();
+  const storedQuality = storedPreferences[stationId];
+  const defaultQuality = STATIONS[stationId].defaultQuality;
+
+  // Migrate older saved Folclor MP3 preference to the new lossless default.
+  if (stationId === 'folclor' && defaultQuality === 'flac' && storedQuality === 'mp3_128') {
+    return 'flac';
+  }
+
+  return storedQuality || defaultQuality;
+};
+
 // Inner component that checks for admin route (must be inside Router)
 function RouteHandler({ children }) {
   const location = useLocation();
@@ -92,8 +105,8 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStation, setCurrentStation] = useState(STATIONS.fm);
   const [selectedQuality, setSelectedQuality] = useState({
-    fm: readStoredQualityPreferences().fm || STATIONS.fm.defaultQuality,
-    folclor: readStoredQualityPreferences().folclor || STATIONS.folclor.defaultQuality
+    fm: getInitialStationQuality('fm'),
+    folclor: getInitialStationQuality('folclor')
   });
   const [metadata, setMetadata] = useState('');
   const [streamInfo, setStreamInfo] = useState(null);
