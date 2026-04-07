@@ -69,11 +69,11 @@ export default function SpectrumVisualizer({
           const sliceAverage = slice.length
             ? slice.reduce((sum, value) => sum + value, 0) / (slice.length * 255)
             : 0;
-          const normalizedSlice = Math.pow(sliceAverage, 0.92);
-          const spectralTilt = Math.max(0.4, 0.86 - index * 0.012);
-          const energyScale = 0.52 + overallEnergy * 0.24;
-          const trailingMotion = overallEnergy * 0.08 * (0.45 + Math.sin(performance.now() / 260 + index * 0.75) * 0.55);
-          return Math.max(0.04, Math.min(0.78, normalizedSlice * spectralTilt * energyScale + trailingMotion));
+          const normalizedSlice = Math.pow(sliceAverage, 0.94);
+          const spectralTilt = Math.max(0.34, 0.68 - index * 0.009);
+          const energyScale = 0.46 + overallEnergy * 0.18;
+          const trailingMotion = overallEnergy * 0.055 * (0.45 + Math.sin(performance.now() / 260 + index * 0.75) * 0.55);
+          return Math.max(0.035, Math.min(0.72, normalizedSlice * spectralTilt * energyScale + trailingMotion));
         }).map((value, index) => {
           const previous = smoothedValuesRef.current[index] || 0.08;
           const smoothed = previous * 0.68 + value * 0.32;
