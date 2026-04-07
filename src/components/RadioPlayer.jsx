@@ -190,7 +190,7 @@ export default function RadioPlayer({ radioState }) {
             }}
           >
             <div className="flex shrink-0 justify-start">
-            {renderCoverArt(true)}
+              {renderCoverArt(true)}
             </div>
 
             <motion.div
@@ -205,15 +205,15 @@ export default function RadioPlayer({ radioState }) {
               }}
             >
               <div className="flex w-full flex-col items-end">
-              <SpectrumVisualizer
-                analyserRef={audioAnalyserRef}
-                isPlaying={isPlaying}
-                className="mb-3 shrink-0"
-                style={{
-                  width: `${desktopMetrics.visualizerWidth}px`,
-                  height: `${desktopMetrics.visualizerHeight}px`,
-                }}
-              />
+                <SpectrumVisualizer
+                  analyserRef={audioAnalyserRef}
+                  isPlaying={isPlaying}
+                  className="mb-3 shrink-0"
+                  style={{
+                    width: `${desktopMetrics.visualizerWidth}px`,
+                    height: `${desktopMetrics.visualizerHeight}px`,
+                  }}
+                />
 
                 <div
                   className="ml-auto inline-grid items-center justify-end"
@@ -222,31 +222,31 @@ export default function RadioPlayer({ radioState }) {
                     gridTemplateColumns: `${desktopMetrics.playButton}px ${desktopMetrics.titleWidth}px`,
                   }}
                 >
-                <motion.button
-                  whileHover={{ scale: isLoading ? 1 : 1.05 }}
-                  whileTap={{ scale: isLoading ? 1 : 0.95 }}
-                  onClick={togglePlay}
-                  disabled={isLoading}
-                  tabIndex={0}
-                  className="relative flex shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all disabled:opacity-40"
-                  style={{
-                    width: `${desktopMetrics.playButton}px`,
-                    height: `${desktopMetrics.playButton}px`,
-                  }}
-                  aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
-                >
-                  {isLoading ? (
-                    <Loader size="small" />
-                  ) : isPlaying ? (
-                    <svg className="h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                    </svg>
-                  ) : (
-                    <svg className="ml-1 h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  )}
-                </motion.button>
+                  <motion.button
+                    whileHover={{ scale: isLoading ? 1 : 1.05 }}
+                    whileTap={{ scale: isLoading ? 1 : 0.95 }}
+                    onClick={togglePlay}
+                    disabled={isLoading}
+                    tabIndex={0}
+                    className="relative flex shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all disabled:opacity-40"
+                    style={{
+                      width: `${desktopMetrics.playButton}px`,
+                      height: `${desktopMetrics.playButton}px`,
+                    }}
+                    aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
+                  >
+                    {isLoading ? (
+                      <Loader size="small" />
+                    ) : isPlaying ? (
+                      <svg className="h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                      </svg>
+                    ) : (
+                      <svg className="ml-1 h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    )}
+                  </motion.button>
 
                   <div className="flex min-w-0 flex-col items-end text-right" style={{ width: `${desktopMetrics.titleWidth}px` }}>
                     <Heading
@@ -255,7 +255,7 @@ export default function RadioPlayer({ radioState }) {
                       className={`mb-1 whitespace-nowrap text-right ${desktopTitleClass} ${textPrimaryClass}`}
                       style={{ fontSize: `${desktopMetrics.titleSize}px` }}
                     >
-                    Radio Constanța
+                      Radio Constanța
                     </Heading>
                     <Body
                       size="normal"
@@ -264,65 +264,64 @@ export default function RadioPlayer({ radioState }) {
                       className={`${textSecondaryClass} min-h-[1.5rem] whitespace-nowrap text-right`}
                       style={{ fontSize: `${desktopMetrics.subtitleSize}px`, lineHeight: 1.25 }}
                     >
-                    {metadata || 'Primul radio din Dobrogea'}
+                      {metadata || 'Primul radio din Dobrogea'}
                     </Body>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {streamInfo && (
+              {streamInfo && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className={`mt-4 flex flex-wrap items-center justify-end gap-2 text-right ${desktopMetaClass}`}
+                  role="status"
+                  aria-label="Stream information"
+                >
+                  <span>{streamInfo.sampleRate}</span>
+                  <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                  <span>{streamInfo.channels}</span>
+                  <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                  <span>{streamInfo.bitrate}</span>
+                  <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1">{streamInfo.format}</span>
+                </motion.div>
+              )}
+
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-              className={`mt-4 flex flex-wrap items-center justify-end gap-2 text-right ${desktopMetaClass}`}
-              role="status"
-              aria-label="Stream information"
-            >
-                <span>{streamInfo.sampleRate}</span>
-                <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
-                <span>{streamInfo.channels}</span>
-                <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
-                <span>{streamInfo.bitrate}</span>
-                <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1">{streamInfo.format}</span>
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="mt-5 flex justify-end gap-2"
+                style={{ width: `${desktopMetrics.buttonRailWidth}px` }}
+                role="group"
+                aria-label="Station selection"
+              >
+                {stations.map((station, index) => {
+                  const isActive = currentStation.id === station.id;
+                  return (
+                    <motion.button
+                      key={station.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => switchStation(station)}
+                      initial={{ x: -10, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.24 + index * 0.05 }}
+                      tabIndex={0}
+                      className={`relative min-w-0 flex-1 rounded-[12px] border px-4 py-3 text-[14px] font-semibold transition-all ${
+                        isActive
+                          ? activeStationButtonClass
+                          : inactiveButtonClass
+                      }`}
+                      aria-pressed={isActive}
+                      aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
+                    >
+                      {station.id === 'fm' ? 'FM' : 'Folclor'}
+                    </motion.button>
+                  );
+                })}
               </motion.div>
-            )}
-
-            <motion.div
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="mt-5 flex justify-end gap-2"
-              style={{ width: `${desktopMetrics.buttonRailWidth}px` }}
-              role="group"
-              aria-label="Station selection"
-            >
-              {stations.map((station, index) => {
-                const isActive = currentStation.id === station.id;
-                return (
-                  <motion.button
-                    key={station.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => switchStation(station)}
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.24 + index * 0.05 }}
-                    tabIndex={0}
-                    className={`relative min-w-0 flex-1 rounded-[12px] border px-4 py-3 text-[14px] font-semibold transition-all ${
-                      isActive
-                        ? activeStationButtonClass
-                        : inactiveButtonClass
-                    }`}
-                    aria-pressed={isActive}
-                    aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
-                  >
-                    {station.id === 'fm' ? 'FM' : 'Folclor'}
-                  </motion.button>
-                );
-              })}
-            </motion.div>
             </motion.div>
           </div>
         </div>
