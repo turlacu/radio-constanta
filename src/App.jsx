@@ -369,14 +369,15 @@ function AppContent() {
 
   useEffect(() => {
     setSelectedQuality((prev) => {
+      const folclorHasLossless = stationsWithDynamicCovers.folclor.qualities.some((quality) => quality.id === 'flac');
       const nextFmPreference = prev.fm || getInitialStationQuality('fm');
-      const nextFolclorPreference = prev.folclor === 'mp3_128' && STATIONS.folclor.defaultQuality === 'flac'
+      const nextFolclorPreference = ((prev.folclor === 'mp3_128' && STATIONS.folclor.defaultQuality === 'flac') || (folclorHasLossless && prev.folclor !== 'flac'))
         ? 'flac'
         : (prev.folclor || getInitialStationQuality('folclor'));
 
       const next = {
         fm: resolveQualityForStation('fm', nextFmPreference)?.id || stationsWithDynamicCovers.fm.defaultQuality,
-        folclor: resolveQualityForStation('folclor', nextFolclorPreference)?.id || nextFolclorPreference
+        folclor: resolveQualityForStation('folclor', nextFolclorPreference)?.id || stationsWithDynamicCovers.folclor.defaultQuality
       };
 
       if (next.fm === prev.fm && next.folclor === prev.folclor) {
@@ -791,7 +792,7 @@ function AppContent() {
     stopRadio,
     resumeRadio,
     restoreRadio,
-    showWeatherBackground: !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is visible
+    showWeatherBackground: showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is actually visible
     audioAnalyserRef: analyserRef,
     forceCompactLayout: showNews
   };

@@ -158,7 +158,7 @@ export default function RadioPlayer({ radioState }) {
           <motion.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="absolute right-4 top-4 flex items-center gap-1.5 rounded-xl bg-error/90 px-3 py-1.5 backdrop-blur-sm 3xl:right-6 3xl:top-6"
+            className="absolute right-4 top-4 flex items-center gap-1.5 rounded-xl border border-white/20 bg-error/95 px-3 py-1.5 text-white shadow-lg shadow-black/15 backdrop-blur-sm 3xl:right-6 3xl:top-6"
           >
             <motion.span
               animate={{ opacity: [1, 0.5, 1] }}

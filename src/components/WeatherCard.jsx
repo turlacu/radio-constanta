@@ -43,6 +43,12 @@ export default function WeatherCard({ className = '', style }) {
   const [weatherData, setWeatherData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const textColor = useWeatherTextColor();
+  const loadingSurfaceClass = textColor === 'dark'
+    ? 'border border-gray-900/18 bg-white/35'
+    : 'border border-white/18 bg-bg-tertiary/60';
+  const loadingBlockClass = textColor === 'dark'
+    ? 'bg-gray-900/12'
+    : 'bg-bg-secondary/50';
 
   useEffect(() => {
     // Get shared singleton WeatherManager instance (same one used by WeatherBackground)
@@ -247,17 +253,18 @@ export default function WeatherCard({ className = '', style }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className={clsx(
-          'w-full max-w-[32rem] bg-bg-tertiary/60 backdrop-blur-xl rounded-3xl p-8 border border-border/30 shadow-2xl',
+          'w-full max-w-[32rem] rounded-3xl p-8 shadow-2xl backdrop-blur-xl',
+          loadingSurfaceClass,
           className
         )}
         style={style}
       >
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-bg-secondary/50 rounded w-3/4"></div>
-          <div className="h-24 bg-bg-secondary/50 rounded"></div>
+          <div className={clsx('h-8 w-3/4 rounded', loadingBlockClass)}></div>
+          <div className={clsx('h-24 rounded', loadingBlockClass)}></div>
           <div className="space-y-2">
-            <div className="h-4 bg-bg-secondary/50 rounded"></div>
-            <div className="h-4 bg-bg-secondary/50 rounded w-5/6"></div>
+            <div className={clsx('h-4 rounded', loadingBlockClass)}></div>
+            <div className={clsx('h-4 w-5/6 rounded', loadingBlockClass)}></div>
           </div>
         </div>
       </motion.div>
