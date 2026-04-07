@@ -956,10 +956,12 @@ function AppContent() {
                       animate={{ x: 0, opacity: 1 }}
                       exit={{ x: '100%', opacity: 0 }}
                       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-                      className="absolute inset-y-0 right-0 overflow-y-auto scrollbar-hide relative flex items-center justify-center bg-bg-secondary"
+                      className="absolute inset-y-0 right-0 z-30 overflow-y-auto scrollbar-hide bg-bg-secondary"
                       style={{ left: `${desktopNewsRailWidth}px` }}
                     >
-                      <News radioState={radioState} />
+                      <div className="h-full w-full">
+                        <News radioState={radioState} />
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>

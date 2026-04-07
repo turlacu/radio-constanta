@@ -5,7 +5,7 @@ import { Card, Heading, Body, Caption, Button } from './ui';
 
 export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore, loading }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.screenWidth >= 768;
+  const isSplitScreen = !device?.isPortrait;
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
