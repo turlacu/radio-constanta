@@ -113,6 +113,7 @@ function AppContent() {
   const audioRef = useRef(null);
   const isSwitchingRef = useRef(false);
   const isSwitchingQualityRef = useRef(false);
+  const streamTransitionIdRef = useRef(0);
   const detectedSampleRateRef = useRef(null);
   const audioContextRef = useRef(null);
   const audioSourceNodeRef = useRef(null);
@@ -398,6 +399,14 @@ function AppContent() {
     console.log(message);
   };
 
+  const getAbsoluteStreamUrl = (url) => {
+    try {
+      return new URL(url, window.location.href).href;
+    } catch {
+      return url;
+    }
+  };
+
   // Get current quality object for the current station
   const getCurrentQuality = () => {
     return resolveQualityForStation(currentStation.id, selectedQuality[currentStation.id]) || currentStation.qualities[0];
@@ -406,6 +415,116 @@ function AppContent() {
   // Get stream URL for current station and quality
   const getStreamUrl = () => {
     return getCurrentQuality().url;
+  };
+
+  const waitForAudioReset = (audio, transitionId, timeoutMs = 400) => new Promise((resolve) => {
+    let settled = false;
+
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      audio.removeEventListener('emptied', finish);
+      audio.removeEventListener('abort', finish);
+      clearTimeout(timeoutId);
+      resolve(transitionId === streamTransitionIdRef.current);
+    };
+
+    const timeoutId = setTimeout(finish, timeoutMs);
+
+    audio.addEventListener('emptied', finish, { once: true });
+    audio.addEventListener('abort', finish, { once: true });
+  });
+
+  const waitForPlaybackStart = (audio, transitionId, playPromise, timeoutMs = 8000) => new Promise((resolve, reject) => {
+    let settled = false;
+
+    const cleanup = () => {
+      audio.removeEventListener('playing', handleSuccess);
+      audio.removeEventListener('canplay', handleSuccess);
+      audio.removeEventListener('error', handleError);
+      clearTimeout(timeoutId);
+    };
+
+    const settle = (callback) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      cleanup();
+      callback();
+    };
+
+    const handleSuccess = () => {
+      settle(() => {
+        if (transitionId !== streamTransitionIdRef.current) {
+          reject(new Error('Stale stream transition'));
+          return;
+        }
+
+        resolve();
+      });
+    };
+
+    const handleError = () => {
+      const code = audio.error?.code;
+      const message = audio.error?.message || `Audio error ${code || 'unknown'}`;
+      settle(() => reject(new Error(message)));
+    };
+
+    const timeoutId = setTimeout(() => {
+      settle(() => reject(new Error('Timed out while starting stream')));
+    }, timeoutMs);
+
+    audio.addEventListener('playing', handleSuccess, { once: true });
+    audio.addEventListener('canplay', handleSuccess, { once: true });
+    audio.addEventListener('error', handleError, { once: true });
+
+    Promise.resolve(playPromise)
+      .then(handleSuccess)
+      .catch((error) => {
+        settle(() => reject(error));
+      });
+  });
+
+  const transitionToStream = async ({ stationId, qualityId }) => {
+    const audio = audioRef.current;
+    const station = stationsWithDynamicCovers[stationId];
+    const quality = resolveQualityForStation(stationId, qualityId);
+
+    if (!audio || !station || !quality?.url) {
+      throw new Error('Missing stream target');
+    }
+
+    const transitionId = ++streamTransitionIdRef.current;
+    detectedSampleRateRef.current = null;
+
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+
+    const resetCompleted = await waitForAudioReset(audio, transitionId);
+    if (!resetCompleted) {
+      throw new Error('Superseded stream transition');
+    }
+
+    if (audioContextRef.current?.state === 'suspended') {
+      audioContextRef.current.resume().catch(() => {});
+    }
+
+    const nextUrl = getAbsoluteStreamUrl(quality.url);
+    logDebug(`Transitioning stream: ${nextUrl}`);
+    audio.src = nextUrl;
+    audio.load();
+    setIsLoading(true);
+
+    const playPromise = audio.play();
+    await waitForPlaybackStart(audio, transitionId, playPromise);
+
+    return { station, quality };
   };
 
   const ensureAudioAnalyser = () => {
@@ -573,22 +692,23 @@ function AppContent() {
     // If paused, start playing
     if (audio.paused) {
       ensureAudioAnalyser();
-      if (audioContextRef.current?.state === 'suspended') {
-        audioContextRef.current.resume().catch(() => {});
-      }
-
-      // Only set src and load if src is different or empty
-      if (!audio.src || audio.src !== streamUrl) {
-        logDebug(`Setting src: ${streamUrl}`);
-        audio.src = streamUrl;
-        audio.load(); // Explicitly load the stream
-      }
-
-      logDebug(`play() - paused=${audio.paused}, ready=${audio.readyState}`);
-      setIsLoading(true);
 
       try {
-        await audio.play();
+        if (!audio.src || audio.src !== getAbsoluteStreamUrl(streamUrl)) {
+          await transitionToStream({
+            stationId: currentStation.id,
+            qualityId: selectedQuality[currentStation.id]
+          });
+        } else {
+          if (audioContextRef.current?.state === 'suspended') {
+            audioContextRef.current.resume().catch(() => {});
+          }
+
+          logDebug(`play() - paused=${audio.paused}, ready=${audio.readyState}`);
+          setIsLoading(true);
+          await audio.play();
+        }
+
         logDebug('✓ play() success');
 
         // Track stream start
@@ -621,16 +741,6 @@ function AppContent() {
     const audio = audioRef.current;
 
     try {
-      // Stop current playback and clear buffer
-      if (audio) {
-        audio.pause();
-        audio.src = ''; // Clear old stream to prevent decode errors
-        audio.load(); // Flush decoder pipeline
-
-        // Wait longer for decoder to fully flush (especially for format changes)
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
-
       // Update station
       setCurrentStation(station);
       setIsPlaying(false);
@@ -640,27 +750,20 @@ function AppContent() {
       // Autoplay if was playing before
       if (wasPlaying && audio) {
         logDebug('Autoplay after station switch');
-
-        // Wait a bit more before starting new stream
-        await new Promise(resolve => setTimeout(resolve, 200));
-
-        // Get URL for the new station's selected quality
-        const quality = resolveQualityForStation(station.id, selectedQuality[station.id]) || station.qualities[0];
-        const qualityId = quality?.id || station.defaultQuality;
-
-        // Set new src and play
-        audio.src = quality.url;
-        audio.load();
-        setIsLoading(true);
+        const qualityId = resolveQualityForStation(station.id, selectedQuality[station.id])?.id || station.defaultQuality;
 
         try {
-          await audio.play();
+          await transitionToStream({
+            stationId: station.id,
+            qualityId
+          });
           logDebug('✓ Autoplay success');
 
           // Track station switch
           analytics.trackStationSwitch(station.id, qualityId);
         } catch (err) {
           logDebug(`✗ Autoplay failed: ${err.message}`);
+          analytics.trackStreamStop();
           setIsLoading(false);
         }
       }
@@ -704,36 +807,19 @@ function AppContent() {
       // If currently playing, restart with new quality
       const audio = audioRef.current;
       if (isPlaying && audio) {
-        const quality = station.qualities.find(q => q.id === qualityId);
-        if (quality) {
-          logDebug(`Reloading stream with new quality: ${quality.url}`);
+        try {
+          await transitionToStream({
+            stationId,
+            qualityId
+          });
+          logDebug('✓ Quality switch success');
 
-          // Pause and clear to prevent decode errors when switching formats
-          audio.pause();
-          audio.src = '';
-          audio.load();
-
-          // Wait longer for decoder to fully flush (format changes need more time)
-          await new Promise(resolve => setTimeout(resolve, 300));
-
-          // Now set new quality stream
-          audio.src = quality.url;
-          audio.load();
-          setIsLoading(true);
-
-          // Wait a bit before playing
-          await new Promise(resolve => setTimeout(resolve, 100));
-
-          try {
-            await audio.play();
-            logDebug('✓ Quality switch success');
-
-            // Track quality change
-            analytics.trackQualityChange(stationId, qualityId);
-          } catch (err) {
-            logDebug(`✗ Quality switch failed: ${err.message}`);
-            setIsLoading(false);
-          }
+          // Track quality change
+          analytics.trackQualityChange(stationId, qualityId);
+        } catch (err) {
+          logDebug(`✗ Quality switch failed: ${err.message}`);
+          analytics.trackStreamStop();
+          setIsLoading(false);
         }
       }
     } finally {
