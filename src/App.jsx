@@ -420,10 +420,10 @@ function AppContent() {
       const sourceNode = audioContext.createMediaElementSource(audio);
       const analyser = audioContext.createAnalyser();
 
-      analyser.fftSize = 512;
-      analyser.minDecibels = -92;
-      analyser.maxDecibels = -18;
-      analyser.smoothingTimeConstant = 0.64;
+      analyser.fftSize = 2048;
+      analyser.minDecibels = -96;
+      analyser.maxDecibels = -20;
+      analyser.smoothingTimeConstant = 0.58;
 
       sourceNode.connect(analyser);
       analyser.connect(audioContext.destination);

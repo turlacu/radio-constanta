@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react';
 import { clsx } from 'clsx';
 
 const BAR_COUNT = 29;
-const MIN_FREQUENCY = 40;
+const MIN_FREQUENCY = 55;
 const MAX_FREQUENCY = 14000;
+const NOISE_FLOOR = 14;
 
 export default function SpectrumVisualizer({
   analyserRef,
@@ -77,6 +78,26 @@ export default function SpectrumVisualizer({
       return [start, end];
     };
 
+    const getBandCompensation = (index) => {
+      if (index < 4) {
+        return 0.48;
+      }
+
+      if (index < 8) {
+        return 0.64;
+      }
+
+      if (index < 12) {
+        return 0.82;
+      }
+
+      if (index > 24) {
+        return 0.92;
+      }
+
+      return 1;
+    };
+
     const render = () => {
       resizeCanvas();
 
@@ -96,8 +117,9 @@ export default function SpectrumVisualizer({
 
           const average = slice.reduce((sum, value) => sum + value, 0) / slice.length;
           const rms = Math.sqrt(slice.reduce((sum, value) => sum + value * value, 0) / slice.length);
-          const weightedEnergy = average * 0.45 + rms * 0.55;
-          const normalized = weightedEnergy / 255;
+          const weightedEnergy = average * 0.52 + rms * 0.48;
+          const compensatedEnergy = Math.max(0, weightedEnergy - NOISE_FLOOR) * getBandCompensation(index);
+          const normalized = compensatedEnergy / (255 - NOISE_FLOOR);
 
           return Math.max(0.02, Math.min(0.72, Math.pow(normalized, 1.48)));
         }).map((value, index) => {
