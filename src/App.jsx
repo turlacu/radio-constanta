@@ -418,6 +418,55 @@ function AppContent() {
     return getCurrentQuality().url;
   };
 
+  const getStationQualityCandidates = (stationId, preferredQualityId) => {
+    const station = stationsWithDynamicCovers[stationId];
+    if (!station) {
+      return [];
+    }
+
+    const preferred = resolveQualityForStation(stationId, preferredQualityId);
+    const candidates = [];
+
+    if (preferred) {
+      candidates.push(preferred);
+    }
+
+    station.qualities.forEach((quality) => {
+      if (!candidates.some((candidate) => candidate.id === quality.id)) {
+        candidates.push(quality);
+      }
+    });
+
+    return candidates;
+  };
+
+  const buildStreamInfoFromQuality = (quality, audio) => {
+    let channels = 'Stereo';
+    let sampleRate = detectedSampleRateRef.current || '48.0 kHz';
+
+    if (!detectedSampleRateRef.current && audioContextRef.current) {
+      detectedSampleRateRef.current = `${(audioContextRef.current.sampleRate / 1000).toFixed(1)} kHz`;
+      sampleRate = detectedSampleRateRef.current;
+    } else if (!detectedSampleRateRef.current && (window.AudioContext || window.webkitAudioContext)) {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContextClass();
+        detectedSampleRateRef.current = `${(audioContext.sampleRate / 1000).toFixed(1)} kHz`;
+        sampleRate = detectedSampleRateRef.current;
+        audioContext.close().catch(() => {});
+      } catch (e) {
+        console.log('AudioContext not available:', e);
+      }
+    }
+
+    return {
+      format: quality.format,
+      bitrate: quality.bitrate,
+      channels,
+      sampleRate
+    };
+  };
+
   const waitForAudioReset = (audio, transitionId, timeoutMs = 400) => new Promise((resolve) => {
     let settled = false;
 
@@ -617,6 +666,7 @@ function AppContent() {
     }
 
     logDebug(`Transitioning stream: ${nextUrl}`);
+    setStreamInfo(null);
     audio.src = nextUrl;
     audio.load();
     setIsLoading(true);
@@ -624,8 +674,38 @@ function AppContent() {
     const playPromise = audio.play();
     await waitForPlaybackStart(audio, transitionId, playPromise);
     ensureAudioAnalyser();
+    setStreamInfo(buildStreamInfoFromQuality(quality, audio));
 
     return { station, quality };
+  };
+
+  const attemptStreamPlayback = async ({ stationId, preferredQualityId, persistFallback = true }) => {
+    const candidates = getStationQualityCandidates(stationId, preferredQualityId);
+    let lastError = null;
+
+    for (const candidate of candidates) {
+      try {
+        const result = await transitionToStream({
+          stationId,
+          qualityId: candidate.id
+        });
+
+        if (persistFallback && candidate.id !== preferredQualityId) {
+          setSelectedQuality((prev) => ({
+            ...prev,
+            [stationId]: candidate.id
+          }));
+          logDebug(`Using fallback quality for ${stationId}: ${candidate.id}`);
+        }
+
+        return result;
+      } catch (error) {
+        lastError = error;
+        logDebug(`✗ Stream candidate failed for ${stationId}/${candidate.id}: ${error.message}`);
+      }
+    }
+
+    throw lastError || new Error('No playable stream candidates');
   };
 
   const ensureAudioAnalyser = () => {
@@ -745,30 +825,7 @@ function AppContent() {
 
     const updateStreamInfo = () => {
       const quality = getCurrentQuality();
-      let channels = 'Stereo';
-      let sampleRate = detectedSampleRateRef.current || '48.0 kHz';
-
-      if (!detectedSampleRateRef.current && audioContextRef.current) {
-        detectedSampleRateRef.current = `${(audioContextRef.current.sampleRate / 1000).toFixed(1)} kHz`;
-        sampleRate = detectedSampleRateRef.current;
-      } else if (!detectedSampleRateRef.current && (window.AudioContext || window.webkitAudioContext)) {
-        try {
-          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-          const audioContext = new AudioContextClass();
-          detectedSampleRateRef.current = `${(audioContext.sampleRate / 1000).toFixed(1)} kHz`;
-          sampleRate = detectedSampleRateRef.current;
-          audioContext.close().catch(() => {});
-        } catch (e) {
-          console.log('AudioContext not available:', e);
-        }
-      }
-
-      setStreamInfo({
-        format: quality.format,
-        bitrate: quality.bitrate,
-        channels,
-        sampleRate
-      });
+      setStreamInfo(buildStreamInfoFromQuality(quality, audio));
     };
 
     const handleLoadedMetadata = () => {
@@ -806,10 +863,12 @@ function AppContent() {
     if (audio.paused) {
       try {
         if (!audio.src || audio.src !== getAbsoluteStreamUrl(streamUrl)) {
-          await transitionToStream({
+          const { quality } = await attemptStreamPlayback({
             stationId: currentStation.id,
-            qualityId: selectedQuality[currentStation.id]
+            preferredQualityId: selectedQuality[currentStation.id]
           });
+          logDebug(`Started with quality ${quality.id}`);
+          analytics.trackStreamStart(currentStation.id, quality.id);
         } else {
           if (audioContextRef.current?.state === 'suspended') {
             audioContextRef.current.resume().catch(() => {});
@@ -822,13 +881,13 @@ function AppContent() {
         }
 
         logDebug('✓ play() success');
-
-        // Track stream start
-        const quality = currentStation.qualities.find(q => q.id === selectedQuality[currentStation.id]);
-        analytics.trackStreamStart(currentStation.id, quality?.id || selectedQuality[currentStation.id]);
+        if (audio.src === getAbsoluteStreamUrl(streamUrl)) {
+          analytics.trackStreamStart(currentStation.id, selectedQuality[currentStation.id]);
+        }
       } catch (err) {
         logDebug(`✗ play() failed: ${err.message}`);
         setIsLoading(false);
+        setStreamInfo(null);
       }
     } else {
       // Pause
@@ -862,26 +921,27 @@ function AppContent() {
       // Autoplay if was playing before
       if (wasPlaying && audio) {
         logDebug('Autoplay after station switch');
-        const qualityId = resolveQualityForStation(station.id, selectedQuality[station.id])?.id || station.defaultQuality;
 
         try {
-          await transitionToStream({
+          const { quality } = await attemptStreamPlayback({
             stationId: station.id,
-            qualityId
+            preferredQualityId: selectedQuality[station.id] || station.defaultQuality
           });
           logDebug('✓ Autoplay success');
 
           // Track station switch
-          analytics.trackStationSwitch(station.id, qualityId);
+          analytics.trackStationSwitch(station.id, quality.id);
         } catch (err) {
           logDebug(`✗ Autoplay failed: ${err.message}`);
           analytics.trackStreamStop();
           setIsLoading(false);
+          setStreamInfo(null);
         }
       }
     } catch (error) {
       logDebug(`✗ Switch error: ${error.message}`);
       setIsLoading(false);
+      setStreamInfo(null);
     } finally {
       isSwitchingRef.current = false;
     }
@@ -920,18 +980,19 @@ function AppContent() {
       const audio = audioRef.current;
       if (isPlaying && audio) {
         try {
-          await transitionToStream({
+          const { quality } = await attemptStreamPlayback({
             stationId,
-            qualityId
+            preferredQualityId: qualityId
           });
           logDebug('✓ Quality switch success');
 
           // Track quality change
-          analytics.trackQualityChange(stationId, qualityId);
+          analytics.trackQualityChange(stationId, quality.id);
         } catch (err) {
           logDebug(`✗ Quality switch failed: ${err.message}`);
           analytics.trackStreamStop();
           setIsLoading(false);
+          setStreamInfo(null);
         }
       }
     } finally {
