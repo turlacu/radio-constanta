@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,11 +68,11 @@ router.get('/current', async (req, res) => {
       upstreamUrl = `${OPEN_METEO_URL}?${params.toString()}`;
     }
 
-    const response = await fetch(upstreamUrl, {
+    const response = await fetchWithTimeout(upstreamUrl, {
       headers: {
         'User-Agent': 'Radio Constanta Weather Proxy/1.0',
       },
-    });
+    }, 8000);
 
     if (!response.ok) {
       return res.status(response.status).json({

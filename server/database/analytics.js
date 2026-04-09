@@ -213,6 +213,14 @@ export function endSession(sessionId) {
   const now = Date.now();
 
   try {
+    const activeSession = db.prepare(`
+      SELECT station, quality
+      FROM listener_sessions
+      WHERE session_id = ? AND ended_at IS NULL
+      ORDER BY started_at DESC
+      LIMIT 1
+    `).get(sessionId);
+
     const stmt = db.prepare(`
       UPDATE listener_sessions
       SET ended_at = ?
@@ -220,12 +228,8 @@ export function endSession(sessionId) {
     `);
     const result = stmt.run(now, sessionId);
 
-    if (result.changes > 0) {
-      // Get session info to log the event
-      const session = db.prepare('SELECT station, quality FROM listener_sessions WHERE session_id = ?').get(sessionId);
-      if (session) {
-        logStreamEvent(sessionId, 'stop', session.station, session.quality);
-      }
+    if (result.changes > 0 && activeSession) {
+      logStreamEvent(sessionId, 'stop', activeSession.station, activeSession.quality);
     }
   } catch (error) {
     console.error('Error ending session:', error);
@@ -355,6 +359,24 @@ export function cleanupStaleSessions() {
   }
 }
 
+function getStationQualityStatsForRange(db, startTime, endTime) {
+  const rows = db.prepare(`
+    SELECT
+      station,
+      quality,
+      COUNT(*) as count
+    FROM listener_sessions
+    WHERE started_at >= ? AND started_at < ?
+    GROUP BY station, quality
+  `).all(startTime, endTime);
+
+  return rows.reduce((acc, row) => {
+    const key = `${row.station}_${row.quality}`;
+    acc[key] = row.count;
+    return acc;
+  }, {});
+}
+
 // === CURRENT STATS ===
 
 // Get current active listeners
@@ -399,6 +421,16 @@ export function getCurrentStats() {
       WHERE ended_at IS NULL AND user_id IS NOT NULL
     `).get();
 
+    const stationQualityStats = db.prepare(`
+      SELECT
+        station,
+        quality,
+        COUNT(*) as count
+      FROM listener_sessions
+      WHERE ended_at IS NULL
+      GROUP BY station, quality
+    `).all();
+
     return {
       total: totalActive.count,
       uniqueUsers: uniqueUsers.count,
@@ -409,11 +441,15 @@ export function getCurrentStats() {
       byQuality: qualityStats.reduce((acc, row) => {
         acc[row.quality] = row.count;
         return acc;
+      }, {}),
+      byStationQuality: stationQualityStats.reduce((acc, row) => {
+        acc[`${row.station}_${row.quality}`] = row.count;
+        return acc;
       }, {})
     };
   } catch (error) {
     console.error('Error getting current stats:', error);
-    return { total: 0, uniqueUsers: 0, byStation: {}, byQuality: {} };
+    return { total: 0, uniqueUsers: 0, byStation: {}, byQuality: {}, byStationQuality: {} };
   }
 }
 
@@ -456,7 +492,11 @@ export function getDailyStats(startDate, endDate) {
 
       if (aggregatedMap[dateStr]) {
         // Use aggregated data
-        result.push(aggregatedMap[dateStr]);
+        const { start: dayStart, end: dayEnd } = getDayRangeInTimeZone(dateStr, BUCHAREST_TIMEZONE);
+        result.push({
+          ...aggregatedMap[dateStr],
+          station_quality: getStationQualityStatsForRange(db, dayStart, dayEnd)
+        });
       } else {
         // Calculate from listener_sessions for missing dates
         const { start: dayStart, end: dayEnd } = getDayRangeInTimeZone(dateStr, BUCHAREST_TIMEZONE);
@@ -513,7 +553,8 @@ export function getDailyStats(startDate, endDate) {
           mp3_256_listeners: mp3_256Count,
           flac_listeners: flacCount,
           article_views: articleViews.count,
-          total_sessions: totalSessions.count
+          total_sessions: totalSessions.count,
+          station_quality: getStationQualityStatsForRange(db, dayStart, dayEnd)
         });
       }
     }
@@ -594,7 +635,8 @@ export function getTodayStats() {
       mp3_128_listeners: mp3_128Count,
       mp3_256_listeners: mp3_256Count,
       flac_listeners: flacCount,
-      article_views: articleViews.count
+      article_views: articleViews.count,
+      station_quality: getStationQualityStatsForRange(db, todayStart, tomorrowStart)
     };
   } catch (error) {
     console.error('Error getting today stats:', error);

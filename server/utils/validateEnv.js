@@ -59,7 +59,9 @@ export function validateEnvironment() {
   // Check ADMIN_PASSWORD_HASH in production
   if (nodeEnv === 'production') {
     const passwordHash = normalizeValue(process.env.ADMIN_PASSWORD_HASH);
-    if (passwordHash && !/^\$2[aby]\$\d{2}\$/.test(passwordHash)) {
+    if (!passwordHash) {
+      errors.push('ADMIN_PASSWORD_HASH is required in production');
+    } else if (!/^\$2[aby]\$\d{2}\$/.test(passwordHash)) {
       warnings.push(
         'ADMIN_PASSWORD_HASH does not appear to be a valid bcrypt hash. In Coolify, wrap it in quotes to prevent $ expansion.'
       );

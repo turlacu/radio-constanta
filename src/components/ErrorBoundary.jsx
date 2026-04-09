@@ -27,11 +27,11 @@ class ErrorBoundary extends Component {
     }
 
     // Update state with error details
-    this.state = {
+    this.setState({
       hasError: true,
       error,
       errorInfo,
-    };
+    });
   }
 
   handleReset = () => {

@@ -18,5 +18,5 @@ const hash = bcrypt.hashSync(password, 10);
 
 console.log('\n=== Admin Password Hash Generated ===\n');
 console.log('Add this to your .env file:\n');
-console.log(`ADMIN_PASSWORD_HASH=${hash}\n`);
+console.log(`ADMIN_PASSWORD_HASH='${hash}'\n`);
 console.log('=====================================\n');

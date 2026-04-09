@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { authenticateAdmin } from '../middleware/auth.js';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -90,11 +91,11 @@ const proxyImageUrl = (imageUrl) => {
 // Helper to fetch og:image from a URL (for fallback image extraction)
 const fetchOgImage = async (url) => {
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; RadioApp/1.0)'
       }
-    });
+    }, 5000);
     if (!response.ok) return null;
 
     const html = await response.text();
@@ -121,7 +122,7 @@ const fetchFromWordPressAPI = async (limit = 20) => {
 
     // Use _embed to get featured images and author info in one request
     const url = `${wpConfig.apiUrl}?per_page=${limit}&_embed`;
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url, {}, 8000);
 
     if (!response.ok) {
       throw new Error(`WordPress API fetch failed: ${response.status}`);

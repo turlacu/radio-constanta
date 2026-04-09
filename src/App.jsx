@@ -373,11 +373,8 @@ function AppContent() {
 
   useEffect(() => {
     setSelectedQuality((prev) => {
-      const folclorHasLossless = stationsWithDynamicCovers.folclor.qualities.some((quality) => quality.id === 'flac');
       const nextFmPreference = prev.fm || getInitialStationQuality('fm');
-      const nextFolclorPreference = ((prev.folclor === 'mp3_128' && STATIONS.folclor.defaultQuality === 'flac') || (folclorHasLossless && prev.folclor !== 'flac'))
-        ? 'flac'
-        : (prev.folclor || getInitialStationQuality('folclor'));
+      const nextFolclorPreference = prev.folclor || getInitialStationQuality('folclor');
 
       const next = {
         fm: resolveQualityForStation('fm', nextFmPreference)?.id || stationsWithDynamicCovers.fm.defaultQuality,

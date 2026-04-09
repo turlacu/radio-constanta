@@ -201,39 +201,23 @@ export default function StatisticsTab({ token }) {
       folclor_flac: 0
     };
 
-    // Aggregate quality stats proportionally by station from historical data
+    const mergeStationQuality = (stationQuality = {}) => {
+      stats.fm_mp3_128 += stationQuality.fm_mp3_128 || 0;
+      stats.fm_mp3_256 += stationQuality.fm_mp3_256 || 0;
+      stats.fm_flac += stationQuality.fm_flac || 0;
+      stats.folclor_mp3_128 += stationQuality.folclor_mp3_128 || 0;
+      stats.folclor_mp3_256 += stationQuality.folclor_mp3_256 || 0;
+      stats.folclor_flac += stationQuality.folclor_flac || 0;
+    };
+
+    // Aggregate exact quality stats from the backend
     lastNDays.forEach(stat => {
-      const totalListeners = stat.total_listeners || 0;
-      if (totalListeners === 0) return;
-
-      const fmRatio = (stat.fm_listeners || 0) / totalListeners;
-      const folclorRatio = (stat.folclor_listeners || 0) / totalListeners;
-
-      // Distribute quality counts proportionally
-      stats.fm_mp3_128 += Math.round((stat.mp3_128_listeners || 0) * fmRatio);
-      stats.fm_mp3_256 += Math.round((stat.mp3_256_listeners || 0) * fmRatio);
-      stats.fm_flac += Math.round((stat.flac_listeners || 0) * fmRatio);
-
-      stats.folclor_mp3_128 += Math.round((stat.mp3_128_listeners || 0) * folclorRatio);
-      stats.folclor_mp3_256 += Math.round((stat.mp3_256_listeners || 0) * folclorRatio);
-      stats.folclor_flac += Math.round((stat.flac_listeners || 0) * folclorRatio);
+      mergeStationQuality(stat.station_quality);
     });
 
-    // Add today's quality stats proportionally
+    // Add today's exact quality stats
     if (todayStats) {
-      const todayTotal = todayStats.total_listeners || 0;
-      if (todayTotal > 0) {
-        const fmRatio = (todayStats.fm_listeners || 0) / todayTotal;
-        const folclorRatio = (todayStats.folclor_listeners || 0) / todayTotal;
-
-        stats.fm_mp3_128 += Math.round((todayStats.mp3_128_listeners || 0) * fmRatio);
-        stats.fm_mp3_256 += Math.round((todayStats.mp3_256_listeners || 0) * fmRatio);
-        stats.fm_flac += Math.round((todayStats.flac_listeners || 0) * fmRatio);
-
-        stats.folclor_mp3_128 += Math.round((todayStats.mp3_128_listeners || 0) * folclorRatio);
-        stats.folclor_mp3_256 += Math.round((todayStats.mp3_256_listeners || 0) * folclorRatio);
-        stats.folclor_flac += Math.round((todayStats.flac_listeners || 0) * folclorRatio);
-      }
+      mergeStationQuality(todayStats.station_quality);
     }
 
     return stats;

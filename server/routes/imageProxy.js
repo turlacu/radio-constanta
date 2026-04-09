@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,7 +66,7 @@ router.get('/', async (req, res) => {
     console.log(`Proxying image: ${url}`);
 
     // Fetch image from original source
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url, {}, 8000);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.status}`);

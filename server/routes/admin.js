@@ -15,6 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = express.Router();
+const VALID_STATIONS = new Set(['fm', 'folclor']);
 
 // Rate limiting for authentication endpoints
 const authLimiter = rateLimit({
@@ -37,6 +38,12 @@ const authLimiter = rateLimit({
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
     const station = req.params.station || 'fm';
+
+    if (!validateStationParam(station)) {
+      cb(new Error('Invalid station'));
+      return;
+    }
+
     const uploadPath = path.join(__dirname, '../data/covers', station);
 
     // Create directory if it doesn't exist
@@ -50,7 +57,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     // Generate unique filename: timestamp-originalname
-    const uniqueName = `${Date.now()}-${file.originalname}`;
+    const uniqueName = `${Date.now()}-${sanitizeUploadFilename(file.originalname)}`;
     cb(null, uniqueName);
   }
 });
@@ -69,8 +76,6 @@ const upload = multer({
     }
   }
 });
-
-const FALLBACK_PASSWORD_HASH = '$2b$10$K2wPm5W9ZMUoWo8HPVCnMORGDjANxJNcKUK4v5FMb8q2TvjM5rIom'; // default: "admin123"
 
 function normalizePasswordHash(value) {
   if (typeof value !== 'string') {
@@ -213,8 +218,7 @@ async function getPasswordHash() {
     // Settings file doesn't exist or doesn't have password - use env var
   }
 
-  // Final fallback to built-in default password
-  return FALLBACK_PASSWORD_HASH;
+  return '';
 }
 
 // SSE: Track connected clients for cover updates
@@ -226,7 +230,20 @@ let lastKnownCovers = { fm: null, folclor: null };
 function validateFilePath(filePath, allowedDir) {
   const absolute = path.resolve(filePath);
   const allowed = path.resolve(allowedDir);
-  return absolute.startsWith(allowed);
+  const relative = path.relative(allowed, absolute);
+
+  return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
+function validateStationParam(station) {
+  return VALID_STATIONS.has(station);
+}
+
+function sanitizeUploadFilename(originalname) {
+  const parsed = path.parse(originalname);
+  const safeName = parsed.name.replace(/[^a-zA-Z0-9-_]+/g, '-').replace(/-+/g, '-').slice(0, 80) || 'cover';
+  const safeExt = parsed.ext.replace(/[^a-zA-Z0-9.]/g, '').slice(0, 10).toLowerCase();
+  return `${safeName}${safeExt}`;
 }
 
 // Admin login endpoint - with rate limiting
@@ -366,6 +383,10 @@ router.post('/covers/:station/upload', authenticateAdmin, upload.single('cover')
     }
 
     const { station } = req.params;
+    if (!validateStationParam(station)) {
+      return res.status(400).json({ error: 'Invalid station' });
+    }
+
     const { name, label, category } = req.body; // category: 'default' or 'scheduling'
 
     // Read current settings
@@ -416,6 +437,9 @@ router.post('/covers/:station/upload-default', authenticateAdmin, upload.single(
     }
 
     const { station } = req.params;
+    if (!validateStationParam(station)) {
+      return res.status(400).json({ error: 'Invalid station' });
+    }
 
     // Read current settings
     const data = await fs.readFile(SETTINGS_FILE, 'utf8');
@@ -451,6 +475,9 @@ router.post('/covers/:station/upload-default', authenticateAdmin, upload.single(
 router.delete('/covers/:station/:coverId', authenticateAdmin, async (req, res) => {
   try {
     const { station, coverId } = req.params;
+    if (!validateStationParam(station)) {
+      return res.status(400).json({ error: 'Invalid station' });
+    }
 
     // Read current settings
     const data = await fs.readFile(SETTINGS_FILE, 'utf8');
@@ -619,6 +646,10 @@ async function evaluateCurrentCover(station, verbose = true) {
 router.get('/covers/current/:station', async (req, res) => {
   try {
     const { station } = req.params;
+    if (!validateStationParam(station)) {
+      return res.status(400).json({ error: 'Invalid station' });
+    }
+
     const result = await evaluateCurrentCover(station, true);
     res.json(result);
   } catch (error) {
