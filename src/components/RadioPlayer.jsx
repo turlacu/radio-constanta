@@ -65,6 +65,9 @@ export default function RadioPlayer({ radioState }) {
     ? 'border-gray-900/18 bg-gray-900/6 text-gray-700 hover:bg-gray-900/12'
     : 'border-white/18 bg-white/6 text-white/70 hover:bg-white/12';
   const desktopMetaClass = `${textTertiaryClass} text-[11px] font-medium xl:text-[12px] 3xl:text-[13px]`;
+  const streamFormatBadgeClass = textColor === 'dark'
+    ? 'border-gray-900/30 bg-gray-900 text-white'
+    : 'border-white/28 bg-white text-gray-950';
   const desktopMetrics = useMemo(() => {
     const minViewport = Math.max(560, Math.min(viewportWidth || 1280, viewportHeight || 720));
     const profile = aspectRatio >= 1.9 ? 'ultrawide' : aspectRatio >= 1.25 ? 'wide' : 'square';
@@ -317,8 +320,7 @@ export default function RadioPlayer({ radioState }) {
                     <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
                     <span>{streamInfo.bitrate}</span>
                     <span
-                      className={`rounded-full border px-2.5 py-1 ${desktopAccentBorderClass} ${textColor === 'dark' ? 'bg-gray-900/8' : 'bg-white/8'}`}
-                      style={{ borderColor: buttonBorderColor }}
+                      className={`rounded-[6px] border px-2.5 py-1 font-semibold tracking-[0.02em] ${streamFormatBadgeClass}`}
                     >
                       {streamInfo.format}
                     </span>
@@ -461,7 +463,9 @@ export default function RadioPlayer({ radioState }) {
             role="status"
             aria-label="Stream information"
           >
-            <span>{streamInfo.format}</span>
+            <span className={`rounded-[6px] border px-2 py-1 font-semibold tracking-[0.02em] ${streamFormatBadgeClass}`}>
+              {streamInfo.format}
+            </span>
             <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-400' : 'bg-border'}`} aria-hidden="true" />
             <span>{streamInfo.bitrate}</span>
             <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-400' : 'bg-border'}`} aria-hidden="true" />
