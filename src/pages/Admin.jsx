@@ -989,9 +989,9 @@ export default function Admin() {
                   </Body>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">
+                <div className="space-y-6">
                   {/* Radio Streams - FM */}
-                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6 h-full">
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
                     <Heading level={6} className="text-base mb-4">Radio Constanța FM Streams</Heading>
 
                     <div className="space-y-4">
@@ -1101,7 +1101,7 @@ export default function Admin() {
                   </div>
 
                   {/* Radio Streams - Folclor */}
-                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6 h-full">
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
                     <Heading level={6} className="text-base mb-4">Radio Constanța Folclor Streams</Heading>
 
                     <div className="space-y-4">

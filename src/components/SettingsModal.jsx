@@ -252,7 +252,7 @@ export default function SettingsModal({
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3 xl:gap-5">
               {/* Column 1: Background Animation */}
               <div className="space-y-4">
                 <div>
@@ -277,7 +277,7 @@ export default function SettingsModal({
 
                 <div>
                   <Heading level={5} className="mb-3">Calitate Stream</Heading>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
                     {stations.map((station) => (
                       <div key={station.id} className="rounded-2xl border border-border bg-bg-tertiary/40 p-4">
                         <div className="mb-3">
