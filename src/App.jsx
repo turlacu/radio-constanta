@@ -111,6 +111,7 @@ function AppContent() {
   const [metadata, setMetadata] = useState('');
   const [streamInfo, setStreamInfo] = useState(null);
   const audioRef = useRef(null);
+  const audioEventCleanupRef = useRef(() => {});
   const isSwitchingRef = useRef(false);
   const isSwitchingQualityRef = useRef(false);
   const streamTransitionIdRef = useRef(0);
@@ -443,7 +444,6 @@ function AppContent() {
 
     const cleanup = () => {
       audio.removeEventListener('playing', handleSuccess);
-      audio.removeEventListener('canplay', handleSuccess);
       audio.removeEventListener('error', handleError);
       clearTimeout(timeoutId);
     };
@@ -480,7 +480,6 @@ function AppContent() {
     }, timeoutMs);
 
     audio.addEventListener('playing', handleSuccess, { once: true });
-    audio.addEventListener('canplay', handleSuccess, { once: true });
     audio.addEventListener('error', handleError, { once: true });
 
     Promise.resolve(playPromise)
@@ -491,35 +490,137 @@ function AppContent() {
   });
 
   const transitionToStream = async ({ stationId, qualityId }) => {
-    const audio = audioRef.current;
     const station = stationsWithDynamicCovers[stationId];
     const quality = resolveQualityForStation(stationId, qualityId);
 
-    if (!audio || !station || !quality?.url) {
+    if (!station || !quality?.url) {
       throw new Error('Missing stream target');
     }
 
     const transitionId = ++streamTransitionIdRef.current;
     detectedSampleRateRef.current = null;
+    const nextUrl = getAbsoluteStreamUrl(quality.url);
+    let audio = audioRef.current;
 
-    audio.pause();
-    audio.removeAttribute('src');
-    audio.load();
+    if (!audio) {
+      throw new Error('Audio element is not initialized');
+    }
 
-    const resetCompleted = await waitForAudioReset(audio, transitionId);
-    if (!resetCompleted) {
-      throw new Error('Superseded stream transition');
+    const releaseAudioProcessingGraph = async () => {
+      analyserRef.current = null;
+      audioSourceNodeRef.current = null;
+
+      if (audioContextRef.current) {
+        const currentContext = audioContextRef.current;
+        audioContextRef.current = null;
+        await currentContext.close().catch(() => {});
+      }
+    };
+
+    const bindAudioEvents = (targetAudio) => {
+      const handlePlaying = () => {
+        logDebug('✓ playing event');
+        setIsPlaying(true);
+        setIsLoading(false);
+      };
+
+      const handlePause = () => {
+        logDebug('pause event');
+        setIsPlaying(false);
+        setIsLoading(false);
+      };
+
+      const handleError = () => {
+        const error = targetAudio.error;
+
+        if (isSwitchingRef.current || isSwitchingQualityRef.current) {
+          if (error?.code === 4 || error?.code === 3) {
+            logDebug(`⚠ Ignoring expected error (code ${error?.code}) during switch`);
+            return;
+          }
+        }
+
+        logDebug(`✗ error: code=${error?.code}, msg=${error?.message}`);
+        setIsPlaying(false);
+        setIsLoading(false);
+      };
+
+      const handleWaiting = () => {
+        logDebug('⚠ buffering');
+        setIsLoading(true);
+      };
+
+      const handleCanPlay = () => {
+        logDebug(`canplay: ready=${targetAudio.readyState}`);
+        setIsLoading(false);
+      };
+
+      const handleStalled = () => {
+        logDebug('⚠ stalled');
+      };
+
+      targetAudio.addEventListener('playing', handlePlaying);
+      targetAudio.addEventListener('pause', handlePause);
+      targetAudio.addEventListener('error', handleError);
+      targetAudio.addEventListener('waiting', handleWaiting);
+      targetAudio.addEventListener('canplay', handleCanPlay);
+      targetAudio.addEventListener('stalled', handleStalled);
+
+      return () => {
+        targetAudio.removeEventListener('playing', handlePlaying);
+        targetAudio.removeEventListener('pause', handlePause);
+        targetAudio.removeEventListener('error', handleError);
+        targetAudio.removeEventListener('waiting', handleWaiting);
+        targetAudio.removeEventListener('canplay', handleCanPlay);
+        targetAudio.removeEventListener('stalled', handleStalled);
+      };
+    };
+
+    const createManagedAudioElement = () => {
+      const nextAudio = document.createElement('audio');
+      nextAudio.preload = 'none';
+      nextAudio.crossOrigin = 'anonymous';
+      nextAudio.setAttribute('playsinline', '');
+      nextAudio.setAttribute('webkit-playsinline', '');
+      audioEventCleanupRef.current = bindAudioEvents(nextAudio);
+      audioRef.current = nextAudio;
+      return nextAudio;
+    };
+
+    const teardownAudioElement = (targetAudio) => {
+      audioEventCleanupRef.current?.();
+      audioEventCleanupRef.current = () => {};
+      targetAudio.pause();
+      targetAudio.removeAttribute('src');
+      targetAudio.load();
+    };
+
+    const shouldRebuildAudio = Boolean(audio.src && audio.src !== nextUrl);
+
+    if (shouldRebuildAudio) {
+      teardownAudioElement(audio);
+      await releaseAudioProcessingGraph();
+      audio = createManagedAudioElement();
+    } else {
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+
+      const resetCompleted = await waitForAudioReset(audio, transitionId);
+      if (!resetCompleted) {
+        throw new Error('Superseded stream transition');
+      }
     }
 
     if (audioContextRef.current?.state === 'suspended') {
       audioContextRef.current.resume().catch(() => {});
     }
 
-    const nextUrl = getAbsoluteStreamUrl(quality.url);
     logDebug(`Transitioning stream: ${nextUrl}`);
     audio.src = nextUrl;
     audio.load();
     setIsLoading(true);
+    ensureAudioAnalyser();
 
     const playPromise = audio.play();
     await waitForPlaybackStart(audio, transitionId, playPromise);
@@ -559,34 +660,28 @@ function AppContent() {
 
   // Create Audio element (HTML5 approach - mobile friendly)
   useEffect(() => {
-    // Create audio element and append to document
     const audio = document.createElement('audio');
     audio.preload = 'none';
     audio.crossOrigin = 'anonymous'; // For CORS
     audio.setAttribute('playsinline', ''); // iOS Safari
     audio.setAttribute('webkit-playsinline', ''); // Older iOS
-    audioRef.current = audio;
 
-    // Simple event handlers
-    audio.addEventListener('playing', () => {
+    const handlePlaying = () => {
       logDebug('✓ playing event');
       setIsPlaying(true);
       setIsLoading(false);
-    });
+    };
 
-    audio.addEventListener('pause', () => {
+    const handlePause = () => {
       logDebug('pause event');
       setIsPlaying(false);
       setIsLoading(false);
-    });
+    };
 
-    audio.addEventListener('error', (e) => {
+    const handleError = () => {
       const error = audio.error;
 
-      // Ignore expected errors during switching operations
       if (isSwitchingRef.current || isSwitchingQualityRef.current) {
-        // Code 4: Empty src attribute (from clearing source)
-        // Code 3: Decode errors (from flushing decoder pipeline)
         if (error?.code === 4 || error?.code === 3) {
           logDebug(`⚠ Ignoring expected error (code ${error?.code}) during switch`);
           return;
@@ -596,25 +691,43 @@ function AppContent() {
       logDebug(`✗ error: code=${error?.code}, msg=${error?.message}`);
       setIsPlaying(false);
       setIsLoading(false);
-    });
+    };
 
-    audio.addEventListener('waiting', () => {
+    const handleWaiting = () => {
       logDebug('⚠ buffering');
       setIsLoading(true);
-    });
+    };
 
-    audio.addEventListener('canplay', () => {
+    const handleCanPlay = () => {
       logDebug(`canplay: ready=${audio.readyState}`);
       setIsLoading(false);
-    });
+    };
 
-    audio.addEventListener('stalled', () => {
+    const handleStalled = () => {
       logDebug('⚠ stalled');
-    });
+    };
+
+    audio.addEventListener('playing', handlePlaying);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('stalled', handleStalled);
+    audioEventCleanupRef.current = () => {
+      audio.removeEventListener('playing', handlePlaying);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('stalled', handleStalled);
+    };
+    audioRef.current = audio;
 
     return () => {
-      audio.pause();
-      audio.src = '';
+      const currentAudio = audioRef.current || audio;
+      audioEventCleanupRef.current?.();
+      currentAudio.pause();
+      currentAudio.src = '';
       audioRef.current = null;
       analyserRef.current = null;
       audioSourceNodeRef.current = null;
