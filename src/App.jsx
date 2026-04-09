@@ -620,10 +620,10 @@ function AppContent() {
     audio.src = nextUrl;
     audio.load();
     setIsLoading(true);
-    ensureAudioAnalyser();
 
     const playPromise = audio.play();
     await waitForPlaybackStart(audio, transitionId, playPromise);
+    ensureAudioAnalyser();
 
     return { station, quality };
   };
@@ -804,8 +804,6 @@ function AppContent() {
 
     // If paused, start playing
     if (audio.paused) {
-      ensureAudioAnalyser();
-
       try {
         if (!audio.src || audio.src !== getAbsoluteStreamUrl(streamUrl)) {
           await transitionToStream({
@@ -820,6 +818,7 @@ function AppContent() {
           logDebug(`play() - paused=${audio.paused}, ready=${audio.readyState}`);
           setIsLoading(true);
           await audio.play();
+          ensureAudioAnalyser();
         }
 
         logDebug('✓ play() success');
