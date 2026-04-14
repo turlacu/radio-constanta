@@ -23,6 +23,9 @@ export function useDeviceDetection() {
     layoutMode: 'mobile-stack',
     showDesktopShell: false,
     compactDesktop: false,
+    isUltraWide: false,
+    isShortHeight: false,
+    isCarDisplay: false,
   });
 
   useEffect(() => {
@@ -38,6 +41,7 @@ export function useDeviceDetection() {
       const effectiveWidth = Math.min(width, viewportWidth);
       const effectiveHeight = Math.min(height, viewportHeight);
       const isPortrait = effectiveHeight > effectiveWidth;
+      const aspectRatio = effectiveHeight > 0 ? effectiveWidth / effectiveHeight : 1;
 
       // Touch support detection
       const supportsTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -67,10 +71,21 @@ export function useDeviceDetection() {
         deviceType = 'mobile';
       }
 
-      const showDesktopShell = !isTV && !isPortrait && effectiveWidth >= 1180 && effectiveHeight >= 680;
-      const compactDesktop = !showDesktopShell && !isPortrait && effectiveWidth >= 900 && effectiveHeight >= 560;
+      const isUltraWide = aspectRatio >= 2.4;
+      const isShortHeight = effectiveHeight <= 560;
+      const isCarDisplay = !isTV && !isPortrait && effectiveWidth >= 1200 && effectiveHeight >= 360 && aspectRatio >= 3.2;
+      const showDesktopShell = !isTV && !isPortrait && (
+        (effectiveWidth >= 1180 && effectiveHeight >= 680) ||
+        isCarDisplay
+      );
+      const compactDesktop = !showDesktopShell && !isPortrait && (
+        (effectiveWidth >= 900 && effectiveHeight >= 560) ||
+        (effectiveWidth >= 820 && effectiveHeight >= 420 && aspectRatio >= 2)
+      );
       const layoutMode = isTV
         ? 'tv-shell'
+        : isCarDisplay
+        ? 'car-shell'
         : showDesktopShell
         ? 'desktop-shell'
         : compactDesktop
@@ -98,6 +113,9 @@ export function useDeviceDetection() {
         layoutMode,
         showDesktopShell,
         compactDesktop,
+        isUltraWide,
+        isShortHeight,
+        isCarDisplay,
       });
     };
 

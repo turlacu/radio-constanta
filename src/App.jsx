@@ -133,6 +133,8 @@ function AppContent() {
   const [showNews, setShowNews] = useState(false);
   const showDesktopShell = device.showDesktopShell;
   const viewportWidth = device.viewportWidth || device.screenWidth || 0;
+  const viewportHeight = device.viewportHeight || device.screenHeight || 0;
+  const isShortHeightShell = device.isShortHeight || device.isCarDisplay;
   const desktopUiTone = showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather'
     ? weatherTextColor
     : 'light';
@@ -1055,7 +1057,9 @@ function AppContent() {
     restoreRadio,
     showWeatherBackground: showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is actually visible
     audioAnalyserRef: analyserRef,
-    forceCompactLayout: showNews || device.compactDesktop
+    forceCompactLayout: showNews || device.compactDesktop,
+    shortHeightLayout: isShortHeightShell,
+    layoutMode: device.layoutMode,
   };
 
   const showDesktopWeatherCard =
@@ -1064,9 +1068,12 @@ function AppContent() {
     isPlaying &&
     settings.backgroundAnimation === 'weather' &&
     viewportWidth >= 1320 &&
-    (device.viewportHeight || device.screenHeight || 0) >= 760;
+    viewportHeight >= 760 &&
+    !isShortHeightShell;
   const desktopWeatherCardWidth = Math.min(460, Math.max(280, Math.round(viewportWidth * 0.24)));
-  const desktopNewsRailWidth = Math.min(520, Math.max(400, Math.round(viewportWidth * 0.36)));
+  const desktopNewsRailWidth = device.isCarDisplay
+    ? Math.min(620, Math.max(460, Math.round(viewportWidth * 0.32)))
+    : Math.min(520, Math.max(400, Math.round(viewportWidth * 0.36)));
 
   // Preload weather data on wide displays so it is ready when playback starts.
   useEffect(() => {
@@ -1134,11 +1141,11 @@ function AppContent() {
                 <WeatherBackground />
               )}
               {/* Top Right Buttons */}
-              <div className="absolute top-6 right-6 z-50 flex gap-3">
+              <div className={`absolute z-50 flex ${isShortHeightShell ? 'top-3 right-3 gap-2' : 'top-6 right-6 gap-3'}`}>
                 {/* Settings Button */}
                 <motion.button
                   onClick={() => setShowSettingsModal(true)}
-                  className={`flex h-12 w-12 items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${desktopActionSurfaceClass}`}
+                  className={`flex items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
                   style={{ borderColor: desktopUiBorderColor }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1153,7 +1160,7 @@ function AppContent() {
                 {/* Toggle News Button - Minimalistic Hamburger */}
                 <motion.button
                   onClick={() => setShowNews(!showNews)}
-                  className={`flex h-12 w-12 items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${desktopActionSurfaceClass}`}
+                  className={`flex items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
                   style={{ borderColor: desktopUiBorderColor }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1223,7 +1230,7 @@ function AppContent() {
                     </>
                   )}
 
-                  <div className="relative z-10 flex h-full w-full items-center justify-center px-6 py-10 3xl:px-10">
+                  <div className={`relative z-10 flex h-full w-full items-center justify-center 3xl:px-10 ${isShortHeightShell ? 'px-4 py-4' : 'px-6 py-10'}`}>
                     <div className="flex h-full w-full items-center justify-center">
                       <Radio radioState={radioState} />
                     </div>

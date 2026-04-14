@@ -22,6 +22,8 @@ export default function RadioPlayer({ radioState }) {
     showWeatherBackground,
     audioAnalyserRef,
     forceCompactLayout,
+    shortHeightLayout,
+    layoutMode,
   } = radioState;
 
   const device = useContext(DeviceContext);
@@ -72,11 +74,24 @@ export default function RadioPlayer({ radioState }) {
   const mobileStationButtonClass = 'rounded-[10px] px-3 text-[13px] sm:px-4 sm:text-[14px] 4k:rounded-[14px] 4k:px-6 4k:py-5 4k:text-[20px]';
   const stationLabelBaseClass = 'block w-full overflow-hidden text-center leading-none';
   const qualityButtonBaseClass = 'relative flex-1 overflow-hidden rounded-[10px] border px-3 py-2 text-[12px] font-medium leading-none transition-all focusable sm:text-[13px] 4k:rounded-xl 4k:px-5 4k:py-3 4k:text-[18px]';
-  const shouldStackDesktopStage = viewportWidth < 1320 || viewportHeight < 760;
+  const isUltraWideShort = layoutMode === 'car-shell' || (aspectRatio >= 3 && viewportHeight <= 560);
+  const shouldStackDesktopStage = !isUltraWideShort && (viewportWidth < 1320 || viewportHeight < 760);
   const desktopMetrics = useMemo(() => {
     const minViewport = Math.max(560, Math.min(viewportWidth || 1280, viewportHeight || 720));
-    const profile = shouldStackDesktopStage ? 'compact' : aspectRatio >= 1.9 ? 'ultrawide' : aspectRatio >= 1.25 ? 'wide' : 'square';
+    const profile = isUltraWideShort ? 'car' : shouldStackDesktopStage ? 'compact' : aspectRatio >= 1.9 ? 'ultrawide' : aspectRatio >= 1.25 ? 'wide' : 'square';
     const baseMetrics = {
+      car: {
+        coverSize: 214,
+        playerWidth: 560,
+        gap: 30,
+        playButton: 58,
+        titleWidth: 450,
+        visualizerWidth: 118,
+        visualizerHeight: 22,
+        titleSize: 28,
+        subtitleSize: 14,
+        buttonRailWidth: 288,
+      },
       compact: {
         coverSize: 314,
         playerWidth: 520,
@@ -137,7 +152,7 @@ export default function RadioPlayer({ radioState }) {
       profile,
       stageWidth: metrics.coverSize + metrics.playerWidth + metrics.gap,
     };
-  }, [aspectRatio, shouldStackDesktopStage, viewportHeight, viewportWidth]);
+  }, [aspectRatio, isUltraWideShort, shouldStackDesktopStage, viewportHeight, viewportWidth]);
   const desktopTitleClass = '!leading-[0.96]';
 
   const renderCoverArt = (desktop = false) => (
@@ -148,7 +163,7 @@ export default function RadioPlayer({ radioState }) {
       className={desktop
         ? 'relative shrink-0'
         : 'relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12'}
-      style={desktop ? { width: `${desktopMetrics.coverSize}px` } : undefined}
+      style={desktop ? { width: `${desktopMetrics.coverSize}px`, maxWidth: isUltraWideShort ? '32vh' : undefined } : undefined}
     >
       <div className={`relative w-full aspect-square overflow-hidden rounded-[22px] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] 3xl:rounded-[28px] ${coverBorderClass}`}>
         <motion.img
@@ -190,7 +205,7 @@ export default function RadioPlayer({ radioState }) {
       initial={{ y: 10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.2 }}
-      className="mb-6 flex w-full max-w-xs gap-2 4k:mb-10 4k:max-w-md 4k:gap-3"
+          className={`mb-6 flex w-full gap-2 4k:mb-10 4k:gap-3 ${shortHeightLayout ? 'max-w-sm' : 'max-w-xs 4k:max-w-md'}`}
       role="group"
       aria-label="Quality selection"
     >
@@ -225,7 +240,7 @@ export default function RadioPlayer({ radioState }) {
   if (isSplitScreen) {
     return (
       <ResponsiveContainer section="radio" className="justify-center">
-        <div className="mx-auto flex w-full max-w-[1160px] items-center justify-center 4k:max-w-[1320px]">
+        <div className={`mx-auto flex w-full items-center justify-center ${isUltraWideShort ? 'max-w-[1280px]' : 'max-w-[1160px] 4k:max-w-[1320px]'}`}>
           <div
             className={`flex w-full items-center justify-center ${shouldStackDesktopStage ? 'flex-col gap-8' : ''}`}
             style={{
@@ -241,7 +256,7 @@ export default function RadioPlayer({ radioState }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className={`relative flex flex-col justify-center ${shouldStackDesktopStage ? 'w-full max-w-[640px] items-center' : 'shrink-0 items-end'}`}
+              className={`relative flex flex-col justify-center ${shouldStackDesktopStage ? 'w-full max-w-[640px] items-center' : 'shrink-0 items-end'} ${isUltraWideShort ? 'py-2' : ''}`}
               style={{
                 width: shouldStackDesktopStage ? 'min(100%, 640px)' : `${desktopMetrics.playerWidth}px`,
                 minHeight: shouldStackDesktopStage ? undefined : `${desktopMetrics.coverSize}px`,
@@ -314,7 +329,7 @@ export default function RadioPlayer({ radioState }) {
                       size="normal"
                       weight="medium"
                       opacity="custom"
-                      className={`${textSecondaryClass} min-h-[1.5rem] max-w-full text-pretty ${shouldStackDesktopStage ? 'text-center' : 'text-right'}`}
+                      className={`${textSecondaryClass} max-w-full text-pretty ${shouldStackDesktopStage ? 'text-center' : 'text-right'}`}
                       style={{ fontSize: `${desktopMetrics.subtitleSize}px`, lineHeight: 1.25 }}
                     >
                       {metadata || 'Primul radio din Dobrogea'}

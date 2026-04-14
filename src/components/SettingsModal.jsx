@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 import { Heading, Body } from './ui';
+import { DeviceContext } from '../App';
 
 // Phosphor Icon SVGs
 const PhosphorIcons = {
@@ -41,6 +42,7 @@ export default function SettingsModal({
   selectedQualities = {},
   onQualityChange = () => {}
 }) {
+  const device = useContext(DeviceContext);
   const {
     backgroundAnimation,
     setBackgroundAnimation,
@@ -58,6 +60,23 @@ export default function SettingsModal({
   const [locationError, setLocationError] = useState('');
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   const [isGettingCurrentLocation, setIsGettingCurrentLocation] = useState(false);
+  const viewportWidth = device?.viewportWidth || device?.screenWidth || 0;
+  const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;
+  const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
+  const compactPanel = viewportHeight < 760 || aspectRatio > 2;
+  const ultraWidePanel = aspectRatio >= 3;
+  const denseOptionClass = `w-full rounded-xl border text-left transition-all ${
+    compactPanel ? 'p-3' : 'p-4'
+  }`;
+  const denseSectionClass = compactPanel
+    ? 'rounded-2xl border border-border bg-bg-tertiary/28 p-3'
+    : 'rounded-2xl border border-border bg-bg-tertiary/28 p-4';
+  const controlButtonClass = compactPanel
+    ? 'rounded-xl border px-3 py-2.5 transition-all'
+    : 'rounded-xl border p-4 transition-all';
+  const tileButtonClass = compactPanel
+    ? 'rounded-xl border px-3 py-2.5 transition-all flex flex-col items-center justify-center'
+    : 'rounded-xl border p-4 transition-all flex flex-col items-center justify-center';
 
   const weatherTypes = [
     { id: 'sunny', label: 'Însorit', icon: 'Sun' },
@@ -233,14 +252,18 @@ export default function SettingsModal({
 
         {/* Modal - Wide TV-friendly layout */}
         <motion.div
-          className="relative flex max-h-[calc(var(--app-height)-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-bg-secondary shadow-2xl md:max-h-[calc(var(--app-height)-3rem)]"
+          className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-border bg-bg-secondary shadow-2xl ${
+            compactPanel
+              ? 'max-h-[calc(var(--app-height)-1.25rem)] max-w-[min(96rem,calc(var(--app-width)-1rem))]'
+              : 'max-h-[calc(var(--app-height)-2rem)] max-w-[min(90rem,calc(var(--app-width)-2rem))] md:max-h-[calc(var(--app-height)-3rem)]'
+          }`}
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <div className={`flex items-center justify-between border-b border-border ${compactPanel ? 'px-4 py-3' : 'px-6 py-4'}`}>
             <Heading level={3}>Setări</Heading>
             <button
               onClick={onClose}
@@ -251,18 +274,18 @@ export default function SettingsModal({
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3 xl:gap-5">
+          <div className={`flex-1 ${compactPanel ? 'overflow-visible p-3' : 'overflow-y-auto p-4 md:p-6'}`}>
+            <div className={`grid grid-cols-1 ${compactPanel ? 'gap-3' : 'gap-6'} ${ultraWidePanel ? 'xl:grid-cols-4' : 'xl:grid-cols-3'} xl:gap-4`}>
               {/* Column 1: Background Animation */}
-              <div className="space-y-4">
-                <div>
+              <div className={compactPanel ? 'space-y-3' : 'space-y-4'}>
+                <div className={denseSectionClass}>
                   <Heading level={5} className="mb-3">Animație Fundal</Heading>
                   <div className="space-y-2">
                     {backgroundOptions.map((option) => (
                       <button
                         key={option.value}
                         onClick={() => setBackgroundAnimation(option.value)}
-                        className={`w-full p-4 rounded-xl border transition-all text-left ${
+                        className={`${denseOptionClass} ${
                           backgroundAnimation === option.value
                             ? 'border-primary bg-primary/5'
                             : 'border-border hover:border-primary/50'
@@ -275,12 +298,12 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                <div>
+                <div className={denseSectionClass}>
                   <Heading level={5} className="mb-3">Calitate Stream</Heading>
-                  <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                  <div className={`grid grid-cols-1 ${compactPanel ? 'gap-2' : 'gap-3'} ${ultraWidePanel ? '2xl:grid-cols-2' : ''}`}>
                     {stations.map((station) => (
-                      <div key={station.id} className="rounded-2xl border border-border bg-bg-tertiary/40 p-4">
-                        <div className="mb-3">
+                      <div key={station.id} className={`rounded-2xl border border-border bg-bg-secondary/40 ${compactPanel ? 'p-3' : 'p-4'}`}>
+                        <div className={compactPanel ? 'mb-2' : 'mb-3'}>
                           <div className="font-medium text-text-primary">
                             {station.id === 'fm' ? 'Radio Constanța FM' : 'Radio Constanța Folclor'}
                           </div>
@@ -289,7 +312,7 @@ export default function SettingsModal({
                           </div>
                         </div>
 
-                        <div className="grid gap-2">
+                        <div className={`grid ${compactPanel ? 'gap-1.5' : 'gap-2'}`}>
                           {station.qualities.map((quality) => {
                             const isActive = selectedQualities[station.id] === quality.id;
 
@@ -297,7 +320,7 @@ export default function SettingsModal({
                               <button
                                 key={quality.id}
                                 onClick={() => onQualityChange(station.id, quality.id)}
-                                className={`rounded-xl border p-3 text-left transition-all ${
+                                className={`rounded-xl border text-left transition-all ${compactPanel ? 'p-2.5' : 'p-3'} ${
                                   isActive
                                     ? 'border-primary bg-primary/5'
                                     : 'border-border hover:border-primary/50'
@@ -321,15 +344,15 @@ export default function SettingsModal({
               </div>
 
               {/* Column 2: Weather Settings */}
-              <div className="space-y-4">
+              <div className={compactPanel ? 'space-y-3' : 'space-y-4'}>
                 {backgroundAnimation === 'weather' && (
                   <>
-                    <div>
+                    <div className={denseSectionClass}>
                       <Heading level={5} className="mb-3">Mod Vreme</Heading>
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => setWeatherMode('auto')}
-                          className={`p-4 rounded-xl border transition-all ${
+                          className={`${controlButtonClass} ${
                             weatherMode === 'auto'
                               ? 'border-primary bg-primary/5'
                               : 'border-border hover:border-primary/50'
@@ -340,7 +363,7 @@ export default function SettingsModal({
                         </button>
                         <button
                           onClick={() => setWeatherMode('manual')}
-                          className={`p-4 rounded-xl border transition-all ${
+                          className={`${controlButtonClass} ${
                             weatherMode === 'manual'
                               ? 'border-primary bg-primary/5'
                               : 'border-border hover:border-primary/50'
@@ -352,14 +375,14 @@ export default function SettingsModal({
                       </div>
                     </div>
 
-                    <div>
+                    <div className={denseSectionClass}>
                       <Heading level={5} className="mb-3">Performanță</Heading>
                       <div className="grid grid-cols-3 gap-2">
                         {performanceOptions.map((option) => (
                           <button
                             key={option.value}
                             onClick={() => setWeatherPerformance(option.value)}
-                            className={`p-4 rounded-xl border transition-all ${
+                            className={`${controlButtonClass} ${
                               weatherPerformance === option.value
                                 ? 'border-primary bg-primary/5'
                                 : 'border-border hover:border-primary/50'
@@ -373,12 +396,12 @@ export default function SettingsModal({
 
                     {weatherMode === 'manual' && (
                       <>
-                        <div>
+                        <div className={denseSectionClass}>
                           <Heading level={5} className="mb-3">Momentul Zilei</Heading>
                           <div className="grid grid-cols-2 gap-2">
                             <button
                               onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'day' })}
-                              className={`p-4 rounded-xl border transition-all flex flex-col items-center ${
+                              className={`${tileButtonClass} ${
                                 manualWeatherState.timeOfDay === 'day'
                                   ? 'border-primary bg-primary/5'
                                   : 'border-border hover:border-primary/50'
@@ -389,7 +412,7 @@ export default function SettingsModal({
                             </button>
                             <button
                               onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'night' })}
-                              className={`p-4 rounded-xl border transition-all flex flex-col items-center ${
+                              className={`${tileButtonClass} ${
                                 manualWeatherState.timeOfDay === 'night'
                                   ? 'border-primary bg-primary/5'
                                   : 'border-border hover:border-primary/50'
@@ -406,7 +429,7 @@ export default function SettingsModal({
                 )}
 
                 {backgroundAnimation !== 'weather' && (
-                  <div className="h-full flex items-center justify-center">
+                  <div className={`${denseSectionClass} flex h-full items-center justify-center`}>
                     <Body opacity="secondary" className="text-center">
                       Selectează animația Reactiv la Vreme<br />pentru a configura setările meteo
                     </Body>
@@ -415,20 +438,20 @@ export default function SettingsModal({
               </div>
 
               {/* Column 3: Location or Manual Weather Type */}
-              <div className="space-y-4">
+              <div className={compactPanel ? 'space-y-3' : 'space-y-4'}>
                 {backgroundAnimation === 'weather' && weatherMode === 'auto' && (
-                  <div>
+                  <div className={denseSectionClass}>
                     <Heading level={5} className="mb-3 flex items-center gap-2">
                       <PhosphorIcons.MapPin />
                       Locație
                     </Heading>
-                    <div className="p-4 rounded-xl bg-bg-tertiary border border-border mb-3">
+                    <div className={`rounded-xl border border-border bg-bg-secondary/40 ${compactPanel ? 'mb-2 p-3' : 'mb-3 p-4'}`}>
                       <Body className="font-medium">{weatherLocation.name}</Body>
                       <Body size="small" opacity="secondary" className="mt-1">
                         {weatherLocation.lat.toFixed(4)}, {weatherLocation.lon.toFixed(4)}
                       </Body>
                     </div>
-                    <div className="space-y-2">
+                    <div className={`grid ${compactPanel ? 'gap-2 xl:grid-cols-[minmax(0,1.3fr)_auto_auto]' : 'gap-2'}`}>
                       <input
                         type="text"
                         placeholder="Introdu numele orașului..."
@@ -438,40 +461,40 @@ export default function SettingsModal({
                           if (e.key === 'Enter' && !isSearchingLocation) handleLocationChange();
                         }}
                         disabled={isSearchingLocation}
-                        className="w-full px-4 py-3 rounded-xl bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50"
+                        className={`w-full rounded-xl border bg-bg-secondary/40 text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 ${compactPanel ? 'px-3 py-2.5' : 'px-4 py-3'}`}
                       />
                       <button
                         onClick={handleLocationChange}
                         disabled={isSearchingLocation || !locationInput.trim()}
-                        className="w-full px-4 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className={`rounded-xl bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${compactPanel ? 'px-3 py-2.5' : 'w-full px-4 py-3'}`}
                       >
                         {isSearchingLocation ? 'Caut...' : 'Setează Locația'}
                       </button>
-                      {locationError && (
-                        <Body size="small" className="text-red-500">{locationError}</Body>
-                      )}
                       <button
                         onClick={handleUseCurrentLocation}
                         disabled={isGettingCurrentLocation}
-                        className="w-full px-4 py-3 rounded-xl bg-bg-tertiary border border-border text-text-primary font-medium hover:bg-bg-tertiary/80 disabled:opacity-50 transition-colors"
+                        className={`rounded-xl border border-border bg-bg-secondary/40 text-text-primary font-medium hover:bg-bg-tertiary/80 disabled:opacity-50 transition-colors ${compactPanel ? 'px-3 py-2.5' : 'w-full px-4 py-3'}`}
                       >
                         {isGettingCurrentLocation ? 'Obțin locația...' : 'Folosește Locația Curentă'}
                       </button>
+                      {locationError && (
+                        <Body size="small" className={`${compactPanel ? 'xl:col-span-3' : ''} text-red-500`}>{locationError}</Body>
+                      )}
                     </div>
                   </div>
                 )}
 
                 {backgroundAnimation === 'weather' && weatherMode === 'manual' && (
-                  <div>
+                  <div className={denseSectionClass}>
                     <Heading level={5} className="mb-3">Tip Vreme</Heading>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className={`grid grid-cols-2 gap-2 ${ultraWidePanel ? '2xl:grid-cols-3' : ''}`}>
                       {weatherTypes.map((type) => {
                         const IconComponent = PhosphorIcons[type.icon];
                         return (
                           <button
                             key={type.id}
                             onClick={() => setManualWeatherState({ ...manualWeatherState, weatherType: type.id })}
-                            className={`p-4 rounded-xl border transition-all flex flex-col items-center ${
+                            className={`${tileButtonClass} ${
                               manualWeatherState.weatherType === type.id
                                 ? 'border-primary bg-primary/5'
                                 : 'border-border hover:border-primary/50'
@@ -487,13 +510,39 @@ export default function SettingsModal({
                 )}
 
                 {backgroundAnimation !== 'weather' && (
-                  <div className="h-full flex items-center justify-center">
+                  <div className={`${denseSectionClass} flex h-full items-center justify-center`}>
                     <Body opacity="secondary" className="text-center">
                       Setările meteo sunt disponibile doar<br />când folosești animația Reactiv la Vreme
                     </Body>
                   </div>
                 )}
               </div>
+
+              {ultraWidePanel && (
+                <div className={compactPanel ? 'space-y-3' : 'space-y-4'}>
+                  <div className={denseSectionClass}>
+                    <Heading level={5} className="mb-3">Rezumat</Heading>
+                    <div className={`grid grid-cols-2 ${compactPanel ? 'gap-2 text-xs' : 'gap-3 text-sm'}`}>
+                      <div>
+                        <div className="text-text-tertiary">Fundal</div>
+                        <div className="font-medium text-text-primary">{backgroundOptions.find((option) => option.value === backgroundAnimation)?.label}</div>
+                      </div>
+                      <div>
+                        <div className="text-text-tertiary">Vreme</div>
+                        <div className="font-medium text-text-primary">{weatherMode === 'auto' ? 'Automat' : 'Manual'}</div>
+                      </div>
+                      <div>
+                        <div className="text-text-tertiary">Performanță</div>
+                        <div className="font-medium text-text-primary">{performanceOptions.find((option) => option.value === weatherPerformance)?.label}</div>
+                      </div>
+                      <div>
+                        <div className="text-text-tertiary">Locație</div>
+                        <div className="font-medium text-text-primary truncate">{weatherLocation.name}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
