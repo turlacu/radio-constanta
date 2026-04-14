@@ -542,10 +542,12 @@ export default function SettingsModal({
                 {renderStreamQualitySection(folclorStation)}
 
                 {layoutMode !== 'stacked' && (
-                  <div className={`${denseSectionClass} flex items-center justify-center border-dashed border-border/60 bg-transparent`}>
-                    <div className="text-center text-[11px] uppercase tracking-[0.22em] text-text-tertiary">
-                      spare
-                    </div>
+                  <div className="relative min-h-[8rem]">
+                    <img
+                      src="/rc-branding.png"
+                      alt="Radio Constanța branding"
+                      className="pointer-events-none absolute bottom-1 right-1 h-auto w-24 select-none opacity-45 md:w-28"
+                    />
                   </div>
                 )}
               </div>
