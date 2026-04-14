@@ -7,7 +7,7 @@ import { DeviceContext } from '../App';
 
 export default function News({ radioState }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = !device?.isPortrait;
+  const isSplitScreen = device?.showDesktopShell;
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,9 +54,7 @@ export default function News({ radioState }) {
     return (
       <div className="
         flex items-center justify-center
-        min-h-[calc(100vh-80px)]
-        md:min-h-[calc(100vh-100px)]
-        tv:min-h-screen
+        min-app-height
       ">
         <Loader size="large" text="Se încarcă știrile..." />
       </div>
@@ -67,9 +65,7 @@ export default function News({ radioState }) {
     return (
       <div className="
         flex flex-col items-center justify-center text-center
-        min-h-[calc(100vh-80px)]
-        md:min-h-[calc(100vh-100px)]
-        tv:min-h-screen
+        min-app-height
         px-6 md:px-8 tv:px-12
       ">
         <svg className="
@@ -118,7 +114,7 @@ export default function News({ radioState }) {
     <div className={
       isSplitScreen
         ? "h-full w-full relative flex flex-col" // Split-screen: fill entire section with background and use flex layout
-        : "min-h-screen relative overflow-hidden" // Single page: full screen
+        : "min-app-height relative overflow-hidden" // Single page: full screen
     }>
       {/* Subtle ambient glow accents */}
       {isSplitScreen ? (
@@ -137,7 +133,7 @@ export default function News({ radioState }) {
       <div className={`
         sticky top-0 z-10
         ${isSplitScreen
-          ? 'px-4 py-6 4k:px-8 4k:py-10' // Padding for full-width background
+          ? 'px-4 py-4 xl:px-6 xl:py-5 4k:px-8 4k:py-8' // Padding for full-width background
           : 'px-4 py-4 md:px-6 md:py-5 lg:px-8 tv:px-12 tv:py-8 4k:px-16 4k:py-12'
         }
       `}>
@@ -149,14 +145,14 @@ export default function News({ radioState }) {
         }`} />
 
         {/* Content wrapper - centered to match articles */}
-        <div className={isSplitScreen ? "relative max-w-[850px] mx-auto 4k:max-w-[1400px]" : "relative"}>
+        <div className={isSplitScreen ? "relative mx-auto w-full max-w-[960px] 4k:max-w-[1400px]" : "relative"}>
           <h1 className={`
             font-bold text-text-primary
-            ${isSplitScreen ? 'text-2xl 4k:text-4xl' : 'text-2xl md:text-3xl lg:text-4xl tv:text-5xl 4k:text-7xl'}
+            ${isSplitScreen ? 'text-xl xl:text-2xl 4k:text-4xl' : 'text-2xl md:text-3xl lg:text-4xl tv:text-5xl 4k:text-7xl'}
           `}>Știri</h1>
           <p className={`
             text-text-tertiary font-medium mt-1
-            ${isSplitScreen ? 'text-sm 4k:text-xl' : 'text-sm md:text-base tv:text-xl 4k:text-3xl'}
+            ${isSplitScreen ? 'text-sm xl:text-base 4k:text-xl' : 'text-sm md:text-base tv:text-xl 4k:text-3xl'}
           `}>Ultimele noutăți din Dobrogea</p>
         </div>
       </div>

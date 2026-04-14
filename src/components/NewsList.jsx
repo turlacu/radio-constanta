@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
 import { useContext } from 'react';
 import { DeviceContext } from '../App';
-import { Card, Heading, Body, Caption, Button } from './ui';
+import { Card, Heading, Body, Button } from './ui';
 
 export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore, loading }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = !device?.isPortrait;
+  const isSplitScreen = device?.showDesktopShell;
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -65,7 +65,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               aria-label={`Read article: ${article.title}`}
             >
               <motion.div
-                className={isSplitScreen ? 'flex flex-row h-[140px] 4k:h-[200px]' : ''}
+                className={isSplitScreen ? 'flex min-h-[156px] flex-row items-stretch xl:min-h-[176px] 4k:min-h-[220px]' : ''}
                 whileHover={isSplitScreen ? { scale: 1.01 } : {}}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
               >
@@ -74,7 +74,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                   <div
                     className={
                       isSplitScreen
-                        ? 'relative bg-bg-secondary overflow-hidden w-[20%] flex-shrink-0 rounded-l-[12px] 4k:w-[20%]'
+                        ? 'relative w-[28%] min-w-[132px] overflow-hidden rounded-l-[12px] bg-bg-secondary xl:w-[30%] xl:min-w-[156px] 4k:min-w-[220px]'
                         : 'relative w-full bg-bg-secondary overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72 4k:h-96 rounded-t-[12px]'
                     }
                   >
@@ -98,7 +98,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 <div
                   className={
                     isSplitScreen
-                      ? 'p-4 flex-1 flex flex-col justify-start overflow-hidden 4k:p-6'
+                      ? 'flex flex-1 flex-col justify-center overflow-hidden p-4 xl:p-5 4k:p-6'
                       : 'p-4 md:p-5 lg:p-6 tv:p-8 4k:p-12'
                   }
                 >
@@ -106,7 +106,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                   <div
                     className={
                       isSplitScreen
-                        ? 'flex items-center gap-2 mb-1.5 font-medium text-[9px] text-text-tertiary 4k:text-[14px] 4k:mb-2'
+                        ? 'mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[11px] text-text-tertiary xl:text-[12px] 4k:text-[14px]'
                         : 'flex items-center gap-2 mb-2 font-medium text-[12px] text-text-tertiary md:mb-3 4k:text-[18px] 4k:mb-4'
                     }
                   >
@@ -115,7 +115,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                         <span
                           className={
                             isSplitScreen
-                              ? 'font-bold text-primary text-[9px] 4k:text-[14px]'
+                              ? 'text-[11px] font-bold text-primary xl:text-[12px] 4k:text-[14px]'
                               : 'font-bold text-primary text-[12px] 4k:text-[18px]'
                           }
                         >
@@ -132,7 +132,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                     level={4}
                     className={
                       isSplitScreen
-                        ? 'mb-1.5 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-[12px] font-bold 4k:text-[16px] 4k:mb-2'
+                        ? 'mb-2 line-clamp-2 text-[15px] font-bold leading-snug transition-colors group-hover:text-primary xl:text-[17px] 4k:text-[20px]'
                         : 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-[14px] 4k:text-[20px] 4k:mb-4'
                     }
                   >
@@ -147,7 +147,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                       clamp={isSplitScreen ? 2 : 2}
                       className={
                         isSplitScreen
-                          ? 'leading-relaxed text-[10px] 4k:text-[14px]'
+                          ? 'line-clamp-3 text-[12px] leading-relaxed xl:text-[13px] 4k:text-[15px]'
                           : 'leading-relaxed 4k:text-[20px]'
                       }
                     >

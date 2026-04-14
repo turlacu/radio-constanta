@@ -727,7 +727,7 @@ export default function Admin() {
   // Login screen
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-bg-secondary flex items-center justify-center p-4">
+      <div className="min-app-height bg-bg-secondary flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -822,9 +822,9 @@ export default function Admin() {
 
   // Admin panel
   return (
-    <div className="min-h-screen bg-bg-primary">
+    <div className="min-app-height bg-bg-primary">
       {/* Sidebar - Fixed */}
-      <div className="fixed left-0 top-0 w-64 h-screen bg-bg-secondary border-r border-border flex flex-col overflow-y-auto">
+      <div className="fixed left-0 top-0 w-64 app-height bg-bg-secondary border-r border-border flex flex-col overflow-y-auto">
         {/* Header */}
         <div className="p-6 border-b border-border">
           <Heading level={5} className="text-lg">Admin Panel</Heading>

@@ -48,6 +48,8 @@
     --font-scale: 1;
     --spacing-scale: 1;
     --container-max-width: 480px;
+    --app-width: 100vw;
+    --app-height: 100dvh;
 
     /* ===== TYPOGRAPHY SCALE (Mobile - Default) ===== */
     /* Headings (line-height: 1.2× font size - web-optimized) */
@@ -184,11 +186,12 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    min-height: 100vh;
+    min-height: var(--app-height);
   }
 
   #root {
-    @apply min-h-screen relative;
+    @apply relative;
+    min-height: var(--app-height);
     max-width: var(--container-max-width);
     margin: 0 auto;
   }
@@ -217,6 +220,8 @@
   .text-responsive-2xl { font-size: var(--text-2xl); }
   .text-responsive-3xl { font-size: var(--text-3xl); }
   .text-responsive-4xl { font-size: var(--text-4xl); }
+  .min-app-height { min-height: var(--app-height); }
+  .app-height { height: var(--app-height); }
 
   /* Line clamping utilities */
   .line-clamp-1 {

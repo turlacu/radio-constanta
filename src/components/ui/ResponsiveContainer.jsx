@@ -23,7 +23,7 @@ export default function ResponsiveContainer({
   ...props
 }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = !device?.isPortrait;
+  const isSplitScreen = device?.showDesktopShell;
 
   // Base padding for different sections (using CSS variables)
   const paddingClasses = {
@@ -49,9 +49,7 @@ export default function ResponsiveContainer({
   const heightClasses = {
     radio: isSplitScreen
       ? 'h-full min-h-0'
-      : device?.isTablet || device?.isDesktop
-      ? 'min-h-[calc(100vh-100px)]'
-      : 'min-h-[calc(100vh-80px)]',
+      : 'min-app-height',
     news: isSplitScreen ? 'h-full overflow-y-auto scrollbar-hide' : '',
     article: isSplitScreen ? 'h-full overflow-y-auto scrollbar-hide' : '',
     default: '',

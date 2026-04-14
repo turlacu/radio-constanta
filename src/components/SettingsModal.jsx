@@ -233,7 +233,7 @@ export default function SettingsModal({
 
         {/* Modal - Wide TV-friendly layout */}
         <motion.div
-          className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-bg-secondary shadow-2xl md:max-h-[calc(100vh-3rem)]"
+          className="relative flex max-h-[calc(var(--app-height)-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-bg-secondary shadow-2xl md:max-h-[calc(var(--app-height)-3rem)]"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}

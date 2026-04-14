@@ -131,7 +131,8 @@ function AppContent() {
 
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
-  const showDesktopShell = !device.isPortrait;
+  const showDesktopShell = device.showDesktopShell;
+  const viewportWidth = device.viewportWidth || device.screenWidth || 0;
   const desktopUiTone = showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather'
     ? weatherTextColor
     : 'light';
@@ -1054,12 +1055,18 @@ function AppContent() {
     restoreRadio,
     showWeatherBackground: showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is actually visible
     audioAnalyserRef: analyserRef,
-    forceCompactLayout: showNews
+    forceCompactLayout: showNews || device.compactDesktop
   };
 
-  const showDesktopWeatherCard = !showNews && isPlaying && settings.backgroundAnimation === 'weather';
-  const desktopWeatherCardWidth = Math.min(520, Math.max(260, Math.round((device.screenWidth || 0) * 0.28)));
-  const desktopNewsRailWidth = Math.min(544, Math.max(352, Math.round((device.screenWidth || 0) * 0.34)));
+  const showDesktopWeatherCard =
+    showDesktopShell &&
+    !showNews &&
+    isPlaying &&
+    settings.backgroundAnimation === 'weather' &&
+    viewportWidth >= 1320 &&
+    (device.viewportHeight || device.screenHeight || 0) >= 760;
+  const desktopWeatherCardWidth = Math.min(460, Math.max(280, Math.round(viewportWidth * 0.24)));
+  const desktopNewsRailWidth = Math.min(520, Math.max(400, Math.round(viewportWidth * 0.36)));
 
   // Preload weather data on wide displays so it is ready when playback starts.
   useEffect(() => {
@@ -1115,10 +1122,10 @@ function AppContent() {
     <DeviceContext.Provider value={device}>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <RouteHandler>
-          <div className="min-h-screen bg-bg-primary">
+          <div className="min-app-height bg-bg-primary">
           {showDesktopShell ? (
             // Desktop/TV: Radio-focused layout with optional news
-            <div className={`flex items-center justify-center min-h-screen relative overflow-hidden ${
+            <div className={`min-app-height relative flex items-center justify-center overflow-hidden ${
               !showNews && isPlaying && settings.backgroundAnimation === 'minimal' ? 'animated-gradient' :
               settings.backgroundAnimation === 'none' ? 'bg-bg-secondary' : 'bg-bg-secondary'
             }`}>
@@ -1167,7 +1174,7 @@ function AppContent() {
               </div>
 
               {/* Content Container */}
-              <div className="relative h-screen w-full overflow-hidden">
+              <div className="app-height relative w-full overflow-hidden">
                 {/* Radio Section */}
                 <div
                   className={`relative overflow-hidden transition-all duration-500 ${
@@ -1234,7 +1241,7 @@ function AppContent() {
                       showDesktopWeatherCard ? 'pointer-events-auto' : ''
                     }`}
                   >
-                    <WeatherCard style={{ width: `${desktopWeatherCardWidth}px`, maxWidth: 'calc(100vw - 4rem)' }} />
+                    <WeatherCard style={{ width: `${desktopWeatherCardWidth}px`, maxWidth: 'min(100%, calc(var(--app-width) - 4rem))' }} />
                   </motion.div>
                 </div>
 
