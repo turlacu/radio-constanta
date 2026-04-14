@@ -75,7 +75,7 @@ export function useDeviceDetection() {
       const isUltraWide = aspectRatio >= 2.4;
       const isShortHeight = effectiveHeight <= 560;
       const isCarDisplay = !isTV && !isPortrait && effectiveWidth >= 1200 && effectiveHeight >= 360 && aspectRatio >= 3.2;
-      const showWideShell = !isTV && !isPortrait && effectiveWidth >= 900 && effectiveHeight >= 320;
+      const showWideShell = !isTV && !isPortrait && effectiveWidth >= 900;
       const showDualPaneShell = showWideShell && effectiveWidth >= 1180 && effectiveHeight >= 640 && !isCarDisplay;
       const compactDesktop = showWideShell && !showDualPaneShell;
       const layoutMode = isTV
