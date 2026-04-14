@@ -65,6 +65,7 @@ export default function SettingsModal({
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
   const compactPanel = viewportHeight < 760 || aspectRatio > 2;
   const ultraWidePanel = aspectRatio >= 3;
+  const compactWidePanel = compactPanel && viewportWidth >= 1100;
   const denseOptionClass = `w-full rounded-xl border text-left transition-all ${
     compactPanel ? 'p-3' : 'p-4'
   }`;
@@ -274,13 +275,13 @@ export default function SettingsModal({
           </div>
 
           {/* Content */}
-          <div className={`flex-1 ${compactPanel ? 'overflow-visible p-3' : 'overflow-y-auto p-4 md:p-6'}`}>
-            <div className={`grid grid-cols-1 ${compactPanel ? 'gap-3' : 'gap-6'} ${ultraWidePanel ? 'xl:grid-cols-4' : 'xl:grid-cols-3'} xl:gap-4`}>
+          <div className={`flex-1 ${compactPanel ? 'overflow-hidden p-3' : 'overflow-y-auto p-4 md:p-6'}`}>
+            <div className={`grid grid-cols-1 ${compactPanel ? 'gap-3' : 'gap-6'} ${ultraWidePanel ? 'xl:grid-cols-4' : compactWidePanel ? 'xl:grid-cols-3' : 'xl:grid-cols-3'} xl:gap-4`}>
               {/* Column 1: Background Animation */}
               <div className={compactPanel ? 'space-y-3' : 'space-y-4'}>
                 <div className={denseSectionClass}>
                   <Heading level={5} className="mb-3">Animație Fundal</Heading>
-                  <div className="space-y-2">
+                  <div className={`grid gap-2 ${compactWidePanel ? 'grid-cols-3' : 'space-y-0'}`}>
                     {backgroundOptions.map((option) => (
                       <button
                         key={option.value}
@@ -292,7 +293,7 @@ export default function SettingsModal({
                         }`}
                       >
                         <div className="font-medium text-text-primary">{option.label}</div>
-                        <div className="text-xs text-text-tertiary mt-1">{option.description}</div>
+                        {!compactPanel && <div className="mt-1 text-xs text-text-tertiary">{option.description}</div>}
                       </button>
                     ))}
                   </div>
@@ -300,19 +301,27 @@ export default function SettingsModal({
 
                 <div className={denseSectionClass}>
                   <Heading level={5} className="mb-3">Calitate Stream</Heading>
-                  <div className={`grid grid-cols-1 ${compactPanel ? 'gap-2' : 'gap-3'} ${ultraWidePanel ? '2xl:grid-cols-2' : ''}`}>
+                  <div className={`grid grid-cols-1 ${compactPanel ? 'gap-2' : 'gap-3'} ${compactWidePanel ? '2xl:grid-cols-2' : ''}`}>
                     {stations.map((station) => (
                       <div key={station.id} className={`rounded-2xl border border-border bg-bg-secondary/40 ${compactPanel ? 'p-3' : 'p-4'}`}>
-                        <div className={compactPanel ? 'mb-2' : 'mb-3'}>
+                        <div className={`flex items-center justify-between ${compactPanel ? 'mb-2' : 'mb-3'}`}>
                           <div className="font-medium text-text-primary">
                             {station.id === 'fm' ? 'Radio Constanța FM' : 'Radio Constanța Folclor'}
                           </div>
-                          <div className="mt-1 text-xs text-text-tertiary">
-                            Preferința este salvată în browser și reaplicată automat.
-                          </div>
+                          {compactPanel && (
+                            <div className="text-[11px] text-text-tertiary">
+                              {selectedQualities[station.id]?.toUpperCase() || 'AUTO'}
+                            </div>
+                          )}
                         </div>
 
-                        <div className={`grid ${compactPanel ? 'gap-1.5' : 'gap-2'}`}>
+                        {!compactPanel && (
+                          <div className="mt-1 mb-3 text-xs text-text-tertiary">
+                            Preferința este salvată în browser și reaplicată automat.
+                          </div>
+                        )}
+
+                        <div className={`grid ${compactPanel ? 'grid-cols-2 gap-1.5' : 'gap-2'}`}>
                           {station.qualities.map((quality) => {
                             const isActive = selectedQualities[station.id] === quality.id;
 
@@ -320,7 +329,7 @@ export default function SettingsModal({
                               <button
                                 key={quality.id}
                                 onClick={() => onQualityChange(station.id, quality.id)}
-                                className={`rounded-xl border text-left transition-all ${compactPanel ? 'p-2.5' : 'p-3'} ${
+                                className={`rounded-xl border text-left transition-all ${compactPanel ? 'p-2' : 'p-3'} ${
                                   isActive
                                     ? 'border-primary bg-primary/5'
                                     : 'border-border hover:border-primary/50'
@@ -330,9 +339,11 @@ export default function SettingsModal({
                                   <div className="font-medium text-text-primary">{quality.label}</div>
                                   <div className="text-xs text-text-tertiary">{quality.format}</div>
                                 </div>
-                                <div className="mt-1 text-xs text-text-tertiary">
-                                  {qualityDescriptions[quality.id] || quality.bitrate}
-                                </div>
+                                {!compactPanel && (
+                                  <div className="mt-1 text-xs text-text-tertiary">
+                                    {qualityDescriptions[quality.id] || quality.bitrate}
+                                  </div>
+                                )}
                               </button>
                             );
                           })}
@@ -445,13 +456,13 @@ export default function SettingsModal({
                       <PhosphorIcons.MapPin />
                       Locație
                     </Heading>
-                    <div className={`rounded-xl border border-border bg-bg-secondary/40 ${compactPanel ? 'mb-2 p-3' : 'mb-3 p-4'}`}>
+                    <div className={`rounded-xl border border-border bg-bg-secondary/40 ${compactPanel ? 'mb-2 p-2.5' : 'mb-3 p-4'}`}>
                       <Body className="font-medium">{weatherLocation.name}</Body>
                       <Body size="small" opacity="secondary" className="mt-1">
                         {weatherLocation.lat.toFixed(4)}, {weatherLocation.lon.toFixed(4)}
                       </Body>
                     </div>
-                    <div className={`grid ${compactPanel ? 'gap-2 xl:grid-cols-[minmax(0,1.3fr)_auto_auto]' : 'gap-2'}`}>
+                    <div className={`grid ${compactPanel ? 'gap-2 xl:grid-cols-[minmax(0,1.5fr)_auto_auto]' : 'gap-2'}`}>
                       <input
                         type="text"
                         placeholder="Introdu numele orașului..."
@@ -461,19 +472,19 @@ export default function SettingsModal({
                           if (e.key === 'Enter' && !isSearchingLocation) handleLocationChange();
                         }}
                         disabled={isSearchingLocation}
-                        className={`w-full rounded-xl border bg-bg-secondary/40 text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 ${compactPanel ? 'px-3 py-2.5' : 'px-4 py-3'}`}
+                        className={`w-full rounded-xl border bg-bg-secondary/40 text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 ${compactPanel ? 'px-3 py-2' : 'px-4 py-3'}`}
                       />
                       <button
                         onClick={handleLocationChange}
                         disabled={isSearchingLocation || !locationInput.trim()}
-                        className={`rounded-xl bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${compactPanel ? 'px-3 py-2.5' : 'w-full px-4 py-3'}`}
+                        className={`rounded-xl bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${compactPanel ? 'px-3 py-2' : 'w-full px-4 py-3'}`}
                       >
                         {isSearchingLocation ? 'Caut...' : 'Setează Locația'}
                       </button>
                       <button
                         onClick={handleUseCurrentLocation}
                         disabled={isGettingCurrentLocation}
-                        className={`rounded-xl border border-border bg-bg-secondary/40 text-text-primary font-medium hover:bg-bg-tertiary/80 disabled:opacity-50 transition-colors ${compactPanel ? 'px-3 py-2.5' : 'w-full px-4 py-3'}`}
+                        className={`rounded-xl border border-border bg-bg-secondary/40 text-text-primary font-medium hover:bg-bg-tertiary/80 disabled:opacity-50 transition-colors ${compactPanel ? 'px-3 py-2' : 'w-full px-4 py-3'}`}
                       >
                         {isGettingCurrentLocation ? 'Obțin locația...' : 'Folosește Locația Curentă'}
                       </button>

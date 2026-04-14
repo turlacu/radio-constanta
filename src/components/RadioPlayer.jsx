@@ -81,16 +81,16 @@ export default function RadioPlayer({ radioState }) {
     const profile = isUltraWideShort ? 'car' : shouldStackDesktopStage ? 'compact' : aspectRatio >= 1.9 ? 'ultrawide' : aspectRatio >= 1.25 ? 'wide' : 'square';
     const baseMetrics = {
       car: {
-        coverSize: 214,
-        playerWidth: 560,
-        gap: 30,
-        playButton: 58,
-        titleWidth: 450,
+        coverSize: 236,
+        playerWidth: 760,
+        gap: 54,
+        playButton: 60,
+        titleWidth: 560,
         visualizerWidth: 118,
         visualizerHeight: 22,
-        titleSize: 28,
+        titleSize: 30,
         subtitleSize: 14,
-        buttonRailWidth: 288,
+        buttonRailWidth: 320,
       },
       compact: {
         coverSize: 314,
@@ -240,15 +240,15 @@ export default function RadioPlayer({ radioState }) {
   if (isSplitScreen) {
     return (
       <ResponsiveContainer section="radio" className="justify-center">
-        <div className={`mx-auto flex w-full items-center justify-center ${isUltraWideShort ? 'max-w-[1280px]' : 'max-w-[1160px] 4k:max-w-[1320px]'}`}>
+        <div className={`mx-auto flex w-full items-center ${isUltraWideShort ? 'max-w-[1480px] justify-between' : 'max-w-[1160px] justify-center 4k:max-w-[1320px]'}`}>
           <div
-            className={`flex w-full items-center justify-center ${shouldStackDesktopStage ? 'flex-col gap-8' : ''}`}
+            className={`flex w-full items-center ${isUltraWideShort ? 'justify-between' : 'justify-center'} ${shouldStackDesktopStage ? 'flex-col gap-8' : ''}`}
             style={{
               gap: `${desktopMetrics.gap}px`,
-              maxWidth: shouldStackDesktopStage ? 'min(100%, 980px)' : `${desktopMetrics.stageWidth}px`,
+              maxWidth: isUltraWideShort ? 'min(100%, 1440px)' : shouldStackDesktopStage ? 'min(100%, 980px)' : `${desktopMetrics.stageWidth}px`,
             }}
           >
-            <div className={`flex justify-start ${shouldStackDesktopStage ? 'w-full justify-center' : 'shrink-0'}`}>
+            <div className={`flex justify-start ${shouldStackDesktopStage ? 'w-full justify-center' : 'shrink-0'} ${isUltraWideShort ? 'pl-4' : ''}`}>
               {renderCoverArt(true)}
             </div>
 
@@ -256,9 +256,9 @@ export default function RadioPlayer({ radioState }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className={`relative flex flex-col justify-center ${shouldStackDesktopStage ? 'w-full max-w-[640px] items-center' : 'shrink-0 items-end'} ${isUltraWideShort ? 'py-2' : ''}`}
+              className={`relative flex flex-col justify-center ${shouldStackDesktopStage ? 'w-full max-w-[640px] items-center' : 'shrink-0 items-end'} ${isUltraWideShort ? 'flex-1 py-2 pr-4' : ''}`}
               style={{
-                width: shouldStackDesktopStage ? 'min(100%, 640px)' : `${desktopMetrics.playerWidth}px`,
+                width: isUltraWideShort ? 'min(100%, 860px)' : shouldStackDesktopStage ? 'min(100%, 640px)' : `${desktopMetrics.playerWidth}px`,
                 minHeight: shouldStackDesktopStage ? undefined : `${desktopMetrics.coverSize}px`,
               }}
             >
