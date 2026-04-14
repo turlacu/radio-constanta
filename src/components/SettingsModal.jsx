@@ -64,9 +64,25 @@ export default function SettingsModal({
   const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
   const compactPanel = viewportHeight < 760 || aspectRatio > 2;
-  const layoutScale = Math.max(0.68, Math.min(1, viewportWidth / 1220, viewportHeight / 860));
+  const wideLandscape = viewportWidth >= 1100;
+  const veryShortViewport = viewportHeight > 0 && viewportHeight < 560;
+  const shortWideViewport = wideLandscape && viewportHeight > 0 && viewportHeight < 720;
+  const mediumViewport = viewportWidth >= 760 && viewportHeight >= 560;
+  const layoutMode = shortWideViewport
+    ? 'wide-compact'
+    : wideLandscape && viewportHeight >= 720
+      ? 'three-by-two'
+      : mediumViewport
+        ? 'two-column'
+        : 'stacked';
+  const layoutScale = layoutMode === 'stacked'
+    ? Math.max(0.78, Math.min(1, viewportWidth / 520, viewportHeight / 780))
+    : veryShortViewport
+      ? Math.max(0.82, Math.min(1, viewportWidth / 1180, viewportHeight / 620))
+      : 1;
   const scaledViewportHeight = viewportHeight > 0 ? `${100 / layoutScale}%` : '100%';
   const scaledViewportWidth = viewportWidth > 0 ? `${100 / layoutScale}%` : '100%';
+  const useScaleWrapper = layoutScale < 0.999;
   const denseOptionClass = `w-full rounded-xl border text-left transition-all ${
     compactPanel ? 'p-2.5' : 'p-3'
   }`;
@@ -108,6 +124,15 @@ export default function SettingsModal({
     mp3_256: 'Compresie redusă, echilibru bun',
     mp3_128: 'Consum redus de date'
   };
+  const fmStation = stations.find((station) => station.id === 'fm') || stations[0];
+  const folclorStation = stations.find((station) => station.id === 'folclor') || stations.find((station) => station.id !== 'fm');
+  const dashboardGridClass = layoutMode === 'three-by-two'
+    ? 'grid-cols-3 grid-rows-2'
+    : layoutMode === 'wide-compact'
+      ? 'grid-cols-4 grid-rows-2'
+      : layoutMode === 'two-column'
+        ? 'grid-cols-2 auto-rows-fr'
+        : 'grid-cols-1';
 
   const renderStreamQualitySection = (station) => {
     if (!station) {
@@ -115,44 +140,44 @@ export default function SettingsModal({
     }
 
     return (
-    <div key={station.id} className={denseSectionClass}>
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <Heading level={5} className="mb-0">
-          {station.id === 'fm' ? 'Radio Constanța FM' : 'Radio Constanța Folclor'}
-        </Heading>
-        <div className="rounded-full bg-bg-secondary/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-tertiary">
-          {selectedQualities[station.id]?.replace('_', ' ') || 'auto'}
+      <div key={station.id} className={denseSectionClass}>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <Heading level={5} className="mb-0">
+            {station.id === 'fm' ? 'Radio Constanța FM' : 'Radio Constanța Folclor'}
+          </Heading>
+          <div className="rounded-full bg-bg-secondary/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-tertiary">
+            {selectedQualities[station.id]?.replace('_', ' ') || 'auto'}
+          </div>
+        </div>
+
+        <div className={`grid ${station.qualities.length > 2 ? 'grid-cols-1' : 'grid-cols-2'} gap-1.5`}>
+          {station.qualities.map((quality) => {
+            const isActive = selectedQualities[station.id] === quality.id;
+
+            return (
+              <button
+                key={quality.id}
+                onClick={() => onQualityChange(station.id, quality.id)}
+                className={`rounded-xl border text-left transition-all ${
+                  compactPanel ? 'p-2' : 'p-2.5'
+                } ${
+                  isActive
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-medium leading-tight text-text-primary">{quality.label}</div>
+                  <div className="text-[10px] uppercase tracking-[0.14em] text-text-tertiary">{quality.format}</div>
+                </div>
+                <div className="mt-1 text-[11px] leading-tight text-text-tertiary">
+                  {qualityDescriptions[quality.id] || quality.bitrate}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
-
-      <div className={`grid ${station.qualities.length > 2 ? 'grid-cols-1' : 'grid-cols-2'} gap-1.5`}>
-        {station.qualities.map((quality) => {
-          const isActive = selectedQualities[station.id] === quality.id;
-
-          return (
-            <button
-              key={quality.id}
-              onClick={() => onQualityChange(station.id, quality.id)}
-              className={`rounded-xl border text-left transition-all ${
-                compactPanel ? 'p-2' : 'p-2.5'
-              } ${
-                isActive
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:border-primary/50'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="font-medium leading-tight text-text-primary">{quality.label}</div>
-                <div className="text-[10px] uppercase tracking-[0.14em] text-text-tertiary">{quality.format}</div>
-              </div>
-              <div className="mt-1 text-[11px] leading-tight text-text-tertiary">
-                {qualityDescriptions[quality.id] || quality.bitrate}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </div>
     );
   };
 
@@ -321,17 +346,23 @@ export default function SettingsModal({
           {/* Content */}
           <div className="overflow-hidden p-2 md:p-3">
             <div
-              className="origin-top-left"
-              style={{
+              className={useScaleWrapper ? 'origin-top-left' : ''}
+              style={useScaleWrapper ? {
                 transform: `scale(${layoutScale})`,
                 width: scaledViewportWidth,
                 height: scaledViewportHeight
-              }}
+              } : undefined}
             >
-              <div className="grid h-full min-h-[36rem] grid-cols-3 grid-rows-2 gap-3">
-                <div className={denseSectionClass}>
+              <div className={`grid gap-3 ${dashboardGridClass}`}>
+                <div className={`${denseSectionClass} ${layoutMode === 'wide-compact' ? 'col-span-2' : ''}`}>
                   <Heading level={5} className="mb-2">Animație Fundal</Heading>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className={`grid gap-2 ${
+                    layoutMode === 'stacked'
+                      ? 'grid-cols-1'
+                      : layoutMode === 'two-column'
+                        ? 'grid-cols-1 sm:grid-cols-3'
+                        : 'grid-cols-3'
+                  }`}>
                     {backgroundOptions.map((option) => (
                       <button
                         key={option.value}
@@ -349,7 +380,7 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                <div className={denseSectionClass}>
+                <div className={`${denseSectionClass} ${layoutMode === 'wide-compact' ? 'col-span-2' : ''}`}>
                   <Heading level={5} className="mb-2">Mod Vreme</Heading>
                   {backgroundAnimation === 'weather' ? (
                     <div className="space-y-2">
@@ -454,7 +485,7 @@ export default function SettingsModal({
                   )}
                 </div>
 
-                <div className={denseSectionClass}>
+                <div className={`${denseSectionClass} ${layoutMode === 'wide-compact' ? 'col-span-2' : ''}`}>
                   <Heading level={5} className="mb-2 flex items-center gap-2">
                     <PhosphorIcons.MapPin />
                     Locație
@@ -507,14 +538,16 @@ export default function SettingsModal({
                   )}
                 </div>
 
-                {renderStreamQualitySection(stations.find((station) => station.id === 'fm') || stations[0])}
-                {renderStreamQualitySection(stations.find((station) => station.id === 'folclor') || stations[1] || stations[0])}
+                {renderStreamQualitySection(fmStation)}
+                {renderStreamQualitySection(folclorStation)}
 
-                <div className={`${denseSectionClass} flex items-center justify-center border-dashed border-border/60 bg-transparent`}>
-                  <div className="text-center text-[11px] uppercase tracking-[0.22em] text-text-tertiary">
-                    spațiu liber
+                {layoutMode !== 'stacked' && (
+                  <div className={`${denseSectionClass} flex items-center justify-center border-dashed border-border/60 bg-transparent`}>
+                    <div className="text-center text-[11px] uppercase tracking-[0.22em] text-text-tertiary">
+                      spare
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
