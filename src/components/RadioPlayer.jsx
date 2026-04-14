@@ -66,6 +66,12 @@ export default function RadioPlayer({ radioState }) {
   const streamFormatBadgeClass = textColor === 'dark'
     ? 'border-gray-900/30 bg-gray-900 text-white'
     : 'border-white/28 bg-white text-gray-950';
+  const streamBadgeBaseClass = 'inline-flex items-center justify-center rounded-[10px] border px-2.5 py-1 text-[11px] font-semibold leading-none tracking-[0.02em] xl:text-[12px]';
+  const stationButtonBaseClass = 'relative flex-1 min-w-0 overflow-hidden border py-3 font-semibold leading-none transition-all';
+  const desktopStationButtonClass = 'rounded-[12px] px-3 text-[13px] xl:px-4 xl:text-[14px]';
+  const mobileStationButtonClass = 'rounded-[10px] px-3 text-[13px] sm:px-4 sm:text-[14px] 4k:rounded-[14px] 4k:px-6 4k:py-5 4k:text-[20px]';
+  const stationLabelBaseClass = 'block w-full overflow-hidden text-center leading-none';
+  const qualityButtonBaseClass = 'relative flex-1 overflow-hidden rounded-[10px] border px-3 py-2 text-[12px] font-medium leading-none transition-all focusable sm:text-[13px] 4k:rounded-xl 4k:px-5 4k:py-3 4k:text-[18px]';
   const shouldStackDesktopStage = viewportWidth < 1320 || viewportHeight < 760;
   const desktopMetrics = useMemo(() => {
     const minViewport = Math.max(560, Math.min(viewportWidth || 1280, viewportHeight || 720));
@@ -81,7 +87,7 @@ export default function RadioPlayer({ radioState }) {
         visualizerHeight: 26,
         titleSize: 34,
         subtitleSize: 17,
-        buttonRailWidth: 240,
+        buttonRailWidth: 272,
       },
       ultrawide: {
         coverSize: 430,
@@ -200,7 +206,7 @@ export default function RadioPlayer({ radioState }) {
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.25 + index * 0.03 }}
             tabIndex={0}
-                          className={`relative flex-1 rounded-lg border px-3 py-2 text-[12px] font-medium transition-all focusable 4k:rounded-xl 4k:px-5 4k:py-3 4k:text-[18px] ${
+                          className={`${qualityButtonBaseClass} ${
                             isActive
                               ? activeMobileQualityClass
                               : inactiveMobileQualityClass
@@ -209,7 +215,7 @@ export default function RadioPlayer({ radioState }) {
                           aria-pressed={isActive}
                           aria-label={`Switch to ${quality.label} quality`}
                         >
-            {quality.label}
+            <span className={stationLabelBaseClass}>{quality.label}</span>
           </motion.button>
         );
       })}
@@ -330,9 +336,7 @@ export default function RadioPlayer({ radioState }) {
                     <span>{streamInfo.channels}</span>
                     <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
                     <span>{streamInfo.bitrate}</span>
-                    <span
-                      className={`rounded-[6px] border px-2.5 py-1 font-semibold tracking-[0.02em] ${streamFormatBadgeClass}`}
-                    >
+                    <span className={`${streamBadgeBaseClass} ${streamFormatBadgeClass}`}>
                       {streamInfo.format}
                     </span>
                   </motion.div>
@@ -349,6 +353,7 @@ export default function RadioPlayer({ radioState }) {
                 >
                   {stations.map((station, index) => {
                     const isActive = currentStation.id === station.id;
+                    const stationLabel = station.id === 'fm' ? 'FM' : 'Folclor';
                     return (
                       <motion.button
                         key={station.id}
@@ -359,16 +364,22 @@ export default function RadioPlayer({ radioState }) {
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.24 + index * 0.05 }}
                         tabIndex={0}
-                        className={`relative min-w-0 flex-1 rounded-[12px] border px-4 py-3 text-[14px] font-semibold transition-all ${
+                        className={`${stationButtonBaseClass} ${desktopStationButtonClass} ${
                           isActive
                             ? activeStationButtonClass
                             : inactiveButtonClass
                         }`}
                         style={{ borderColor: isActive ? strongButtonBorderColor : buttonBorderColor }}
                         aria-pressed={isActive}
-                        aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
+                        aria-label={`Switch to ${stationLabel} station`}
                       >
-                        {station.id === 'fm' ? 'FM' : 'Folclor'}
+                        <span
+                          className={`${stationLabelBaseClass} ${
+                            station.id === 'fm' ? 'whitespace-nowrap' : 'text-[12px] tracking-[0.01em] xl:text-[13px]'
+                          }`}
+                        >
+                          {stationLabel}
+                        </span>
                       </motion.button>
                     );
                   })}
@@ -438,6 +449,7 @@ export default function RadioPlayer({ radioState }) {
         >
           {stations.map((station, index) => {
             const isActive = currentStation.id === station.id;
+            const stationLabel = station.id === 'fm' ? 'FM' : 'Folclor';
             return (
               <motion.button
                 key={station.id}
@@ -448,16 +460,22 @@ export default function RadioPlayer({ radioState }) {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.2 + index * 0.05 }}
                 tabIndex={0}
-                    className={`relative flex-1 rounded-[10px] border px-4 py-3 text-[14px] font-semibold transition-all focusable 4k:rounded-[14px] 4k:px-6 4k:py-5 4k:text-[20px] ${
+                    className={`${stationButtonBaseClass} ${mobileStationButtonClass} focusable ${
                       isActive
                         ? activeMobileStationClass
                         : inactiveMobileStationClass
                     }`}
                     style={{ borderColor: isActive ? strongButtonBorderColor : buttonBorderColor }}
                     aria-pressed={isActive}
-                    aria-label={`Switch to ${station.id === 'fm' ? 'FM' : 'Folclor'} station`}
+                    aria-label={`Switch to ${stationLabel} station`}
                   >
-                {station.id === 'fm' ? 'FM' : 'Folclor'}
+                <span
+                  className={`${stationLabelBaseClass} ${
+                    station.id === 'fm' ? 'whitespace-nowrap' : 'text-[12px] tracking-[0.01em] sm:text-[13px] 4k:text-[18px]'
+                  }`}
+                >
+                  {stationLabel}
+                </span>
               </motion.button>
             );
           })}
@@ -474,7 +492,7 @@ export default function RadioPlayer({ radioState }) {
             role="status"
             aria-label="Stream information"
           >
-            <span className={`rounded-[6px] border px-2 py-1 font-semibold tracking-[0.02em] ${streamFormatBadgeClass}`}>
+            <span className={`${streamBadgeBaseClass} ${streamFormatBadgeClass}`}>
               {streamInfo.format}
             </span>
             <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-400' : 'bg-border'}`} aria-hidden="true" />
