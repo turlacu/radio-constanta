@@ -314,7 +314,7 @@ export default function SettingsModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
+      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-3 md:items-center md:p-6">
         {/* Backdrop */}
         <motion.div
           className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -326,14 +326,14 @@ export default function SettingsModal({
 
         {/* Modal - Wide TV-friendly layout */}
         <motion.div
-          className="relative flex w-full max-w-[min(96rem,calc(var(--app-width)-1rem))] flex-col overflow-hidden rounded-2xl border border-border bg-bg-secondary shadow-2xl md:max-w-[min(96rem,calc(var(--app-width)-2rem))]"
+          className="relative my-auto flex max-h-[calc(var(--app-height)-1rem)] w-full max-w-[min(96rem,calc(var(--app-width)-0.75rem))] flex-col overflow-hidden rounded-2xl border border-border bg-bg-secondary shadow-2xl md:max-h-[calc(var(--app-height)-2rem)] md:max-w-[min(96rem,calc(var(--app-width)-2rem))]"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         >
           {/* Header */}
-          <div className={`flex items-center justify-between border-b border-border ${compactPanel ? 'px-4 py-3' : 'px-6 py-4'}`}>
+          <div className={`sticky top-0 z-10 flex items-center justify-between border-b border-border bg-bg-secondary/95 backdrop-blur-sm ${compactPanel ? 'px-4 py-3' : 'px-6 py-4'}`}>
             <Heading level={3}>Setări</Heading>
             <button
               onClick={onClose}
@@ -344,7 +344,7 @@ export default function SettingsModal({
           </div>
 
           {/* Content */}
-          <div className="overflow-hidden p-2 md:p-3">
+          <div className="overflow-y-auto overflow-x-hidden overscroll-contain p-2 touch-pan-y md:p-3">
             <div
               className={useScaleWrapper ? 'origin-top-left' : ''}
               style={useScaleWrapper ? {
