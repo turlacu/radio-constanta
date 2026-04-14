@@ -64,20 +64,21 @@ export default function SettingsModal({
   const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
   const compactPanel = viewportHeight < 760 || aspectRatio > 2;
-  const ultraWidePanel = aspectRatio >= 3;
-  const compactWidePanel = compactPanel && viewportWidth >= 1100;
+  const layoutScale = Math.max(0.68, Math.min(1, viewportWidth / 1220, viewportHeight / 860));
+  const scaledViewportHeight = viewportHeight > 0 ? `${100 / layoutScale}%` : '100%';
+  const scaledViewportWidth = viewportWidth > 0 ? `${100 / layoutScale}%` : '100%';
   const denseOptionClass = `w-full rounded-xl border text-left transition-all ${
-    compactPanel ? 'p-3' : 'p-4'
+    compactPanel ? 'p-2.5' : 'p-3'
   }`;
   const denseSectionClass = compactPanel
-    ? 'rounded-2xl border border-border bg-bg-tertiary/28 p-3'
-    : 'rounded-2xl border border-border bg-bg-tertiary/28 p-4';
+    ? 'rounded-2xl border border-border bg-bg-tertiary/28 p-2.5'
+    : 'rounded-2xl border border-border bg-bg-tertiary/28 p-3';
   const controlButtonClass = compactPanel
-    ? 'rounded-xl border px-3 py-2.5 transition-all'
-    : 'rounded-xl border p-4 transition-all';
+    ? 'rounded-xl border px-3 py-2 transition-all'
+    : 'rounded-xl border px-3 py-2.5 transition-all';
   const tileButtonClass = compactPanel
-    ? 'rounded-xl border px-3 py-2.5 transition-all flex flex-col items-center justify-center'
-    : 'rounded-xl border p-4 transition-all flex flex-col items-center justify-center';
+    ? 'rounded-xl border px-3 py-2 transition-all flex flex-col items-center justify-center'
+    : 'rounded-xl border px-3 py-3 transition-all flex flex-col items-center justify-center';
 
   const weatherTypes = [
     { id: 'sunny', label: 'Însorit', icon: 'Sun' },
@@ -106,6 +107,53 @@ export default function SettingsModal({
     flac: 'Lossless, calitate maximă',
     mp3_256: 'Compresie redusă, echilibru bun',
     mp3_128: 'Consum redus de date'
+  };
+
+  const renderStreamQualitySection = (station) => {
+    if (!station) {
+      return <div className={denseSectionClass} />;
+    }
+
+    return (
+    <div key={station.id} className={denseSectionClass}>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <Heading level={5} className="mb-0">
+          {station.id === 'fm' ? 'Radio Constanța FM' : 'Radio Constanța Folclor'}
+        </Heading>
+        <div className="rounded-full bg-bg-secondary/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-tertiary">
+          {selectedQualities[station.id]?.replace('_', ' ') || 'auto'}
+        </div>
+      </div>
+
+      <div className={`grid ${station.qualities.length > 2 ? 'grid-cols-1' : 'grid-cols-2'} gap-1.5`}>
+        {station.qualities.map((quality) => {
+          const isActive = selectedQualities[station.id] === quality.id;
+
+          return (
+            <button
+              key={quality.id}
+              onClick={() => onQualityChange(station.id, quality.id)}
+              className={`rounded-xl border text-left transition-all ${
+                compactPanel ? 'p-2' : 'p-2.5'
+              } ${
+                isActive
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-primary/50'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-medium leading-tight text-text-primary">{quality.label}</div>
+                <div className="text-[10px] uppercase tracking-[0.14em] text-text-tertiary">{quality.format}</div>
+              </div>
+              <div className="mt-1 text-[11px] leading-tight text-text-tertiary">
+                {qualityDescriptions[quality.id] || quality.bitrate}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+    );
   };
 
   const handleLocationChange = async () => {
@@ -253,11 +301,7 @@ export default function SettingsModal({
 
         {/* Modal - Wide TV-friendly layout */}
         <motion.div
-          className={`relative flex w-full flex-col overflow-hidden rounded-2xl border border-border bg-bg-secondary shadow-2xl ${
-            compactPanel
-              ? 'max-h-[calc(var(--app-height)-1.25rem)] max-w-[min(96rem,calc(var(--app-width)-1rem))]'
-              : 'max-h-[calc(var(--app-height)-2rem)] max-w-[min(90rem,calc(var(--app-width)-2rem))] md:max-h-[calc(var(--app-height)-3rem)]'
-          }`}
+          className="relative flex w-full max-w-[min(96rem,calc(var(--app-width)-1rem))] flex-col overflow-hidden rounded-2xl border border-border bg-bg-secondary shadow-2xl md:max-w-[min(96rem,calc(var(--app-width)-2rem))]"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -275,13 +319,19 @@ export default function SettingsModal({
           </div>
 
           {/* Content */}
-          <div className={`flex-1 ${compactPanel ? 'overflow-hidden p-3' : 'overflow-y-auto p-4 md:p-6'}`}>
-            <div className={`grid grid-cols-1 ${compactPanel ? 'gap-3' : 'gap-6'} ${ultraWidePanel ? 'xl:grid-cols-4' : compactWidePanel ? 'xl:grid-cols-3' : 'xl:grid-cols-3'} xl:gap-4`}>
-              {/* Column 1: Background Animation */}
-              <div className={compactPanel ? 'space-y-3' : 'space-y-4'}>
+          <div className="overflow-hidden p-2 md:p-3">
+            <div
+              className="origin-top-left"
+              style={{
+                transform: `scale(${layoutScale})`,
+                width: scaledViewportWidth,
+                height: scaledViewportHeight
+              }}
+            >
+              <div className="grid h-full min-h-[36rem] grid-cols-3 grid-rows-2 gap-3">
                 <div className={denseSectionClass}>
-                  <Heading level={5} className="mb-3">Animație Fundal</Heading>
-                  <div className={`grid gap-2 ${compactWidePanel ? 'grid-cols-3' : 'space-y-0'}`}>
+                  <Heading level={5} className="mb-2">Animație Fundal</Heading>
+                  <div className="grid grid-cols-3 gap-2">
                     {backgroundOptions.map((option) => (
                       <button
                         key={option.value}
@@ -293,267 +343,179 @@ export default function SettingsModal({
                         }`}
                       >
                         <div className="font-medium text-text-primary">{option.label}</div>
-                        {!compactPanel && <div className="mt-1 text-xs text-text-tertiary">{option.description}</div>}
+                        <div className="mt-1 text-[11px] leading-tight text-text-tertiary">{option.description}</div>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div className={denseSectionClass}>
-                  <Heading level={5} className="mb-3">Calitate Stream</Heading>
-                  <div className={`grid grid-cols-1 ${compactPanel ? 'gap-2' : 'gap-3'} ${compactWidePanel ? '2xl:grid-cols-2' : ''}`}>
-                    {stations.map((station) => (
-                      <div key={station.id} className={`rounded-2xl border border-border bg-bg-secondary/40 ${compactPanel ? 'p-3' : 'p-4'}`}>
-                        <div className={`flex items-center justify-between ${compactPanel ? 'mb-2' : 'mb-3'}`}>
-                          <div className="font-medium text-text-primary">
-                            {station.id === 'fm' ? 'Radio Constanța FM' : 'Radio Constanța Folclor'}
-                          </div>
-                          {compactPanel && (
-                            <div className="text-[11px] text-text-tertiary">
-                              {selectedQualities[station.id]?.toUpperCase() || 'AUTO'}
-                            </div>
-                          )}
+                  <Heading level={5} className="mb-2">Mod Vreme</Heading>
+                  {backgroundAnimation === 'weather' ? (
+                    <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => setWeatherMode('auto')}
+                            className={`${controlButtonClass} ${
+                              weatherMode === 'auto'
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <div className="font-medium text-text-primary">Automat</div>
+                            <div className="mt-1 text-[11px] leading-tight text-text-tertiary">Vreme reală</div>
+                          </button>
+                          <button
+                            onClick={() => setWeatherMode('manual')}
+                            className={`${controlButtonClass} ${
+                              weatherMode === 'manual'
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <div className="font-medium text-text-primary">Manual</div>
+                            <div className="mt-1 text-[11px] leading-tight text-text-tertiary">Alege tipul</div>
+                          </button>
                         </div>
 
-                        {!compactPanel && (
-                          <div className="mt-1 mb-3 text-xs text-text-tertiary">
-                            Preferința este salvată în browser și reaplicată automat.
-                          </div>
-                        )}
+                        <div className="grid grid-cols-3 gap-2">
+                          {performanceOptions.map((option) => (
+                            <button
+                              key={option.value}
+                              onClick={() => setWeatherPerformance(option.value)}
+                              className={`${controlButtonClass} ${
+                                weatherPerformance === option.value
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <div className="font-medium text-sm text-text-primary">{option.label}</div>
+                            </button>
+                          ))}
+                        </div>
 
-                        <div className={`grid ${compactPanel ? 'grid-cols-2 gap-1.5' : 'gap-2'}`}>
-                          {station.qualities.map((quality) => {
-                            const isActive = selectedQualities[station.id] === quality.id;
-
-                            return (
+                        {weatherMode === 'manual' ? (
+                          <>
+                            <div className="grid grid-cols-2 gap-2">
                               <button
-                                key={quality.id}
-                                onClick={() => onQualityChange(station.id, quality.id)}
-                                className={`rounded-xl border text-left transition-all ${compactPanel ? 'p-2' : 'p-3'} ${
-                                  isActive
+                                onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'day' })}
+                                className={`${tileButtonClass} ${
+                                  manualWeatherState.timeOfDay === 'day'
                                     ? 'border-primary bg-primary/5'
                                     : 'border-border hover:border-primary/50'
                                 }`}
                               >
-                                <div className="flex items-center justify-between gap-3">
-                                  <div className="font-medium text-text-primary">{quality.label}</div>
-                                  <div className="text-xs text-text-tertiary">{quality.format}</div>
-                                </div>
-                                {!compactPanel && (
-                                  <div className="mt-1 text-xs text-text-tertiary">
-                                    {qualityDescriptions[quality.id] || quality.bitrate}
-                                  </div>
-                                )}
+                                <PhosphorIcons.Sun />
+                                <div className="mt-1.5 font-medium text-sm text-text-primary">Zi</div>
                               </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                              <button
+                                onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'night' })}
+                                className={`${tileButtonClass} ${
+                                  manualWeatherState.timeOfDay === 'night'
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:border-primary/50'
+                                }`}
+                              >
+                                <PhosphorIcons.Moon />
+                                <div className="mt-1.5 font-medium text-sm text-text-primary">Noapte</div>
+                              </button>
+                            </div>
 
-              {/* Column 2: Weather Settings */}
-              <div className={compactPanel ? 'space-y-3' : 'space-y-4'}>
-                {backgroundAnimation === 'weather' && (
-                  <>
-                    <div className={denseSectionClass}>
-                      <Heading level={5} className="mb-3">Mod Vreme</Heading>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => setWeatherMode('auto')}
-                          className={`${controlButtonClass} ${
-                            weatherMode === 'auto'
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div className="font-medium text-text-primary">Automat</div>
-                          <div className="text-xs text-text-tertiary mt-1">Vreme reală</div>
-                        </button>
-                        <button
-                          onClick={() => setWeatherMode('manual')}
-                          className={`${controlButtonClass} ${
-                            weatherMode === 'manual'
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div className="font-medium text-text-primary">Manual</div>
-                          <div className="text-xs text-text-tertiary mt-1">Alege tipul</div>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className={denseSectionClass}>
-                      <Heading level={5} className="mb-3">Performanță</Heading>
-                      <div className="grid grid-cols-3 gap-2">
-                        {performanceOptions.map((option) => (
-                          <button
-                            key={option.value}
-                            onClick={() => setWeatherPerformance(option.value)}
-                            className={`${controlButtonClass} ${
-                              weatherPerformance === option.value
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/50'
-                            }`}
-                          >
-                            <div className="font-medium text-text-primary text-sm">{option.label}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {weatherMode === 'manual' && (
-                      <>
-                        <div className={denseSectionClass}>
-                          <Heading level={5} className="mb-3">Momentul Zilei</Heading>
-                          <div className="grid grid-cols-2 gap-2">
-                            <button
-                              onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'day' })}
-                              className={`${tileButtonClass} ${
-                                manualWeatherState.timeOfDay === 'day'
-                                  ? 'border-primary bg-primary/5'
-                                  : 'border-border hover:border-primary/50'
-                              }`}
-                            >
-                              <PhosphorIcons.Sun />
-                              <div className="font-medium text-text-primary text-sm mt-2">Zi</div>
-                            </button>
-                            <button
-                              onClick={() => setManualWeatherState({ ...manualWeatherState, timeOfDay: 'night' })}
-                              className={`${tileButtonClass} ${
-                                manualWeatherState.timeOfDay === 'night'
-                                  ? 'border-primary bg-primary/5'
-                                  : 'border-border hover:border-primary/50'
-                              }`}
-                            >
-                              <PhosphorIcons.Moon />
-                              <div className="font-medium text-text-primary text-sm mt-2">Noapte</div>
-                            </button>
+                            <div className="grid grid-cols-3 gap-2">
+                              {weatherTypes.map((type) => {
+                                const IconComponent = PhosphorIcons[type.icon];
+                                return (
+                                  <button
+                                    key={type.id}
+                                    onClick={() => setManualWeatherState({ ...manualWeatherState, weatherType: type.id })}
+                                    className={`${tileButtonClass} ${
+                                      manualWeatherState.weatherType === type.id
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-border hover:border-primary/50'
+                                    }`}
+                                  >
+                                    <IconComponent />
+                                    <div className="mt-1.5 font-medium text-[11px] text-text-primary">{type.label}</div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="rounded-xl border border-border bg-bg-secondary/40 px-3 py-2 text-[11px] leading-tight text-text-tertiary">
+                            Vremea este actualizată automat pentru locația selectată.
                           </div>
-                        </div>
-                      </>
-                    )}
-                  </>
-                )}
-
-                {backgroundAnimation !== 'weather' && (
-                  <div className={`${denseSectionClass} flex h-full items-center justify-center`}>
-                    <Body opacity="secondary" className="text-center">
-                      Selectează animația Reactiv la Vreme<br />pentru a configura setările meteo
-                    </Body>
-                  </div>
-                )}
-              </div>
-
-              {/* Column 3: Location or Manual Weather Type */}
-              <div className={compactPanel ? 'space-y-3' : 'space-y-4'}>
-                {backgroundAnimation === 'weather' && weatherMode === 'auto' && (
-                  <div className={denseSectionClass}>
-                    <Heading level={5} className="mb-3 flex items-center gap-2">
-                      <PhosphorIcons.MapPin />
-                      Locație
-                    </Heading>
-                    <div className={`rounded-xl border border-border bg-bg-secondary/40 ${compactPanel ? 'mb-2 p-2.5' : 'mb-3 p-4'}`}>
-                      <Body className="font-medium">{weatherLocation.name}</Body>
-                      <Body size="small" opacity="secondary" className="mt-1">
-                        {weatherLocation.lat.toFixed(4)}, {weatherLocation.lon.toFixed(4)}
-                      </Body>
+                        )}
                     </div>
-                    <div className={`grid ${compactPanel ? 'gap-2 xl:grid-cols-[minmax(0,1.5fr)_auto_auto]' : 'gap-2'}`}>
-                      <input
-                        type="text"
-                        placeholder="Introdu numele orașului..."
-                        value={locationInput}
-                        onChange={(e) => setLocationInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !isSearchingLocation) handleLocationChange();
-                        }}
-                        disabled={isSearchingLocation}
-                        className={`w-full rounded-xl border bg-bg-secondary/40 text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary disabled:opacity-50 ${compactPanel ? 'px-3 py-2' : 'px-4 py-3'}`}
-                      />
-                      <button
-                        onClick={handleLocationChange}
-                        disabled={isSearchingLocation || !locationInput.trim()}
-                        className={`rounded-xl bg-primary text-white font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${compactPanel ? 'px-3 py-2' : 'w-full px-4 py-3'}`}
-                      >
-                        {isSearchingLocation ? 'Caut...' : 'Setează Locația'}
-                      </button>
+                  ) : (
+                    <div className="flex h-full min-h-[12rem] items-center justify-center rounded-xl border border-dashed border-border/70 px-4 text-center text-sm text-text-tertiary">
+                      Activează fundalul reactiv pentru setările meteo.
+                    </div>
+                  )}
+                </div>
+
+                <div className={denseSectionClass}>
+                  <Heading level={5} className="mb-2 flex items-center gap-2">
+                    <PhosphorIcons.MapPin />
+                    Locație
+                  </Heading>
+                  {backgroundAnimation === 'weather' && weatherMode === 'auto' ? (
+                    <div className="space-y-2">
+                      <div className="rounded-xl border border-border bg-bg-secondary/40 px-3 py-2.5">
+                        <Body className="font-medium leading-tight">{weatherLocation.name}</Body>
+                        <Body size="small" opacity="secondary" className="mt-1 text-[11px] leading-tight">
+                          {weatherLocation.lat.toFixed(4)}, {weatherLocation.lon.toFixed(4)}
+                        </Body>
+                      </div>
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                        <input
+                          type="text"
+                          placeholder="Oraș"
+                          value={locationInput}
+                          onChange={(e) => setLocationInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !isSearchingLocation) handleLocationChange();
+                          }}
+                          disabled={isSearchingLocation}
+                          className="w-full rounded-xl border bg-bg-secondary/40 px-3 py-2 text-text-primary placeholder-text-tertiary focus:border-primary focus:outline-none disabled:opacity-50"
+                        />
+                        <button
+                          onClick={handleLocationChange}
+                          disabled={isSearchingLocation || !locationInput.trim()}
+                          className="rounded-xl bg-primary px-3 py-2 font-medium text-white transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {isSearchingLocation ? 'Caut...' : 'Setează'}
+                        </button>
+                      </div>
                       <button
                         onClick={handleUseCurrentLocation}
                         disabled={isGettingCurrentLocation}
-                        className={`rounded-xl border border-border bg-bg-secondary/40 text-text-primary font-medium hover:bg-bg-tertiary/80 disabled:opacity-50 transition-colors ${compactPanel ? 'px-3 py-2' : 'w-full px-4 py-3'}`}
+                        className="w-full rounded-xl border border-border bg-bg-secondary/40 px-3 py-2 font-medium text-text-primary transition-colors hover:bg-bg-tertiary/80 disabled:opacity-50"
                       >
-                        {isGettingCurrentLocation ? 'Obțin locația...' : 'Folosește Locația Curentă'}
+                        {isGettingCurrentLocation ? 'Obțin locația...' : 'Folosește locația curentă'}
                       </button>
                       {locationError && (
-                        <Body size="small" className={`${compactPanel ? 'xl:col-span-3' : ''} text-red-500`}>{locationError}</Body>
+                        <Body size="small" className="text-[11px] text-red-500">{locationError}</Body>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {backgroundAnimation === 'weather' && weatherMode === 'manual' && (
-                  <div className={denseSectionClass}>
-                    <Heading level={5} className="mb-3">Tip Vreme</Heading>
-                    <div className={`grid grid-cols-2 gap-2 ${ultraWidePanel ? '2xl:grid-cols-3' : ''}`}>
-                      {weatherTypes.map((type) => {
-                        const IconComponent = PhosphorIcons[type.icon];
-                        return (
-                          <button
-                            key={type.id}
-                            onClick={() => setManualWeatherState({ ...manualWeatherState, weatherType: type.id })}
-                            className={`${tileButtonClass} ${
-                              manualWeatherState.weatherType === type.id
-                                ? 'border-primary bg-primary/5'
-                                : 'border-border hover:border-primary/50'
-                            }`}
-                          >
-                            <IconComponent />
-                            <div className="font-medium text-text-primary text-sm mt-2">{type.label}</div>
-                          </button>
-                        );
-                      })}
+                  ) : (
+                    <div className="flex h-full min-h-[12rem] items-center justify-center rounded-xl border border-dashed border-border/70 px-4 text-center text-sm text-text-tertiary">
+                      {backgroundAnimation === 'weather'
+                        ? 'Locația este folosită doar în modul automat.'
+                        : 'Locația devine activă când fundalul este reactiv la vreme.'}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
-                {backgroundAnimation !== 'weather' && (
-                  <div className={`${denseSectionClass} flex h-full items-center justify-center`}>
-                    <Body opacity="secondary" className="text-center">
-                      Setările meteo sunt disponibile doar<br />când folosești animația Reactiv la Vreme
-                    </Body>
-                  </div>
-                )}
-              </div>
+                {renderStreamQualitySection(stations.find((station) => station.id === 'fm') || stations[0])}
+                {renderStreamQualitySection(stations.find((station) => station.id === 'folclor') || stations[1] || stations[0])}
 
-              {ultraWidePanel && (
-                <div className={compactPanel ? 'space-y-3' : 'space-y-4'}>
-                  <div className={denseSectionClass}>
-                    <Heading level={5} className="mb-3">Rezumat</Heading>
-                    <div className={`grid grid-cols-2 ${compactPanel ? 'gap-2 text-xs' : 'gap-3 text-sm'}`}>
-                      <div>
-                        <div className="text-text-tertiary">Fundal</div>
-                        <div className="font-medium text-text-primary">{backgroundOptions.find((option) => option.value === backgroundAnimation)?.label}</div>
-                      </div>
-                      <div>
-                        <div className="text-text-tertiary">Vreme</div>
-                        <div className="font-medium text-text-primary">{weatherMode === 'auto' ? 'Automat' : 'Manual'}</div>
-                      </div>
-                      <div>
-                        <div className="text-text-tertiary">Performanță</div>
-                        <div className="font-medium text-text-primary">{performanceOptions.find((option) => option.value === weatherPerformance)?.label}</div>
-                      </div>
-                      <div>
-                        <div className="text-text-tertiary">Locație</div>
-                        <div className="font-medium text-text-primary truncate">{weatherLocation.name}</div>
-                      </div>
-                    </div>
+                <div className={`${denseSectionClass} flex items-center justify-center border-dashed border-border/60 bg-transparent`}>
+                  <div className="text-center text-[11px] uppercase tracking-[0.22em] text-text-tertiary">
+                    spațiu liber
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </motion.div>
