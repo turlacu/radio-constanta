@@ -114,6 +114,14 @@ function AppContent() {
   const audioEventCleanupRef = useRef(() => {});
   const isSwitchingRef = useRef(false);
   const isSwitchingQualityRef = useRef(false);
+  const isPlayingRef = useRef(false);
+  const playbackIntentRef = useRef(false);
+  const selectedQualityRef = useRef({
+    fm: getInitialStationQuality('fm'),
+    folclor: getInitialStationQuality('folclor')
+  });
+  const pendingPlaybackTargetRef = useRef(null);
+  const isPlaybackTransitionQueuedRef = useRef(false);
   const streamTransitionIdRef = useRef(0);
   const detectedSampleRateRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -396,6 +404,7 @@ function AppContent() {
   }, [stationsWithDynamicCovers]);
 
   useEffect(() => {
+    selectedQualityRef.current = selectedQuality;
     localStorage.setItem(QUALITY_STORAGE_KEY, JSON.stringify(selectedQuality));
   }, [selectedQuality]);
 
@@ -559,110 +568,13 @@ function AppContent() {
       throw new Error('Audio element is not initialized');
     }
 
-    const releaseAudioProcessingGraph = async () => {
-      analyserRef.current = null;
-      audioSourceNodeRef.current = null;
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
 
-      if (audioContextRef.current) {
-        const currentContext = audioContextRef.current;
-        audioContextRef.current = null;
-        await currentContext.close().catch(() => {});
-      }
-    };
-
-    const bindAudioEvents = (targetAudio) => {
-      const handlePlaying = () => {
-        logDebug('✓ playing event');
-        setIsPlaying(true);
-        setIsLoading(false);
-      };
-
-      const handlePause = () => {
-        logDebug('pause event');
-        setIsPlaying(false);
-        setIsLoading(false);
-      };
-
-      const handleError = () => {
-        const error = targetAudio.error;
-
-        if (isSwitchingRef.current || isSwitchingQualityRef.current) {
-          if (error?.code === 4 || error?.code === 3) {
-            logDebug(`⚠ Ignoring expected error (code ${error?.code}) during switch`);
-            return;
-          }
-        }
-
-        logDebug(`✗ error: code=${error?.code}, msg=${error?.message}`);
-        setIsPlaying(false);
-        setIsLoading(false);
-      };
-
-      const handleWaiting = () => {
-        logDebug('⚠ buffering');
-        setIsLoading(true);
-      };
-
-      const handleCanPlay = () => {
-        logDebug(`canplay: ready=${targetAudio.readyState}`);
-        setIsLoading(false);
-      };
-
-      const handleStalled = () => {
-        logDebug('⚠ stalled');
-      };
-
-      targetAudio.addEventListener('playing', handlePlaying);
-      targetAudio.addEventListener('pause', handlePause);
-      targetAudio.addEventListener('error', handleError);
-      targetAudio.addEventListener('waiting', handleWaiting);
-      targetAudio.addEventListener('canplay', handleCanPlay);
-      targetAudio.addEventListener('stalled', handleStalled);
-
-      return () => {
-        targetAudio.removeEventListener('playing', handlePlaying);
-        targetAudio.removeEventListener('pause', handlePause);
-        targetAudio.removeEventListener('error', handleError);
-        targetAudio.removeEventListener('waiting', handleWaiting);
-        targetAudio.removeEventListener('canplay', handleCanPlay);
-        targetAudio.removeEventListener('stalled', handleStalled);
-      };
-    };
-
-    const createManagedAudioElement = () => {
-      const nextAudio = document.createElement('audio');
-      nextAudio.preload = 'none';
-      nextAudio.crossOrigin = 'anonymous';
-      nextAudio.setAttribute('playsinline', '');
-      nextAudio.setAttribute('webkit-playsinline', '');
-      audioEventCleanupRef.current = bindAudioEvents(nextAudio);
-      audioRef.current = nextAudio;
-      return nextAudio;
-    };
-
-    const teardownAudioElement = (targetAudio) => {
-      audioEventCleanupRef.current?.();
-      audioEventCleanupRef.current = () => {};
-      targetAudio.pause();
-      targetAudio.removeAttribute('src');
-      targetAudio.load();
-    };
-
-    const shouldRebuildAudio = Boolean(audio.src && audio.src !== nextUrl);
-
-    if (shouldRebuildAudio) {
-      teardownAudioElement(audio);
-      await releaseAudioProcessingGraph();
-      audio = createManagedAudioElement();
-    } else {
-      audio.pause();
-      audio.removeAttribute('src');
-      audio.load();
-
-      const resetCompleted = await waitForAudioReset(audio, transitionId);
-      if (!resetCompleted) {
-        throw new Error('Superseded stream transition');
-      }
+    const resetCompleted = await waitForAudioReset(audio, transitionId);
+    if (!resetCompleted) {
+      throw new Error('Superseded stream transition');
     }
 
     if (audioContextRef.current?.state === 'suspended') {
@@ -712,6 +624,60 @@ function AppContent() {
     throw lastError || new Error('No playable stream candidates');
   };
 
+  const processPendingPlaybackTarget = async () => {
+    if (isPlaybackTransitionQueuedRef.current) {
+      return;
+    }
+
+    isPlaybackTransitionQueuedRef.current = true;
+
+    while (pendingPlaybackTargetRef.current) {
+      const request = pendingPlaybackTargetRef.current;
+      pendingPlaybackTargetRef.current = null;
+
+      isSwitchingRef.current = request.reason === 'station';
+      isSwitchingQualityRef.current = request.reason === 'quality';
+      setIsLoading(true);
+
+      try {
+        const { quality } = await attemptStreamPlayback({
+          stationId: request.stationId,
+          preferredQualityId: request.qualityId
+        });
+
+        if (request.reason === 'station') {
+          analytics.trackStationSwitch(request.stationId, quality.id);
+        } else if (request.reason === 'quality') {
+          analytics.trackQualityChange(request.stationId, quality.id);
+        }
+      } catch (error) {
+        logDebug(`✗ Queued playback transition failed: ${error.message}`);
+
+        if (!pendingPlaybackTargetRef.current) {
+          playbackIntentRef.current = false;
+          analytics.trackStreamStop();
+          setIsLoading(false);
+          setStreamInfo(null);
+        }
+      } finally {
+        isSwitchingRef.current = false;
+        isSwitchingQualityRef.current = false;
+      }
+    }
+
+    isPlaybackTransitionQueuedRef.current = false;
+  };
+
+  const schedulePlaybackTransition = ({ stationId, qualityId, reason }) => {
+    playbackIntentRef.current = true;
+    pendingPlaybackTargetRef.current = {
+      stationId,
+      qualityId,
+      reason
+    };
+    void processPendingPlaybackTarget();
+  };
+
   const ensureAudioAnalyser = () => {
     const audio = audioRef.current;
     if (!audio || analyserRef.current || !(window.AudioContext || window.webkitAudioContext)) {
@@ -752,12 +718,15 @@ function AppContent() {
 
     const handlePlaying = () => {
       logDebug('✓ playing event');
+      isPlayingRef.current = true;
+      playbackIntentRef.current = true;
       setIsPlaying(true);
       setIsLoading(false);
     };
 
     const handlePause = () => {
       logDebug('pause event');
+      isPlayingRef.current = false;
       setIsPlaying(false);
       setIsLoading(false);
     };
@@ -773,6 +742,10 @@ function AppContent() {
       }
 
       logDebug(`✗ error: code=${error?.code}, msg=${error?.message}`);
+      isPlayingRef.current = false;
+      if (!pendingPlaybackTargetRef.current) {
+        playbackIntentRef.current = false;
+      }
       setIsPlaying(false);
       setIsLoading(false);
     };
@@ -813,6 +786,8 @@ function AppContent() {
       currentAudio.pause();
       currentAudio.src = '';
       audioRef.current = null;
+      isPlayingRef.current = false;
+      playbackIntentRef.current = false;
       analyserRef.current = null;
       audioSourceNodeRef.current = null;
       if (audioContextRef.current) {
@@ -866,6 +841,7 @@ function AppContent() {
     // If paused, start playing
     if (audio.paused) {
       try {
+        playbackIntentRef.current = true;
         if (!audio.src || audio.src !== getAbsoluteStreamUrl(streamUrl)) {
           const { quality } = await attemptStreamPlayback({
             stationId: currentStation.id,
@@ -890,12 +866,14 @@ function AppContent() {
         }
       } catch (err) {
         logDebug(`✗ play() failed: ${err.message}`);
+        playbackIntentRef.current = false;
         setIsLoading(false);
         setStreamInfo(null);
       }
     } else {
       // Pause
       logDebug('pause()');
+      playbackIntentRef.current = false;
       audio.pause();
 
       // Track stream stop
@@ -904,50 +882,32 @@ function AppContent() {
   };
 
   const switchStation = async (station) => {
-    if (isSwitchingRef.current || isSwitchingQualityRef.current || currentStation.id === station.id) {
-      logDebug('⚠ Cannot switch station - operation in progress');
+    if (currentStation.id === station.id) {
       return;
     }
 
     logDebug(`Switching to ${station.name}`);
-    isSwitchingRef.current = true;
-
-    const wasPlaying = isPlaying;
-    const audio = audioRef.current;
+    const shouldMaintainPlayback = playbackIntentRef.current
+      || Boolean(audioRef.current && (!audioRef.current.paused || isLoading));
 
     try {
       // Update station
       setCurrentStation(station);
-      setIsPlaying(false);
 
       logDebug('Station switched');
 
-      // Autoplay if was playing before
-      if (wasPlaying && audio) {
-        logDebug('Autoplay after station switch');
-
-        try {
-          const { quality } = await attemptStreamPlayback({
-            stationId: station.id,
-            preferredQualityId: selectedQuality[station.id] || station.defaultQuality
-          });
-          logDebug('✓ Autoplay success');
-
-          // Track station switch
-          analytics.trackStationSwitch(station.id, quality.id);
-        } catch (err) {
-          logDebug(`✗ Autoplay failed: ${err.message}`);
-          analytics.trackStreamStop();
-          setIsLoading(false);
-          setStreamInfo(null);
-        }
+      if (shouldMaintainPlayback) {
+        logDebug('Queueing autoplay after station switch');
+        schedulePlaybackTransition({
+          stationId: station.id,
+          qualityId: selectedQualityRef.current[station.id] || station.defaultQuality,
+          reason: 'station'
+        });
       }
     } catch (error) {
       logDebug(`✗ Switch error: ${error.message}`);
       setIsLoading(false);
       setStreamInfo(null);
-    } finally {
-      isSwitchingRef.current = false;
     }
   };
 
@@ -961,52 +921,39 @@ function AppContent() {
       return; // Already selected
     }
 
-    if (isSwitchingRef.current || isSwitchingQualityRef.current) {
-      logDebug('⚠ Cannot switch quality - operation in progress');
-      return;
-    }
-
     logDebug(`Switching quality for ${stationId} to ${qualityId}`);
-    isSwitchingQualityRef.current = true;
 
     try {
       // Update selected quality
-      setSelectedQuality(prev => ({
-        ...prev,
+      const nextSelectedQuality = {
+        ...selectedQualityRef.current,
         [stationId]: qualityId
-      }));
+      };
+      selectedQualityRef.current = nextSelectedQuality;
+      setSelectedQuality(nextSelectedQuality);
 
       if (stationId !== currentStation.id) {
         return;
       }
 
-      // If currently playing, restart with new quality
-      const audio = audioRef.current;
-      if (isPlaying && audio) {
-        try {
-          const { quality } = await attemptStreamPlayback({
-            stationId,
-            preferredQualityId: qualityId
-          });
-          logDebug('✓ Quality switch success');
-
-          // Track quality change
-          analytics.trackQualityChange(stationId, quality.id);
-        } catch (err) {
-          logDebug(`✗ Quality switch failed: ${err.message}`);
-          analytics.trackStreamStop();
-          setIsLoading(false);
-          setStreamInfo(null);
-        }
+      const shouldMaintainPlayback = playbackIntentRef.current
+        || Boolean(audioRef.current && (!audioRef.current.paused || isLoading));
+      if (shouldMaintainPlayback) {
+        schedulePlaybackTransition({
+          stationId,
+          qualityId,
+          reason: 'quality'
+        });
       }
-    } finally {
-      isSwitchingQualityRef.current = false;
+    } catch (error) {
+      logDebug(`✗ Quality switch error: ${error.message}`);
     }
   };
 
   // Functions to pause/resume radio from article audio players
   const pauseRadio = () => {
     if (audioRef.current && isPlaying) {
+      playbackIntentRef.current = false;
       audioRef.current.pause();
       return true; // Return true if we paused
     }
@@ -1017,6 +964,7 @@ function AppContent() {
   const stopRadio = () => {
     if (audioRef.current) {
       const wasSrc = audioRef.current.src;
+      playbackIntentRef.current = false;
       audioRef.current.pause();
       audioRef.current.src = ''; // Clear source to release audio session
       return wasSrc; // Return old src so it can be restored
@@ -1026,6 +974,7 @@ function AppContent() {
 
   const resumeRadio = () => {
     if (audioRef.current && !isPlaying && audioRef.current.src) {
+      playbackIntentRef.current = true;
       audioRef.current.play().catch(err => {
         logDebug(`Resume failed: ${err.message}`);
       });
