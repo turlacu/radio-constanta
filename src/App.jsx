@@ -131,11 +131,12 @@ function AppContent() {
 
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
-  const showDesktopShell = device.showDesktopShell;
+  const showWideShell = device.showDesktopShell;
+  const showDesktopShell = device.showDualPaneShell;
   const viewportWidth = device.viewportWidth || device.screenWidth || 0;
   const viewportHeight = device.viewportHeight || device.screenHeight || 0;
   const isShortHeightShell = device.isShortHeight || device.isCarDisplay;
-  const desktopUiTone = showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather'
+  const desktopUiTone = showWideShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather'
     ? weatherTextColor
     : 'light';
   const desktopActionSurfaceClass = desktopUiTone === 'dark'
@@ -1055,15 +1056,15 @@ function AppContent() {
     stopRadio,
     resumeRadio,
     restoreRadio,
-    showWeatherBackground: showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is actually visible
+    showWeatherBackground: showWideShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is actually visible
     audioAnalyserRef: analyserRef,
-    forceCompactLayout: showNews || device.compactDesktop,
+    forceCompactLayout: showNews,
     shortHeightLayout: isShortHeightShell,
     layoutMode: device.layoutMode,
   };
 
   const showDesktopWeatherCard =
-    showDesktopShell &&
+    showWideShell &&
     !showNews &&
     isPlaying &&
     settings.backgroundAnimation === 'weather' &&
@@ -1077,7 +1078,7 @@ function AppContent() {
 
   // Preload weather data on wide displays so it is ready when playback starts.
   useEffect(() => {
-    if (!showDesktopShell || settings.backgroundAnimation !== 'weather') {
+    if (!showWideShell || settings.backgroundAnimation !== 'weather') {
       return;
     }
 
@@ -1118,19 +1119,25 @@ function AppContent() {
       cancelled = true;
     };
   }, [
-    showDesktopShell,
+    showWideShell,
     settings.backgroundAnimation,
     settings.weatherMode,
     settings.weatherLocation,
     settings.manualWeatherState
   ]);
 
+  useEffect(() => {
+    if (!showDesktopShell && showNews) {
+      setShowNews(false);
+    }
+  }, [showDesktopShell, showNews]);
+
   return (
     <DeviceContext.Provider value={device}>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <RouteHandler>
           <div className="min-app-height bg-bg-primary">
-          {showDesktopShell ? (
+          {showWideShell ? (
             // Desktop/TV: Radio-focused layout with optional news
             <div className={`min-app-height relative flex items-center justify-center overflow-hidden ${
               !showNews && isPlaying && settings.backgroundAnimation === 'minimal' ? 'animated-gradient' :
@@ -1157,27 +1164,26 @@ function AppContent() {
                   </svg>
                 </motion.button>
 
-                {/* Toggle News Button - Minimalistic Hamburger */}
-                <motion.button
-                  onClick={() => setShowNews(!showNews)}
-                  className={`flex items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
-                  style={{ borderColor: desktopUiBorderColor }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label={showNews ? 'Hide news' : 'Show news'}
-                >
-                  {showNews ? (
-                    // X icon
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  ) : (
-                    // Hamburger icon
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                  )}
-                </motion.button>
+                {showDesktopShell && (
+                  <motion.button
+                    onClick={() => setShowNews(!showNews)}
+                    className={`flex items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
+                    style={{ borderColor: desktopUiBorderColor }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label={showNews ? 'Hide news' : 'Show news'}
+                  >
+                    {showNews ? (
+                      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    ) : (
+                      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                    )}
+                  </motion.button>
+                )}
               </div>
 
               {/* Content Container */}
@@ -1189,7 +1195,7 @@ function AppContent() {
                       ? 'h-full border-r border-border'
                       : 'h-full w-full'
                   }`}
-                  style={showNews ? { width: `${desktopNewsRailWidth}px` } : undefined}
+                  style={showNews && showDesktopShell ? { width: `${desktopNewsRailWidth}px` } : undefined}
                 >
                   {/* Floating particles animation - only show for minimal background */}
                   {!showNews && isPlaying && settings.backgroundAnimation === 'minimal' && (
@@ -1254,7 +1260,7 @@ function AppContent() {
 
                 {/* News Section - Slide in from right */}
                 <AnimatePresence>
-                  {showNews && (
+                  {showNews && showDesktopShell && (
                     <motion.div
                       initial={{ x: '100%', opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}

@@ -22,6 +22,7 @@ export function useDeviceDetection() {
     supportsHover: false,
     layoutMode: 'mobile-stack',
     showDesktopShell: false,
+    showDualPaneShell: false,
     compactDesktop: false,
     isUltraWide: false,
     isShortHeight: false,
@@ -74,22 +75,17 @@ export function useDeviceDetection() {
       const isUltraWide = aspectRatio >= 2.4;
       const isShortHeight = effectiveHeight <= 560;
       const isCarDisplay = !isTV && !isPortrait && effectiveWidth >= 1200 && effectiveHeight >= 360 && aspectRatio >= 3.2;
-      const showDesktopShell = !isTV && !isPortrait && (
-        (effectiveWidth >= 1180 && effectiveHeight >= 680) ||
-        isCarDisplay
-      );
-      const compactDesktop = !showDesktopShell && !isPortrait && (
-        (effectiveWidth >= 900 && effectiveHeight >= 560) ||
-        (effectiveWidth >= 820 && effectiveHeight >= 420 && aspectRatio >= 2)
-      );
+      const showWideShell = !isTV && !isPortrait && effectiveWidth >= 900 && effectiveHeight >= 320;
+      const showDualPaneShell = showWideShell && effectiveWidth >= 1180 && effectiveHeight >= 640 && !isCarDisplay;
+      const compactDesktop = showWideShell && !showDualPaneShell;
       const layoutMode = isTV
         ? 'tv-shell'
         : isCarDisplay
         ? 'car-shell'
-        : showDesktopShell
+        : showDualPaneShell
         ? 'desktop-shell'
-        : compactDesktop
-        ? 'landscape-stack'
+        : showWideShell
+        ? 'landscape-shell'
         : 'mobile-stack';
 
       document.documentElement.style.setProperty('--app-width', `${effectiveWidth}px`);
@@ -111,7 +107,8 @@ export function useDeviceDetection() {
         supportsTouch,
         supportsHover,
         layoutMode,
-        showDesktopShell,
+        showDesktopShell: showWideShell,
+        showDualPaneShell,
         compactDesktop,
         isUltraWide,
         isShortHeight,

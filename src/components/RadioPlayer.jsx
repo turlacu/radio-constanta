@@ -75,7 +75,7 @@ export default function RadioPlayer({ radioState }) {
   const stationLabelBaseClass = 'block w-full overflow-hidden text-center leading-none';
   const qualityButtonBaseClass = 'relative flex-1 overflow-hidden rounded-[10px] border px-3 py-2 text-[12px] font-medium leading-none transition-all focusable sm:text-[13px] 4k:rounded-xl 4k:px-5 4k:py-3 4k:text-[18px]';
   const isUltraWideShort = layoutMode === 'car-shell' || (aspectRatio >= 3 && viewportHeight <= 560);
-  const shouldStackDesktopStage = !isUltraWideShort && (viewportWidth < 1320 || viewportHeight < 760);
+  const shouldStackDesktopStage = !isUltraWideShort && aspectRatio < 1.75 && (viewportWidth < 1320 || viewportHeight < 760);
   const desktopMetrics = useMemo(() => {
     const minViewport = Math.max(560, Math.min(viewportWidth || 1280, viewportHeight || 720));
     const profile = isUltraWideShort ? 'car' : shouldStackDesktopStage ? 'compact' : aspectRatio >= 1.9 ? 'ultrawide' : aspectRatio >= 1.25 ? 'wide' : 'square';
