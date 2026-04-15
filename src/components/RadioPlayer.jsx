@@ -29,10 +29,10 @@ export default function RadioPlayer({ radioState }) {
   const device = useContext(DeviceContext);
   const isDesktopShell = device?.showDesktopShell;
   const isSplitScreen = isDesktopShell && !forceCompactLayout;
-  const useCenteredDesktopStack = isDesktopShell && device?.isUltraWide;
   const viewportWidth = device?.viewportWidth || device?.screenWidth || 0;
   const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
+  const useCenteredDesktopStack = isDesktopShell && (device?.isUltraWide || aspectRatio <= 1.5);
   const weatherTextColor = useWeatherTextColor();
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
@@ -482,12 +482,12 @@ export default function RadioPlayer({ radioState }) {
           transition={{ delay: 0.1 }}
           className="mb-[clamp(1.75rem,1.35rem+1.2vw,3rem)] text-center"
         >
-          <Heading level={3} color="custom" className={`mb-2 ${textPrimaryClass}`}>
+          <Heading level={3} color="custom" className={`mb-2 max-w-full text-center ${textPrimaryClass}`}>
             {currentStation.name}
           </Heading>
           {metadata && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-              <Body size="normal" weight="medium" opacity="custom" className={textSecondaryClass}>
+              <Body size="normal" weight="medium" opacity="custom" className={`max-w-full text-center ${textSecondaryClass}`}>
                 {metadata}
               </Body>
             </motion.div>
