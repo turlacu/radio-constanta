@@ -184,9 +184,9 @@ function AppContent() {
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
   const showDesktopShell = device.showDesktopShell;
-  const canShowNewsRail = device.showDualPaneShell && !device.isUltraWide;
   const viewportWidth = device.viewportWidth || device.screenWidth || 0;
   const viewportHeight = device.viewportHeight || device.screenHeight || 0;
+  const viewportAspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
   const isShortHeightShell = device.isShortHeight || device.isCarDisplay;
   const desktopUiTone = showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather'
     ? weatherTextColor
@@ -1033,6 +1033,22 @@ function AppContent() {
     }
   };
 
+  const desiredNewsRailWidth = Math.min(
+    viewportHeight * 0.92,
+    Math.max(viewportHeight * 0.72, viewportWidth - viewportHeight * 0.96)
+  );
+  const playerPaneWidthWithNews = Math.max(0, viewportWidth - desiredNewsRailWidth);
+  const newsPaneAspectRatio = viewportHeight > 0 ? desiredNewsRailWidth / viewportHeight : 0;
+  const playerPaneAspectRatioWithNews = viewportHeight > 0 ? playerPaneWidthWithNews / viewportHeight : 0;
+  const canShowNewsRail = device.showDualPaneShell
+    && newsPaneAspectRatio <= 1
+    && playerPaneAspectRatioWithNews <= 0.98;
+  const desktopNewsRailWidth = canShowNewsRail ? desiredNewsRailWidth : 0;
+  const activeRadioPaneWidth = showNews && canShowNewsRail
+    ? playerPaneWidthWithNews
+    : Math.max(0, viewportWidth - (showDesktopShell ? 96 : 32));
+  const activeRadioPaneAspectRatio = viewportHeight > 0 ? activeRadioPaneWidth / viewportHeight : viewportAspectRatio;
+
   const radioState = {
     isPlaying,
     isLoading,
@@ -1054,6 +1070,8 @@ function AppContent() {
     forceCompactLayout: showNews,
     shortHeightLayout: isShortHeightShell,
     layoutMode: device.layoutMode,
+    availablePaneWidth: activeRadioPaneWidth,
+    availablePaneAspectRatio: activeRadioPaneAspectRatio,
   };
 
   const showDesktopWeatherCard =
@@ -1061,13 +1079,10 @@ function AppContent() {
     !showNews &&
     isPlaying &&
     settings.backgroundAnimation === 'weather' &&
-    viewportWidth >= (device.isUltraWide ? 1240 : 1320) &&
-    viewportHeight >= (device.isUltraWide ? 520 : 760) &&
+    device.viewportShape !== 'tall' &&
+    viewportAspectRatio <= 2.4 &&
     !device.isCarDisplay;
   const desktopWeatherCardWidth = Math.min(460, Math.max(280, Math.round(viewportWidth * 0.24)));
-  const desktopNewsRailWidth = device.isCarDisplay
-    ? Math.min(620, Math.max(460, Math.round(viewportWidth * 0.32)))
-    : Math.min(520, Math.max(400, Math.round(viewportWidth * 0.36)));
 
   useEffect(() => {
     const preloadLikelyNextViews = () => {
@@ -1270,8 +1285,14 @@ function AppContent() {
                     </>
                   )}
 
-                  <div className={`relative z-10 flex h-full w-full items-center justify-center 3xl:px-10 ${isShortHeightShell ? 'px-4 py-4' : 'px-6 py-10'}`}>
-                    <div className="flex h-full w-full items-center justify-center">
+                  <div className={`relative z-10 flex h-full w-full justify-center 3xl:px-10 ${
+                    showNews
+                      ? 'items-start overflow-y-auto scrollbar-hide px-4 pt-[clamp(4.75rem,4.3rem+1.2vw,6rem)] pb-6'
+                      : isShortHeightShell
+                      ? 'items-center px-4 py-4'
+                      : 'items-center px-6 py-10'
+                  }`}>
+                    <div className={`flex w-full justify-center ${showNews ? 'min-h-max items-start' : 'h-full items-center'}`}>
                       <Radio radioState={radioState} />
                     </div>
                   </div>

@@ -20,6 +20,7 @@ export function useDeviceDetection() {
     isPortrait: true,
     supportsTouch: false,
     supportsHover: false,
+    viewportShape: 'tall', // tall | wide | ultra-wide
     layoutMode: 'mobile-stack',
     showDesktopShell: false,
     showDualPaneShell: false,
@@ -76,25 +77,26 @@ export function useDeviceDetection() {
       document.documentElement.style.setProperty('--app-height', `${effectiveHeight}px`);
 
       setDevice((prev) => {
-        const isUltraWide = aspectRatio >= 2.4;
+        const previousShape = prev.viewportShape || 'tall';
+        const tallThreshold = previousShape === 'tall' ? 1.02 : 0.98;
+        const ultraWideThreshold = previousShape === 'ultra-wide' ? 1.74 : 1.82;
+        const viewportShape = aspectRatio < tallThreshold
+          ? 'tall'
+          : aspectRatio > ultraWideThreshold
+          ? 'ultra-wide'
+          : 'wide';
+        const isUltraWide = viewportShape === 'ultra-wide';
         const isShortHeight = effectiveHeight <= 560;
         const isCarDisplay = !isTV && !isPortrait && effectiveWidth >= 1200 && effectiveHeight >= 360 && aspectRatio >= 3.2;
-        const showWideShell = !isTV && !isPortrait && effectiveWidth >= (prev.showDesktopShell ? 860 : 900);
-        const dualPaneWidthThreshold = isUltraWide
-          ? (prev.showDualPaneShell ? 1240 : 1280)
-          : (prev.showDualPaneShell ? 1140 : 1180);
-        const dualPaneHeightThreshold = isUltraWide
-          ? (prev.showDualPaneShell ? 500 : 540)
-          : (prev.showDualPaneShell ? 600 : 640);
-        const showDualPaneShell = showWideShell
-          && effectiveWidth >= dualPaneWidthThreshold
-          && effectiveHeight >= dualPaneHeightThreshold
-          && !isCarDisplay;
+        const showWideShell = !isTV && viewportShape !== 'tall' && !isCarDisplay;
+        const showDualPaneShell = showWideShell && viewportShape === 'wide';
         const compactDesktop = showWideShell && !showDualPaneShell;
         const layoutMode = isTV
           ? 'tv-shell'
           : isCarDisplay
           ? 'car-shell'
+          : viewportShape === 'ultra-wide'
+          ? 'ultra-wide-shell'
           : showDualPaneShell
           ? 'desktop-shell'
           : showWideShell
@@ -116,6 +118,7 @@ export function useDeviceDetection() {
           isPortrait,
           supportsTouch,
           supportsHover,
+          viewportShape,
           layoutMode,
           showDesktopShell: showWideShell,
           showDualPaneShell,

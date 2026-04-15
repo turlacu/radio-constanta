@@ -24,6 +24,7 @@ export default function RadioPlayer({ radioState }) {
     forceCompactLayout,
     shortHeightLayout,
     layoutMode,
+    availablePaneAspectRatio,
   } = radioState;
 
   const device = useContext(DeviceContext);
@@ -32,7 +33,8 @@ export default function RadioPlayer({ radioState }) {
   const viewportWidth = device?.viewportWidth || device?.screenWidth || 0;
   const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
-  const useCenteredDesktopStack = isDesktopShell && aspectRatio <= 1.5;
+  const effectivePaneAspectRatio = availablePaneAspectRatio || aspectRatio;
+  const useCenteredDesktopStack = isDesktopShell && effectivePaneAspectRatio <= 1.02;
   const weatherTextColor = useWeatherTextColor();
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
