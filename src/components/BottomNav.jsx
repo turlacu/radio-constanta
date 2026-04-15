@@ -7,7 +7,7 @@ import { Caption } from './ui';
 export default function BottomNav() {
   const location = useLocation();
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.showDesktopShell;
+  const isSplitScreen = device?.policy?.isDesktopShell;
 
   const tabs = [
     {

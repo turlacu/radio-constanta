@@ -183,12 +183,59 @@ function AppContent() {
 
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
-  const showDesktopShell = device.showDesktopShell;
   const viewportWidth = device.viewportWidth || device.screenWidth || 0;
   const viewportHeight = device.viewportHeight || device.screenHeight || 0;
   const viewportAspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
-  const isShortHeightShell = device.isShortHeight || device.isCarDisplay;
-  const desktopUiTone = showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather'
+  const resizePolicy = useMemo(() => {
+    const shellMode = device.shellMode || 'stacked';
+    const viewportShape = device.viewportShape || 'tall';
+    const isDesktopShell = shellMode === 'desktop';
+    const topControlsCompact = device.isShortHeight;
+    const candidateNewsWidth = Math.min(viewportHeight, viewportWidth * 0.4);
+    const candidatePlayerWidth = Math.max(0, viewportWidth - candidateNewsWidth);
+    const candidateNewsAspectRatio = viewportHeight > 0 ? candidateNewsWidth / viewportHeight : 0;
+    const candidatePlayerAspectRatio = viewportHeight > 0 ? candidatePlayerWidth / viewportHeight : 0;
+    const canShowNewsRail = isDesktopShell
+      && viewportShape === 'wide'
+      && candidateNewsAspectRatio <= 1
+      && candidatePlayerAspectRatio < 1;
+    const showInlineNews = showNews && canShowNewsRail;
+    const activePlayerPaneWidth = showInlineNews ? candidatePlayerWidth : viewportWidth;
+    const activePlayerPaneAspectRatio = viewportHeight > 0
+      ? activePlayerPaneWidth / viewportHeight
+      : viewportAspectRatio;
+    const showWeatherBackground = isDesktopShell
+      && !showInlineNews
+      && isPlaying
+      && settings.backgroundAnimation === 'weather';
+    const showWeatherCard = showWeatherBackground && viewportShape === 'wide';
+
+    return {
+      viewportShape,
+      shellMode,
+      isDesktopShell,
+      canShowNewsRail,
+      showInlineNews,
+      activePlayerPaneWidth,
+      activePlayerPaneAspectRatio,
+      topControlsCompact,
+      showWeatherBackground,
+      showWeatherCard,
+    };
+  }, [
+    device.shellMode,
+    device.viewportShape,
+    device.isShortHeight,
+    viewportWidth,
+    viewportHeight,
+    viewportAspectRatio,
+    showNews,
+    isPlaying,
+    settings.backgroundAnimation,
+  ]);
+  const showDesktopShell = resizePolicy.isDesktopShell;
+  const isShortHeightShell = resizePolicy.topControlsCompact;
+  const desktopUiTone = resizePolicy.showWeatherBackground
     ? weatherTextColor
     : 'light';
   const desktopActionSurfaceClass = desktopUiTone === 'dark'
@@ -1033,22 +1080,6 @@ function AppContent() {
     }
   };
 
-  const desiredNewsRailWidth = Math.min(
-    viewportHeight * 0.92,
-    Math.max(viewportHeight * 0.72, viewportWidth - viewportHeight * 0.96)
-  );
-  const playerPaneWidthWithNews = Math.max(0, viewportWidth - desiredNewsRailWidth);
-  const newsPaneAspectRatio = viewportHeight > 0 ? desiredNewsRailWidth / viewportHeight : 0;
-  const playerPaneAspectRatioWithNews = viewportHeight > 0 ? playerPaneWidthWithNews / viewportHeight : 0;
-  const canShowNewsRail = device.showDualPaneShell
-    && newsPaneAspectRatio <= 1
-    && playerPaneAspectRatioWithNews <= 0.98;
-  const desktopNewsRailWidth = canShowNewsRail ? desiredNewsRailWidth : 0;
-  const activeRadioPaneWidth = showNews && canShowNewsRail
-    ? playerPaneWidthWithNews
-    : Math.max(0, viewportWidth - (showDesktopShell ? 96 : 32));
-  const activeRadioPaneAspectRatio = viewportHeight > 0 ? activeRadioPaneWidth / viewportHeight : viewportAspectRatio;
-
   const radioState = {
     isPlaying,
     isLoading,
@@ -1065,23 +1096,13 @@ function AppContent() {
     stopRadio,
     resumeRadio,
     restoreRadio,
-    showWeatherBackground: showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is actually visible
+    showWeatherBackground: resizePolicy.showWeatherBackground,
     audioAnalyserRef: analyserRef,
-    forceCompactLayout: showNews,
+    forceCompactLayout: resizePolicy.showInlineNews,
     shortHeightLayout: isShortHeightShell,
-    layoutMode: device.layoutMode,
-    availablePaneWidth: activeRadioPaneWidth,
-    availablePaneAspectRatio: activeRadioPaneAspectRatio,
+    availablePaneAspectRatio: resizePolicy.activePlayerPaneAspectRatio,
   };
 
-  const showDesktopWeatherCard =
-    showDesktopShell &&
-    !showNews &&
-    isPlaying &&
-    settings.backgroundAnimation === 'weather' &&
-    device.viewportShape !== 'tall' &&
-    viewportAspectRatio <= 2.4 &&
-    !device.isCarDisplay;
   const desktopWeatherCardWidth = Math.min(460, Math.max(280, Math.round(viewportWidth * 0.24)));
 
   useEffect(() => {
@@ -1112,7 +1133,7 @@ function AppContent() {
 
   // Preload weather data on wide displays so it is ready when playback starts.
   useEffect(() => {
-    if (!showDesktopShell || settings.backgroundAnimation !== 'weather') {
+    if (!resizePolicy.isDesktopShell || settings.backgroundAnimation !== 'weather') {
       return;
     }
 
@@ -1153,7 +1174,7 @@ function AppContent() {
       cancelled = true;
     };
   }, [
-    showDesktopShell,
+    resizePolicy.isDesktopShell,
     settings.backgroundAnimation,
     settings.weatherMode,
     settings.weatherLocation,
@@ -1170,24 +1191,29 @@ function AppContent() {
   }, [settings.backgroundAnimation]);
 
   useEffect(() => {
-    if ((!showDesktopShell || !canShowNewsRail) && showNews) {
+    if ((!resizePolicy.isDesktopShell || !resizePolicy.canShowNewsRail) && showNews) {
       setShowNews(false);
     }
-  }, [showDesktopShell, canShowNewsRail, showNews]);
+  }, [resizePolicy.isDesktopShell, resizePolicy.canShowNewsRail, showNews]);
+
+  const deviceContextValue = useMemo(() => ({
+    ...device,
+    policy: resizePolicy,
+  }), [device, resizePolicy]);
 
   return (
-    <DeviceContext.Provider value={device}>
+    <DeviceContext.Provider value={deviceContextValue}>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <RouteHandler>
           <div className="min-app-height bg-bg-primary">
           {showDesktopShell ? (
             // Desktop/TV: Radio-focused layout with optional news
             <div className={`min-app-height relative flex items-center justify-center overflow-hidden ${
-              !showNews && isPlaying && settings.backgroundAnimation === 'minimal' ? 'animated-gradient' :
+              !resizePolicy.showInlineNews && isPlaying && settings.backgroundAnimation === 'minimal' ? 'animated-gradient' :
               settings.backgroundAnimation === 'none' ? 'bg-bg-secondary' : 'bg-bg-secondary'
             }`}>
               {/* Weather Background - Full screen behind everything */}
-              {settings.backgroundAnimation === 'weather' && !showNews && isPlaying && (
+              {resizePolicy.showWeatherBackground && (
                 <Suspense fallback={null}>
                   <WeatherBackground />
                 </Suspense>
@@ -1211,7 +1237,7 @@ function AppContent() {
                   </svg>
                 </motion.button>
 
-                {canShowNewsRail && (
+                {resizePolicy.canShowNewsRail && (
                   <motion.button
                     onClick={() => setShowNews(!showNews)}
                     onMouseEnter={loadNewsPage}
@@ -1244,10 +1270,10 @@ function AppContent() {
                       ? 'h-full border-r border-border'
                       : 'h-full w-full'
                   }`}
-                  style={showNews && canShowNewsRail ? { width: `${desktopNewsRailWidth}px` } : undefined}
+                  style={resizePolicy.showInlineNews ? { width: `${resizePolicy.activePlayerPaneWidth}px` } : undefined}
                 >
                   {/* Floating particles animation - only show for minimal background */}
-                  {!showNews && isPlaying && settings.backgroundAnimation === 'minimal' && (
+                  {!resizePolicy.showInlineNews && isPlaying && settings.backgroundAnimation === 'minimal' && (
                     <>
                       <style dangerouslySetInnerHTML={{
                         __html: floatingParticles.map((particle) => `
@@ -1286,13 +1312,13 @@ function AppContent() {
                   )}
 
                   <div className={`relative z-10 flex h-full w-full justify-center 3xl:px-10 ${
-                    showNews
+                    resizePolicy.showInlineNews
                       ? 'items-start overflow-y-auto scrollbar-hide px-4 pt-[clamp(4.75rem,4.3rem+1.2vw,6rem)] pb-6'
                       : isShortHeightShell
                       ? 'items-center px-4 py-4'
                       : 'items-center px-6 py-10'
                   }`}>
-                    <div className={`flex w-full justify-center ${showNews ? 'min-h-max items-start' : 'h-full items-center'}`}>
+                    <div className={`flex w-full justify-center ${resizePolicy.showInlineNews ? 'min-h-max items-start' : 'h-full items-center'}`}>
                       <Radio radioState={radioState} />
                     </div>
                   </div>
@@ -1300,13 +1326,13 @@ function AppContent() {
                   <motion.div
                     initial={false}
                     animate={{
-                      opacity: showDesktopWeatherCard ? 1 : 0,
-                      x: showDesktopWeatherCard ? 0 : -20,
-                      y: showDesktopWeatherCard ? 0 : 12
+                      opacity: resizePolicy.showWeatherCard ? 1 : 0,
+                      x: resizePolicy.showWeatherCard ? 0 : -20,
+                      y: resizePolicy.showWeatherCard ? 0 : 12
                     }}
-                    transition={{ delay: showDesktopWeatherCard ? 0.2 : 0, duration: 0.35 }}
+                    transition={{ delay: resizePolicy.showWeatherCard ? 0.2 : 0, duration: 0.35 }}
                     className={`pointer-events-none absolute bottom-8 left-8 z-20 3xl:bottom-10 3xl:left-10 ${
-                      showDesktopWeatherCard ? 'pointer-events-auto' : ''
+                      resizePolicy.showWeatherCard ? 'pointer-events-auto' : ''
                     }`}
                   >
                     <Suspense fallback={<WeatherCardFallback width={`${desktopWeatherCardWidth}px`} />}>
@@ -1317,14 +1343,14 @@ function AppContent() {
 
                 {/* News Section - Slide in from right */}
                 <AnimatePresence>
-                  {showNews && canShowNewsRail && (
+                  {resizePolicy.showInlineNews && (
                     <motion.div
                       initial={{ x: '100%', opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       exit={{ x: '100%', opacity: 0 }}
                       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
                       className="absolute inset-y-0 right-0 z-30 overflow-y-auto scrollbar-hide bg-bg-secondary"
-                      style={{ left: `${desktopNewsRailWidth}px` }}
+                      style={{ left: `${resizePolicy.activePlayerPaneWidth}px` }}
                     >
                       <div className="h-full w-full">
                         <Suspense fallback={<RouteFallback />}>

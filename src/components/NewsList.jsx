@@ -5,7 +5,7 @@ import { Card, Heading, Body, Button } from './ui';
 
 export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore, loading }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.showDualPaneShell;
+  const isSplitScreen = device?.policy?.canShowNewsRail;
   const listShellClass = isSplitScreen
     ? 'mx-auto flex w-full max-w-[58rem] flex-col gap-[clamp(0.9rem,0.82rem+0.32vw,1.5rem)] px-[clamp(1rem,0.9rem+0.36vw,2rem)] pt-[clamp(1rem,0.92rem+0.28vw,1.5rem)] pb-[clamp(0.4rem,0.3rem+0.18vw,0.7rem)]'
     : 'mx-auto grid w-full max-w-[96rem] grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-[clamp(1rem,0.9rem+0.35vw,1.75rem)] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] pt-[clamp(1.5rem,1.32rem+0.72vw,2.8rem)] min-[1100px]:grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))]';

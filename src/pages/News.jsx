@@ -7,7 +7,7 @@ import { DeviceContext } from '../App';
 
 export default function News({ radioState }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.showDualPaneShell;
+  const isSplitScreen = device?.policy?.canShowNewsRail;
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(true);

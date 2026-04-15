@@ -23,23 +23,24 @@ export default function ResponsiveContainer({
   ...props
 }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.showDualPaneShell;
+  const isDesktopShell = device?.policy?.isDesktopShell;
+  const isInlineNewsShell = device?.policy?.canShowNewsRail;
 
   // Base padding for different sections (using CSS variables)
   const paddingClasses = {
     radio: noPadding
       ? ''
-      : isSplitScreen
+      : isDesktopShell
       ? 'w-full px-[clamp(1rem,0.9rem+0.42vw,2.4rem)] py-[clamp(1.25rem,1.05rem+0.85vw,3rem)]'
       : 'px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1.25rem,1.05rem+0.85vw,3rem)]',
     news: noPadding
       ? ''
-      : isSplitScreen
+      : isInlineNewsShell
       ? 'px-[clamp(1rem,0.9rem+0.38vw,2rem)] pt-0 pb-[clamp(1.5rem,1.32rem+0.7vw,2.6rem)]'
       : 'px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] pt-[clamp(1.5rem,1.32rem+0.72vw,2.8rem)] pb-[clamp(4.5rem,4rem+1.8vw,6.5rem)]',
     article: noPadding
       ? ''
-      : isSplitScreen
+      : isInlineNewsShell
       ? 'px-[clamp(1rem,0.9rem+0.38vw,2rem)] py-[clamp(1rem,0.9rem+0.42vw,1.9rem)]'
       : 'px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1rem,0.9rem+0.48vw,2.4rem)]',
     default: noPadding ? '' : 'px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1rem,0.9rem+0.48vw,2.1rem)]',
@@ -47,17 +48,17 @@ export default function ResponsiveContainer({
 
   // Height classes for different sections
   const heightClasses = {
-    radio: isSplitScreen
+    radio: isDesktopShell
       ? 'h-full min-h-0'
       : 'min-app-height',
-    news: isSplitScreen ? 'h-full overflow-y-auto scrollbar-hide' : '',
-    article: isSplitScreen ? 'h-full overflow-y-auto scrollbar-hide' : '',
+    news: isInlineNewsShell ? 'h-full overflow-y-auto scrollbar-hide' : '',
+    article: isInlineNewsShell ? 'h-full overflow-y-auto scrollbar-hide' : '',
     default: '',
   };
 
   // Layout classes
   const layoutClasses = {
-    radio: isSplitScreen
+    radio: isDesktopShell
       ? 'flex items-center justify-center relative overflow-hidden flex-col'
       : 'flex items-center justify-center relative overflow-hidden flex-col',
     news: '',
@@ -73,7 +74,8 @@ export default function ResponsiveContainer({
         layoutClasses[section],
         className
       )}
-      data-split-screen={isSplitScreen}
+      data-split-screen={isInlineNewsShell}
+      data-desktop-shell={isDesktopShell}
       data-section={section}
       {...props}
     >

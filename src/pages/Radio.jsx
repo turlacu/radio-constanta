@@ -4,7 +4,7 @@ import { DeviceContext } from '../App';
 
 export default function Radio({ radioState }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.showDesktopShell;
+  const isSplitScreen = device?.policy?.isDesktopShell;
 
   return (
     <div className={

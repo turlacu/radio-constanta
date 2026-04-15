@@ -21,13 +21,8 @@ export function useDeviceDetection() {
     supportsTouch: false,
     supportsHover: false,
     viewportShape: 'tall', // tall | wide | ultra-wide
-    layoutMode: 'mobile-stack',
-    showDesktopShell: false,
-    showDualPaneShell: false,
-    compactDesktop: false,
-    isUltraWide: false,
+    shellMode: 'stacked', // stacked | desktop | tv
     isShortHeight: false,
-    isCarDisplay: false,
   });
 
   useEffect(() => {
@@ -85,23 +80,12 @@ export function useDeviceDetection() {
           : aspectRatio > ultraWideThreshold
           ? 'ultra-wide'
           : 'wide';
-        const isUltraWide = viewportShape === 'ultra-wide';
         const isShortHeight = effectiveHeight <= 560;
-        const isCarDisplay = !isTV && !isPortrait && effectiveWidth >= 1200 && effectiveHeight >= 360 && aspectRatio >= 3.2;
-        const showWideShell = !isTV && viewportShape !== 'tall' && !isCarDisplay;
-        const showDualPaneShell = showWideShell && viewportShape === 'wide';
-        const compactDesktop = showWideShell && !showDualPaneShell;
-        const layoutMode = isTV
-          ? 'tv-shell'
-          : isCarDisplay
-          ? 'car-shell'
-          : viewportShape === 'ultra-wide'
-          ? 'ultra-wide-shell'
-          : showDualPaneShell
-          ? 'desktop-shell'
-          : showWideShell
-          ? 'landscape-shell'
-          : 'mobile-stack';
+        const shellMode = isTV
+          ? 'tv'
+          : viewportShape === 'tall'
+          ? 'stacked'
+          : 'desktop';
 
         return {
           type: deviceType,
@@ -119,13 +103,8 @@ export function useDeviceDetection() {
           supportsTouch,
           supportsHover,
           viewportShape,
-          layoutMode,
-          showDesktopShell: showWideShell,
-          showDualPaneShell,
-          compactDesktop,
-          isUltraWide,
+          shellMode,
           isShortHeight,
-          isCarDisplay,
         };
       });
     };
