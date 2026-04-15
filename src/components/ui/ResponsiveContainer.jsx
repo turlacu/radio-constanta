@@ -30,19 +30,19 @@ export default function ResponsiveContainer({
     radio: noPadding
       ? ''
       : isSplitScreen
-      ? 'w-full px-5 py-8 lg:px-8 lg:py-10 3xl:px-10 3xl:py-12'
-      : 'px-4 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 tv:px-12 tv:py-12',
+      ? 'w-full px-[clamp(1rem,0.9rem+0.42vw,2.4rem)] py-[clamp(1.25rem,1.05rem+0.85vw,3rem)]'
+      : 'px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1.25rem,1.05rem+0.85vw,3rem)]',
     news: noPadding
       ? ''
       : isSplitScreen
-      ? 'px-4 pt-0 pb-6'
-      : 'px-4 pt-6 pb-20 md:px-6 md:pt-8 md:pb-24 lg:px-8 tv:px-12 tv:pt-10 tv:pb-16',
+      ? 'px-[clamp(1rem,0.9rem+0.38vw,2rem)] pt-0 pb-[clamp(1.5rem,1.32rem+0.7vw,2.6rem)]'
+      : 'px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] pt-[clamp(1.5rem,1.32rem+0.72vw,2.8rem)] pb-[clamp(4.5rem,4rem+1.8vw,6.5rem)]',
     article: noPadding
       ? ''
       : isSplitScreen
-      ? 'px-4 py-4'
-      : 'px-4 py-4 md:px-6 md:py-6 lg:px-8 tv:px-12 tv:py-10',
-    default: noPadding ? '' : 'px-4 py-4 md:px-6 md:py-6 lg:px-8 tv:px-12 tv:py-8',
+      ? 'px-[clamp(1rem,0.9rem+0.38vw,2rem)] py-[clamp(1rem,0.9rem+0.42vw,1.9rem)]'
+      : 'px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1rem,0.9rem+0.48vw,2.4rem)]',
+    default: noPadding ? '' : 'px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1rem,0.9rem+0.48vw,2.1rem)]',
   };
 
   // Height classes for different sections

@@ -7,8 +7,15 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
   const device = useContext(DeviceContext);
   const isSplitScreen = device?.showDualPaneShell;
   const listShellClass = isSplitScreen
-    ? 'mx-auto flex w-full max-w-[58rem] flex-col gap-4 px-4 pt-4 pb-2 xl:max-w-[64rem] xl:gap-5 xl:px-6 xl:pt-5 4k:max-w-[76rem] 4k:gap-6 4k:px-8'
-    : 'mx-auto grid w-full max-w-[96rem] grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-4 px-4 pt-6 md:gap-5 md:px-6 md:pt-8 lg:gap-6 lg:px-8 xl:grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] tv:px-12 tv:pt-10 4k:max-w-[120rem] 4k:gap-8 4k:px-16 4k:pt-16';
+    ? 'mx-auto flex w-full max-w-[58rem] flex-col gap-[clamp(0.9rem,0.82rem+0.32vw,1.5rem)] px-[clamp(1rem,0.9rem+0.36vw,2rem)] pt-[clamp(1rem,0.92rem+0.28vw,1.5rem)] pb-[clamp(0.4rem,0.3rem+0.18vw,0.7rem)]'
+    : 'mx-auto grid w-full max-w-[96rem] grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-[clamp(1rem,0.9rem+0.35vw,1.75rem)] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] pt-[clamp(1.5rem,1.32rem+0.72vw,2.8rem)] min-[1100px]:grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))]';
+  const splitCardFrameClass = 'grid min-h-[clamp(10rem,9.2rem+1.8vw,13rem)] grid-cols-[minmax(clamp(9rem,8.3rem+1.4vw,12.5rem),32%)_minmax(0,1fr)] items-stretch';
+  const splitMetaClass = 'mb-[clamp(0.45rem,0.38rem+0.16vw,0.65rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.68rem,0.65rem+0.12vw,0.82rem)] text-text-tertiary';
+  const stackedMetaClass = 'mb-[clamp(0.65rem,0.58rem+0.2vw,0.95rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.75rem,0.72rem+0.12vw,0.92rem)] text-text-tertiary';
+  const splitTitleClass = 'mb-[clamp(0.45rem,0.38rem+0.16vw,0.65rem)] line-clamp-2 text-[clamp(0.95rem,0.9rem+0.2vw,1.2rem)] font-bold leading-snug transition-colors group-hover:text-primary';
+  const stackedTitleClass = 'mb-[clamp(0.65rem,0.58rem+0.2vw,0.95rem)] line-clamp-3 text-[clamp(1rem,0.96rem+0.22vw,1.28rem)] leading-snug transition-colors group-hover:text-primary';
+  const splitSummaryClass = 'line-clamp-3 text-[clamp(0.76rem,0.73rem+0.12vw,0.92rem)] leading-relaxed';
+  const stackedSummaryClass = 'line-clamp-4 text-[clamp(0.82rem,0.78rem+0.16vw,1rem)] leading-relaxed';
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -28,7 +35,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
   };
 
   return (
-    <div className={isSplitScreen ? 'pb-6' : 'pb-20 md:pb-24 tv:pb-16'}>
+    <div className={isSplitScreen ? 'pb-[clamp(1.5rem,1.32rem+0.7vw,2.6rem)]' : 'pb-[clamp(4.5rem,4rem+1.8vw,6.5rem)]'}>
       <div className={listShellClass}>
         {articles.map((article, index) => (
           <motion.div
@@ -58,7 +65,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               <motion.div
                 className={
                   isSplitScreen
-                    ? 'grid min-h-[10.5rem] grid-cols-[minmax(10rem,32%)_minmax(0,1fr)] items-stretch xl:min-h-[12rem] 4k:min-h-[14rem]'
+                    ? splitCardFrameClass
                     : 'flex h-full flex-col'
                 }
                 whileHover={isSplitScreen ? { scale: 1.01 } : {}}
@@ -91,27 +98,21 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
 
                 {/* Content */}
                 <div
-                    className={
-                      isSplitScreen
-                        ? 'flex flex-1 flex-col justify-center overflow-hidden p-4 xl:p-5 4k:p-6'
-                        : 'flex flex-1 flex-col justify-between p-4 md:p-5 lg:p-6 tv:p-7 4k:p-9'
-                    }
-                  >
+                  className={
+                    isSplitScreen
+                      ? 'flex flex-1 flex-col justify-center overflow-hidden p-[clamp(1rem,0.92rem+0.28vw,1.5rem)]'
+                      : 'flex flex-1 flex-col justify-between p-[clamp(1rem,0.92rem+0.34vw,1.6rem)]'
+                  }
+                >
                   {/* Category & Date */}
-                  <div
-                    className={
-                      isSplitScreen
-                        ? 'mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[11px] text-text-tertiary xl:text-[12px] 4k:text-[14px]'
-                        : 'mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[12px] text-text-tertiary md:mb-4 md:text-[13px] 4k:text-[17px]'
-                    }
-                  >
+                  <div className={isSplitScreen ? splitMetaClass : stackedMetaClass}>
                     {article.category && (
                       <>
                         <span
                           className={
                             isSplitScreen
-                              ? 'text-[11px] font-bold text-primary xl:text-[12px] 4k:text-[14px]'
-                              : 'font-bold text-primary text-[12px] 4k:text-[18px]'
+                              ? 'text-[clamp(0.68rem,0.65rem+0.12vw,0.82rem)] font-bold text-primary'
+                              : 'text-[clamp(0.75rem,0.72rem+0.12vw,0.92rem)] font-bold text-primary'
                           }
                         >
                           {article.category}
@@ -125,13 +126,9 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                   {/* Title */}
                   <Heading
                     level={4}
-                      className={
-                        isSplitScreen
-                          ? 'mb-2 line-clamp-2 text-[15px] font-bold leading-snug transition-colors group-hover:text-primary xl:text-[17px] 4k:text-[20px]'
-                          : 'mb-3 line-clamp-3 text-[1rem] leading-snug transition-colors group-hover:text-primary md:text-[1.05rem] lg:text-[1.1rem] 4k:mb-4 4k:text-[1.5rem]'
-                      }
-                    >
-                      {article.title}
+                    className={isSplitScreen ? splitTitleClass : stackedTitleClass}
+                  >
+                    {article.title}
                   </Heading>
 
                   {/* Summary */}
@@ -142,8 +139,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                       clamp={isSplitScreen ? 2 : 2}
                       className={
                         isSplitScreen
-                          ? 'line-clamp-3 text-[12px] leading-relaxed xl:text-[13px] 4k:text-[15px]'
-                          : 'line-clamp-4 text-[13px] leading-relaxed md:text-[14px] 4k:text-[19px]'
+                          ? splitSummaryClass
+                          : stackedSummaryClass
                       }
                     >
                       {article.summary}
@@ -163,8 +160,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
           animate={{ opacity: 1, y: 0 }}
           className={
             isSplitScreen
-              ? 'mx-auto mt-6 w-full max-w-[58rem] px-4 xl:max-w-[64rem] xl:px-6 4k:max-w-[76rem] 4k:px-8 4k:mt-10'
-              : 'mx-auto mt-6 w-full max-w-[96rem] px-4 md:px-6 md:mt-8 lg:px-8 tv:px-12 tv:mt-10 4k:max-w-[120rem] 4k:px-16 4k:mt-16'
+              ? 'mx-auto mt-[clamp(1.5rem,1.32rem+0.7vw,2.6rem)] w-full max-w-[58rem] px-[clamp(1rem,0.9rem+0.36vw,2rem)]'
+              : 'mx-auto mt-[clamp(1.5rem,1.32rem+0.72vw,2.8rem)] w-full max-w-[96rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)]'
           }
         >
           <Button
@@ -173,7 +170,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             fullWidth={!isSplitScreen}
             onClick={onLoadMore}
             disabled={loading}
-            className={isSplitScreen ? 'max-w-xs mx-auto block' : ''}
+            className={isSplitScreen ? 'mx-auto block max-w-[min(100%,18rem)]' : ''}
             aria-label="Load more articles"
           >
             {loading ? 'Se încarcă...' : 'Încarcă mai multe'}
@@ -183,7 +180,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
 
       {/* Link to website */}
       {!hasMore && articles.length > 0 && (
-        <div className={`mx-auto mt-8 text-center ${isSplitScreen ? 'max-w-[58rem] px-4 xl:max-w-[64rem] xl:px-6 4k:max-w-[76rem] 4k:px-8' : 'max-w-[96rem] px-4 md:px-6 lg:px-8 tv:px-12 4k:max-w-[120rem] 4k:px-16'}`}>
+        <div className={`mx-auto mt-[clamp(2rem,1.8rem+0.75vw,3rem)] text-center ${isSplitScreen ? 'max-w-[58rem] px-[clamp(1rem,0.9rem+0.36vw,2rem)]' : 'max-w-[96rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)]'}`}>
           <Body size="small" opacity="tertiary" className="mb-3">
             Pentru știri mai vechi, vizitează
           </Body>
@@ -191,7 +188,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             href="https://www.radioconstanta.ro/articole/stiri/actualitate/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-primary hover:text-primary-dark transition-colors font-medium focusable rounded-lg px-3 py-1"
+            className="inline-flex items-center gap-2 rounded-lg px-[clamp(0.75rem,0.68rem+0.2vw,1rem)] py-[clamp(0.3rem,0.26rem+0.1vw,0.45rem)] font-medium text-primary transition-colors hover:text-primary-dark focusable"
             aria-label="Visit Radio Constanta website for more articles"
           >
             radioconstanta.ro

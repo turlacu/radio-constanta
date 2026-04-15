@@ -45,45 +45,43 @@
     --color-white: #FFFFFF;
 
     /* ===== RESPONSIVE SCALING ===== */
-    --font-scale: 1;
-    --spacing-scale: 1;
     --container-max-width: 480px;
     --app-width: 100vw;
     --app-height: 100dvh;
 
-    /* ===== TYPOGRAPHY SCALE (Mobile - Default) ===== */
-    --text-xs: 0.75rem;      /* 12px */
-    --text-sm: 0.875rem;     /* 14px */
-    --text-base: 1rem;       /* 16px */
-    --text-lg: 1.125rem;     /* 18px */
-    --text-xl: 1.25rem;      /* 20px */
-    --text-2xl: 1.5rem;      /* 24px */
-    --text-3xl: 1.875rem;    /* 30px */
-    --text-4xl: 2.25rem;     /* 36px */
+    /* ===== TYPOGRAPHY SCALE ===== */
+    --text-xs: clamp(0.75rem, 0.73rem + 0.12vw, 0.9rem);
+    --text-sm: clamp(0.875rem, 0.84rem + 0.18vw, 1.05rem);
+    --text-base: clamp(1rem, 0.96rem + 0.22vw, 1.2rem);
+    --text-lg: clamp(1.125rem, 1.06rem + 0.35vw, 1.45rem);
+    --text-xl: clamp(1.25rem, 1.14rem + 0.58vw, 1.9rem);
+    --text-2xl: clamp(1.5rem, 1.34rem + 0.82vw, 2.45rem);
+    --text-3xl: clamp(1.875rem, 1.62rem + 1.28vw, 3.2rem);
+    --text-4xl: clamp(2.25rem, 1.9rem + 1.75vw, 4.25rem);
 
     /* Line heights */
     --line-height-heading: 1.2;
     --line-height-body: 1.5;
 
-    /* ===== SPACING SCALE (8px-based system) ===== */
-    --spacing-8: calc(0.5rem * var(--spacing-scale));     /* 8px */
-    --spacing-16: calc(1rem * var(--spacing-scale));      /* 16px */
-    --spacing-24: calc(1.5rem * var(--spacing-scale));    /* 24px */
-    --spacing-32: calc(2rem * var(--spacing-scale));      /* 32px */
-    --spacing-40: calc(2.5rem * var(--spacing-scale));    /* 40px */
-    --spacing-56: calc(3.5rem * var(--spacing-scale));    /* 56px */
-    --spacing-72: calc(4.5rem * var(--spacing-scale));    /* 72px */
-    --spacing-80: calc(5rem * var(--spacing-scale));      /* 80px */
-    --spacing-96: calc(6rem * var(--spacing-scale));      /* 96px */
-    --spacing-120: calc(7.5rem * var(--spacing-scale));   /* 120px */
+    /* ===== SPACING SCALE ===== */
+    --spacing-8: clamp(0.5rem, 0.48rem + 0.08vw, 0.625rem);
+    --spacing-16: clamp(1rem, 0.95rem + 0.18vw, 1.25rem);
+    --spacing-24: clamp(1.5rem, 1.42rem + 0.28vw, 1.9rem);
+    --spacing-32: clamp(2rem, 1.88rem + 0.42vw, 2.6rem);
+    --spacing-40: clamp(2.5rem, 2.34rem + 0.55vw, 3.2rem);
+    --spacing-56: clamp(3.5rem, 3.2rem + 0.95vw, 4.6rem);
+    --spacing-72: clamp(4.5rem, 4.1rem + 1.2vw, 5.8rem);
+    --spacing-80: clamp(5rem, 4.55rem + 1.4vw, 6.5rem);
+    --spacing-96: clamp(6rem, 5.5rem + 1.6vw, 7.6rem);
+    --spacing-120: clamp(7.5rem, 6.8rem + 2vw, 9.5rem);
 
     /* ===== COMPONENT SPACING ===== */
-    --container-px: 1rem;     /* 16px */
-    --container-py: 1rem;     /* 16px */
-    --card-padding: 1rem;     /* 16px */
-    --button-px: 1rem;        /* 16px */
-    --button-py: 0.75rem;     /* 12px */
-    --gap: 1rem;              /* 16px */
+    --container-px: clamp(1rem, 0.78rem + 0.95vw, 3rem);
+    --container-py: clamp(1rem, 0.82rem + 0.7vw, 2.5rem);
+    --card-padding: clamp(1rem, 0.9rem + 0.45vw, 2rem);
+    --button-px: clamp(1rem, 0.9rem + 0.42vw, 1.85rem);
+    --button-py: clamp(0.75rem, 0.68rem + 0.28vw, 1.25rem);
+    --gap: clamp(1rem, 0.92rem + 0.45vw, 2rem);
 
     /* ===== BORDER RADIUS ===== */
     --radius-sm: 0.25rem;     /* 4px */
@@ -93,82 +91,9 @@
     --radius-2xl: 1.5rem;     /* 24px */
   }
 
-  /* ===== TABLET SCALING (768px+) ===== */
-  @media (min-width: 768px) {
-    :root {
-      --font-scale: 1.15;
-      --spacing-scale: 1.2;
-      --container-max-width: 100%;
-
-      /* Typography */
-      --text-xs: 0.8125rem;    /* 13px */
-      --text-sm: 0.9375rem;    /* 15px */
-      --text-base: 1.0625rem;  /* 17px */
-      --text-lg: 1.25rem;      /* 20px */
-      --text-xl: 1.5rem;       /* 24px */
-      --text-2xl: 1.75rem;     /* 28px */
-      --text-3xl: 2.125rem;    /* 34px */
-      --text-4xl: 2.5rem;      /* 40px */
-
-      /* Component spacing */
-      --container-px: 1.5rem;  /* 24px */
-      --container-py: 1.5rem;  /* 24px */
-      --card-padding: 1.25rem; /* 20px */
-      --button-px: 1.25rem;    /* 20px */
-      --button-py: 1rem;       /* 16px */
-      --gap: 1.25rem;          /* 20px */
-    }
-  }
-
-  /* ===== DESKTOP SCALING (1024px+) ===== */
-  @media (min-width: 1024px) {
-    :root {
-      --font-scale: 1.25;
-      --spacing-scale: 1.4;
-
-      /* Typography */
-      --text-xs: 0.875rem;     /* 14px */
-      --text-sm: 1rem;         /* 16px */
-      --text-base: 1.125rem;   /* 18px */
-      --text-lg: 1.375rem;     /* 22px */
-      --text-xl: 1.625rem;     /* 26px */
-      --text-2xl: 2rem;        /* 32px */
-      --text-3xl: 2.5rem;      /* 40px */
-      --text-4xl: 3rem;        /* 48px */
-
-      /* Component spacing */
-      --container-px: 2rem;    /* 32px */
-      --container-py: 2rem;    /* 32px */
-      --card-padding: 1.5rem;  /* 24px */
-      --button-px: 1.5rem;     /* 24px */
-      --button-py: 1.25rem;    /* 20px */
-      --gap: 1.5rem;           /* 24px */
-    }
-  }
-
-  /* ===== TV SCALING (1920px+) ===== */
   @media (min-width: 1920px) {
     :root {
-      --font-scale: 1.8;
-      --spacing-scale: 2;
-
-      /* Typography */
-      --text-xs: 1.125rem;     /* 18px */
-      --text-sm: 1.375rem;     /* 22px */
-      --text-base: 1.625rem;   /* 26px */
-      --text-lg: 2rem;         /* 32px */
-      --text-xl: 2.5rem;       /* 40px */
-      --text-2xl: 3rem;        /* 48px */
-      --text-3xl: 3.75rem;     /* 60px */
-      --text-4xl: 4.5rem;      /* 72px */
-
-      /* Component spacing */
-      --container-px: 3rem;    /* 48px */
-      --container-py: 2.5rem;  /* 40px */
-      --card-padding: 2rem;    /* 32px */
-      --button-px: 2rem;       /* 32px */
-      --button-py: 1.5rem;     /* 24px */
-      --gap: 2rem;             /* 32px */
+      --container-max-width: 100%;
     }
   }
 

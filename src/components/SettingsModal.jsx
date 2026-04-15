@@ -305,7 +305,7 @@ export default function SettingsModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-3 md:items-center md:p-6">
+      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-[clamp(0.75rem,0.62rem+0.5vw,1.5rem)] min-[48rem]:items-center">
         {/* Backdrop */}
         <motion.div
           className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -317,7 +317,7 @@ export default function SettingsModal({
 
         {/* Modal - Wide TV-friendly layout */}
         <motion.div
-          className="relative my-auto flex max-h-[calc(var(--app-height)-1rem)] w-full max-w-[min(96rem,calc(var(--app-width)-0.75rem))] flex-col overflow-hidden rounded-2xl border border-border bg-bg-secondary shadow-2xl md:max-h-[calc(var(--app-height)-2rem)] md:max-w-[min(96rem,calc(var(--app-width)-2rem))]"
+          className="relative my-auto flex max-h-[calc(var(--app-height)-clamp(1rem,0.72rem+0.9vw,2.5rem))] w-full max-w-[min(96rem,calc(var(--app-width)-clamp(0.75rem,0.55rem+0.7vw,2rem)))] flex-col overflow-hidden rounded-[clamp(1rem,0.88rem+0.42vw,1.5rem)] border border-border bg-bg-secondary shadow-2xl"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -335,7 +335,7 @@ export default function SettingsModal({
           </div>
 
           {/* Content */}
-          <div className="overflow-y-auto overflow-x-hidden overscroll-contain p-2 touch-pan-y md:p-3">
+          <div className="overflow-y-auto overflow-x-hidden overscroll-contain p-[clamp(0.5rem,0.42rem+0.24vw,0.85rem)] touch-pan-y">
             <div className={`grid gap-3 ${dashboardGridClass}`}>
                 <div className={`${denseSectionClass} ${layoutMode === 'wide-compact' ? 'col-span-2' : ''}`}>
                   <Heading level={5} className="mb-2">Animație Fundal</Heading>
@@ -529,7 +529,7 @@ export default function SettingsModal({
                     <img
                       src="/rc-branding.png"
                       alt="Radio Constanța branding"
-                      className="pointer-events-none absolute bottom-1 right-1 h-auto w-24 select-none opacity-45 md:w-28"
+                      className="pointer-events-none absolute bottom-1 right-1 h-auto w-[clamp(5rem,4.4rem+2vw,7rem)] select-none opacity-45"
                     />
                   </div>
                 )}

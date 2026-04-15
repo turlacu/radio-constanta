@@ -29,10 +29,10 @@ const buttonVariants = cva(
         outline: '',
       },
       size: {
-        small: 'text-[12px]',
-        normal: 'text-[14px]',
-        medium: 'text-[16px]',
-        large: 'text-[18px]',
+        small: 'text-responsive-xs',
+        normal: 'text-responsive-sm',
+        medium: 'text-responsive-base',
+        large: 'text-responsive-lg',
       },
       radius: {
         base: 'rounded-lg',   // 8px
@@ -52,43 +52,43 @@ const buttonVariants = cva(
       {
         icon: false,
         size: 'small',
-        className: 'px-4 py-2',
+        className: 'px-[clamp(0.875rem,0.83rem+0.18vw,1rem)] py-[clamp(0.5rem,0.46rem+0.14vw,0.625rem)]',
       },
       {
         icon: false,
         size: 'normal',
-        className: 'px-5 py-2.5',
+        className: 'px-[clamp(1rem,0.92rem+0.28vw,1.25rem)] py-[clamp(0.625rem,0.56rem+0.2vw,0.8rem)]',
       },
       {
         icon: false,
         size: 'medium',
-        className: 'px-6 py-3',
+        className: 'px-[clamp(1.125rem,1.02rem+0.38vw,1.5rem)] py-[clamp(0.75rem,0.67rem+0.22vw,0.95rem)]',
       },
       {
         icon: false,
         size: 'large',
-        className: 'px-7 py-3.5',
+        className: 'px-[clamp(1.25rem,1.12rem+0.48vw,1.75rem)] py-[clamp(0.875rem,0.78rem+0.28vw,1.1rem)]',
       },
       // Icon buttons
       {
         icon: true,
         size: 'small',
-        className: 'w-9 h-9',
+        className: 'w-[clamp(2.1rem,2rem+0.32vw,2.35rem)] h-[clamp(2.1rem,2rem+0.32vw,2.35rem)]',
       },
       {
         icon: true,
         size: 'normal',
-        className: 'w-10 h-10',
+        className: 'w-[clamp(2.35rem,2.2rem+0.42vw,2.7rem)] h-[clamp(2.35rem,2.2rem+0.42vw,2.7rem)]',
       },
       {
         icon: true,
         size: 'medium',
-        className: 'w-12 h-12',
+        className: 'w-[clamp(2.75rem,2.55rem+0.55vw,3.15rem)] h-[clamp(2.75rem,2.55rem+0.55vw,3.15rem)]',
       },
       {
         icon: true,
         size: 'large',
-        className: 'w-14 h-14',
+        className: 'w-[clamp(3.15rem,2.95rem+0.7vw,3.75rem)] h-[clamp(3.15rem,2.95rem+0.7vw,3.75rem)]',
       },
     ],
     defaultVariants: {

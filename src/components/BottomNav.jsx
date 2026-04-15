@@ -63,7 +63,7 @@ export default function BottomNav() {
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="relative mx-auto flex items-center justify-around px-4 py-2 md:px-8 md:py-4 lg:max-w-desktop">
+      <div className="relative mx-auto flex max-w-[min(100%,72rem)] items-center justify-around px-[clamp(0.9rem,0.72rem+0.7vw,2rem)] py-[clamp(0.55rem,0.46rem+0.35vw,1rem)]">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path;
 
@@ -71,7 +71,7 @@ export default function BottomNav() {
             <Link
               key={tab.path}
               to={tab.path}
-              className="relative flex flex-col items-center gap-1 py-2 px-6 md:py-3 md:px-8 lg:px-10"
+              className="relative flex flex-col items-center gap-[clamp(0.2rem,0.16rem+0.15vw,0.4rem)] px-[clamp(1rem,0.78rem+0.8vw,2.25rem)] py-[clamp(0.55rem,0.45rem+0.35vw,0.95rem)]"
               aria-label={`Navigate to ${tab.name}`}
               aria-current={isActive ? 'page' : undefined}
             >
@@ -92,7 +92,7 @@ export default function BottomNav() {
                   isActive ? 'text-primary' : 'text-text-tertiary'
                 }`}
               >
-                <div className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8">{tab.icon(isActive)}</div>
+                <div className="h-[clamp(1.35rem,1.22rem+0.45vw,2rem)] w-[clamp(1.35rem,1.22rem+0.45vw,2rem)]">{tab.icon(isActive)}</div>
               </motion.div>
 
               <Caption

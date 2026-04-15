@@ -11,18 +11,18 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const articleShellClass = isSplitScreen
-    ? 'mx-auto w-full max-w-[52rem] px-4 py-5 md:px-6 xl:max-w-[58rem] xl:px-8 xl:py-6 4k:max-w-[68rem] 4k:px-10'
-    : 'mx-auto w-full max-w-[54rem] px-4 py-5 md:px-6 md:py-6 lg:max-w-[60rem] lg:px-8 xl:max-w-[66rem] tv:max-w-[72rem] tv:px-12 tv:py-10';
+    ? 'mx-auto w-full max-w-[52rem] px-[clamp(1rem,0.9rem+0.36vw,2rem)] py-[clamp(1.25rem,1.12rem+0.5vw,1.9rem)]'
+    : 'mx-auto w-full max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1.25rem,1.12rem+0.55vw,2.4rem)] min-[1500px]:max-w-[66rem]';
   const articleBodyClass = [
-    'text-[15px] leading-8 text-white/84 md:text-[16px] lg:text-[17px] 4k:text-[20px]',
-    '[&_p]:mb-5 [&_p]:text-pretty',
-    '[&_h2]:mb-4 [&_h2]:mt-10 [&_h2]:text-[1.5rem] [&_h2]:font-bold [&_h2]:leading-tight md:[&_h2]:text-[1.75rem]',
-    '[&_h3]:mb-3 [&_h3]:mt-8 [&_h3]:text-[1.2rem] [&_h3]:font-semibold [&_h3]:leading-tight md:[&_h3]:text-[1.35rem]',
-    '[&_ul]:mb-5 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5',
-    '[&_ol]:mb-5 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5',
+    'text-[clamp(0.94rem,0.9rem+0.22vw,1.14rem)] leading-[1.8] text-white/84',
+    '[&_p]:mb-[clamp(1rem,0.92rem+0.25vw,1.4rem)] [&_p]:text-pretty',
+    '[&_h2]:mb-[clamp(0.85rem,0.8rem+0.18vw,1.1rem)] [&_h2]:mt-[clamp(2rem,1.8rem+0.7vw,3rem)] [&_h2]:text-[clamp(1.35rem,1.22rem+0.48vw,1.8rem)] [&_h2]:font-bold [&_h2]:leading-tight',
+    '[&_h3]:mb-[clamp(0.75rem,0.7rem+0.14vw,0.95rem)] [&_h3]:mt-[clamp(1.7rem,1.55rem+0.5vw,2.5rem)] [&_h3]:text-[clamp(1.1rem,1rem+0.34vw,1.4rem)] [&_h3]:font-semibold [&_h3]:leading-tight',
+    '[&_ul]:mb-[clamp(1rem,0.92rem+0.25vw,1.4rem)] [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5',
+    '[&_ol]:mb-[clamp(1rem,0.92rem+0.25vw,1.4rem)] [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5',
     '[&_a]:text-primary [&_a]:underline-offset-4 hover:[&_a]:text-primary/80 hover:[&_a]:underline',
-    '[&_strong]:font-semibold [&_blockquote]:my-6 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-4 [&_blockquote]:text-white/72',
-    '[&_img]:my-8 [&_img]:rounded-2xl'
+    '[&_strong]:font-semibold [&_blockquote]:my-[clamp(1.4rem,1.28rem+0.4vw,2rem)] [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-4 [&_blockquote]:text-white/72',
+    '[&_img]:my-[clamp(1.6rem,1.45rem+0.5vw,2.4rem)] [&_img]:rounded-2xl'
   ].join(' ');
 
   if (!article) return null;
@@ -95,8 +95,8 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
       exit={{ opacity: 0 }}
       className={
         isSplitScreen
-          ? 'h-full bg-bg-secondary overflow-y-auto scrollbar-hide pb-6'
-          : 'fixed inset-0 bg-bg-primary z-50 overflow-y-auto scrollbar-hide pb-20 md:pb-24 tv:pb-16'
+          ? 'h-full bg-bg-secondary overflow-y-auto scrollbar-hide pb-[clamp(1.5rem,1.32rem+0.7vw,2.6rem)]'
+          : 'fixed inset-0 z-50 overflow-y-auto scrollbar-hide bg-bg-primary pb-[clamp(4.5rem,4rem+1.8vw,6.5rem)]'
       }
     >
       {/* Subtle ambient glow accents */}
@@ -110,7 +110,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {/* Clean solid header background */}
         <div className="absolute inset-0 bg-bg-secondary border-b border-border" />
 
-        <div className={`relative mx-auto flex items-center gap-3 ${isSplitScreen ? 'max-w-[52rem] px-4 py-3 md:px-6 xl:max-w-[58rem] xl:px-8' : 'max-w-[54rem] px-4 py-3 md:max-w-[60rem] md:px-6 md:py-4 lg:px-8 xl:max-w-[66rem] tv:max-w-[72rem] tv:px-12 tv:py-6'} md:gap-4 tv:gap-6`}>
+        <div className={`relative mx-auto flex items-center gap-[clamp(0.75rem,0.68rem+0.18vw,1rem)] ${isSplitScreen ? 'max-w-[52rem] px-[clamp(1rem,0.9rem+0.36vw,2rem)] py-[clamp(0.8rem,0.72rem+0.22vw,1.1rem)]' : 'max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)] min-[1500px]:max-w-[66rem]'}`}>
           <Button
             variant="ghost"
             icon
@@ -119,7 +119,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
             aria-label="Go back to news list"
           >
             <svg
-              className="w-5 h-5 md:w-6 md:h-6 tv:w-7 tv:h-7"
+              className="h-[clamp(1.1rem,1rem+0.3vw,1.5rem)] w-[clamp(1.1rem,1rem+0.3vw,1.5rem)]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -147,7 +147,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative mb-5 aspect-[16/9] w-full overflow-hidden rounded-[1.25rem] shadow-2xl md:mb-7 lg:mb-8"
+            className="relative mb-[clamp(1.25rem,1.1rem+0.52vw,2rem)] aspect-[16/9] w-full overflow-hidden rounded-[1.25rem] shadow-2xl"
           >
             <div className="absolute inset-0 z-10 rounded-[1.25rem] border border-white/10 pointer-events-none" />
             <img
@@ -169,7 +169,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-white/50 text-responsive-xs md:mb-4"
+          className="mb-[clamp(0.65rem,0.58rem+0.22vw,1rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-white/50 text-responsive-xs"
         >
           {article.category && (
             <>
@@ -191,21 +191,21 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Heading level={2} gradient className="mb-3 text-balance md:mb-4 tv:mb-6">
+          <Heading level={2} gradient className="mb-[clamp(0.75rem,0.64rem+0.4vw,1.5rem)] text-balance">
             {article.title}
           </Heading>
         </motion.div>
 
         {/* Summary - only show if full content hasn't loaded yet */}
         {article.summary && !fullContent && !loading && (
-          <Body size="medium" opacity="secondary" className="mb-5 md:mb-6 tv:mb-8">
+          <Body size="medium" opacity="secondary" className="mb-[clamp(1.25rem,1.1rem+0.52vw,2rem)]">
             {article.summary}
           </Body>
         )}
 
         {/* Loading State */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-10 md:py-12 tv:py-16">
+          <div className="flex flex-col items-center justify-center py-[clamp(2.5rem,2.2rem+1vw,4rem)]">
             <Loader size="medium" />
             <Body size="small" opacity="tertiary" className="mt-4">
               Se încarcă articolul complet...
@@ -215,7 +215,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl mb-5 p-4 md:p-5 md:mb-6 tv:p-8 tv:mb-8">
+          <div className="mb-[clamp(1.25rem,1.1rem+0.52vw,2rem)] rounded-xl border border-red-500/30 bg-red-500/10 p-[clamp(1rem,0.92rem+0.3vw,1.5rem)]">
             <Body size="small" className="text-red-400 mb-2">
               {error}
             </Body>
@@ -223,7 +223,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
               href={article.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 text-sm underline inline-block tv-focusable"
+              className="inline-block text-responsive-sm text-primary underline tv-focusable hover:text-primary/80"
               aria-label="Read full article on Radio Constanta website"
             >
               Citește pe radioconstanta.ro
@@ -243,7 +243,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
 
         {/* Link to original - only show for articles older than 3 days */}
         {article.link && isOlderThanThreeDays && (
-          <div className="mt-6 pt-5 border-t border-white/10 md:mt-8 md:pt-6 tv:mt-12 tv:pt-10">
+          <div className="mt-[clamp(1.5rem,1.32rem+0.7vw,2.6rem)] border-t border-white/10 pt-[clamp(1.25rem,1.12rem+0.46vw,1.9rem)]">
             <Body size="small" opacity="tertiary" className="mb-3">
               Acest articol are mai mult de 3 zile. Pentru informații actualizate, vizitează:
             </Body>
@@ -252,12 +252,12 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
               target="_blank"
               rel="noopener noreferrer"
               tabIndex={0}
-              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium tv-focusable text-responsive-base md:text-responsive-lg"
+              className="inline-flex items-center gap-2 text-responsive-base font-medium text-primary transition-colors hover:text-primary/80 tv-focusable"
               aria-label="Visit Radio Constanta website for updated information"
             >
               radioconstanta.ro
               <svg
-                className="w-4 h-4 md:w-5 md:h-5 tv:w-6 tv:h-6"
+                className="h-[clamp(1rem,0.94rem+0.2vw,1.3rem)] w-[clamp(1rem,0.94rem+0.2vw,1.3rem)]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

@@ -72,47 +72,52 @@ export function useDeviceDetection() {
         deviceType = 'mobile';
       }
 
-      const isUltraWide = aspectRatio >= 2.4;
-      const isShortHeight = effectiveHeight <= 560;
-      const isCarDisplay = !isTV && !isPortrait && effectiveWidth >= 1200 && effectiveHeight >= 360 && aspectRatio >= 3.2;
-      const showWideShell = !isTV && !isPortrait && effectiveWidth >= 900;
-      const showDualPaneShell = showWideShell && effectiveWidth >= 1180 && effectiveHeight >= 640 && !isCarDisplay;
-      const compactDesktop = showWideShell && !showDualPaneShell;
-      const layoutMode = isTV
-        ? 'tv-shell'
-        : isCarDisplay
-        ? 'car-shell'
-        : showDualPaneShell
-        ? 'desktop-shell'
-        : showWideShell
-        ? 'landscape-shell'
-        : 'mobile-stack';
-
       document.documentElement.style.setProperty('--app-width', `${effectiveWidth}px`);
       document.documentElement.style.setProperty('--app-height', `${effectiveHeight}px`);
 
-      setDevice({
-        type: deviceType,
-        isMobile: deviceType === 'mobile',
-        isTablet: deviceType === 'tablet',
-        isDesktop: deviceType === 'desktop',
-        isTV: deviceType === 'tv',
-        screenWidth: width,
-        screenHeight: height,
-        viewportWidth: effectiveWidth,
-        viewportHeight: effectiveHeight,
-        devicePixelRatio,
-        viewportScale,
-        isPortrait,
-        supportsTouch,
-        supportsHover,
-        layoutMode,
-        showDesktopShell: showWideShell,
-        showDualPaneShell,
-        compactDesktop,
-        isUltraWide,
-        isShortHeight,
-        isCarDisplay,
+      setDevice((prev) => {
+        const isUltraWide = aspectRatio >= 2.4;
+        const isShortHeight = effectiveHeight <= 560;
+        const isCarDisplay = !isTV && !isPortrait && effectiveWidth >= 1200 && effectiveHeight >= 360 && aspectRatio >= 3.2;
+        const showWideShell = !isTV && !isPortrait && effectiveWidth >= (prev.showDesktopShell ? 860 : 900);
+        const showDualPaneShell = showWideShell
+          && effectiveWidth >= (prev.showDualPaneShell ? 1140 : 1180)
+          && effectiveHeight >= (prev.showDualPaneShell ? 600 : 640)
+          && !isCarDisplay;
+        const compactDesktop = showWideShell && !showDualPaneShell;
+        const layoutMode = isTV
+          ? 'tv-shell'
+          : isCarDisplay
+          ? 'car-shell'
+          : showDualPaneShell
+          ? 'desktop-shell'
+          : showWideShell
+          ? 'landscape-shell'
+          : 'mobile-stack';
+
+        return {
+          type: deviceType,
+          isMobile: deviceType === 'mobile',
+          isTablet: deviceType === 'tablet',
+          isDesktop: deviceType === 'desktop',
+          isTV: deviceType === 'tv',
+          screenWidth: width,
+          screenHeight: height,
+          viewportWidth: effectiveWidth,
+          viewportHeight: effectiveHeight,
+          devicePixelRatio,
+          viewportScale,
+          isPortrait,
+          supportsTouch,
+          supportsHover,
+          layoutMode,
+          showDesktopShell: showWideShell,
+          showDualPaneShell,
+          compactDesktop,
+          isUltraWide,
+          isShortHeight,
+          isCarDisplay,
+        };
       });
     };
 

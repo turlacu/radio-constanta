@@ -309,9 +309,7 @@ export default function WeatherCard({ className = '', style }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
       className={clsx(
-        'w-full max-w-[40rem] px-2 py-1',
-        'flex items-center gap-4',
-        'min-[1800px]:max-w-[40rem] 4k:max-w-[44rem]',
+        'flex w-full max-w-[clamp(20rem,80vw,44rem)] items-center gap-[clamp(0.75rem,0.55rem+0.8vw,1.4rem)] px-[clamp(0.35rem,0.28rem+0.25vw,0.65rem)] py-[clamp(0.15rem,0.1rem+0.15vw,0.35rem)]',
         textColorClass,
         className
       )}
@@ -319,7 +317,7 @@ export default function WeatherCard({ className = '', style }) {
     >
       {/* Temperature - Only show in auto mode */}
       {!isManualMode && (
-        <div className="shrink-0 text-4xl font-light leading-none tracking-tight min-[1800px]:text-5xl 4k:text-6xl">
+        <div className="shrink-0 text-[clamp(2rem,1.5rem+1.8vw,3.75rem)] font-light leading-none tracking-tight">
           {weatherData.temperature}°
         </div>
       )}
@@ -338,10 +336,10 @@ export default function WeatherCard({ className = '', style }) {
 
       {/* Date and Location */}
       <div className="min-w-0 flex-1 flex flex-col gap-1">
-        <div className="text-sm font-medium opacity-95 tracking-wide min-[1800px]:text-base 4k:text-lg">
+        <div className="text-[clamp(0.82rem,0.74rem+0.28vw,1.1rem)] font-medium opacity-95 tracking-wide">
           {getCurrentDate()}
         </div>
-        <div className="flex items-center gap-1.5 text-sm font-medium opacity-95 tracking-wide min-[1800px]:text-base 4k:text-lg">
+        <div className="flex items-center gap-1.5 text-[clamp(0.82rem,0.74rem+0.28vw,1.1rem)] font-medium opacity-95 tracking-wide">
           {/* Only show location icon and location in auto mode */}
           {!isManualMode && <div className="shrink-0"><PhosphorIcons.MapPin /></div>}
           <span className="min-w-0 whitespace-nowrap">

@@ -18,10 +18,10 @@ import { memo } from 'react';
 const bodyVariants = cva('', {
   variants: {
     size: {
-      small: 'text-[12px] leading-[18px]',    // Small
-      normal: 'text-[14px] leading-[21px]',   // Normal
-      medium: 'text-[16px] leading-[24px]',   // Medium
-      large: 'text-[18px] leading-[27px]',    // Large
+      small: 'text-responsive-xs leading-[1.5]',
+      normal: 'text-responsive-sm leading-[1.55]',
+      medium: 'text-responsive-base leading-[1.55]',
+      large: 'text-responsive-lg leading-[1.5]',
     },
     weight: {
       light: 'font-light',

@@ -18,12 +18,12 @@ import { memo } from 'react';
 const headingVariants = cva('font-bold', {
   variants: {
     level: {
-      1: 'text-[36px] leading-[43.2px]', // H1 - 36px
-      2: 'text-[28px] leading-[33.6px]', // H2 - 28px
-      3: 'text-[24px] leading-[28.8px]', // H3 - 24px
-      4: 'text-[20px] leading-[24px]',   // H4 - 20px
-      5: 'text-[18px] leading-[21.6px]', // H5 - 18px
-      6: 'text-[16px] leading-[19.2px]', // H6 - 16px
+      1: 'text-responsive-4xl leading-[1.08]',
+      2: 'text-responsive-3xl leading-[1.1]',
+      3: 'text-responsive-2xl leading-[1.12]',
+      4: 'text-responsive-xl leading-[1.15]',
+      5: 'text-responsive-lg leading-[1.18]',
+      6: 'text-responsive-base leading-[1.2]',
     },
     color: {
       primary: 'text-text-primary',

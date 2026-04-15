@@ -64,16 +64,16 @@ export default function RadioPlayer({ radioState }) {
   const inactiveMobileStationClass = textColor === 'dark'
     ? 'border-gray-900/18 bg-gray-900/6 text-gray-700 hover:bg-gray-900/12'
     : 'border-white/18 bg-white/6 text-white/70 hover:bg-white/12';
-  const desktopMetaClass = `${textTertiaryClass} text-[11px] font-medium xl:text-[12px] 3xl:text-[13px]`;
+  const desktopMetaClass = `${textTertiaryClass} text-[clamp(0.72rem,0.68rem+0.12vw,0.82rem)] font-medium`;
   const streamFormatBadgeClass = textColor === 'dark'
     ? 'border-gray-900/30 bg-gray-900 text-white'
     : 'border-white/28 bg-white text-gray-950';
-  const streamBadgeBaseClass = 'inline-flex items-center justify-center rounded-[10px] border px-2.5 py-1 text-[11px] font-semibold leading-none tracking-[0.02em] xl:text-[12px]';
-  const stationButtonBaseClass = 'relative flex-1 min-w-0 overflow-hidden border py-3 font-semibold leading-none transition-all';
-  const desktopStationButtonClass = 'rounded-[12px] px-3 text-[13px] xl:px-4 xl:text-[14px]';
-  const mobileStationButtonClass = 'rounded-[10px] px-3 text-[13px] sm:px-4 sm:text-[14px] 4k:rounded-[14px] 4k:px-6 4k:py-5 4k:text-[20px]';
+  const streamBadgeBaseClass = 'inline-flex items-center justify-center rounded-[10px] border px-[clamp(0.55rem,0.5rem+0.18vw,0.7rem)] py-[clamp(0.22rem,0.18rem+0.08vw,0.32rem)] text-[clamp(0.7rem,0.66rem+0.12vw,0.8rem)] font-semibold leading-none tracking-[0.02em]';
+  const stationButtonBaseClass = 'relative flex-1 min-w-0 overflow-hidden border py-[clamp(0.65rem,0.58rem+0.22vw,0.9rem)] font-semibold leading-none transition-all';
+  const desktopStationButtonClass = 'rounded-[12px] px-[clamp(0.75rem,0.68rem+0.22vw,1rem)] text-[clamp(0.76rem,0.72rem+0.14vw,0.9rem)]';
+  const mobileStationButtonClass = 'rounded-[10px] px-[clamp(0.8rem,0.72rem+0.25vw,1.15rem)] text-[clamp(0.78rem,0.72rem+0.2vw,0.98rem)]';
   const stationLabelBaseClass = 'block w-full overflow-hidden text-center leading-none';
-  const qualityButtonBaseClass = 'relative flex-1 overflow-hidden rounded-[10px] border px-3 py-2 text-[12px] font-medium leading-none transition-all focusable sm:text-[13px] 4k:rounded-xl 4k:px-5 4k:py-3 4k:text-[18px]';
+  const qualityButtonBaseClass = 'relative flex-1 overflow-hidden rounded-[10px] border px-[clamp(0.75rem,0.68rem+0.22vw,1rem)] py-[clamp(0.55rem,0.5rem+0.16vw,0.75rem)] text-[clamp(0.76rem,0.72rem+0.16vw,0.92rem)] font-medium leading-none transition-all focusable';
   const isUltraWideShort = layoutMode === 'car-shell' || (aspectRatio >= 3 && viewportHeight <= 560);
   const desktopTitleClass = '!leading-[0.96]';
   const desktopCoverWidth = isUltraWideShort
@@ -98,8 +98,8 @@ export default function RadioPlayer({ radioState }) {
     ? 'min(100%, 22rem)'
     : 'min(100%, 20rem)';
   const desktopStageLayoutClass = isUltraWideShort
-    ? 'flex flex-row items-center justify-between gap-6 xl:gap-8'
-    : 'grid items-center gap-8 xl:gap-10 min-[1320px]:grid-cols-[minmax(280px,38%)_minmax(360px,1fr)]';
+    ? 'flex flex-row items-center justify-between gap-[clamp(1.25rem,1rem+0.8vw,2rem)]'
+    : 'grid items-center gap-[clamp(1.5rem,1.2rem+1vw,2.5rem)] min-[1320px]:grid-cols-[minmax(280px,38%)_minmax(360px,1fr)]';
   const desktopStageInnerClass = isUltraWideShort
     ? 'flex-1 min-w-0'
     : 'w-full max-w-[42rem] justify-self-center min-[1320px]:justify-self-end';
@@ -111,10 +111,10 @@ export default function RadioPlayer({ radioState }) {
       transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
       className={desktop
         ? 'relative shrink-0'
-        : 'relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12'}
+        : 'relative mb-[clamp(1.75rem,1.4rem+1.2vw,3rem)] w-full max-w-[clamp(18rem,72vw,32rem)]'}
       style={desktop ? { width: desktopCoverWidth } : undefined}
     >
-      <div className={`relative w-full aspect-square overflow-hidden rounded-[22px] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] 3xl:rounded-[28px] ${coverBorderClass}`}>
+      <div className={`relative w-full aspect-square overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
         <motion.img
           key={currentStation.coverArt}
           src={currentStation.coverArt}
@@ -131,7 +131,7 @@ export default function RadioPlayer({ radioState }) {
           <motion.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-              className={`absolute right-4 top-4 flex items-center gap-1.5 rounded-xl border bg-error/95 px-3 py-1.5 text-white backdrop-blur-sm 3xl:right-6 3xl:top-6 ${textColor === 'dark' ? 'border-gray-900/18' : 'border-white/20'}`}
+              className={`absolute right-[clamp(0.9rem,0.8rem+0.35vw,1.5rem)] top-[clamp(0.9rem,0.8rem+0.35vw,1.5rem)] flex items-center gap-1.5 rounded-xl border bg-error/95 px-[clamp(0.65rem,0.55rem+0.3vw,0.95rem)] py-[clamp(0.3rem,0.24rem+0.18vw,0.5rem)] text-white backdrop-blur-sm ${textColor === 'dark' ? 'border-gray-900/18' : 'border-white/20'}`}
               style={{ borderColor: textColor === 'dark' ? 'rgba(17, 24, 39, 0.18)' : 'rgba(255, 255, 255, 0.20)' }}
             >
             <motion.span
@@ -140,7 +140,7 @@ export default function RadioPlayer({ radioState }) {
               className="h-1.5 w-1.5 rounded-full bg-white"
               aria-hidden="true"
             />
-            <Caption uppercase weight="semibold" className="text-[11px] text-white 3xl:text-[12px]">
+            <Caption uppercase weight="semibold" className="text-[clamp(0.68rem,0.65rem+0.08vw,0.78rem)] text-white">
               Live
             </Caption>
           </motion.div>
@@ -154,7 +154,7 @@ export default function RadioPlayer({ radioState }) {
       initial={{ y: 10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.2 }}
-          className={`mb-6 flex w-full gap-2 4k:mb-10 4k:gap-3 ${shortHeightLayout ? 'max-w-sm' : 'max-w-xs 4k:max-w-md'}`}
+          className={`mb-[clamp(1.25rem,1rem+0.8vw,2.25rem)] flex w-full gap-[clamp(0.5rem,0.42rem+0.22vw,0.75rem)] ${shortHeightLayout ? 'max-w-[min(100%,24rem)]' : 'max-w-[min(100%,20rem)]'}`}
       role="group"
       aria-label="Quality selection"
     >
@@ -189,7 +189,7 @@ export default function RadioPlayer({ radioState }) {
   if (isSplitScreen) {
     return (
       <ResponsiveContainer section="radio" className="justify-center">
-        <div className={`mx-auto w-full ${isUltraWideShort ? 'max-w-[1480px]' : 'max-w-[1180px] 4k:max-w-[1360px]'}`}>
+        <div className={`mx-auto w-full ${isUltraWideShort ? 'max-w-[min(100%,92rem)]' : 'max-w-[min(100%,85rem)]'}`}>
           <div className={desktopStageLayoutClass}>
             <div className={`flex ${isUltraWideShort ? 'justify-start pl-4' : 'w-full justify-center min-[1320px]:justify-start'}`}>
               {renderCoverArt(true)}
@@ -233,11 +233,11 @@ export default function RadioPlayer({ radioState }) {
                     {isLoading ? (
                       <Loader size="small" />
                     ) : isPlaying ? (
-                      <svg className="h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <svg className="h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                       </svg>
                     ) : (
-                      <svg className="ml-1 h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <svg className="ml-[clamp(0.12rem,0.08rem+0.08vw,0.2rem)] h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     )}
@@ -317,7 +317,7 @@ export default function RadioPlayer({ radioState }) {
                       >
                         <span
                           className={`${stationLabelBaseClass} ${
-                            station.id === 'fm' ? 'whitespace-nowrap' : 'text-[12px] tracking-[0.01em] xl:text-[13px]'
+                            station.id === 'fm' ? 'whitespace-nowrap' : 'text-[clamp(0.72rem,0.68rem+0.12vw,0.82rem)] tracking-[0.01em]'
                           }`}
                         >
                           {stationLabel}
@@ -343,7 +343,7 @@ export default function RadioPlayer({ radioState }) {
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="mb-8 text-center 4k:mb-12"
+          className="mb-[clamp(1.75rem,1.35rem+1.2vw,3rem)] text-center"
         >
           <Heading level={3} color="custom" className={`mb-2 ${textPrimaryClass}`}>
             {currentStation.name}
@@ -363,18 +363,18 @@ export default function RadioPlayer({ radioState }) {
           onClick={togglePlay}
           disabled={isLoading}
           tabIndex={0}
-          className="group focusable relative mb-8 h-20 w-20 rounded-full bg-primary transition-all disabled:opacity-40 4k:mb-12 4k:h-32 4k:w-32"
+          className="group focusable relative mb-[clamp(1.75rem,1.35rem+1.2vw,3rem)] h-[clamp(4.5rem,3.9rem+1.8vw,7rem)] w-[clamp(4.5rem,3.9rem+1.8vw,7rem)] rounded-full bg-primary transition-all disabled:opacity-40"
           aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
         >
           <div className="flex h-full w-full items-center justify-center">
             {isLoading ? (
               <Loader size="small" />
             ) : isPlaying ? (
-              <svg className="h-9 w-9 text-white 4k:h-14 4k:w-14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="h-[clamp(2rem,1.7rem+1vw,3.5rem)] w-[clamp(2rem,1.7rem+1vw,3.5rem)] text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
               </svg>
             ) : (
-              <svg className="ml-1 h-9 w-9 text-white 4k:h-14 4k:w-14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="ml-[clamp(0.12rem,0.08rem+0.08vw,0.2rem)] h-[clamp(2rem,1.7rem+1vw,3.5rem)] w-[clamp(2rem,1.7rem+1vw,3.5rem)] text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M8 5v14l11-7z" />
               </svg>
             )}
@@ -385,7 +385,7 @@ export default function RadioPlayer({ radioState }) {
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.15 }}
-          className="mb-5 flex w-full max-w-xs gap-2 4k:mb-8 4k:max-w-md 4k:gap-3"
+          className="mb-[clamp(1rem,0.82rem+0.65vw,2rem)] flex w-full max-w-[min(100%,20rem)] gap-[clamp(0.5rem,0.42rem+0.22vw,0.75rem)]"
           role="group"
           aria-label="Station selection"
         >
@@ -413,7 +413,7 @@ export default function RadioPlayer({ radioState }) {
                   >
                 <span
                   className={`${stationLabelBaseClass} ${
-                    station.id === 'fm' ? 'whitespace-nowrap' : 'text-[12px] tracking-[0.01em] sm:text-[13px] 4k:text-[18px]'
+                    station.id === 'fm' ? 'whitespace-nowrap' : 'text-[clamp(0.72rem,0.68rem+0.16vw,0.95rem)] tracking-[0.01em]'
                   }`}
                 >
                   {stationLabel}
@@ -430,7 +430,7 @@ export default function RadioPlayer({ radioState }) {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className={`flex items-center justify-center gap-2 text-[12px] font-medium 4k:gap-3 4k:text-[18px] ${textTertiaryClass}`}
+            className={`flex items-center justify-center gap-2 text-[clamp(0.76rem,0.72rem+0.18vw,0.98rem)] font-medium ${textTertiaryClass}`}
             role="status"
             aria-label="Stream information"
           >

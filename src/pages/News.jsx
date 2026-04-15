@@ -66,30 +66,26 @@ export default function News({ radioState }) {
       <div className="
         flex flex-col items-center justify-center text-center
         min-app-height
-        px-6 md:px-8 tv:px-12
+        px-[clamp(1rem,0.88rem+0.5vw,3rem)]
       ">
         <svg className="
-          w-16 h-16 mb-4 text-white/30
-          md:w-20 md:h-20
-          tv:w-28 tv:h-28
+          mb-[clamp(0.9rem,0.78rem+0.45vw,1.5rem)] h-[clamp(3.5rem,3rem+1.5vw,7rem)] w-[clamp(3.5rem,3rem+1.5vw,7rem)] text-white/30
         " fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <h2 className="
-          font-semibold mb-2
-          text-xl md:text-2xl tv:text-4xl
+          mb-[clamp(0.4rem,0.34rem+0.2vw,0.75rem)] font-semibold
+          text-[clamp(1.35rem,1.1rem+0.95vw,2.75rem)]
         ">Oops!</h2>
         <p className="
-          text-white/60 mb-6
-          text-base md:text-lg tv:text-2xl
+          mb-[clamp(1.25rem,1rem+0.8vw,2rem)] text-white/60
+          text-[clamp(0.95rem,0.85rem+0.35vw,1.45rem)]
         ">{error}</p>
         <button
           onClick={loadInitialNews}
           className="
             bg-primary hover:bg-primary/90 rounded-2xl font-medium transition-colors tv-focusable
-            px-6 py-3 text-base
-            md:px-8 md:py-4 md:text-lg
-            tv:px-12 tv:py-6 tv:text-2xl
+            px-[clamp(1.15rem,0.95rem+0.7vw,3rem)] py-[clamp(0.7rem,0.6rem+0.35vw,1.5rem)] text-[clamp(0.95rem,0.86rem+0.28vw,1.35rem)]
           "
           tabIndex={0}
         >
@@ -133,8 +129,8 @@ export default function News({ radioState }) {
       <div className={`
         sticky top-0 z-10
         ${isSplitScreen
-          ? 'px-4 py-4 xl:px-6 xl:py-5 4k:px-8 4k:py-8' // Padding for full-width background
-          : 'px-4 py-4 md:px-6 md:py-5 lg:px-8 tv:px-12 tv:py-8 4k:px-16 4k:py-12'
+          ? 'px-[clamp(1rem,0.9rem+0.36vw,2rem)] py-[clamp(1rem,0.92rem+0.26vw,1.45rem)]'
+          : 'px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1rem,0.92rem+0.3vw,1.7rem)]'
         }
       `}>
         {/* Clean solid header background */}
@@ -145,14 +141,14 @@ export default function News({ radioState }) {
         }`} />
 
         {/* Content wrapper - centered to match articles */}
-        <div className={isSplitScreen ? "relative mx-auto w-full max-w-[58rem] xl:max-w-[64rem] 4k:max-w-[76rem]" : "relative mx-auto w-full max-w-[96rem] 4k:max-w-[120rem]"}>
+        <div className={isSplitScreen ? "relative mx-auto w-full max-w-[min(100%,76rem)]" : "relative mx-auto w-full max-w-[min(100%,120rem)]"}>
           <h1 className={`
             font-bold text-text-primary
-            ${isSplitScreen ? 'text-xl xl:text-2xl 4k:text-4xl' : 'text-2xl md:text-3xl lg:text-4xl tv:text-5xl 4k:text-7xl'}
+            ${isSplitScreen ? 'text-[clamp(1.25rem,1.14rem+0.42vw,2rem)]' : 'text-[clamp(1.5rem,1.32rem+0.78vw,3rem)]'}
           `}>Știri</h1>
           <p className={`
             text-text-tertiary font-medium mt-1
-            ${isSplitScreen ? 'text-sm xl:text-base 4k:text-xl' : 'text-sm md:text-base tv:text-xl 4k:text-3xl'}
+            ${isSplitScreen ? 'text-[clamp(0.82rem,0.78rem+0.18vw,1.05rem)]' : 'text-[clamp(0.88rem,0.82rem+0.24vw,1.2rem)]'}
           `}>Ultimele noutăți din Dobrogea</p>
         </div>
       </div>
