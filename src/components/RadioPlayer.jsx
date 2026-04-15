@@ -29,6 +29,7 @@ export default function RadioPlayer({ radioState }) {
   const device = useContext(DeviceContext);
   const isDesktopShell = device?.showDesktopShell;
   const isSplitScreen = isDesktopShell && !forceCompactLayout;
+  const useCenteredDesktopStack = isDesktopShell && device?.isUltraWide;
   const viewportWidth = device?.viewportWidth || device?.screenWidth || 0;
   const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
@@ -187,6 +188,142 @@ export default function RadioPlayer({ radioState }) {
   );
 
   if (isSplitScreen) {
+    if (useCenteredDesktopStack) {
+      return (
+        <ResponsiveContainer section="radio" className="justify-center">
+          <div className="mx-auto flex w-full max-w-[min(100%,56rem)] flex-col items-center text-center">
+            {renderCoverArt(true)}
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
+              className="mt-[clamp(1.25rem,1rem+0.8vw,2rem)] flex w-full flex-col items-center gap-[clamp(0.9rem,0.72rem+0.55vw,1.5rem)]"
+            >
+              <SpectrumVisualizer
+                analyserRef={audioAnalyserRef}
+                isPlaying={isPlaying}
+                tone={textColor}
+                className="shrink-0"
+                style={{
+                  width: desktopVisualizerWidth,
+                  height: desktopVisualizerHeight,
+                }}
+              />
+
+              <div className="flex w-full max-w-[min(100%,36rem)] flex-col items-center text-center">
+                <Heading
+                  level={2}
+                  color="custom"
+                  className={`mb-[clamp(0.2rem,0.16rem+0.1vw,0.35rem)] max-w-full text-balance text-center ${desktopTitleClass} ${textPrimaryClass}`}
+                  style={{ fontSize: desktopTitleSize }}
+                >
+                  Radio Constanța
+                </Heading>
+                <Body
+                  size="normal"
+                  weight="medium"
+                  opacity="custom"
+                  className={`${textSecondaryClass} max-w-full text-pretty text-center`}
+                  style={{ fontSize: desktopSubtitleSize, lineHeight: 1.25 }}
+                >
+                  {metadata || 'Primul radio din Dobrogea'}
+                </Body>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: isLoading ? 1 : 1.05 }}
+                whileTap={{ scale: isLoading ? 1 : 0.95 }}
+                onClick={togglePlay}
+                disabled={isLoading}
+                tabIndex={0}
+                className={`flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
+                style={{
+                  width: desktopPlayButtonSize,
+                  height: desktopPlayButtonSize,
+                  borderColor: buttonBorderColor,
+                }}
+                aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
+              >
+                {isLoading ? (
+                  <Loader size="small" />
+                ) : isPlaying ? (
+                  <svg className="h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                  </svg>
+                ) : (
+                  <svg className="ml-[clamp(0.12rem,0.08rem+0.08vw,0.2rem)] h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                )}
+              </motion.button>
+
+              {streamInfo && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className={`flex flex-wrap items-center justify-center gap-2 text-center ${desktopMetaClass}`}
+                  role="status"
+                  aria-label="Stream information"
+                >
+                  <span>{streamInfo.sampleRate}</span>
+                  <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                  <span>{streamInfo.channels}</span>
+                  <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                  <span>{streamInfo.bitrate}</span>
+                  <span className={`${streamBadgeBaseClass} ${streamFormatBadgeClass}`}>
+                    {streamInfo.format}
+                  </span>
+                </motion.div>
+              )}
+
+              <motion.div
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex w-full justify-center gap-2"
+                style={{ maxWidth: desktopStationRailWidth }}
+                role="group"
+                aria-label="Station selection"
+              >
+                {stations.map((station, index) => {
+                  const isActive = currentStation.id === station.id;
+                  const stationLabel = station.id === 'fm' ? 'FM' : 'Folclor';
+                  return (
+                    <motion.button
+                      key={station.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => switchStation(station)}
+                      initial={{ x: -10, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.24 + index * 0.05 }}
+                      tabIndex={0}
+                      className={`${stationButtonBaseClass} ${desktopStationButtonClass} ${
+                        isActive ? activeStationButtonClass : inactiveButtonClass
+                      }`}
+                      style={{ borderColor: isActive ? strongButtonBorderColor : buttonBorderColor }}
+                      aria-pressed={isActive}
+                      aria-label={`Switch to ${stationLabel} station`}
+                    >
+                      <span
+                        className={`${stationLabelBaseClass} ${
+                          station.id === 'fm' ? 'whitespace-nowrap' : 'text-[clamp(0.72rem,0.68rem+0.12vw,0.82rem)] tracking-[0.01em]'
+                        }`}
+                      >
+                        {stationLabel}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </motion.div>
+            </motion.div>
+          </div>
+        </ResponsiveContainer>
+      );
+    }
+
     return (
       <ResponsiveContainer section="radio" className="justify-center">
         <div className={`mx-auto w-full ${isUltraWideShort ? 'max-w-[min(100%,92rem)]' : 'max-w-[min(100%,85rem)]'}`}>
