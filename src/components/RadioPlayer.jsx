@@ -32,7 +32,7 @@ export default function RadioPlayer({ radioState }) {
   const viewportWidth = device?.viewportWidth || device?.screenWidth || 0;
   const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
-  const useCenteredDesktopStack = isDesktopShell && (device?.isUltraWide || aspectRatio <= 1.5);
+  const useCenteredDesktopStack = isDesktopShell && aspectRatio <= 1.5;
   const weatherTextColor = useWeatherTextColor();
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
