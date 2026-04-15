@@ -80,9 +80,15 @@ export function useDeviceDetection() {
         const isShortHeight = effectiveHeight <= 560;
         const isCarDisplay = !isTV && !isPortrait && effectiveWidth >= 1200 && effectiveHeight >= 360 && aspectRatio >= 3.2;
         const showWideShell = !isTV && !isPortrait && effectiveWidth >= (prev.showDesktopShell ? 860 : 900);
+        const dualPaneWidthThreshold = isUltraWide
+          ? (prev.showDualPaneShell ? 1240 : 1280)
+          : (prev.showDualPaneShell ? 1140 : 1180);
+        const dualPaneHeightThreshold = isUltraWide
+          ? (prev.showDualPaneShell ? 500 : 540)
+          : (prev.showDualPaneShell ? 600 : 640);
         const showDualPaneShell = showWideShell
-          && effectiveWidth >= (prev.showDualPaneShell ? 1140 : 1180)
-          && effectiveHeight >= (prev.showDualPaneShell ? 600 : 640)
+          && effectiveWidth >= dualPaneWidthThreshold
+          && effectiveHeight >= dualPaneHeightThreshold
           && !isCarDisplay;
         const compactDesktop = showWideShell && !showDualPaneShell;
         const layoutMode = isTV

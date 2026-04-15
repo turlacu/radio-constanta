@@ -27,7 +27,7 @@ export default function RadioPlayer({ radioState }) {
   } = radioState;
 
   const device = useContext(DeviceContext);
-  const isDesktopShell = device?.showDualPaneShell;
+  const isDesktopShell = device?.showDesktopShell;
   const isSplitScreen = isDesktopShell && !forceCompactLayout;
   const viewportWidth = device?.viewportWidth || device?.screenWidth || 0;
   const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;

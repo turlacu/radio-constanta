@@ -183,7 +183,8 @@ function AppContent() {
 
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
-  const showDesktopShell = device.showDualPaneShell;
+  const showDesktopShell = device.showDesktopShell;
+  const canShowNewsRail = device.showDualPaneShell && !device.isUltraWide;
   const viewportWidth = device.viewportWidth || device.screenWidth || 0;
   const viewportHeight = device.viewportHeight || device.screenHeight || 0;
   const isShortHeightShell = device.isShortHeight || device.isCarDisplay;
@@ -1060,9 +1061,9 @@ function AppContent() {
     !showNews &&
     isPlaying &&
     settings.backgroundAnimation === 'weather' &&
-    viewportWidth >= 1320 &&
-    viewportHeight >= 760 &&
-    !isShortHeightShell;
+    viewportWidth >= (device.isUltraWide ? 1240 : 1320) &&
+    viewportHeight >= (device.isUltraWide ? 520 : 760) &&
+    !device.isCarDisplay;
   const desktopWeatherCardWidth = Math.min(460, Math.max(280, Math.round(viewportWidth * 0.24)));
   const desktopNewsRailWidth = device.isCarDisplay
     ? Math.min(620, Math.max(460, Math.round(viewportWidth * 0.32)))
@@ -1154,10 +1155,10 @@ function AppContent() {
   }, [settings.backgroundAnimation]);
 
   useEffect(() => {
-    if (!showDesktopShell && showNews) {
+    if ((!showDesktopShell || !canShowNewsRail) && showNews) {
       setShowNews(false);
     }
-  }, [showDesktopShell, showNews]);
+  }, [showDesktopShell, canShowNewsRail, showNews]);
 
   return (
     <DeviceContext.Provider value={device}>
@@ -1195,7 +1196,7 @@ function AppContent() {
                   </svg>
                 </motion.button>
 
-                {showDesktopShell && (
+                {canShowNewsRail && (
                   <motion.button
                     onClick={() => setShowNews(!showNews)}
                     onMouseEnter={loadNewsPage}
@@ -1228,7 +1229,7 @@ function AppContent() {
                       ? 'h-full border-r border-border'
                       : 'h-full w-full'
                   }`}
-                  style={showNews && showDesktopShell ? { width: `${desktopNewsRailWidth}px` } : undefined}
+                  style={showNews && canShowNewsRail ? { width: `${desktopNewsRailWidth}px` } : undefined}
                 >
                   {/* Floating particles animation - only show for minimal background */}
                   {!showNews && isPlaying && settings.backgroundAnimation === 'minimal' && (
@@ -1295,7 +1296,7 @@ function AppContent() {
 
                 {/* News Section - Slide in from right */}
                 <AnimatePresence>
-                  {showNews && showDesktopShell && (
+                  {showNews && canShowNewsRail && (
                     <motion.div
                       initial={{ x: '100%', opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
