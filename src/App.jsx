@@ -191,14 +191,14 @@ function AppContent() {
     const viewportShape = device.viewportShape || 'tall';
     const isDesktopShell = shellMode === 'desktop';
     const topControlsCompact = device.isShortHeight;
-    const candidateNewsWidth = Math.min(viewportHeight, viewportWidth * 0.4);
+    const preferredNewsShare = viewportAspectRatio <= 1.9 ? 0.54 : 0.5;
+    const candidateNewsWidth = Math.min(viewportHeight * 1.04, viewportWidth * preferredNewsShare);
     const candidatePlayerWidth = Math.max(0, viewportWidth - candidateNewsWidth);
     const candidateNewsAspectRatio = viewportHeight > 0 ? candidateNewsWidth / viewportHeight : 0;
     const candidatePlayerAspectRatio = viewportHeight > 0 ? candidatePlayerWidth / viewportHeight : 0;
     const canShowNewsRail = isDesktopShell
-      && viewportShape === 'wide'
-      && candidateNewsAspectRatio <= 1
-      && candidatePlayerAspectRatio < 1;
+      && candidateNewsAspectRatio <= 1.08
+      && candidatePlayerAspectRatio <= 1.02;
     const showInlineNews = showNews && canShowNewsRail;
     const activePlayerPaneWidth = showInlineNews ? candidatePlayerWidth : viewportWidth;
     const activePlayerPaneAspectRatio = viewportHeight > 0
@@ -244,6 +244,9 @@ function AppContent() {
   const desktopUiBorderColor = desktopUiTone === 'dark'
     ? 'rgba(17, 24, 39, 0.18)'
     : 'rgba(255, 255, 255, 0.20)';
+  const desktopControlRailClass = desktopUiTone === 'dark'
+    ? 'border-gray-900/14 bg-white/48 text-gray-900 shadow-[0_18px_45px_rgba(15,23,42,0.12)]'
+    : 'border-white/16 bg-slate-950/22 text-white shadow-[0_20px_55px_rgba(2,6,23,0.28)]';
 
   // Generate floating particles for background animation
   const floatingParticles = useMemo(() => {
@@ -1219,13 +1222,14 @@ function AppContent() {
                 </Suspense>
               )}
               {/* Top Right Buttons */}
-              <div className={`absolute z-50 flex ${isShortHeightShell ? 'top-3 right-3 gap-2' : 'top-6 right-6 gap-3'}`}>
+              <div className={`absolute z-50 ${isShortHeightShell ? 'top-3 right-3' : 'top-6 right-6'}`}>
+                <div className={`flex items-center gap-2 rounded-[1.15rem] border px-2 py-2 backdrop-blur-xl ${desktopControlRailClass}`}>
                 {/* Settings Button */}
                 <motion.button
                   onClick={() => setShowSettingsModal(true)}
                   onMouseEnter={loadSettingsModal}
                   onFocus={loadSettingsModal}
-                  className={`flex items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
+                  className={`flex items-center justify-center rounded-[0.95rem] border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
                   style={{ borderColor: desktopUiBorderColor }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1242,7 +1246,7 @@ function AppContent() {
                     onClick={() => setShowNews(!showNews)}
                     onMouseEnter={loadNewsPage}
                     onFocus={loadNewsPage}
-                    className={`flex items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
+                    className={`flex items-center justify-center rounded-[0.95rem] border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
                     style={{ borderColor: desktopUiBorderColor }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -1259,6 +1263,7 @@ function AppContent() {
                     )}
                   </motion.button>
                 )}
+                </div>
               </div>
 
               {/* Content Container */}
@@ -1267,7 +1272,7 @@ function AppContent() {
                 <div
                   className={`relative overflow-hidden transition-all duration-500 ${
                     showNews
-                      ? 'h-full border-r border-border'
+                      ? 'h-full border-r border-white/10'
                       : 'h-full w-full'
                   }`}
                   style={resizePolicy.showInlineNews ? { width: `${resizePolicy.activePlayerPaneWidth}px` } : undefined}
@@ -1311,12 +1316,12 @@ function AppContent() {
                     </>
                   )}
 
-                  <div className={`relative z-10 flex h-full w-full justify-center 3xl:px-10 ${
+                  <div className={`relative z-10 flex h-full w-full justify-center ${
                     resizePolicy.showInlineNews
-                      ? 'items-start overflow-y-auto scrollbar-hide px-4 pt-[clamp(4.75rem,4.3rem+1.2vw,6rem)] pb-6'
+                      ? 'items-start overflow-y-auto scrollbar-hide px-[clamp(1.25rem,1.05rem+0.8vw,2.5rem)] pt-[clamp(4.9rem,4.45rem+1.1vw,6.15rem)] pb-[clamp(1.25rem,1rem+0.7vw,2rem)]'
                       : isShortHeightShell
-                      ? 'items-center px-4 py-4'
-                      : 'items-center px-6 py-10'
+                      ? 'items-center px-[clamp(1rem,0.88rem+0.42vw,1.5rem)] py-[clamp(1rem,0.88rem+0.42vw,1.5rem)]'
+                      : 'items-center px-[clamp(1.5rem,1.28rem+0.85vw,3rem)] py-[clamp(2rem,1.65rem+1.2vw,3.5rem)]'
                   }`}>
                     <div className={`flex w-full justify-center ${resizePolicy.showInlineNews ? 'min-h-max items-start' : 'h-full items-center'}`}>
                       <Radio radioState={radioState} />
@@ -1349,7 +1354,7 @@ function AppContent() {
                       animate={{ x: 0, opacity: 1 }}
                       exit={{ x: '100%', opacity: 0 }}
                       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-                      className="absolute inset-y-0 right-0 z-30 overflow-y-auto scrollbar-hide bg-bg-secondary"
+                      className="absolute inset-y-0 right-0 z-30 overflow-y-auto scrollbar-hide border-l border-white/10 bg-[linear-gradient(180deg,rgba(13,18,28,0.96),rgba(9,13,22,0.98))] shadow-[-28px_0_60px_rgba(3,7,18,0.34)]"
                       style={{ left: `${resizePolicy.activePlayerPaneWidth}px` }}
                     >
                       <div className="h-full w-full">

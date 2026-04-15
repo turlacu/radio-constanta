@@ -7,14 +7,14 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
   const device = useContext(DeviceContext);
   const isSplitScreen = device?.policy?.canShowNewsRail;
   const listShellClass = isSplitScreen
-    ? 'mx-auto flex w-full max-w-[58rem] flex-col gap-[clamp(0.9rem,0.82rem+0.32vw,1.5rem)] px-[clamp(1rem,0.9rem+0.36vw,2rem)] pt-[clamp(1rem,0.92rem+0.28vw,1.5rem)] pb-[clamp(0.4rem,0.3rem+0.18vw,0.7rem)]'
+    ? 'mx-auto flex w-full max-w-[64rem] flex-col gap-[clamp(0.95rem,0.86rem+0.34vw,1.6rem)] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)] pt-[clamp(1.1rem,1rem+0.32vw,1.6rem)] pb-[clamp(0.5rem,0.38rem+0.18vw,0.8rem)]'
     : 'mx-auto grid w-full max-w-[96rem] grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-[clamp(1rem,0.9rem+0.35vw,1.75rem)] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] pt-[clamp(1.5rem,1.32rem+0.72vw,2.8rem)] min-[1100px]:grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))]';
-  const splitCardFrameClass = 'grid min-h-[clamp(10rem,9.2rem+1.8vw,13rem)] grid-cols-[minmax(clamp(9rem,8.3rem+1.4vw,12.5rem),32%)_minmax(0,1fr)] items-stretch';
-  const splitMetaClass = 'mb-[clamp(0.45rem,0.38rem+0.16vw,0.65rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.68rem,0.65rem+0.12vw,0.82rem)] text-text-tertiary';
+  const splitCardFrameClass = 'grid min-h-[clamp(11rem,10.1rem+1.9vw,14rem)] grid-cols-[minmax(clamp(9.5rem,8.8rem+1.5vw,13rem),34%)_minmax(0,1fr)] items-stretch';
+  const splitMetaClass = 'mb-[clamp(0.5rem,0.42rem+0.16vw,0.72rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.7rem,0.67rem+0.12vw,0.84rem)] text-text-tertiary';
   const stackedMetaClass = 'mb-[clamp(0.65rem,0.58rem+0.2vw,0.95rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.75rem,0.72rem+0.12vw,0.92rem)] text-text-tertiary';
-  const splitTitleClass = 'mb-[clamp(0.45rem,0.38rem+0.16vw,0.65rem)] line-clamp-2 text-[clamp(0.95rem,0.9rem+0.2vw,1.2rem)] font-bold leading-snug transition-colors group-hover:text-primary';
+  const splitTitleClass = 'mb-[clamp(0.55rem,0.48rem+0.18vw,0.8rem)] line-clamp-2 text-[clamp(1.02rem,0.96rem+0.24vw,1.32rem)] font-bold leading-snug transition-colors group-hover:text-primary';
   const stackedTitleClass = 'mb-[clamp(0.65rem,0.58rem+0.2vw,0.95rem)] line-clamp-3 text-[clamp(1rem,0.96rem+0.22vw,1.28rem)] leading-snug transition-colors group-hover:text-primary';
-  const splitSummaryClass = 'line-clamp-3 text-[clamp(0.76rem,0.73rem+0.12vw,0.92rem)] leading-relaxed';
+  const splitSummaryClass = 'line-clamp-3 text-[clamp(0.8rem,0.76rem+0.14vw,0.96rem)] leading-relaxed';
   const stackedSummaryClass = 'line-clamp-4 text-[clamp(0.82rem,0.78rem+0.16vw,1rem)] leading-relaxed';
 
   const formatDate = (dateString) => {
@@ -57,7 +57,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               onClick={() => onArticleClick(article)}
               className={
                 isSplitScreen
-                  ? 'group overflow-hidden border-white/8 bg-white/[0.035] hover:border-white/12 hover:shadow-lg transition-[border-color,box-shadow]'
+                  ? 'group overflow-hidden border-white/10 bg-white/[0.045] shadow-[0_18px_42px_rgba(3,7,18,0.12)] hover:border-white/14 hover:shadow-[0_20px_48px_rgba(3,7,18,0.18)] transition-[border-color,box-shadow]'
                   : 'group overflow-hidden border-white/8 bg-white/[0.03] hover:border-white/12'
               }
               aria-label={`Read article: ${article.title}`}
@@ -100,7 +100,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 <div
                   className={
                     isSplitScreen
-                      ? 'flex flex-1 flex-col justify-center overflow-hidden p-[clamp(1rem,0.92rem+0.28vw,1.5rem)]'
+                      ? 'flex flex-1 flex-col justify-center overflow-hidden p-[clamp(1.1rem,1rem+0.32vw,1.7rem)]'
                       : 'flex flex-1 flex-col justify-between p-[clamp(1rem,0.92rem+0.34vw,1.6rem)]'
                   }
                 >
@@ -160,7 +160,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
           animate={{ opacity: 1, y: 0 }}
           className={
             isSplitScreen
-              ? 'mx-auto mt-[clamp(1.5rem,1.32rem+0.7vw,2.6rem)] w-full max-w-[58rem] px-[clamp(1rem,0.9rem+0.36vw,2rem)]'
+              ? 'mx-auto mt-[clamp(1.5rem,1.32rem+0.7vw,2.6rem)] w-full max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]'
               : 'mx-auto mt-[clamp(1.5rem,1.32rem+0.72vw,2.8rem)] w-full max-w-[96rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)]'
           }
         >
@@ -180,7 +180,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
 
       {/* Link to website */}
       {!hasMore && articles.length > 0 && (
-        <div className={`mx-auto mt-[clamp(2rem,1.8rem+0.75vw,3rem)] text-center ${isSplitScreen ? 'max-w-[58rem] px-[clamp(1rem,0.9rem+0.36vw,2rem)]' : 'max-w-[96rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)]'}`}>
+        <div className={`mx-auto mt-[clamp(2rem,1.8rem+0.75vw,3rem)] text-center ${isSplitScreen ? 'max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]' : 'max-w-[96rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)]'}`}>
           <Body size="small" opacity="tertiary" className="mb-3">
             Pentru știri mai vechi, vizitează
           </Body>

@@ -98,6 +98,9 @@ export default function RadioPlayer({ radioState }) {
   const desktopStationRailWidth = shortHeightLayout
     ? 'min(100%, 22rem)'
     : 'min(100%, 24rem)';
+  const desktopStageWidth = shortHeightLayout
+    ? 'min(100%, 60rem)'
+    : 'min(100%, 68rem)';
 
   const renderCoverArt = (desktop = false) => (
     <motion.div
@@ -320,9 +323,12 @@ export default function RadioPlayer({ radioState }) {
 
     return (
       <ResponsiveContainer section="radio" className="justify-center">
-        <div className="mx-auto w-full max-w-[min(100%,84rem)]">
-          <div className="grid items-center gap-[clamp(1.5rem,1.2rem+1vw,2.5rem)] grid-cols-[minmax(14rem,24rem)_minmax(0,1fr)]">
-            <div className="flex w-full justify-center">
+        <div className="mx-auto flex w-full justify-center">
+          <div
+            className="grid w-full items-center gap-[clamp(1.5rem,1.2rem+1vw,2.5rem)] grid-cols-[minmax(14rem,24rem)_minmax(18rem,1fr)]"
+            style={{ maxWidth: desktopStageWidth }}
+          >
+            <div className="flex w-full justify-start">
               {renderCoverArt(true)}
             </div>
 
@@ -330,9 +336,9 @@ export default function RadioPlayer({ radioState }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className="flex min-w-0 flex-col justify-center py-2"
+              className="flex min-w-0 flex-col items-end justify-center py-2"
             >
-              <div className="flex w-full flex-col items-center gap-5 text-center">
+              <div className="flex w-full max-w-[min(100%,34rem)] flex-col items-end gap-5 text-right">
                 <SpectrumVisualizer
                   analyserRef={audioAnalyserRef}
                   isPlaying={isPlaying}
@@ -344,7 +350,7 @@ export default function RadioPlayer({ radioState }) {
                   }}
                 />
 
-                <div className="grid w-full max-w-[min(100%,40rem)] items-center gap-4 grid-cols-[auto_minmax(0,1fr)]">
+                <div className="grid w-full items-center gap-4 grid-cols-[auto_minmax(0,1fr)]">
                   <motion.button
                     whileHover={{ scale: isLoading ? 1 : 1.05 }}
                     whileTap={{ scale: isLoading ? 1 : 0.95 }}
@@ -372,11 +378,11 @@ export default function RadioPlayer({ radioState }) {
                     )}
                   </motion.button>
 
-                  <div className="flex min-w-0 flex-col items-start text-left" style={{ minWidth: 0, width: '100%' }}>
+                  <div className="flex min-w-0 flex-col items-end text-right" style={{ minWidth: 0, width: '100%' }}>
                     <Heading
                       level={2}
                       color="custom"
-                      className={`mb-1 max-w-full text-balance text-left ${desktopTitleClass} ${textPrimaryClass}`}
+                      className={`mb-1 max-w-full text-balance text-right ${desktopTitleClass} ${textPrimaryClass}`}
                       style={{ fontSize: desktopTitleSize }}
                     >
                       Radio Constanța
@@ -385,7 +391,7 @@ export default function RadioPlayer({ radioState }) {
                       size="normal"
                       weight="medium"
                       opacity="custom"
-                      className={`${textSecondaryClass} max-w-full text-pretty text-left`}
+                      className={`${textSecondaryClass} max-w-full text-pretty text-right`}
                       style={{ fontSize: desktopSubtitleSize, lineHeight: 1.25 }}
                     >
                       {metadata || 'Primul radio din Dobrogea'}
@@ -398,7 +404,7 @@ export default function RadioPlayer({ radioState }) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    className={`flex flex-wrap items-center justify-center gap-2 text-center ${desktopMetaClass}`}
+                    className={`flex flex-wrap items-center justify-end gap-2 text-right ${desktopMetaClass}`}
                     role="status"
                     aria-label="Stream information"
                   >
@@ -417,7 +423,7 @@ export default function RadioPlayer({ radioState }) {
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="flex w-full justify-center gap-2"
+                  className="flex w-full justify-end gap-2"
                   style={{ maxWidth: desktopStationRailWidth }}
                   role="group"
                   aria-label="Station selection"

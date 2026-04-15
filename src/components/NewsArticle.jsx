@@ -11,7 +11,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const articleShellClass = isSplitScreen
-    ? 'mx-auto w-full max-w-[52rem] px-[clamp(1rem,0.9rem+0.36vw,2rem)] py-[clamp(1.25rem,1.12rem+0.5vw,1.9rem)]'
+    ? 'mx-auto w-full max-w-[58rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)] py-[clamp(1.3rem,1.15rem+0.52vw,2rem)]'
     : 'mx-auto w-full max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1.25rem,1.12rem+0.55vw,2.4rem)] min-[1500px]:max-w-[66rem]';
   const articleBodyClass = [
     'text-[clamp(0.94rem,0.9rem+0.22vw,1.14rem)] leading-[1.8] text-white/84',
@@ -110,7 +110,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {/* Clean solid header background */}
         <div className="absolute inset-0 bg-bg-secondary border-b border-border" />
 
-        <div className={`relative mx-auto flex items-center gap-[clamp(0.75rem,0.68rem+0.18vw,1rem)] ${isSplitScreen ? 'max-w-[52rem] px-[clamp(1rem,0.9rem+0.36vw,2rem)] py-[clamp(0.8rem,0.72rem+0.22vw,1.1rem)]' : 'max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)] min-[1500px]:max-w-[66rem]'}`}>
+        <div className={`relative mx-auto flex items-center gap-[clamp(0.75rem,0.68rem+0.18vw,1rem)] ${isSplitScreen ? 'max-w-[58rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)] py-[clamp(0.82rem,0.74rem+0.22vw,1.14rem)]' : 'max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)] min-[1500px]:max-w-[66rem]'}`}>
           <Button
             variant="ghost"
             icon
