@@ -12,8 +12,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
   const splitCardFrameClass = 'grid min-h-[clamp(11rem,10.1rem+1.9vw,14rem)] grid-cols-[minmax(clamp(9.5rem,8.8rem+1.5vw,13rem),34%)_minmax(0,1fr)] items-stretch';
   const splitMetaClass = 'mb-[clamp(0.5rem,0.42rem+0.16vw,0.72rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.7rem,0.67rem+0.12vw,0.84rem)] text-text-tertiary';
   const stackedMetaClass = 'mb-[clamp(0.65rem,0.58rem+0.2vw,0.95rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.75rem,0.72rem+0.12vw,0.92rem)] text-text-tertiary';
-  const splitTitleClass = 'mb-[clamp(0.55rem,0.48rem+0.18vw,0.8rem)] line-clamp-2 text-[clamp(1.02rem,0.96rem+0.24vw,1.32rem)] font-bold leading-snug transition-colors group-hover:text-primary';
-  const stackedTitleClass = 'mb-[clamp(0.65rem,0.58rem+0.2vw,0.95rem)] line-clamp-3 text-[clamp(1rem,0.96rem+0.22vw,1.28rem)] leading-snug transition-colors group-hover:text-primary';
+  const splitTitleClass = 'mb-[clamp(0.5rem,0.44rem+0.16vw,0.72rem)] line-clamp-2 text-[clamp(0.94rem,0.9rem+0.18vw,1.14rem)] font-bold leading-snug transition-colors group-hover:text-primary';
+  const stackedTitleClass = 'mb-[clamp(0.6rem,0.54rem+0.18vw,0.88rem)] line-clamp-3 text-[clamp(0.94rem,0.9rem+0.18vw,1.18rem)] leading-snug transition-colors group-hover:text-primary';
   const splitSummaryClass = 'line-clamp-3 text-[clamp(0.8rem,0.76rem+0.14vw,0.96rem)] leading-relaxed';
   const stackedSummaryClass = 'line-clamp-4 text-[clamp(0.82rem,0.78rem+0.16vw,1rem)] leading-relaxed';
 

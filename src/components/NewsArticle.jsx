@@ -16,8 +16,8 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
   const articleBodyClass = [
     'text-[clamp(0.94rem,0.9rem+0.22vw,1.14rem)] leading-[1.8] text-white/84',
     '[&_p]:mb-[clamp(1rem,0.92rem+0.25vw,1.4rem)] [&_p]:text-pretty',
-    '[&_h2]:mb-[clamp(0.85rem,0.8rem+0.18vw,1.1rem)] [&_h2]:mt-[clamp(2rem,1.8rem+0.7vw,3rem)] [&_h2]:text-[clamp(1.35rem,1.22rem+0.48vw,1.8rem)] [&_h2]:font-bold [&_h2]:leading-tight',
-    '[&_h3]:mb-[clamp(0.75rem,0.7rem+0.14vw,0.95rem)] [&_h3]:mt-[clamp(1.7rem,1.55rem+0.5vw,2.5rem)] [&_h3]:text-[clamp(1.1rem,1rem+0.34vw,1.4rem)] [&_h3]:font-semibold [&_h3]:leading-tight',
+    '[&_h2]:mb-[clamp(0.8rem,0.74rem+0.16vw,1rem)] [&_h2]:mt-[clamp(2rem,1.8rem+0.7vw,3rem)] [&_h2]:text-[clamp(1.22rem,1.12rem+0.34vw,1.55rem)] [&_h2]:font-bold [&_h2]:leading-tight',
+    '[&_h3]:mb-[clamp(0.72rem,0.67rem+0.14vw,0.9rem)] [&_h3]:mt-[clamp(1.7rem,1.55rem+0.5vw,2.5rem)] [&_h3]:text-[clamp(1rem,0.93rem+0.24vw,1.22rem)] [&_h3]:font-semibold [&_h3]:leading-tight',
     '[&_ul]:mb-[clamp(1rem,0.92rem+0.25vw,1.4rem)] [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5',
     '[&_ol]:mb-[clamp(1rem,0.92rem+0.25vw,1.4rem)] [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5',
     '[&_a]:text-primary [&_a]:underline-offset-4 hover:[&_a]:text-primary/80 hover:[&_a]:underline',
@@ -191,7 +191,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Heading level={2} gradient className="mb-[clamp(0.75rem,0.64rem+0.4vw,1.5rem)] text-balance">
+          <Heading level={2} gradient className="mb-[clamp(0.72rem,0.62rem+0.34vw,1.25rem)] text-balance text-[clamp(1.5rem,1.34rem+0.58vw,2.1rem)]">
             {article.title}
           </Heading>
         </motion.div>

@@ -1229,8 +1229,7 @@ function AppContent() {
                   onClick={() => setShowSettingsModal(true)}
                   onMouseEnter={loadSettingsModal}
                   onFocus={loadSettingsModal}
-                  className={`flex items-center justify-center rounded-[0.95rem] border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
-                  style={{ borderColor: desktopUiBorderColor }}
+                  className={`flex items-center justify-center rounded-[0.95rem] backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label="Settings"
@@ -1246,8 +1245,7 @@ function AppContent() {
                     onClick={() => setShowNews(!showNews)}
                     onMouseEnter={loadNewsPage}
                     onFocus={loadNewsPage}
-                    className={`flex items-center justify-center rounded-[0.95rem] border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
-                    style={{ borderColor: desktopUiBorderColor }}
+                    className={`flex items-center justify-center rounded-[0.95rem] backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     aria-label={showNews ? 'Hide news' : 'Show news'}
