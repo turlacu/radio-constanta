@@ -5,7 +5,10 @@ import { Card, Heading, Body, Button } from './ui';
 
 export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore, loading }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.showDesktopShell;
+  const isSplitScreen = device?.showDualPaneShell;
+  const listShellClass = isSplitScreen
+    ? 'mx-auto flex w-full max-w-[58rem] flex-col gap-4 px-4 pt-4 pb-2 xl:max-w-[64rem] xl:gap-5 xl:px-6 xl:pt-5 4k:max-w-[76rem] 4k:gap-6 4k:px-8'
+    : 'mx-auto grid w-full max-w-[96rem] grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-4 px-4 pt-6 md:gap-5 md:px-6 md:pt-8 lg:gap-6 lg:px-8 xl:grid-cols-[repeat(auto-fit,minmax(20rem,1fr))] tv:px-12 tv:pt-10 4k:max-w-[120rem] 4k:gap-8 4k:px-16 4k:pt-16';
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -26,13 +29,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
 
   return (
     <div className={isSplitScreen ? 'pb-6' : 'pb-20 md:pb-24 tv:pb-16'}>
-      <div
-        className={
-          isSplitScreen
-            ? 'px-4 pt-4 flex flex-col gap-4 max-w-full 4k:px-8 4k:pt-6 4k:gap-6'
-            : `px-4 pt-6 md:px-6 md:pt-8 lg:px-8 tv:px-12 tv:pt-10 grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 tv:grid-cols-3 tv:gap-8 4k:px-16 4k:pt-16 4k:gap-12`
-        }
-      >
+      <div className={listShellClass}>
         {articles.map((article, index) => (
           <motion.div
             key={article.id || index}
@@ -43,7 +40,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               delay: index * 0.05,
               ease: [0.25, 0.46, 0.45, 0.94]
             }}
-            className={isSplitScreen ? 'max-w-[850px] mx-auto w-full 4k:max-w-[1400px]' : ''}
+            className="w-full"
           >
             <Card
               variant="default"
@@ -51,21 +48,19 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               padding="none"
               interactive
               onClick={() => onArticleClick(article)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onArticleClick(article);
-                }
-              }}
               className={
                 isSplitScreen
-                  ? 'overflow-hidden group hover:shadow-lg transition-shadow duration-300'
-                  : 'overflow-hidden group'
+                  ? 'group overflow-hidden border-white/8 bg-white/[0.035] hover:border-white/12 hover:shadow-lg transition-[border-color,box-shadow]'
+                  : 'group overflow-hidden border-white/8 bg-white/[0.03] hover:border-white/12'
               }
               aria-label={`Read article: ${article.title}`}
             >
               <motion.div
-                className={isSplitScreen ? 'flex min-h-[156px] flex-row items-stretch xl:min-h-[176px] 4k:min-h-[220px]' : ''}
+                className={
+                  isSplitScreen
+                    ? 'grid min-h-[10.5rem] grid-cols-[minmax(10rem,32%)_minmax(0,1fr)] items-stretch xl:min-h-[12rem] 4k:min-h-[14rem]'
+                    : 'flex h-full flex-col'
+                }
                 whileHover={isSplitScreen ? { scale: 1.01 } : {}}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
               >
@@ -74,8 +69,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                   <div
                     className={
                       isSplitScreen
-                        ? 'relative w-[28%] min-w-[132px] overflow-hidden rounded-l-[12px] bg-bg-secondary xl:w-[30%] xl:min-w-[156px] 4k:min-w-[220px]'
-                        : 'relative w-full bg-bg-secondary overflow-hidden h-48 md:h-52 lg:h-56 tv:h-72 4k:h-96 rounded-t-[12px]'
+                        ? 'relative h-full overflow-hidden rounded-l-[12px] bg-bg-secondary'
+                        : 'relative aspect-[16/9] w-full overflow-hidden rounded-t-[12px] bg-bg-secondary'
                     }
                   >
                     <motion.img
@@ -96,18 +91,18 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
 
                 {/* Content */}
                 <div
-                  className={
-                    isSplitScreen
-                      ? 'flex flex-1 flex-col justify-center overflow-hidden p-4 xl:p-5 4k:p-6'
-                      : 'p-4 md:p-5 lg:p-6 tv:p-8 4k:p-12'
-                  }
-                >
+                    className={
+                      isSplitScreen
+                        ? 'flex flex-1 flex-col justify-center overflow-hidden p-4 xl:p-5 4k:p-6'
+                        : 'flex flex-1 flex-col justify-between p-4 md:p-5 lg:p-6 tv:p-7 4k:p-9'
+                    }
+                  >
                   {/* Category & Date */}
                   <div
                     className={
                       isSplitScreen
                         ? 'mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[11px] text-text-tertiary xl:text-[12px] 4k:text-[14px]'
-                        : 'flex items-center gap-2 mb-2 font-medium text-[12px] text-text-tertiary md:mb-3 4k:text-[18px] 4k:mb-4'
+                        : 'mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[12px] text-text-tertiary md:mb-4 md:text-[13px] 4k:text-[17px]'
                     }
                   >
                     {article.category && (
@@ -130,13 +125,13 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                   {/* Title */}
                   <Heading
                     level={4}
-                    className={
-                      isSplitScreen
-                        ? 'mb-2 line-clamp-2 text-[15px] font-bold leading-snug transition-colors group-hover:text-primary xl:text-[17px] 4k:text-[20px]'
-                        : 'mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors text-[14px] 4k:text-[20px] 4k:mb-4'
-                    }
-                  >
-                    {article.title}
+                      className={
+                        isSplitScreen
+                          ? 'mb-2 line-clamp-2 text-[15px] font-bold leading-snug transition-colors group-hover:text-primary xl:text-[17px] 4k:text-[20px]'
+                          : 'mb-3 line-clamp-3 text-[1rem] leading-snug transition-colors group-hover:text-primary md:text-[1.05rem] lg:text-[1.1rem] 4k:mb-4 4k:text-[1.5rem]'
+                      }
+                    >
+                      {article.title}
                   </Heading>
 
                   {/* Summary */}
@@ -148,7 +143,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                       className={
                         isSplitScreen
                           ? 'line-clamp-3 text-[12px] leading-relaxed xl:text-[13px] 4k:text-[15px]'
-                          : 'leading-relaxed 4k:text-[20px]'
+                          : 'line-clamp-4 text-[13px] leading-relaxed md:text-[14px] 4k:text-[19px]'
                       }
                     >
                       {article.summary}
@@ -168,8 +163,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
           animate={{ opacity: 1, y: 0 }}
           className={
             isSplitScreen
-              ? 'px-4 mt-6 max-w-[850px] mx-auto 4k:px-8 4k:mt-10 4k:max-w-[1400px]'
-              : 'px-4 mt-6 md:px-6 md:mt-8 tv:px-12 tv:mt-10 4k:px-16 4k:mt-16'
+              ? 'mx-auto mt-6 w-full max-w-[58rem] px-4 xl:max-w-[64rem] xl:px-6 4k:max-w-[76rem] 4k:px-8 4k:mt-10'
+              : 'mx-auto mt-6 w-full max-w-[96rem] px-4 md:px-6 md:mt-8 lg:px-8 tv:px-12 tv:mt-10 4k:max-w-[120rem] 4k:px-16 4k:mt-16'
           }
         >
           <Button
@@ -188,7 +183,7 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
 
       {/* Link to website */}
       {!hasMore && articles.length > 0 && (
-        <div className="px-4 mt-8 text-center">
+        <div className={`mx-auto mt-8 text-center ${isSplitScreen ? 'max-w-[58rem] px-4 xl:max-w-[64rem] xl:px-6 4k:max-w-[76rem] 4k:px-8' : 'max-w-[96rem] px-4 md:px-6 lg:px-8 tv:px-12 4k:max-w-[120rem] 4k:px-16'}`}>
           <Body size="small" opacity="tertiary" className="mb-3">
             Pentru știri mai vechi, vizitează
           </Body>

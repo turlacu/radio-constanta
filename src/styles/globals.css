@@ -52,19 +52,14 @@
     --app-height: 100dvh;
 
     /* ===== TYPOGRAPHY SCALE (Mobile - Default) ===== */
-    /* Headings (line-height: 1.2× font size - web-optimized) */
-    --text-h1: 2.25rem;      /* 36px */
-    --text-h2: 1.75rem;      /* 28px */
-    --text-h3: 1.5rem;       /* 24px */
-    --text-h4: 1.25rem;      /* 20px */
-    --text-h5: 1.125rem;     /* 18px */
-    --text-h6: 1rem;         /* 16px */
-
-    /* Body text (line-height: 1.5× font size - web-optimized) */
-    --text-large: 1.125rem;  /* 18px */
-    --text-medium: 1rem;     /* 16px */
-    --text-normal: 0.875rem; /* 14px */
-    --text-small: 0.75rem;   /* 12px */
+    --text-xs: 0.75rem;      /* 12px */
+    --text-sm: 0.875rem;     /* 14px */
+    --text-base: 1rem;       /* 16px */
+    --text-lg: 1.125rem;     /* 18px */
+    --text-xl: 1.25rem;      /* 20px */
+    --text-2xl: 1.5rem;      /* 24px */
+    --text-3xl: 1.875rem;    /* 30px */
+    --text-4xl: 2.25rem;     /* 36px */
 
     /* Line heights */
     --line-height-heading: 1.2;
@@ -222,6 +217,14 @@
   .text-responsive-4xl { font-size: var(--text-4xl); }
   .min-app-height { min-height: var(--app-height); }
   .app-height { height: var(--app-height); }
+
+  .animate-loader-pulse {
+    animation: loaderPulse 1.5s ease-in-out infinite;
+  }
+
+  .animate-loader-spin {
+    animation: loaderSpin 1s linear infinite;
+  }
 
   /* Line clamping utilities */
   .line-clamp-1 {
@@ -384,6 +387,28 @@ img {
   }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+@keyframes loaderPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes loaderSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 

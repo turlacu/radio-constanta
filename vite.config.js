@@ -15,6 +15,29 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return undefined
+          }
+
+          if (id.includes('react-router-dom')) {
+            return 'router'
+          }
+
+          if (id.includes('framer-motion')) {
+            return 'motion'
+          }
+
+          if (id.includes('react') || id.includes('react-dom')) {
+            return 'react-vendor'
+          }
+
+          return 'vendor'
+        }
+      }
+    }
   }
 })

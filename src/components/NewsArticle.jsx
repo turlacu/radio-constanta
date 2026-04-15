@@ -10,6 +10,20 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
   const [fullImage, setFullImage] = useState(article.image);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const articleShellClass = isSplitScreen
+    ? 'mx-auto w-full max-w-[52rem] px-4 py-5 md:px-6 xl:max-w-[58rem] xl:px-8 xl:py-6 4k:max-w-[68rem] 4k:px-10'
+    : 'mx-auto w-full max-w-[54rem] px-4 py-5 md:px-6 md:py-6 lg:max-w-[60rem] lg:px-8 xl:max-w-[66rem] tv:max-w-[72rem] tv:px-12 tv:py-10';
+  const articleBodyClass = [
+    'text-[15px] leading-8 text-white/84 md:text-[16px] lg:text-[17px] 4k:text-[20px]',
+    '[&_p]:mb-5 [&_p]:text-pretty',
+    '[&_h2]:mb-4 [&_h2]:mt-10 [&_h2]:text-[1.5rem] [&_h2]:font-bold [&_h2]:leading-tight md:[&_h2]:text-[1.75rem]',
+    '[&_h3]:mb-3 [&_h3]:mt-8 [&_h3]:text-[1.2rem] [&_h3]:font-semibold [&_h3]:leading-tight md:[&_h3]:text-[1.35rem]',
+    '[&_ul]:mb-5 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5',
+    '[&_ol]:mb-5 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5',
+    '[&_a]:text-primary [&_a]:underline-offset-4 hover:[&_a]:text-primary/80 hover:[&_a]:underline',
+    '[&_strong]:font-semibold [&_blockquote]:my-6 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-4 [&_blockquote]:text-white/72',
+    '[&_img]:my-8 [&_img]:rounded-2xl'
+  ].join(' ');
 
   if (!article) return null;
 
@@ -96,11 +110,11 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {/* Clean solid header background */}
         <div className="absolute inset-0 bg-bg-secondary border-b border-border" />
 
-        <div className="relative flex items-center gap-3 px-4 py-3 md:px-6 md:py-4 md:gap-4 tv:px-12 tv:py-6 tv:gap-6">
+        <div className={`relative mx-auto flex items-center gap-3 ${isSplitScreen ? 'max-w-[52rem] px-4 py-3 md:px-6 xl:max-w-[58rem] xl:px-8' : 'max-w-[54rem] px-4 py-3 md:max-w-[60rem] md:px-6 md:py-4 lg:px-8 xl:max-w-[66rem] tv:max-w-[72rem] tv:px-12 tv:py-6'} md:gap-4 tv:gap-6`}>
           <Button
             variant="ghost"
             icon
-            size="md"
+            size="medium"
             onClick={onBack}
             aria-label="Go back to news list"
           >
@@ -126,16 +140,16 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
       </div>
 
       {/* Article Content */}
-      <article className="relative mx-auto px-4 py-4 md:px-6 md:py-6 lg:px-8 tv:px-12 tv:py-10 max-w-2xl lg:max-w-4xl tv:max-w-6xl">
+      <article className={`relative ${articleShellClass}`}>
         {/* Featured Image */}
         {fullImage && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative w-full overflow-hidden shadow-2xl h-[280px] rounded-lg mb-4 md:h-[360px] md:mb-6 lg:h-[400px] lg:rounded-xl tv:h-[480px] tv:rounded-2xl tv:mb-10 4k:h-[600px]"
+            className="relative mb-5 aspect-[16/9] w-full overflow-hidden rounded-[1.25rem] shadow-2xl md:mb-7 lg:mb-8"
           >
-            <div className="absolute inset-0 border-2 border-white/10 rounded-lg z-10 pointer-events-none" />
+            <div className="absolute inset-0 z-10 rounded-[1.25rem] border border-white/10 pointer-events-none" />
             <img
               src={fullImage}
               alt={article.title}
@@ -155,7 +169,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center gap-2 mb-3 font-medium text-white/50 text-responsive-xs md:mb-4"
+          className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-white/50 text-responsive-xs md:mb-4"
         >
           {article.category && (
             <>
@@ -177,7 +191,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Heading level={2} gradient className="mb-3 md:mb-4 tv:mb-6">
+          <Heading level={2} gradient className="mb-3 text-balance md:mb-4 tv:mb-6">
             {article.title}
           </Heading>
         </motion.div>
@@ -193,7 +207,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {loading && (
           <div className="flex flex-col items-center justify-center py-10 md:py-12 tv:py-16">
             <Loader size="medium" />
-            <Body size="sm" opacity="tertiary" className="mt-4">
+            <Body size="small" opacity="tertiary" className="mt-4">
               Se încarcă articolul complet...
             </Body>
           </div>
@@ -202,7 +216,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {/* Error State */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl mb-5 p-4 md:p-5 md:mb-6 tv:p-8 tv:mb-8">
-            <Body size="sm" className="text-red-400 mb-2">
+            <Body size="small" className="text-red-400 mb-2">
               {error}
             </Body>
             <a
@@ -221,7 +235,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {!loading && fullContent && (
           <div className="prose prose-invert max-w-none overflow-x-hidden">
             <div
-              className="text-white/80 leading-relaxed space-y-4 text-justify text-[13px] md:text-[14px] lg:text-[15px] tv:text-[16px] 4k:text-[18px]"
+              className={articleBodyClass}
               dangerouslySetInnerHTML={{ __html: fullContent }}
             />
           </div>
@@ -230,7 +244,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {/* Link to original - only show for articles older than 3 days */}
         {article.link && isOlderThanThreeDays && (
           <div className="mt-6 pt-5 border-t border-white/10 md:mt-8 md:pt-6 tv:mt-12 tv:pt-10">
-            <Body size="sm" opacity="tertiary" className="mb-3">
+            <Body size="small" opacity="tertiary" className="mb-3">
               Acest articol are mai mult de 3 zile. Pentru informații actualizate, vizitează:
             </Body>
             <a

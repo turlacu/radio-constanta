@@ -7,7 +7,7 @@ import { DeviceContext } from '../App';
 
 export default function News({ radioState }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.showDesktopShell;
+  const isSplitScreen = device?.showDualPaneShell;
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -145,7 +145,7 @@ export default function News({ radioState }) {
         }`} />
 
         {/* Content wrapper - centered to match articles */}
-        <div className={isSplitScreen ? "relative mx-auto w-full max-w-[960px] 4k:max-w-[1400px]" : "relative"}>
+        <div className={isSplitScreen ? "relative mx-auto w-full max-w-[58rem] xl:max-w-[64rem] 4k:max-w-[76rem]" : "relative mx-auto w-full max-w-[96rem] 4k:max-w-[120rem]"}>
           <h1 className={`
             font-bold text-text-primary
             ${isSplitScreen ? 'text-xl xl:text-2xl 4k:text-4xl' : 'text-2xl md:text-3xl lg:text-4xl tv:text-5xl 4k:text-7xl'}

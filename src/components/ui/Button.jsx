@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { cva } from 'class-variance-authority';
 import { clsx } from 'clsx';
 import { forwardRef } from 'react';
@@ -20,7 +19,7 @@ import { forwardRef } from 'react';
  */
 
 const buttonVariants = cva(
-  'relative inline-flex items-center justify-center font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed focusable',
+  'relative inline-flex items-center justify-center font-medium transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed focusable motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]',
   {
     variants: {
       variant: {
@@ -128,17 +127,9 @@ const Button = forwardRef(
     }[variant];
 
     return (
-      <motion.button
+      <button
         ref={ref}
         type={type}
-        // Subtle micro-interactions
-        whileHover={{ scale: disabled ? 1 : 1.02 }}
-        whileTap={{ scale: disabled ? 1 : 0.98 }}
-        transition={{
-          type: 'spring',
-          stiffness: 400,
-          damping: 25,
-        }}
         onClick={onClick}
         disabled={disabled}
         className={clsx(
@@ -149,7 +140,7 @@ const Button = forwardRef(
         {...props}
       >
         {children}
-      </motion.button>
+      </button>
     );
   }
 );

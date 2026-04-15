@@ -65,7 +65,6 @@ export default function SettingsModal({
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
   const compactPanel = viewportHeight < 760 || aspectRatio > 2;
   const wideLandscape = viewportWidth >= 1100;
-  const veryShortViewport = viewportHeight > 0 && viewportHeight < 560;
   const shortWideViewport = wideLandscape && viewportHeight > 0 && viewportHeight < 720;
   const mediumViewport = viewportWidth >= 760 && viewportHeight >= 560;
   const layoutMode = shortWideViewport
@@ -75,14 +74,6 @@ export default function SettingsModal({
       : mediumViewport
         ? 'two-column'
         : 'stacked';
-  const layoutScale = layoutMode === 'stacked'
-    ? Math.max(0.78, Math.min(1, viewportWidth / 520, viewportHeight / 780))
-    : veryShortViewport
-      ? Math.max(0.82, Math.min(1, viewportWidth / 1180, viewportHeight / 620))
-      : 1;
-  const scaledViewportHeight = viewportHeight > 0 ? `${100 / layoutScale}%` : '100%';
-  const scaledViewportWidth = viewportWidth > 0 ? `${100 / layoutScale}%` : '100%';
-  const useScaleWrapper = layoutScale < 0.999;
   const denseOptionClass = `w-full rounded-xl border text-left transition-all ${
     compactPanel ? 'p-2.5' : 'p-3'
   }`;
@@ -345,15 +336,7 @@ export default function SettingsModal({
 
           {/* Content */}
           <div className="overflow-y-auto overflow-x-hidden overscroll-contain p-2 touch-pan-y md:p-3">
-            <div
-              className={useScaleWrapper ? 'origin-top-left' : ''}
-              style={useScaleWrapper ? {
-                transform: `scale(${layoutScale})`,
-                width: scaledViewportWidth,
-                height: scaledViewportHeight
-              } : undefined}
-            >
-              <div className={`grid gap-3 ${dashboardGridClass}`}>
+            <div className={`grid gap-3 ${dashboardGridClass}`}>
                 <div className={`${denseSectionClass} ${layoutMode === 'wide-compact' ? 'col-span-2' : ''}`}>
                   <Heading level={5} className="mb-2">Animație Fundal</Heading>
                   <div className={`grid gap-2 ${
@@ -550,7 +533,6 @@ export default function SettingsModal({
                     />
                   </div>
                 )}
-              </div>
             </div>
           </div>
         </motion.div>

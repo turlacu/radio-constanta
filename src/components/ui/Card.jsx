@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { cva } from 'class-variance-authority';
 import { clsx } from 'clsx';
 import { forwardRef } from 'react';
@@ -61,6 +60,7 @@ const Card = forwardRef(
       onClick,
       onKeyDown,
       tabIndex,
+      type,
       ...props
     },
     ref
@@ -70,23 +70,31 @@ const Card = forwardRef(
       ? 'hover:shadow-lg hover:-translate-y-0.5'
       : '';
 
-    const Component = interactive ? motion.div : 'div';
-    const motionProps = interactive
-      ? {
-          initial: { opacity: 0, y: 10 },
-          animate: { opacity: 1, y: 0 },
-          whileHover: { y: -2 },
-          whileTap: { scale: 0.99 },
-          transition: {
-            type: 'spring',
-            stiffness: 300,
-            damping: 25,
-          },
-        }
-      : {};
+    const interactiveType = type || 'button';
+
+    if (interactive) {
+      return (
+        <button
+          ref={ref}
+          type={interactiveType}
+          className={clsx(
+            cardVariants({ variant, radius, padding, interactive }),
+            hoverStyles,
+            'w-full text-left focusable focus-visible:outline-none motion-safe:active:scale-[0.99]',
+            className
+          )}
+          onClick={onClick}
+          onKeyDown={onKeyDown}
+          tabIndex={tabIndex}
+          {...props}
+        >
+          {children}
+        </button>
+      );
+    }
 
     return (
-      <Component
+      <div
         ref={ref}
         className={clsx(
           cardVariants({ variant, radius, padding, interactive }),
@@ -95,12 +103,11 @@ const Card = forwardRef(
         )}
         onClick={onClick}
         onKeyDown={onKeyDown}
-        tabIndex={interactive ? tabIndex ?? 0 : tabIndex}
-        {...motionProps}
+        tabIndex={tabIndex}
         {...props}
       >
         {children}
-      </Component>
+      </div>
     );
   }
 );

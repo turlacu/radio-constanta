@@ -1,13 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState, useRef, useEffect, createContext, useMemo } from 'react';
+import { lazy, Suspense, useState, useRef, useEffect, createContext, useMemo } from 'react';
 import Radio from './pages/Radio';
-import News from './pages/News';
-import Admin from './pages/Admin';
 import BottomNav from './components/BottomNav';
-import SettingsModal from './components/SettingsModal';
-import WeatherBackground from './components/WeatherBackground';
-import WeatherCard from './components/WeatherCard';
+import Loader from './components/Loader';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
 import { createFloatingParticles } from './utils/createFloatingParticles';
 import { SettingsProvider, useSettings } from './contexts/SettingsContext';
@@ -15,6 +11,18 @@ import { getWeatherManager } from './modules/weather/WeatherManager';
 import { getLosslessStreamUrl, getLosslessFormatLabel } from './utils/osDetection';
 import { useWeatherTextColor } from './hooks/useWeatherTextColor';
 import analytics from './utils/analytics';
+
+const loadNewsPage = () => import('./pages/News');
+const loadAdminPage = () => import('./pages/Admin');
+const loadSettingsModal = () => import('./components/SettingsModal');
+const loadWeatherBackground = () => import('./components/WeatherBackground');
+const loadWeatherCard = () => import('./components/WeatherCard');
+
+const News = lazy(loadNewsPage);
+const Admin = lazy(loadAdminPage);
+const SettingsModal = lazy(loadSettingsModal);
+const WeatherBackground = lazy(loadWeatherBackground);
+const WeatherCard = lazy(loadWeatherCard);
 
 // Create context for device info to share across components
 export const DeviceContext = createContext(null);
@@ -81,12 +89,48 @@ const getInitialStationQuality = (stationId) => {
   return storedQuality || defaultQuality;
 };
 
+function RouteFallback() {
+  return (
+    <div className="min-app-height flex items-center justify-center px-6">
+      <Loader size="large" text="Se pregătește interfața..." />
+    </div>
+  );
+}
+
+function OverlayFallback() {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-bg-primary/60 backdrop-blur-sm">
+      <Loader size="medium" text="Se încarcă..." />
+    </div>
+  );
+}
+
+function WeatherCardFallback({ width }) {
+  return (
+    <div
+      className="w-full rounded-3xl border border-white/12 bg-white/8 p-6 shadow-2xl backdrop-blur-xl"
+      style={{ width, maxWidth: 'min(100%, calc(var(--app-width) - 4rem))' }}
+      aria-hidden="true"
+    >
+      <div className="animate-pulse space-y-4">
+        <div className="h-7 w-2/3 rounded bg-white/12" />
+        <div className="h-16 rounded bg-white/10" />
+        <div className="h-4 w-1/2 rounded bg-white/12" />
+      </div>
+    </div>
+  );
+}
+
 // Inner component that checks for admin route (must be inside Router)
 function RouteHandler({ children }) {
   const location = useLocation();
 
   if (location.pathname === '/admin') {
-    return <Admin />;
+    return (
+      <Suspense fallback={<RouteFallback />}>
+        <Admin />
+      </Suspense>
+    );
   }
 
   return children;
@@ -139,12 +183,11 @@ function AppContent() {
 
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
-  const showWideShell = device.showDesktopShell;
   const showDesktopShell = device.showDualPaneShell;
   const viewportWidth = device.viewportWidth || device.screenWidth || 0;
   const viewportHeight = device.viewportHeight || device.screenHeight || 0;
   const isShortHeightShell = device.isShortHeight || device.isCarDisplay;
-  const desktopUiTone = showWideShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather'
+  const desktopUiTone = showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather'
     ? weatherTextColor
     : 'light';
   const desktopActionSurfaceClass = desktopUiTone === 'dark'
@@ -1005,7 +1048,7 @@ function AppContent() {
     stopRadio,
     resumeRadio,
     restoreRadio,
-    showWeatherBackground: showWideShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is actually visible
+    showWeatherBackground: showDesktopShell && !showNews && isPlaying && settings.backgroundAnimation === 'weather', // Track if weather background is actually visible
     audioAnalyserRef: analyserRef,
     forceCompactLayout: showNews,
     shortHeightLayout: isShortHeightShell,
@@ -1013,7 +1056,7 @@ function AppContent() {
   };
 
   const showDesktopWeatherCard =
-    showWideShell &&
+    showDesktopShell &&
     !showNews &&
     isPlaying &&
     settings.backgroundAnimation === 'weather' &&
@@ -1025,9 +1068,35 @@ function AppContent() {
     ? Math.min(620, Math.max(460, Math.round(viewportWidth * 0.32)))
     : Math.min(520, Math.max(400, Math.round(viewportWidth * 0.36)));
 
+  useEffect(() => {
+    const preloadLikelyNextViews = () => {
+      loadNewsPage();
+      loadSettingsModal();
+    };
+
+    let timeoutId = null;
+    let idleCallbackId = null;
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      idleCallbackId = window.requestIdleCallback(preloadLikelyNextViews, { timeout: 1800 });
+    } else {
+      timeoutId = window.setTimeout(preloadLikelyNextViews, 1200);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined' && idleCallbackId !== null && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleCallbackId);
+      }
+
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, []);
+
   // Preload weather data on wide displays so it is ready when playback starts.
   useEffect(() => {
-    if (!showWideShell || settings.backgroundAnimation !== 'weather') {
+    if (!showDesktopShell || settings.backgroundAnimation !== 'weather') {
       return;
     }
 
@@ -1068,12 +1137,21 @@ function AppContent() {
       cancelled = true;
     };
   }, [
-    showWideShell,
+    showDesktopShell,
     settings.backgroundAnimation,
     settings.weatherMode,
     settings.weatherLocation,
     settings.manualWeatherState
   ]);
+
+  useEffect(() => {
+    if (settings.backgroundAnimation !== 'weather') {
+      return;
+    }
+
+    loadWeatherBackground();
+    loadWeatherCard();
+  }, [settings.backgroundAnimation]);
 
   useEffect(() => {
     if (!showDesktopShell && showNews) {
@@ -1086,7 +1164,7 @@ function AppContent() {
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <RouteHandler>
           <div className="min-app-height bg-bg-primary">
-          {showWideShell ? (
+          {showDesktopShell ? (
             // Desktop/TV: Radio-focused layout with optional news
             <div className={`min-app-height relative flex items-center justify-center overflow-hidden ${
               !showNews && isPlaying && settings.backgroundAnimation === 'minimal' ? 'animated-gradient' :
@@ -1094,13 +1172,17 @@ function AppContent() {
             }`}>
               {/* Weather Background - Full screen behind everything */}
               {settings.backgroundAnimation === 'weather' && !showNews && isPlaying && (
-                <WeatherBackground />
+                <Suspense fallback={null}>
+                  <WeatherBackground />
+                </Suspense>
               )}
               {/* Top Right Buttons */}
               <div className={`absolute z-50 flex ${isShortHeightShell ? 'top-3 right-3 gap-2' : 'top-6 right-6 gap-3'}`}>
                 {/* Settings Button */}
                 <motion.button
                   onClick={() => setShowSettingsModal(true)}
+                  onMouseEnter={loadSettingsModal}
+                  onFocus={loadSettingsModal}
                   className={`flex items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
                   style={{ borderColor: desktopUiBorderColor }}
                   whileHover={{ scale: 1.05 }}
@@ -1116,6 +1198,8 @@ function AppContent() {
                 {showDesktopShell && (
                   <motion.button
                     onClick={() => setShowNews(!showNews)}
+                    onMouseEnter={loadNewsPage}
+                    onFocus={loadNewsPage}
                     className={`flex items-center justify-center rounded-lg border backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
                     style={{ borderColor: desktopUiBorderColor }}
                     whileHover={{ scale: 1.05 }}
@@ -1203,7 +1287,9 @@ function AppContent() {
                       showDesktopWeatherCard ? 'pointer-events-auto' : ''
                     }`}
                   >
-                    <WeatherCard style={{ width: `${desktopWeatherCardWidth}px`, maxWidth: 'min(100%, calc(var(--app-width) - 4rem))' }} />
+                    <Suspense fallback={<WeatherCardFallback width={`${desktopWeatherCardWidth}px`} />}>
+                      <WeatherCard style={{ width: `${desktopWeatherCardWidth}px`, maxWidth: 'min(100%, calc(var(--app-width) - 4rem))' }} />
+                    </Suspense>
                   </motion.div>
                 </div>
 
@@ -1219,7 +1305,9 @@ function AppContent() {
                       style={{ left: `${desktopNewsRailWidth}px` }}
                     >
                       <div className="h-full w-full">
-                        <News radioState={radioState} />
+                        <Suspense fallback={<RouteFallback />}>
+                          <News radioState={radioState} />
+                        </Suspense>
                       </div>
                     </motion.div>
                   )}
@@ -1230,10 +1318,12 @@ function AppContent() {
             // Mobile/Tablet: Single page with routing
             <>
               <AnimatePresence mode="wait">
-                <Routes>
-                  <Route path="/" element={<Radio radioState={radioState} />} />
-                  <Route path="/news" element={<News radioState={radioState} />} />
-                </Routes>
+                <Suspense fallback={<RouteFallback />}>
+                  <Routes>
+                    <Route path="/" element={<Radio radioState={radioState} />} />
+                    <Route path="/news" element={<News radioState={radioState} />} />
+                  </Routes>
+                </Suspense>
               </AnimatePresence>
               <BottomNav />
             </>
@@ -1241,13 +1331,17 @@ function AppContent() {
         </div>
 
         {/* Settings Modal */}
-        <SettingsModal
-          isOpen={showSettingsModal}
-          onClose={() => setShowSettingsModal(false)}
-          stations={Object.values(stationsWithDynamicCovers)}
-          selectedQualities={selectedQuality}
-          onQualityChange={setStationQualityPreference}
-        />
+        {showSettingsModal && (
+          <Suspense fallback={<OverlayFallback />}>
+            <SettingsModal
+              isOpen={showSettingsModal}
+              onClose={() => setShowSettingsModal(false)}
+              stations={Object.values(stationsWithDynamicCovers)}
+              selectedQualities={selectedQuality}
+              onQualityChange={setStationQualityPreference}
+            />
+          </Suspense>
+        )}
         </RouteHandler>
       </Router>
     </DeviceContext.Provider>

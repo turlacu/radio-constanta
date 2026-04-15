@@ -23,7 +23,7 @@ export default function ResponsiveContainer({
   ...props
 }) {
   const device = useContext(DeviceContext);
-  const isSplitScreen = device?.showDesktopShell;
+  const isSplitScreen = device?.showDualPaneShell;
 
   // Base padding for different sections (using CSS variables)
   const paddingClasses = {

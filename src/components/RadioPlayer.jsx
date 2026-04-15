@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react';
+import { useContext } from 'react';
 import { motion } from 'framer-motion';
 import Loader from './Loader';
 import SpectrumVisualizer from './SpectrumVisualizer';
@@ -27,7 +27,7 @@ export default function RadioPlayer({ radioState }) {
   } = radioState;
 
   const device = useContext(DeviceContext);
-  const isDesktopShell = device?.showDesktopShell;
+  const isDesktopShell = device?.showDualPaneShell;
   const isSplitScreen = isDesktopShell && !forceCompactLayout;
   const viewportWidth = device?.viewportWidth || device?.screenWidth || 0;
   const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;
@@ -75,85 +75,34 @@ export default function RadioPlayer({ radioState }) {
   const stationLabelBaseClass = 'block w-full overflow-hidden text-center leading-none';
   const qualityButtonBaseClass = 'relative flex-1 overflow-hidden rounded-[10px] border px-3 py-2 text-[12px] font-medium leading-none transition-all focusable sm:text-[13px] 4k:rounded-xl 4k:px-5 4k:py-3 4k:text-[18px]';
   const isUltraWideShort = layoutMode === 'car-shell' || (aspectRatio >= 3 && viewportHeight <= 560);
-  const shouldStackDesktopStage = !isUltraWideShort && aspectRatio < 1.75 && (viewportWidth < 1320 || viewportHeight < 760);
-  const desktopMetrics = useMemo(() => {
-    const minViewport = Math.max(560, Math.min(viewportWidth || 1280, viewportHeight || 720));
-    const profile = isUltraWideShort ? 'car' : shouldStackDesktopStage ? 'compact' : aspectRatio >= 1.9 ? 'ultrawide' : aspectRatio >= 1.25 ? 'wide' : 'square';
-    const baseMetrics = {
-      car: {
-        coverSize: 236,
-        playerWidth: 760,
-        gap: 54,
-        playButton: 60,
-        titleWidth: 560,
-        visualizerWidth: 118,
-        visualizerHeight: 22,
-        titleSize: 30,
-        subtitleSize: 14,
-        buttonRailWidth: 320,
-      },
-      compact: {
-        coverSize: 314,
-        playerWidth: 520,
-        gap: 28,
-        playButton: 62,
-        titleWidth: 420,
-        visualizerWidth: 132,
-        visualizerHeight: 26,
-        titleSize: 34,
-        subtitleSize: 17,
-        buttonRailWidth: 272,
-      },
-      ultrawide: {
-        coverSize: 430,
-        playerWidth: 456,
-        gap: 54,
-        playButton: 74,
-        titleWidth: 328,
-        visualizerWidth: 162,
-        visualizerHeight: 34,
-        titleSize: 42,
-        subtitleSize: 21,
-        buttonRailWidth: 190,
-      },
-      wide: {
-        coverSize: 396,
-        playerWidth: 430,
-        gap: 44,
-        playButton: 70,
-        titleWidth: 306,
-        visualizerWidth: 148,
-        visualizerHeight: 32,
-        titleSize: 39,
-        subtitleSize: 19,
-        buttonRailWidth: 182,
-      },
-      square: {
-        coverSize: 348,
-        playerWidth: 392,
-        gap: 32,
-        playButton: 64,
-        titleWidth: 284,
-        visualizerWidth: 128,
-        visualizerHeight: 28,
-        titleSize: 32,
-        subtitleSize: 17,
-        buttonRailWidth: 170,
-      }
-    };
-
-    const scale = Math.min(1.14, Math.max(0.68, minViewport / 940));
-    const metrics = Object.fromEntries(
-      Object.entries(baseMetrics[profile]).map(([key, value]) => [key, Math.round(value * scale)])
-    );
-
-    return {
-      ...metrics,
-      profile,
-      stageWidth: metrics.coverSize + metrics.playerWidth + metrics.gap,
-    };
-  }, [aspectRatio, isUltraWideShort, shouldStackDesktopStage, viewportHeight, viewportWidth]);
   const desktopTitleClass = '!leading-[0.96]';
+  const desktopCoverWidth = isUltraWideShort
+    ? 'clamp(180px, 23vh, 260px)'
+    : 'clamp(260px, 30vw, 430px)';
+  const desktopPlayButtonSize = isUltraWideShort
+    ? 'clamp(54px, 6vh, 64px)'
+    : 'clamp(58px, 5vw, 76px)';
+  const desktopVisualizerWidth = isUltraWideShort
+    ? 'clamp(100px, 14vw, 132px)'
+    : 'clamp(120px, 16vw, 168px)';
+  const desktopVisualizerHeight = isUltraWideShort
+    ? 'clamp(18px, 2.6vh, 24px)'
+    : 'clamp(24px, 3vw, 34px)';
+  const desktopTitleSize = isUltraWideShort
+    ? 'clamp(1.8rem, 3vw, 2.2rem)'
+    : 'clamp(2rem, 3.2vw, 2.9rem)';
+  const desktopSubtitleSize = isUltraWideShort
+    ? 'clamp(0.95rem, 1.5vw, 1.05rem)'
+    : 'clamp(1rem, 1.7vw, 1.35rem)';
+  const desktopStationRailWidth = isUltraWideShort
+    ? 'min(100%, 22rem)'
+    : 'min(100%, 20rem)';
+  const desktopStageLayoutClass = isUltraWideShort
+    ? 'flex flex-row items-center justify-between gap-6 xl:gap-8'
+    : 'grid items-center gap-8 xl:gap-10 min-[1320px]:grid-cols-[minmax(280px,38%)_minmax(360px,1fr)]';
+  const desktopStageInnerClass = isUltraWideShort
+    ? 'flex-1 min-w-0'
+    : 'w-full max-w-[42rem] justify-self-center min-[1320px]:justify-self-end';
 
   const renderCoverArt = (desktop = false) => (
     <motion.div
@@ -163,7 +112,7 @@ export default function RadioPlayer({ radioState }) {
       className={desktop
         ? 'relative shrink-0'
         : 'relative w-full mb-8 max-w-[360px] 4k:max-w-[600px] 4k:mb-12'}
-      style={desktop ? { width: `${desktopMetrics.coverSize}px`, maxWidth: isUltraWideShort ? '32vh' : undefined } : undefined}
+      style={desktop ? { width: desktopCoverWidth } : undefined}
     >
       <div className={`relative w-full aspect-square overflow-hidden rounded-[22px] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] 3xl:rounded-[28px] ${coverBorderClass}`}>
         <motion.img
@@ -240,15 +189,9 @@ export default function RadioPlayer({ radioState }) {
   if (isSplitScreen) {
     return (
       <ResponsiveContainer section="radio" className="justify-center">
-        <div className={`mx-auto flex w-full items-center ${isUltraWideShort ? 'max-w-[1480px] justify-between' : 'max-w-[1160px] justify-center 4k:max-w-[1320px]'}`}>
-          <div
-            className={`flex w-full items-center ${isUltraWideShort ? 'justify-between' : 'justify-center'} ${shouldStackDesktopStage ? 'flex-col gap-8' : ''}`}
-            style={{
-              gap: `${desktopMetrics.gap}px`,
-              maxWidth: isUltraWideShort ? 'min(100%, 1440px)' : shouldStackDesktopStage ? 'min(100%, 980px)' : `${desktopMetrics.stageWidth}px`,
-            }}
-          >
-            <div className={`flex justify-start ${shouldStackDesktopStage ? 'w-full justify-center' : 'shrink-0'} ${isUltraWideShort ? 'pl-4' : ''}`}>
+        <div className={`mx-auto w-full ${isUltraWideShort ? 'max-w-[1480px]' : 'max-w-[1180px] 4k:max-w-[1360px]'}`}>
+          <div className={desktopStageLayoutClass}>
+            <div className={`flex ${isUltraWideShort ? 'justify-start pl-4' : 'w-full justify-center min-[1320px]:justify-start'}`}>
               {renderCoverArt(true)}
             </div>
 
@@ -256,72 +199,56 @@ export default function RadioPlayer({ radioState }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className={`relative flex flex-col justify-center ${shouldStackDesktopStage ? 'w-full max-w-[640px] items-center' : 'shrink-0 items-end'} ${isUltraWideShort ? 'flex-1 py-2 pr-4' : ''}`}
-              style={{
-                width: isUltraWideShort ? 'min(100%, 860px)' : shouldStackDesktopStage ? 'min(100%, 640px)' : `${desktopMetrics.playerWidth}px`,
-                minHeight: shouldStackDesktopStage ? undefined : `${desktopMetrics.coverSize}px`,
-              }}
+              className={`flex flex-col justify-center ${desktopStageInnerClass} ${isUltraWideShort ? 'py-2 pr-4' : ''}`}
             >
-              <motion.button
-                whileHover={{ scale: isLoading ? 1 : 1.05 }}
-                whileTap={{ scale: isLoading ? 1 : 0.95 }}
-                onClick={togglePlay}
-                disabled={isLoading}
-                tabIndex={0}
-                className={`${shouldStackDesktopStage ? 'relative mb-6' : 'absolute left-0'} flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
-                style={{
-                  width: `${desktopMetrics.playButton}px`,
-                  height: `${desktopMetrics.playButton}px`,
-                  top: shouldStackDesktopStage ? undefined : `${Math.round((desktopMetrics.coverSize - desktopMetrics.playButton) / 2)}px`,
-                  borderColor: buttonBorderColor,
-                }}
-                aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
-              >
-                {isLoading ? (
-                  <Loader size="small" />
-                ) : isPlaying ? (
-                  <svg className="h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                  </svg>
-                ) : (
-                  <svg className="ml-1 h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                )}
-              </motion.button>
-
               <div
-                className={`flex w-full flex-col justify-center ${shouldStackDesktopStage ? 'items-center text-center' : 'items-end'}`}
-                style={{
-                  rowGap: `${Math.max(12, Math.round(desktopMetrics.playButton * 0.18))}px`,
-                }}
+                className={`flex w-full flex-col gap-5 ${isUltraWideShort ? 'items-start text-left' : 'items-center text-center min-[1320px]:items-end min-[1320px]:text-right'}`}
               >
                 <SpectrumVisualizer
                   analyserRef={audioAnalyserRef}
                   isPlaying={isPlaying}
                   tone={textColor}
-                  className={`shrink-0 ${shouldStackDesktopStage ? 'mx-auto' : ''}`}
+                  className={`shrink-0 ${isUltraWideShort ? '' : 'mx-auto min-[1320px]:mx-0'}`}
                   style={{
-                    width: `${desktopMetrics.visualizerWidth}px`,
-                    height: `${desktopMetrics.visualizerHeight}px`,
+                    width: desktopVisualizerWidth,
+                    height: desktopVisualizerHeight,
                   }}
                 />
 
-                <div
-                  className={`grid w-full items-center ${shouldStackDesktopStage ? 'justify-center' : 'ml-auto justify-end'}`}
-                  style={{
-                    columnGap: `${Math.max(12, Math.round(desktopMetrics.playButton * 0.18))}px`,
-                    gridTemplateColumns: shouldStackDesktopStage ? 'minmax(0, 1fr)' : `${desktopMetrics.playButton}px minmax(0, 1fr)`,
-                  }}
-                >
-                  {!shouldStackDesktopStage && <div aria-hidden="true" />}
+                <div className={`grid w-full items-center gap-4 ${isUltraWideShort ? 'grid-cols-[auto_minmax(0,1fr)]' : 'max-w-[42rem] grid-cols-[auto_minmax(0,1fr)] min-[1320px]:ml-auto'}`}>
+                  <motion.button
+                    whileHover={{ scale: isLoading ? 1 : 1.05 }}
+                    whileTap={{ scale: isLoading ? 1 : 0.95 }}
+                    onClick={togglePlay}
+                    disabled={isLoading}
+                    tabIndex={0}
+                    className={`flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
+                    style={{
+                      width: desktopPlayButtonSize,
+                      height: desktopPlayButtonSize,
+                      borderColor: buttonBorderColor,
+                    }}
+                    aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
+                  >
+                    {isLoading ? (
+                      <Loader size="small" />
+                    ) : isPlaying ? (
+                      <svg className="h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                      </svg>
+                    ) : (
+                      <svg className="ml-1 h-9 w-9 3xl:h-10 3xl:w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    )}
+                  </motion.button>
 
-                  <div className={`flex min-w-0 flex-col ${shouldStackDesktopStage ? 'items-center text-center' : 'items-end text-right'}`} style={{ minWidth: 0, width: '100%' }}>
+                  <div className={`flex min-w-0 flex-col ${isUltraWideShort ? 'items-start text-left' : 'items-start text-left min-[1320px]:items-end min-[1320px]:text-right'}`} style={{ minWidth: 0, width: '100%' }}>
                     <Heading
                       level={2}
                       color="custom"
-                      className={`mb-1 max-w-full text-balance ${shouldStackDesktopStage ? 'text-center' : 'text-right'} ${desktopTitleClass} ${textPrimaryClass}`}
-                      style={{ fontSize: `${desktopMetrics.titleSize}px` }}
+                      className={`mb-1 max-w-full text-balance ${isUltraWideShort ? 'text-left' : 'text-left min-[1320px]:text-right'} ${desktopTitleClass} ${textPrimaryClass}`}
+                      style={{ fontSize: desktopTitleSize }}
                     >
                       Radio Constanța
                     </Heading>
@@ -329,8 +256,8 @@ export default function RadioPlayer({ radioState }) {
                       size="normal"
                       weight="medium"
                       opacity="custom"
-                      className={`${textSecondaryClass} max-w-full text-pretty ${shouldStackDesktopStage ? 'text-center' : 'text-right'}`}
-                      style={{ fontSize: `${desktopMetrics.subtitleSize}px`, lineHeight: 1.25 }}
+                      className={`${textSecondaryClass} max-w-full text-pretty ${isUltraWideShort ? 'text-left' : 'text-left min-[1320px]:text-right'}`}
+                      style={{ fontSize: desktopSubtitleSize, lineHeight: 1.25 }}
                     >
                       {metadata || 'Primul radio din Dobrogea'}
                     </Body>
@@ -342,7 +269,7 @@ export default function RadioPlayer({ radioState }) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    className={`flex flex-wrap items-center gap-2 ${shouldStackDesktopStage ? 'justify-center text-center' : 'justify-end text-right'} ${desktopMetaClass}`}
+                    className={`flex flex-wrap items-center gap-2 ${isUltraWideShort ? 'justify-start text-left' : 'justify-center text-center min-[1320px]:justify-end min-[1320px]:text-right'} ${desktopMetaClass}`}
                     role="status"
                     aria-label="Stream information"
                   >
@@ -361,8 +288,8 @@ export default function RadioPlayer({ radioState }) {
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className={`flex gap-2 ${shouldStackDesktopStage ? 'w-full max-w-[320px] justify-center' : 'justify-end'}`}
-                  style={{ width: shouldStackDesktopStage ? '100%' : `${desktopMetrics.buttonRailWidth}px` }}
+                  className={`flex w-full gap-2 ${isUltraWideShort ? 'justify-start' : 'justify-center min-[1320px]:justify-end'}`}
+                  style={{ maxWidth: desktopStationRailWidth }}
                   role="group"
                   aria-label="Station selection"
                 >
