@@ -11,7 +11,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const splitShellClass = 'mx-auto w-full max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]';
-  const splitHeaderShellClass = `${splitShellClass} pr-[clamp(6.6rem,5.8rem+2.6vw,9rem)]`;
+  const splitHeaderShellClass = `${splitShellClass} pr-[clamp(7.4rem,6.4rem+3vw,10rem)]`;
   const articleShellClass = isSplitScreen
     ? `${splitShellClass} py-[clamp(1.3rem,1.15rem+0.52vw,2rem)]`
     : 'mx-auto w-full max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1.25rem,1.12rem+0.55vw,2.4rem)] min-[1500px]:max-w-[66rem]';
@@ -112,13 +112,13 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {/* Clean solid header background */}
         <div className="absolute inset-0 bg-bg-secondary border-b border-border" />
 
-        <div className={`relative mx-auto flex items-center gap-[clamp(0.75rem,0.68rem+0.18vw,1rem)] ${isSplitScreen ? `${splitHeaderShellClass} py-[clamp(0.82rem,0.74rem+0.22vw,1.14rem)]` : 'max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)] min-[1500px]:max-w-[66rem]'}`}>
+        <div className={`relative mx-auto flex items-start gap-[clamp(0.75rem,0.68rem+0.18vw,1rem)] ${isSplitScreen ? `${splitHeaderShellClass} py-[clamp(0.82rem,0.74rem+0.22vw,1.14rem)]` : 'max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)] min-[1500px]:max-w-[66rem]'}`}>
           <Button
             variant="ghost"
             icon
             size="medium"
             onClick={onBack}
-            className="shrink-0"
+            className="mt-[clamp(0.1rem,0.08rem+0.04vw,0.16rem)] shrink-0"
             aria-label="Go back to news list"
           >
             <svg
@@ -136,9 +136,24 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
               />
             </svg>
           </Button>
-          <Heading level={5} className="text-white/90 font-semibold">
-            Înapoi la știri
-          </Heading>
+          <div className="min-w-0">
+            <Heading
+              level={5}
+              className={`text-text-primary ${
+                isSplitScreen ? 'text-[clamp(1.25rem,1.14rem+0.42vw,2rem)]' : 'text-[clamp(1.5rem,1.32rem+0.78vw,3rem)]'
+              }`}
+            >
+              Știri
+            </Heading>
+            <Body
+              size="small"
+              weight="medium"
+              opacity="tertiary"
+              className={`mt-1 ${isSplitScreen ? 'text-[clamp(0.82rem,0.78rem+0.18vw,1.05rem)]' : 'text-[clamp(0.88rem,0.82rem+0.24vw,1.2rem)]'}`}
+            >
+              Înapoi la știri
+            </Body>
+          </div>
         </div>
       </div>
 

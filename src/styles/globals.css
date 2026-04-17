@@ -97,10 +97,14 @@
     }
   }
 
+  html {
+    font-family: 'Geist', system-ui, -apple-system, sans-serif;
+  }
+
   body {
     background: var(--bg-primary);
     color: var(--text-primary);
-    font-family: 'Geist', system-ui, -apple-system, sans-serif;
+    font-family: inherit;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
@@ -111,9 +115,17 @@
 
   #root {
     @apply relative;
+    font-family: inherit;
     min-height: var(--app-height);
     max-width: var(--container-max-width);
     margin: 0 auto;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
   }
 
   /* Split-screen mode (tablet/desktop/TV) - allow full width */

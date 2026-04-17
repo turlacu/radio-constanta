@@ -9,6 +9,7 @@ export default function News({ radioState }) {
   const device = useContext(DeviceContext);
   const isSplitScreen = device?.policy?.canShowNewsRail;
   const splitShellClass = 'mx-auto w-full max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]';
+  const splitHeaderShellClass = `${splitShellClass} pr-[clamp(7.4rem,6.4rem+3vw,10rem)]`;
   const stackedShellClass = 'mx-auto w-full max-w-[96rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)]';
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
@@ -128,13 +129,7 @@ export default function News({ radioState }) {
       )}
 
       {/* Header - Clean solid with border */}
-      <div className={`
-        sticky top-0 z-10
-        ${isSplitScreen
-          ? 'py-[clamp(1rem,0.92rem+0.26vw,1.45rem)]'
-          : 'py-[clamp(1rem,0.92rem+0.3vw,1.7rem)]'
-        }
-      `}>
+      <div className="sticky top-0 z-10">
         {/* Clean solid header background */}
         <div className={`absolute inset-0 border-b border-border ${
           isSplitScreen
@@ -142,7 +137,11 @@ export default function News({ radioState }) {
             : 'bg-bg-primary'
         }`} />
 
-        <div className={`relative ${isSplitScreen ? splitShellClass : stackedShellClass}`}>
+        <div className={`relative ${
+          isSplitScreen
+            ? `${splitHeaderShellClass} py-[clamp(0.82rem,0.74rem+0.22vw,1.14rem)]`
+            : `${stackedShellClass} py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)]`
+        }`}>
           <h1 className={`
             font-bold text-text-primary
             ${isSplitScreen ? 'text-[clamp(1.25rem,1.14rem+0.42vw,2rem)]' : 'text-[clamp(1.5rem,1.32rem+0.78vw,3rem)]'}
