@@ -265,9 +265,9 @@
 
   /* ===== GLOBAL RADIUS NORMALIZATION ===== */
   :root {
-    --radius-flat-sm: 0.2rem;
-    --radius-flat: 0.42rem;
-    --radius-flat-lg: 0.7rem;
+    --radius-flat-sm: 0.24rem;
+    --radius-flat: 0.5rem;
+    --radius-flat-lg: 0.82rem;
   }
 
   .rounded,
@@ -362,19 +362,45 @@ article audio::-webkit-media-controls-overflow-button {
 /* Style article video players - make responsive */
 article video {
   display: block !important;
+  width: min(100%, 42rem) !important;
   max-width: 100% !important;
-  width: 100% !important;
+  max-height: 52vh !important;
   height: auto !important;
-  margin: 1rem 0;
+  margin: 1rem auto;
+  object-fit: contain;
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.05);
 }
 
 /* Also handle video containers */
 article .wp-video,
-article figure.wp-block-video {
+article figure.wp-block-video,
+article .wp-block-embed,
+article .wp-block-embed__wrapper {
+  width: min(100%, 42rem) !important;
   max-width: 100% !important;
-  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Handle embedded video iframes (YouTube, Facebook, etc.) */
+article iframe {
+  display: block !important;
+  width: min(100%, 42rem) !important;
+  max-width: 100% !important;
+  max-height: 52vh !important;
+  margin: 1rem auto !important;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Keep very tall portrait embeds usable on shorter windows */
+@media (max-height: 820px) {
+  article video,
+  article iframe {
+    max-height: 44vh !important;
+  }
 }
 
 /* ===== GLOBAL ENHANCEMENTS ===== */
