@@ -73,6 +73,7 @@ export function useDeviceDetection() {
 
       setDevice((prev) => {
         const previousShape = prev.viewportShape || 'tall';
+        const previousShellMode = prev.shellMode || 'stacked';
         const tallThreshold = previousShape === 'tall' ? 1.02 : 0.98;
         const ultraWideThreshold = previousShape === 'ultra-wide' ? 1.74 : 1.82;
         const viewportShape = aspectRatio < tallThreshold
@@ -81,9 +82,15 @@ export function useDeviceDetection() {
           ? 'ultra-wide'
           : 'wide';
         const isShortHeight = effectiveHeight <= 560;
+        const desktopEnterAspect = 0.86;
+        const desktopExitAspect = 0.78;
+        const prefersStackedByAspect = previousShellMode === 'desktop'
+          ? aspectRatio < desktopExitAspect
+          : aspectRatio < desktopEnterAspect;
+        const keepDesktopByWidth = effectiveWidth >= 680;
         const shellMode = isTV
           ? 'tv'
-          : viewportShape === 'tall'
+          : (prefersStackedByAspect && !keepDesktopByWidth)
           ? 'stacked'
           : 'desktop';
 

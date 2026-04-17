@@ -34,6 +34,11 @@ export default function RadioPlayer({ radioState }) {
   const effectivePaneAspectRatio = availablePaneAspectRatio || aspectRatio;
   const useCompactDesktopSizing = isDesktopShell && (forceCompactLayout || shortHeightLayout);
   const useCenteredDesktopStack = isDesktopShell && (forceCompactLayout || effectivePaneAspectRatio < 1.25);
+  const useCompactStackedSizing = !isDesktopShell && (shortHeightLayout || aspectRatio > 0.72);
+  const mobileCoverMaxPx = useCompactStackedSizing
+    ? Math.min(viewportWidth * 0.62, viewportHeight * 0.34)
+    : Math.min(viewportWidth * 0.72, viewportHeight * 0.42);
+  const mobileCoverWidth = Math.max(188, Math.min(mobileCoverMaxPx || 0, 360));
   const weatherTextColor = useWeatherTextColor();
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
@@ -109,8 +114,8 @@ export default function RadioPlayer({ radioState }) {
       transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
       className={desktop
         ? 'relative shrink-0'
-        : 'relative mb-[clamp(1.75rem,1.4rem+1.2vw,3rem)] w-full max-w-[clamp(18rem,72vw,32rem)]'}
-      style={desktop ? { width: desktopCoverWidth } : undefined}
+        : `relative w-full ${useCompactStackedSizing ? 'mb-[clamp(1.1rem,0.98rem+0.4vw,1.6rem)]' : 'mb-[clamp(1.75rem,1.4rem+1.2vw,3rem)]'}`}
+      style={desktop ? { width: desktopCoverWidth } : { maxWidth: `${mobileCoverWidth}px` }}
     >
       <div className={`relative w-full aspect-square overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
         <motion.img
@@ -482,7 +487,7 @@ export default function RadioPlayer({ radioState }) {
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="mb-[clamp(1.75rem,1.35rem+1.2vw,3rem)] text-center"
+          className={`${useCompactStackedSizing ? 'mb-[clamp(0.95rem,0.85rem+0.35vw,1.35rem)]' : 'mb-[clamp(1.75rem,1.35rem+1.2vw,3rem)]'} text-center`}
         >
           <Heading level={3} color="custom" className={`mb-2 max-w-full text-center ${textPrimaryClass}`}>
             {currentStation.name}
@@ -502,7 +507,7 @@ export default function RadioPlayer({ radioState }) {
           onClick={togglePlay}
           disabled={isLoading}
           tabIndex={0}
-          className="group focusable relative mb-[clamp(1.75rem,1.35rem+1.2vw,3rem)] h-[clamp(4.5rem,3.9rem+1.8vw,7rem)] w-[clamp(4.5rem,3.9rem+1.8vw,7rem)] rounded-full bg-primary transition-all disabled:opacity-40"
+          className={`group focusable relative ${useCompactStackedSizing ? 'mb-[clamp(1rem,0.9rem+0.4vw,1.5rem)] h-[clamp(3.9rem,3.5rem+1.2vw,5rem)] w-[clamp(3.9rem,3.5rem+1.2vw,5rem)]' : 'mb-[clamp(1.75rem,1.35rem+1.2vw,3rem)] h-[clamp(4.5rem,3.9rem+1.8vw,7rem)] w-[clamp(4.5rem,3.9rem+1.8vw,7rem)]'} rounded-full bg-primary transition-all disabled:opacity-40`}
           aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
         >
           <div className="flex h-full w-full items-center justify-center">
@@ -524,7 +529,7 @@ export default function RadioPlayer({ radioState }) {
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.15 }}
-          className="mb-[clamp(1rem,0.82rem+0.65vw,2rem)] flex w-full max-w-[min(100%,20rem)] gap-[clamp(0.5rem,0.42rem+0.22vw,0.75rem)]"
+          className={`${useCompactStackedSizing ? 'mb-[clamp(0.72rem,0.66rem+0.2vw,0.95rem)] max-w-[min(100%,19rem)]' : 'mb-[clamp(1rem,0.82rem+0.65vw,2rem)] max-w-[min(100%,20rem)]'} flex w-full gap-[clamp(0.5rem,0.42rem+0.22vw,0.75rem)]`}
           role="group"
           aria-label="Station selection"
         >
