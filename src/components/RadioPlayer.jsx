@@ -78,28 +78,28 @@ export default function RadioPlayer({ radioState }) {
   const qualityButtonBaseClass = 'relative flex-1 overflow-hidden rounded-[10px] border px-[clamp(0.75rem,0.68rem+0.22vw,1rem)] py-[clamp(0.55rem,0.5rem+0.16vw,0.75rem)] text-[clamp(0.76rem,0.72rem+0.16vw,0.92rem)] font-medium leading-none transition-all focusable';
   const desktopTitleClass = '!leading-[0.96]';
   const desktopCoverWidth = useCompactDesktopSizing
-    ? 'min(100%, clamp(11.5rem, 24vh, 15rem))'
+    ? 'min(100%, clamp(13.5rem, 29vh, 18.5rem))'
     : 'clamp(16rem, 28vw, 26rem)';
   const desktopPlayButtonSize = useCompactDesktopSizing
-    ? 'clamp(3rem, 4.4vh, 3.75rem)'
+    ? 'clamp(3.35rem, 5.1vh, 4.25rem)'
     : 'clamp(3.75rem, 4.6vw, 5rem)';
   const desktopVisualizerWidth = useCompactDesktopSizing
-    ? 'clamp(5.5rem, 9vw, 7rem)'
+    ? 'clamp(6.25rem, 11vw, 8rem)'
     : 'clamp(7rem, 14vw, 10rem)';
   const desktopVisualizerHeight = useCompactDesktopSizing
-    ? 'clamp(0.95rem, 1.55vh, 1.2rem)'
+    ? 'clamp(1rem, 1.8vh, 1.3rem)'
     : 'clamp(1.25rem, 2.6vw, 2rem)';
   const desktopTitleSize = useCompactDesktopSizing
-    ? 'clamp(1.45rem, 1.7vw, 1.9rem)'
+    ? 'clamp(1.65rem, 2vw, 2.15rem)'
     : 'clamp(2rem, 2.8vw, 2.8rem)';
   const desktopSubtitleSize = useCompactDesktopSizing
-    ? 'clamp(0.88rem, 0.98vw, 1rem)'
+    ? 'clamp(0.94rem, 1.05vw, 1.08rem)'
     : 'clamp(1rem, 1.4vw, 1.28rem)';
   const desktopStationRailWidth = useCompactDesktopSizing
-    ? 'min(100%, 20rem)'
+    ? 'min(100%, 21.5rem)'
     : 'min(100%, 24rem)';
   const desktopStageWidth = useCompactDesktopSizing
-    ? 'min(100%, 48rem)'
+    ? 'min(100%, 54rem)'
     : 'min(100%, 68rem)';
 
   const renderCoverArt = (desktop = false) => (
@@ -188,7 +188,7 @@ export default function RadioPlayer({ radioState }) {
     if (useCenteredDesktopStack) {
       return (
         <ResponsiveContainer section="radio" className="justify-center">
-          <div className="mx-auto flex w-full max-w-[min(100%,48rem)] flex-col items-center text-center">
+          <div className="mx-auto flex w-full max-w-[min(100%,54rem)] flex-col items-center text-center">
             {renderCoverArt(true)}
 
             <motion.div
@@ -197,7 +197,7 @@ export default function RadioPlayer({ radioState }) {
               transition={{ delay: 0.08 }}
               className={`flex w-full flex-col items-center ${
                 useCompactDesktopSizing
-                  ? 'mt-[clamp(0.8rem,0.7rem+0.35vw,1.1rem)] gap-[clamp(0.55rem,0.48rem+0.22vw,0.85rem)]'
+                  ? 'mt-[clamp(0.9rem,0.78rem+0.42vw,1.25rem)] gap-[clamp(0.65rem,0.56rem+0.28vw,1rem)]'
                   : 'mt-[clamp(1.25rem,1rem+0.8vw,2rem)] gap-[clamp(0.9rem,0.72rem+0.55vw,1.5rem)]'
               }`}
             >
@@ -212,7 +212,7 @@ export default function RadioPlayer({ radioState }) {
                 }}
               />
 
-              <div className={`flex w-full flex-col items-center text-center ${useCompactDesktopSizing ? 'max-w-[min(100%,28rem)]' : 'max-w-[min(100%,36rem)]'}`}>
+              <div className={`flex w-full flex-col items-center text-center ${useCompactDesktopSizing ? 'max-w-[min(100%,31rem)]' : 'max-w-[min(100%,36rem)]'}`}>
                 <Heading
                   level={2}
                   color="custom"

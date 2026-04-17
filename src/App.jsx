@@ -259,8 +259,8 @@ function AppContent() {
     ? 'rgba(17, 24, 39, 0.18)'
     : 'rgba(255, 255, 255, 0.20)';
   const desktopControlRailClass = desktopUiTone === 'dark'
-    ? 'border-gray-900/14 bg-white/48 text-gray-900 shadow-[0_18px_45px_rgba(15,23,42,0.12)]'
-    : 'border-white/16 bg-slate-950/22 text-white shadow-[0_20px_55px_rgba(2,6,23,0.28)]';
+    ? 'border-gray-900/12 bg-white/40 text-gray-900 shadow-[0_8px_20px_rgba(15,23,42,0.07)]'
+    : 'border-white/14 bg-slate-950/18 text-white shadow-[0_10px_26px_rgba(2,6,23,0.16)]';
 
   // Generate floating particles for background animation
   const floatingParticles = useMemo(() => {

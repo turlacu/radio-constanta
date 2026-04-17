@@ -8,6 +8,8 @@ import { DeviceContext } from '../App';
 export default function News({ radioState }) {
   const device = useContext(DeviceContext);
   const isSplitScreen = device?.policy?.canShowNewsRail;
+  const splitShellClass = 'mx-auto w-full max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]';
+  const stackedShellClass = 'mx-auto w-full max-w-[96rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)]';
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -129,8 +131,8 @@ export default function News({ radioState }) {
       <div className={`
         sticky top-0 z-10
         ${isSplitScreen
-          ? 'px-[clamp(1rem,0.9rem+0.36vw,2rem)] py-[clamp(1rem,0.92rem+0.26vw,1.45rem)]'
-          : 'px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1rem,0.92rem+0.3vw,1.7rem)]'
+          ? 'py-[clamp(1rem,0.92rem+0.26vw,1.45rem)]'
+          : 'py-[clamp(1rem,0.92rem+0.3vw,1.7rem)]'
         }
       `}>
         {/* Clean solid header background */}
@@ -140,8 +142,7 @@ export default function News({ radioState }) {
             : 'bg-bg-primary'
         }`} />
 
-        {/* Content wrapper - centered to match articles */}
-        <div className={isSplitScreen ? "relative mx-auto w-full max-w-[min(100%,76rem)]" : "relative mx-auto w-full max-w-[min(100%,120rem)]"}>
+        <div className={`relative ${isSplitScreen ? splitShellClass : stackedShellClass}`}>
           <h1 className={`
             font-bold text-text-primary
             ${isSplitScreen ? 'text-[clamp(1.25rem,1.14rem+0.42vw,2rem)]' : 'text-[clamp(1.5rem,1.32rem+0.78vw,3rem)]'}

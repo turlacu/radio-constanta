@@ -10,8 +10,10 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
   const [fullImage, setFullImage] = useState(article.image);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const splitShellClass = 'mx-auto w-full max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]';
+  const splitHeaderShellClass = `${splitShellClass} pr-[clamp(6.6rem,5.8rem+2.6vw,9rem)]`;
   const articleShellClass = isSplitScreen
-    ? 'mx-auto w-full max-w-[58rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)] py-[clamp(1.3rem,1.15rem+0.52vw,2rem)]'
+    ? `${splitShellClass} py-[clamp(1.3rem,1.15rem+0.52vw,2rem)]`
     : 'mx-auto w-full max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1.25rem,1.12rem+0.55vw,2.4rem)] min-[1500px]:max-w-[66rem]';
   const articleBodyClass = [
     'text-[clamp(0.94rem,0.9rem+0.22vw,1.14rem)] leading-[1.8] text-white/84',
@@ -110,12 +112,13 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         {/* Clean solid header background */}
         <div className="absolute inset-0 bg-bg-secondary border-b border-border" />
 
-        <div className={`relative mx-auto flex items-center gap-[clamp(0.75rem,0.68rem+0.18vw,1rem)] ${isSplitScreen ? 'max-w-[58rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)] py-[clamp(0.82rem,0.74rem+0.22vw,1.14rem)]' : 'max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)] min-[1500px]:max-w-[66rem]'}`}>
+        <div className={`relative mx-auto flex items-center gap-[clamp(0.75rem,0.68rem+0.18vw,1rem)] ${isSplitScreen ? `${splitHeaderShellClass} py-[clamp(0.82rem,0.74rem+0.22vw,1.14rem)]` : 'max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)] min-[1500px]:max-w-[66rem]'}`}>
           <Button
             variant="ghost"
             icon
             size="medium"
             onClick={onBack}
+            className="shrink-0"
             aria-label="Go back to news list"
           >
             <svg
@@ -191,7 +194,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Heading level={2} gradient className="mb-[clamp(0.72rem,0.62rem+0.34vw,1.25rem)] text-balance text-[clamp(1.5rem,1.34rem+0.58vw,2.1rem)]">
+          <Heading level={2} gradient className="mb-[clamp(0.72rem,0.62rem+0.34vw,1.25rem)] text-balance text-[clamp(1.28rem,1.18rem+0.42vw,1.78rem)]">
             {article.title}
           </Heading>
         </motion.div>
