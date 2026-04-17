@@ -31,7 +31,7 @@ export default function News({ radioState }) {
 
       while (current) {
         const style = window.getComputedStyle(current);
-        const isScrollable = /(auto|scroll)/.test(style.overflowY) && current.scrollHeight > current.clientHeight;
+        const isScrollable = /(auto|scroll)/.test(style.overflowY);
 
         if (isScrollable) {
           return current;
@@ -45,7 +45,7 @@ export default function News({ radioState }) {
 
     const target = findScrollContainer(rootRef.current);
     setScrollTarget(target);
-  }, [isSplitScreen]);
+  }, [isSplitScreen, articles.length]);
 
   useEffect(() => {
     if (!scrollTarget) return;

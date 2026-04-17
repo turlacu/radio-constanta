@@ -1236,13 +1236,7 @@ function AppContent() {
                 </Suspense>
               )}
               {/* Top Right Buttons */}
-              <div className={`absolute z-50 ${
-                resizePolicy.showInlineNews
-                  ? 'top-2 right-3'
-                  : isShortHeightShell
-                  ? 'top-3 right-3'
-                  : 'top-6 right-6'
-              }`}>
+              <div className="absolute right-3 top-3 z-50">
                 <div className={`flex items-center gap-2 rounded-[1.15rem] px-2 py-2 backdrop-blur-xl ${desktopControlRailClass}`}>
                 {/* Settings Button */}
                 <motion.button

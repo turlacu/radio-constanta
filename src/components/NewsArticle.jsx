@@ -8,7 +8,23 @@ import analytics from '../utils/analytics';
 
 export default function NewsArticle({ article, onBack, radioState, isSplitScreen }) {
   const scrollRef = useRef(null);
-  const [fullContent, setFullContent] = useState(article.content || '');
+  const normalizeArticleMarkup = (html) => {
+    if (!html) return '';
+
+    // Source pages often embed inline font stacks; remove those so app typography stays consistent.
+    return html
+      .replace(/\sstyle=(['"])(.*?)\1/gi, (match, quote, styleValue) => {
+        const cleanedStyle = styleValue
+          .replace(/font-family\s*:[^;]+;?/gi, '')
+          .replace(/font\s*:[^;]*;?/gi, '')
+          .replace(/\s{2,}/g, ' ')
+          .trim()
+          .replace(/^;|;$/g, '');
+
+        return cleanedStyle ? ` style=${quote}${cleanedStyle}${quote}` : '';
+      });
+  };
+  const [fullContent, setFullContent] = useState(normalizeArticleMarkup(article.content || ''));
   const [fullImage, setFullImage] = useState(article.image);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -50,7 +66,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         const data = await response.json();
 
         if (data.content) {
-          setFullContent(data.content);
+          setFullContent(normalizeArticleMarkup(data.content));
         }
 
         if (data.image) {
@@ -188,7 +204,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Heading level={2} gradient className="mb-[clamp(0.72rem,0.62rem+0.34vw,1.25rem)] text-balance text-[clamp(1.28rem,1.18rem+0.42vw,1.78rem)]">
+          <Heading level={2} gradient className="mb-[clamp(0.72rem,0.62rem+0.34vw,1.25rem)] text-balance text-[clamp(1.14rem,1.06rem+0.32vw,1.52rem)]">
             {article.title}
           </Heading>
         </motion.div>
