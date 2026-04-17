@@ -19,7 +19,7 @@ import { forwardRef } from 'react';
  */
 
 const buttonVariants = cva(
-  'relative inline-flex items-center justify-center font-medium transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed focusable motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]',
+  'relative inline-flex items-center justify-center font-sans font-medium transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed focusable motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]',
   {
     variants: {
       variant: {

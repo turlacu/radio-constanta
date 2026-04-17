@@ -15,7 +15,7 @@ import { memo } from 'react';
  * @param {React.ReactNode} children - Content
  */
 
-const bodyVariants = cva('', {
+const bodyVariants = cva('font-sans', {
   variants: {
     size: {
       small: 'text-responsive-xs leading-[1.5]',

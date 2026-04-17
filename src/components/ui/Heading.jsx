@@ -15,7 +15,7 @@ import { memo } from 'react';
  * @param {React.ReactNode} children - Content
  */
 
-const headingVariants = cva('font-bold', {
+const headingVariants = cva('font-sans font-bold', {
   variants: {
     level: {
       1: 'text-responsive-4xl leading-[1.08]',

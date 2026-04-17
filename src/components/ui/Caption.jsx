@@ -12,7 +12,7 @@ import { memo } from 'react';
  * @param {React.ReactNode} children - Content
  */
 
-const captionVariants = cva('text-responsive-xs leading-snug', {
+const captionVariants = cva('font-sans text-responsive-xs leading-snug', {
   variants: {
     weight: {
       regular: 'font-normal',

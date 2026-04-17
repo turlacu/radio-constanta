@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect, useMemo } from 'react';
 import Loader from './Loader';
-import { Heading, Body, Caption, Button } from './ui';
+import { Heading, Body, Caption } from './ui';
+import NewsHeader from './NewsHeader';
 import { useArticleMedia } from '../hooks/useArticleMedia';
 import analytics from '../utils/analytics';
 
@@ -11,12 +12,11 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const splitShellClass = 'mx-auto w-full max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]';
-  const splitHeaderShellClass = `${splitShellClass} pr-[clamp(7.4rem,6.4rem+3vw,10rem)]`;
   const articleShellClass = isSplitScreen
     ? `${splitShellClass} py-[clamp(1.3rem,1.15rem+0.52vw,2rem)]`
     : 'mx-auto w-full max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1.25rem,1.12rem+0.55vw,2.4rem)] min-[1500px]:max-w-[66rem]';
   const articleBodyClass = [
-    'text-[clamp(0.94rem,0.9rem+0.22vw,1.14rem)] leading-[1.8] text-white/84',
+    'font-sans text-[clamp(0.94rem,0.9rem+0.22vw,1.14rem)] leading-[1.8] text-white/84',
     '[&_p]:mb-[clamp(1rem,0.92rem+0.25vw,1.4rem)] [&_p]:text-pretty',
     '[&_h2]:mb-[clamp(0.8rem,0.74rem+0.16vw,1rem)] [&_h2]:mt-[clamp(2rem,1.8rem+0.7vw,3rem)] [&_h2]:text-[clamp(1.22rem,1.12rem+0.34vw,1.55rem)] [&_h2]:font-bold [&_h2]:leading-tight',
     '[&_h3]:mb-[clamp(0.72rem,0.67rem+0.14vw,0.9rem)] [&_h3]:mt-[clamp(1.7rem,1.55rem+0.5vw,2.5rem)] [&_h3]:text-[clamp(1rem,0.93rem+0.24vw,1.22rem)] [&_h3]:font-semibold [&_h3]:leading-tight',
@@ -107,55 +107,11 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         <div className="absolute bottom-1/3 left-1/3 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Header */}
-      <div className="sticky top-0 z-10">
-        {/* Clean solid header background */}
-        <div className="absolute inset-0 bg-bg-secondary border-b border-border" />
-
-        <div className={`relative mx-auto flex items-start gap-[clamp(0.75rem,0.68rem+0.18vw,1rem)] ${isSplitScreen ? `${splitHeaderShellClass} py-[clamp(0.82rem,0.74rem+0.22vw,1.14rem)]` : 'max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)] min-[1500px]:max-w-[66rem]'}`}>
-          <Button
-            variant="ghost"
-            icon
-            size="medium"
-            onClick={onBack}
-            className="mt-[clamp(0.1rem,0.08rem+0.04vw,0.16rem)] shrink-0"
-            aria-label="Go back to news list"
-          >
-            <svg
-              className="h-[clamp(1.1rem,1rem+0.3vw,1.5rem)] w-[clamp(1.1rem,1rem+0.3vw,1.5rem)]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </Button>
-          <div className="min-w-0">
-            <Heading
-              level={5}
-              className={`text-text-primary ${
-                isSplitScreen ? 'text-[clamp(1.25rem,1.14rem+0.42vw,2rem)]' : 'text-[clamp(1.5rem,1.32rem+0.78vw,3rem)]'
-              }`}
-            >
-              Știri
-            </Heading>
-            <Body
-              size="small"
-              weight="medium"
-              opacity="tertiary"
-              className={`mt-1 ${isSplitScreen ? 'text-[clamp(0.82rem,0.78rem+0.18vw,1.05rem)]' : 'text-[clamp(0.88rem,0.82rem+0.24vw,1.2rem)]'}`}
-            >
-              Înapoi la știri
-            </Body>
-          </div>
-        </div>
-      </div>
+      <NewsHeader
+        isSplitScreen={isSplitScreen}
+        onBack={onBack}
+        subtitle="Înapoi la știri"
+      />
 
       {/* Article Content */}
       <article className={`relative ${articleShellClass}`}>
@@ -251,7 +207,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
 
         {/* Content */}
         {!loading && fullContent && (
-          <div className="prose prose-invert max-w-none overflow-x-hidden">
+          <div className="prose prose-invert max-w-none overflow-x-hidden font-sans">
             <div
               className={articleBodyClass}
               dangerouslySetInnerHTML={{ __html: fullContent }}

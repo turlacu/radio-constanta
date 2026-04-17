@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import NewsList from '../components/NewsList';
 import NewsArticle from '../components/NewsArticle';
+import NewsHeader from '../components/NewsHeader';
 import Loader from '../components/Loader';
 import { fetchNews } from '../utils/fetchNews';
 import { DeviceContext } from '../App';
@@ -8,9 +9,6 @@ import { DeviceContext } from '../App';
 export default function News({ radioState }) {
   const device = useContext(DeviceContext);
   const isSplitScreen = device?.policy?.canShowNewsRail;
-  const splitShellClass = 'mx-auto w-full max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]';
-  const splitHeaderShellClass = `${splitShellClass} pr-[clamp(7.4rem,6.4rem+3vw,10rem)]`;
-  const stackedShellClass = 'mx-auto w-full max-w-[96rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)]';
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -128,30 +126,7 @@ export default function News({ radioState }) {
         </div>
       )}
 
-      {/* Header - Clean solid with border */}
-      <div className="sticky top-0 z-10">
-        {/* Clean solid header background */}
-        <div className={`absolute inset-0 border-b border-border ${
-          isSplitScreen
-            ? 'bg-bg-secondary' // Solid background
-            : 'bg-bg-primary'
-        }`} />
-
-        <div className={`relative ${
-          isSplitScreen
-            ? `${splitHeaderShellClass} py-[clamp(0.82rem,0.74rem+0.22vw,1.14rem)]`
-            : `${stackedShellClass} py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)]`
-        }`}>
-          <h1 className={`
-            font-bold text-text-primary
-            ${isSplitScreen ? 'text-[clamp(1.25rem,1.14rem+0.42vw,2rem)]' : 'text-[clamp(1.5rem,1.32rem+0.78vw,3rem)]'}
-          `}>Știri</h1>
-          <p className={`
-            text-text-tertiary font-medium mt-1
-            ${isSplitScreen ? 'text-[clamp(0.82rem,0.78rem+0.18vw,1.05rem)]' : 'text-[clamp(0.88rem,0.82rem+0.24vw,1.2rem)]'}
-          `}>Ultimele noutăți din Dobrogea</p>
-        </div>
-      </div>
+      <NewsHeader isSplitScreen={isSplitScreen} />
 
       {/* News List */}
       <div className="relative">
