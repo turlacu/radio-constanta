@@ -262,6 +262,79 @@
   .focusable:focus-visible {
     outline: none;
   }
+
+  /* ===== GLOBAL RADIUS NORMALIZATION ===== */
+  :root {
+    --radius-flat-sm: 0.14rem;
+    --radius-flat: 0.28rem;
+    --radius-flat-lg: 0.38rem;
+  }
+
+  .rounded,
+  .rounded-md,
+  .rounded-lg,
+  .rounded-xl,
+  .rounded-2xl,
+  .rounded-3xl {
+    border-radius: var(--radius-flat) !important;
+  }
+
+  .rounded-sm {
+    border-radius: var(--radius-flat-sm) !important;
+  }
+
+  .rounded-full {
+    border-radius: var(--radius-flat-lg) !important;
+  }
+
+  [class^='rounded-['],
+  [class*=' rounded-['] {
+    border-radius: var(--radius-flat) !important;
+  }
+
+  [class^='rounded-t-'],
+  [class*=' rounded-t-'] {
+    border-top-left-radius: var(--radius-flat) !important;
+    border-top-right-radius: var(--radius-flat) !important;
+  }
+
+  [class^='rounded-r-'],
+  [class*=' rounded-r-'] {
+    border-top-right-radius: var(--radius-flat) !important;
+    border-bottom-right-radius: var(--radius-flat) !important;
+  }
+
+  [class^='rounded-b-'],
+  [class*=' rounded-b-'] {
+    border-bottom-right-radius: var(--radius-flat) !important;
+    border-bottom-left-radius: var(--radius-flat) !important;
+  }
+
+  [class^='rounded-l-'],
+  [class*=' rounded-l-'] {
+    border-top-left-radius: var(--radius-flat) !important;
+    border-bottom-left-radius: var(--radius-flat) !important;
+  }
+
+  [class^='rounded-tl-'],
+  [class*=' rounded-tl-'] {
+    border-top-left-radius: var(--radius-flat) !important;
+  }
+
+  [class^='rounded-tr-'],
+  [class*=' rounded-tr-'] {
+    border-top-right-radius: var(--radius-flat) !important;
+  }
+
+  [class^='rounded-br-'],
+  [class*=' rounded-br-'] {
+    border-bottom-right-radius: var(--radius-flat) !important;
+  }
+
+  [class^='rounded-bl-'],
+  [class*=' rounded-bl-'] {
+    border-bottom-left-radius: var(--radius-flat) !important;
+  }
 }
 
 /* ===== AUDIO/VIDEO PLAYER STYLES ===== */

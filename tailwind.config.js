@@ -9,6 +9,17 @@ export default {
       fontFamily: {
         sans: ['Geist'],
       },
+      borderRadius: {
+        none: '0',
+        sm: '0.14rem',
+        DEFAULT: '0.22rem',
+        md: '0.22rem',
+        lg: '0.28rem',
+        xl: '0.34rem',
+        '2xl': '0.42rem',
+        '3xl': '0.52rem',
+        full: '0.56rem',
+      },
       colors: {
         // Dark mode pastel colors
         primary: '#7CA9DB',
