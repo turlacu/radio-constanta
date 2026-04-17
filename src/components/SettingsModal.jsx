@@ -317,6 +317,7 @@ export default function SettingsModal({
 
         {/* Modal - Wide TV-friendly layout */}
         <motion.div
+          data-dpad-scope="settings-modal"
           className="relative my-auto flex max-h-[calc(var(--app-height)-clamp(1rem,0.72rem+0.9vw,2.5rem))] w-full max-w-[min(96rem,calc(var(--app-width)-clamp(0.75rem,0.55rem+0.7vw,2rem)))] flex-col overflow-hidden rounded-[clamp(1rem,0.88rem+0.42vw,1.5rem)] border border-border bg-bg-secondary shadow-2xl"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -328,6 +329,9 @@ export default function SettingsModal({
             <Heading level={3}>Setări</Heading>
             <button
               onClick={onClose}
+              data-dpad="true"
+              data-dpad-group="settings"
+              data-dpad-default="true"
               className="p-2 rounded-lg bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80 transition-colors"
             >
               <PhosphorIcons.X />

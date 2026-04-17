@@ -173,6 +173,8 @@ export default function RadioPlayer({ radioState }) {
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.25 + index * 0.03 }}
             tabIndex={0}
+            data-dpad="true"
+            data-dpad-group="player"
                           className={`${qualityButtonBaseClass} ${
                             isActive
                               ? activeMobileQualityClass
@@ -243,6 +245,9 @@ export default function RadioPlayer({ radioState }) {
                 onClick={togglePlay}
                 disabled={isLoading}
                 tabIndex={0}
+                data-dpad="true"
+                data-dpad-group="player"
+                data-dpad-default="play"
                 className={`flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
                 style={{
                   width: desktopPlayButtonSize,
@@ -304,11 +309,13 @@ export default function RadioPlayer({ radioState }) {
                       onClick={() => switchStation(station)}
                       initial={{ x: -10, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.24 + index * 0.05 }}
-                      tabIndex={0}
-                      className={`${stationButtonBaseClass} ${desktopStationButtonClass} ${
-                        isActive ? activeStationButtonClass : inactiveButtonClass
-                      }`}
+                    transition={{ delay: 0.24 + index * 0.05 }}
+                    tabIndex={0}
+                    data-dpad="true"
+                    data-dpad-group="player"
+                    className={`${stationButtonBaseClass} ${desktopStationButtonClass} ${
+                      isActive ? activeStationButtonClass : inactiveButtonClass
+                    }`}
                       style={{ borderColor: isActive ? strongButtonBorderColor : buttonBorderColor }}
                       aria-pressed={isActive}
                       aria-label={`Switch to ${stationLabel} station`}
@@ -366,6 +373,9 @@ export default function RadioPlayer({ radioState }) {
                     onClick={togglePlay}
                     disabled={isLoading}
                     tabIndex={0}
+                    data-dpad="true"
+                    data-dpad-group="player"
+                    data-dpad-default="play"
                     className={`flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
                     style={{
                       width: desktopPlayButtonSize,
@@ -450,6 +460,8 @@ export default function RadioPlayer({ radioState }) {
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.24 + index * 0.05 }}
                         tabIndex={0}
+                        data-dpad="true"
+                        data-dpad-group="player"
                         className={`${stationButtonBaseClass} ${desktopStationButtonClass} ${
                           isActive
                             ? activeStationButtonClass
@@ -507,6 +519,9 @@ export default function RadioPlayer({ radioState }) {
           onClick={togglePlay}
           disabled={isLoading}
           tabIndex={0}
+          data-dpad="true"
+          data-dpad-group="player"
+          data-dpad-default="play"
           className={`group focusable relative ${useCompactStackedSizing ? 'mb-[clamp(1rem,0.9rem+0.4vw,1.5rem)] h-[clamp(3.9rem,3.5rem+1.2vw,5rem)] w-[clamp(3.9rem,3.5rem+1.2vw,5rem)]' : 'mb-[clamp(1.75rem,1.35rem+1.2vw,3rem)] h-[clamp(4.5rem,3.9rem+1.8vw,7rem)] w-[clamp(4.5rem,3.9rem+1.8vw,7rem)]'} rounded-full bg-primary transition-all disabled:opacity-40`}
           aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
         >
@@ -546,6 +561,8 @@ export default function RadioPlayer({ radioState }) {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.2 + index * 0.05 }}
                 tabIndex={0}
+                data-dpad="true"
+                data-dpad-group="player"
                     className={`${stationButtonBaseClass} ${mobileStationButtonClass} focusable ${
                       isActive
                         ? activeMobileStationClass

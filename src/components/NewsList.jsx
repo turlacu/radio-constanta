@@ -57,6 +57,9 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
               padding="none"
               interactive
               onClick={() => onArticleClick(article)}
+              data-dpad="true"
+              data-dpad-group="news"
+              data-dpad-default={index === 0 ? 'true' : undefined}
               className={
                 isSplitScreen
                   ? 'group overflow-hidden border-white/10 bg-white/[0.045] shadow-[0_18px_42px_rgba(3,7,18,0.12)] hover:border-white/14 hover:shadow-[0_20px_48px_rgba(3,7,18,0.18)] transition-[border-color,box-shadow]'
@@ -168,6 +171,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             fullWidth={!isSplitScreen}
             onClick={onLoadMore}
             disabled={loading}
+            data-dpad="true"
+            data-dpad-group="news"
             className={isSplitScreen ? 'mx-auto block max-w-[min(100%,18rem)]' : ''}
             aria-label="Load more articles"
           >
@@ -186,6 +191,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
             href="https://www.radioconstanta.ro/articole/stiri/actualitate/"
             target="_blank"
             rel="noopener noreferrer"
+            data-dpad="true"
+            data-dpad-group="news"
             className="inline-flex items-center gap-2 rounded-lg px-[clamp(0.75rem,0.68rem+0.2vw,1rem)] py-[clamp(0.3rem,0.26rem+0.1vw,0.45rem)] font-medium text-primary transition-colors hover:text-primary-dark focusable"
             aria-label="Visit Radio Constanta website for more articles"
           >

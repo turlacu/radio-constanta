@@ -25,6 +25,9 @@ export default function NewsHeader({
               icon
               size="medium"
               onClick={onBack}
+              data-dpad="true"
+              data-dpad-group="news"
+              data-dpad-action="news-back"
               className={`mt-[clamp(0.1rem,0.08rem+0.04vw,0.16rem)] shrink-0 ${backSlotClass}`}
               aria-label="Go back to news list"
             >

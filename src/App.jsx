@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { lazy, Suspense, useState, useRef, useEffect, createContext, useMemo } from 'react';
+import { lazy, Suspense, useState, useRef, useEffect, createContext, useMemo, useCallback } from 'react';
 import Radio from './pages/Radio';
 import BottomNav from './components/BottomNav';
 import Loader from './components/Loader';
@@ -10,6 +10,7 @@ import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { getWeatherManager } from './modules/weather/WeatherManager';
 import { getLosslessStreamUrl, getLosslessFormatLabel } from './utils/osDetection';
 import { useWeatherTextColor } from './hooks/useWeatherTextColor';
+import { useTvDpadNavigation } from './hooks/useTvDpadNavigation';
 import analytics from './utils/analytics';
 
 const loadNewsPage = () => import('./pages/News');
@@ -136,6 +137,43 @@ function RouteHandler({ children }) {
   return children;
 }
 
+function TvDpadController({
+  enabled,
+  showSettingsModal,
+  showInlineNews,
+  onCloseSettings,
+  onCloseInlineNews,
+}) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isAdminRoute = location.pathname === '/admin';
+
+  const handleNavigateBack = useCallback(() => {
+    if (location.pathname === '/') {
+      return false;
+    }
+
+    navigate(-1);
+    return true;
+  }, [location.pathname, navigate]);
+
+  const handleNavigateHome = useCallback(() => {
+    navigate('/');
+  }, [navigate]);
+
+  useTvDpadNavigation({
+    enabled: enabled && !isAdminRoute,
+    showSettingsModal,
+    showInlineNews,
+    onCloseSettings,
+    onCloseInlineNews,
+    onNavigateBack: handleNavigateBack,
+    onNavigateHome: handleNavigateHome,
+  });
+
+  return null;
+}
+
 function AppContent() {
   // Device detection
   const device = useDeviceDetection();
@@ -189,7 +227,7 @@ function AppContent() {
   const resizePolicy = useMemo(() => {
     const shellMode = device.shellMode || 'stacked';
     const viewportShape = device.viewportShape || 'tall';
-    const isDesktopShell = shellMode === 'desktop';
+    const isDesktopShell = shellMode === 'desktop' || shellMode === 'tv';
     const topControlsCompact = device.isShortHeight;
     const preferredNewsShare = viewportAspectRatio >= 2.45
       ? 0.62
@@ -1221,6 +1259,13 @@ function AppContent() {
   return (
     <DeviceContext.Provider value={deviceContextValue}>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <TvDpadController
+          enabled={device.isTV}
+          showSettingsModal={showSettingsModal}
+          showInlineNews={resizePolicy.showInlineNews}
+          onCloseSettings={() => setShowSettingsModal(false)}
+          onCloseInlineNews={() => setShowNews(false)}
+        />
         <RouteHandler>
           <div className="min-app-height bg-bg-primary">
           {showDesktopShell ? (
@@ -1243,6 +1288,8 @@ function AppContent() {
                   onClick={() => setShowSettingsModal(true)}
                   onMouseEnter={loadSettingsModal}
                   onFocus={loadSettingsModal}
+                  data-dpad="true"
+                  data-dpad-group="top-controls"
                   className={`flex items-center justify-center rounded-[0.95rem] backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1259,6 +1306,8 @@ function AppContent() {
                     onClick={() => setShowNews(!showNews)}
                     onMouseEnter={loadNewsPage}
                     onFocus={loadNewsPage}
+                    data-dpad="true"
+                    data-dpad-group="top-controls"
                     className={`flex items-center justify-center rounded-[0.95rem] backdrop-blur-sm transition-all ${isShortHeightShell ? 'h-10 w-10' : 'h-12 w-12'} ${desktopActionSurfaceClass}`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}

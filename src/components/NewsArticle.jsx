@@ -157,7 +157,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
       />
 
       {/* Article Content */}
-      <article className={`relative ${articleShellClass}`}>
+      <article data-dpad-group="news" className={`relative ${articleShellClass}`}>
         {/* Featured Image */}
         {fullImage && (
           <motion.div
@@ -239,6 +239,8 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
               href={article.link}
               target="_blank"
               rel="noopener noreferrer"
+              data-dpad="true"
+              data-dpad-group="news"
               className="inline-block text-responsive-sm text-primary underline tv-focusable hover:text-primary/80"
               aria-label="Read full article on Radio Constanta website"
             >
@@ -268,6 +270,8 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
               target="_blank"
               rel="noopener noreferrer"
               tabIndex={0}
+              data-dpad="true"
+              data-dpad-group="news"
               className="inline-flex items-center gap-2 text-responsive-base font-medium text-primary transition-colors hover:text-primary/80 tv-focusable"
               aria-label="Visit Radio Constanta website for updated information"
             >
@@ -299,6 +303,8 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.96 }}
           onClick={scrollToTop}
+          data-dpad="true"
+          data-dpad-group="news"
           className="fixed bottom-6 right-6 z-[70] flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-bg-tertiary/90 text-white shadow-[0_12px_28px_rgba(2,6,23,0.3)] backdrop-blur-lg transition-colors hover:bg-bg-tertiary"
           aria-label="Back to top"
         >

@@ -263,6 +263,18 @@
     outline: none;
   }
 
+  .tv-dpad-active [data-dpad="true"]:focus-visible,
+  .tv-dpad-active button:focus-visible,
+  .tv-dpad-active a:focus-visible,
+  .tv-dpad-active input:focus-visible,
+  .tv-dpad-active select:focus-visible,
+  .tv-dpad-active textarea:focus-visible,
+  .tv-dpad-active [tabindex]:focus-visible {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(124, 169, 219, 0.32) !important;
+  }
+
   /* ===== GLOBAL RADIUS NORMALIZATION ===== */
   :root {
     --radius-flat-sm: 0.24rem;

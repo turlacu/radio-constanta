@@ -143,6 +143,8 @@ export default function News({ radioState }) {
         ">{error}</p>
         <button
           onClick={loadInitialNews}
+          data-dpad="true"
+          data-dpad-group="news"
           className="
             bg-primary hover:bg-primary/90 rounded-2xl font-medium transition-colors tv-focusable
             px-[clamp(1.15rem,0.95rem+0.7vw,3rem)] py-[clamp(0.7rem,0.6rem+0.35vw,1.5rem)] text-[clamp(0.95rem,0.86rem+0.28vw,1.35rem)]
@@ -193,6 +195,7 @@ export default function News({ radioState }) {
       {/* News List */}
       <div
         ref={listScrollRef}
+        data-dpad-group="news"
         className={isSplitScreen ? 'relative flex-1 overflow-y-auto scrollbar-hide' : 'relative'}
       >
         <NewsList
@@ -213,6 +216,8 @@ export default function News({ radioState }) {
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.96 }}
           onClick={scrollToTop}
+          data-dpad="true"
+          data-dpad-group="news"
           className="fixed bottom-6 right-6 z-[70] flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-bg-tertiary/90 text-white shadow-[0_12px_28px_rgba(2,6,23,0.3)] backdrop-blur-lg transition-colors hover:bg-bg-tertiary"
           aria-label="Back to top"
         >
