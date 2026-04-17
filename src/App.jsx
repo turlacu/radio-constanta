@@ -535,10 +535,26 @@ function AppContent() {
     setSelectedQuality((prev) => {
       const nextFmPreference = prev.fm || getInitialStationQuality('fm');
       const nextFolclorPreference = prev.folclor || getInitialStationQuality('folclor');
+      const shouldKeepPendingFlacPreference = (stationId, preferredQualityId) => {
+        if (preferredQualityId !== 'flac') return false;
+
+        const station = stationsWithDynamicCovers[stationId];
+        if (!station) return false;
+
+        const hasFlacQuality = station.qualities.some((quality) => quality.id === 'flac');
+        const hasLoadedDynamicConfig = Array.isArray(dynamicStreams?.[stationId]);
+
+        // Preserve FLAC preference while we still use static fallback streams.
+        return !hasFlacQuality && !hasLoadedDynamicConfig;
+      };
 
       const next = {
-        fm: resolveQualityForStation('fm', nextFmPreference)?.id || stationsWithDynamicCovers.fm.defaultQuality,
-        folclor: resolveQualityForStation('folclor', nextFolclorPreference)?.id || stationsWithDynamicCovers.folclor.defaultQuality
+        fm: shouldKeepPendingFlacPreference('fm', nextFmPreference)
+          ? 'flac'
+          : resolveQualityForStation('fm', nextFmPreference)?.id || stationsWithDynamicCovers.fm.defaultQuality,
+        folclor: shouldKeepPendingFlacPreference('folclor', nextFolclorPreference)
+          ? 'flac'
+          : resolveQualityForStation('folclor', nextFolclorPreference)?.id || stationsWithDynamicCovers.folclor.defaultQuality
       };
 
       if (next.fm === prev.fm && next.folclor === prev.folclor) {
@@ -547,7 +563,7 @@ function AppContent() {
 
       return next;
     });
-  }, [stationsWithDynamicCovers]);
+  }, [stationsWithDynamicCovers, dynamicStreams]);
 
   useEffect(() => {
     selectedQualityRef.current = selectedQuality;
