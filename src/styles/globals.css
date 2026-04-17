@@ -331,6 +331,11 @@
   [class*=' rounded-bl-'] {
     border-bottom-left-radius: var(--radius-flat) !important;
   }
+
+  /* Player cover should keep a softer, more rounded look than global UI corners */
+  .rc-player-cover {
+    border-radius: clamp(0.95rem, 0.82rem + 0.52vw, 1.45rem) !important;
+  }
 }
 
 /* ===== AUDIO/VIDEO PLAYER STYLES ===== */

@@ -117,7 +117,7 @@ export default function RadioPlayer({ radioState }) {
         : `relative w-full ${useCompactStackedSizing ? 'mb-[clamp(1.1rem,0.98rem+0.4vw,1.6rem)]' : 'mb-[clamp(1.75rem,1.4rem+1.2vw,3rem)]'}`}
       style={desktop ? { width: desktopCoverWidth } : { maxWidth: `${mobileCoverWidth}px` }}
     >
-      <div className={`relative w-full aspect-square overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
+      <div className={`rc-player-cover relative w-full aspect-square overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
         <motion.img
           key={currentStation.coverArt}
           src={currentStation.coverArt}
