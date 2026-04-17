@@ -125,7 +125,24 @@ export default function Admin() {
         const settingsData = await settingsResponse.json();
         setSettings(settingsData);
       } else {
-        setError('Invalid password');
+        let errorMessage = 'Login failed. Please try again.';
+
+        try {
+          const data = await response.json();
+          if (typeof data?.message === 'string' && data.message.trim()) {
+            errorMessage = data.message;
+          } else if (typeof data?.error === 'string' && data.error.trim()) {
+            errorMessage = data.error;
+          }
+        } catch {
+          // Keep fallback message if response body is not JSON.
+        }
+
+        if (response.status === 401 && errorMessage === 'Invalid password') {
+          setError('Invalid password');
+        } else {
+          setError(errorMessage);
+        }
       }
     } catch (error) {
       setError('Login failed. Please try again.');
