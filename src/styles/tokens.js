@@ -86,7 +86,7 @@ export const shadows = {
 export const typography = {
   // Font families
   fontFamily: {
-    sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
+    sans: ['Geist'],
   },
 
   // Font weights

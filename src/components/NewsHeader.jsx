@@ -8,6 +8,7 @@ export default function NewsHeader({
 }) {
   const splitShellClass = 'mx-auto w-full max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]';
   const stackedShellClass = 'mx-auto w-full max-w-[96rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)]';
+  const backSlotClass = 'w-[clamp(2.75rem,2.55rem+0.55vw,3.15rem)]';
   const headerShellClass = isSplitScreen
     ? `${splitShellClass} pr-[clamp(7.4rem,6.4rem+3vw,10rem)] py-[clamp(0.82rem,0.74rem+0.22vw,1.14rem)]`
     : `${stackedShellClass} py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)]`;
@@ -17,14 +18,14 @@ export default function NewsHeader({
       <div className={`absolute inset-0 border-b border-border ${isSplitScreen ? 'bg-bg-secondary' : 'bg-bg-primary'}`} />
 
       <div className={`relative ${headerShellClass}`}>
-        <div className="flex items-start gap-[clamp(0.75rem,0.68rem+0.18vw,1rem)]">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-[clamp(0.75rem,0.68rem+0.18vw,1rem)]">
           {onBack && (
             <Button
               variant="ghost"
               icon
               size="medium"
               onClick={onBack}
-              className="mt-[clamp(0.1rem,0.08rem+0.04vw,0.16rem)] shrink-0"
+              className={`mt-[clamp(0.1rem,0.08rem+0.04vw,0.16rem)] shrink-0 ${backSlotClass}`}
               aria-label="Go back to news list"
             >
               <svg
@@ -43,6 +44,7 @@ export default function NewsHeader({
               </svg>
             </Button>
           )}
+          {!onBack && <div className={backSlotClass} aria-hidden="true" />}
 
           <div className="min-w-0">
             <Heading

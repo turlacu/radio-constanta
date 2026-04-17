@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Geist', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Geist'],
       },
       colors: {
         // Dark mode pastel colors
