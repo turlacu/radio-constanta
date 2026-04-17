@@ -191,14 +191,28 @@ function AppContent() {
     const viewportShape = device.viewportShape || 'tall';
     const isDesktopShell = shellMode === 'desktop';
     const topControlsCompact = device.isShortHeight;
-    const preferredNewsShare = viewportAspectRatio <= 1.9 ? 0.54 : 0.5;
-    const candidateNewsWidth = Math.min(viewportHeight * 1.04, viewportWidth * preferredNewsShare);
+    const preferredNewsShare = viewportAspectRatio >= 2.45
+      ? 0.62
+      : viewportAspectRatio >= 2.1
+      ? 0.6
+      : 0.58;
+    const minNewsPaneWidth = viewportHeight;
+    const minPlayerPaneWidth = Math.max(360, Math.min(460, viewportHeight * 0.6));
+    const maxPlayerPaneWidth = Math.min(viewportHeight * 0.92, viewportWidth * 0.44);
+    const preferredNewsWidth = viewportWidth * preferredNewsShare;
+    const candidateNewsWidth = Math.max(
+      minNewsPaneWidth,
+      preferredNewsWidth,
+      viewportWidth - maxPlayerPaneWidth
+    );
     const candidatePlayerWidth = Math.max(0, viewportWidth - candidateNewsWidth);
     const candidateNewsAspectRatio = viewportHeight > 0 ? candidateNewsWidth / viewportHeight : 0;
     const candidatePlayerAspectRatio = viewportHeight > 0 ? candidatePlayerWidth / viewportHeight : 0;
     const canShowNewsRail = isDesktopShell
-      && candidateNewsAspectRatio <= 1.08
-      && candidatePlayerAspectRatio <= 1.02;
+      && candidateNewsWidth + minPlayerPaneWidth <= viewportWidth
+      && candidateNewsAspectRatio >= 1
+      && candidatePlayerAspectRatio <= 0.92
+      && candidateNewsWidth > candidatePlayerWidth;
     const showInlineNews = showNews && canShowNewsRail;
     const activePlayerPaneWidth = showInlineNews ? candidatePlayerWidth : viewportWidth;
     const activePlayerPaneAspectRatio = viewportHeight > 0
@@ -1223,7 +1237,7 @@ function AppContent() {
               )}
               {/* Top Right Buttons */}
               <div className={`absolute z-50 ${isShortHeightShell ? 'top-3 right-3' : 'top-6 right-6'}`}>
-                <div className={`flex items-center gap-2 rounded-[1.15rem] border px-2 py-2 backdrop-blur-xl ${desktopControlRailClass}`}>
+                <div className={`flex items-center gap-2 rounded-[1.15rem] px-2 py-2 backdrop-blur-xl ${desktopControlRailClass}`}>
                 {/* Settings Button */}
                 <motion.button
                   onClick={() => setShowSettingsModal(true)}
@@ -1316,12 +1330,12 @@ function AppContent() {
 
                   <div className={`relative z-10 flex h-full w-full justify-center ${
                     resizePolicy.showInlineNews
-                      ? 'items-start overflow-y-auto scrollbar-hide px-[clamp(1.25rem,1.05rem+0.8vw,2.5rem)] pt-[clamp(4.9rem,4.45rem+1.1vw,6.15rem)] pb-[clamp(1.25rem,1rem+0.7vw,2rem)]'
+                      ? 'items-center overflow-hidden px-[clamp(1.25rem,1.05rem+0.8vw,2.5rem)] pt-[clamp(4.9rem,4.45rem+1.1vw,6.15rem)] pb-[clamp(1.25rem,1rem+0.7vw,2rem)]'
                       : isShortHeightShell
                       ? 'items-center px-[clamp(1rem,0.88rem+0.42vw,1.5rem)] py-[clamp(1rem,0.88rem+0.42vw,1.5rem)]'
                       : 'items-center px-[clamp(1.5rem,1.28rem+0.85vw,3rem)] py-[clamp(2rem,1.65rem+1.2vw,3.5rem)]'
                   }`}>
-                    <div className={`flex w-full justify-center ${resizePolicy.showInlineNews ? 'min-h-max items-start' : 'h-full items-center'}`}>
+                    <div className={`flex w-full justify-center ${resizePolicy.showInlineNews ? 'h-full items-center min-h-0' : 'h-full items-center'}`}>
                       <Radio radioState={radioState} />
                     </div>
                   </div>

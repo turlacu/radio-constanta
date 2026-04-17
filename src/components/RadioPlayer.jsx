@@ -28,12 +28,12 @@ export default function RadioPlayer({ radioState }) {
 
   const device = useContext(DeviceContext);
   const isDesktopShell = device?.policy?.isDesktopShell;
-  const isSplitScreen = isDesktopShell && !forceCompactLayout;
   const viewportWidth = device?.viewportWidth || device?.screenWidth || 0;
   const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
   const effectivePaneAspectRatio = availablePaneAspectRatio || aspectRatio;
-  const useCenteredDesktopStack = isDesktopShell && effectivePaneAspectRatio < 1.25;
+  const useCompactDesktopSizing = isDesktopShell && (forceCompactLayout || shortHeightLayout);
+  const useCenteredDesktopStack = isDesktopShell && (forceCompactLayout || effectivePaneAspectRatio < 1.25);
   const weatherTextColor = useWeatherTextColor();
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
@@ -77,29 +77,29 @@ export default function RadioPlayer({ radioState }) {
   const stationLabelBaseClass = 'block w-full overflow-hidden text-center leading-none';
   const qualityButtonBaseClass = 'relative flex-1 overflow-hidden rounded-[10px] border px-[clamp(0.75rem,0.68rem+0.22vw,1rem)] py-[clamp(0.55rem,0.5rem+0.16vw,0.75rem)] text-[clamp(0.76rem,0.72rem+0.16vw,0.92rem)] font-medium leading-none transition-all focusable';
   const desktopTitleClass = '!leading-[0.96]';
-  const desktopCoverWidth = shortHeightLayout
-    ? 'clamp(13rem, 28vh, 18rem)'
+  const desktopCoverWidth = useCompactDesktopSizing
+    ? 'min(100%, clamp(11.5rem, 24vh, 15rem))'
     : 'clamp(16rem, 28vw, 26rem)';
-  const desktopPlayButtonSize = shortHeightLayout
-    ? 'clamp(3.25rem, 5vh, 4rem)'
+  const desktopPlayButtonSize = useCompactDesktopSizing
+    ? 'clamp(3rem, 4.4vh, 3.75rem)'
     : 'clamp(3.75rem, 4.6vw, 5rem)';
-  const desktopVisualizerWidth = shortHeightLayout
-    ? 'clamp(6rem, 12vw, 8rem)'
+  const desktopVisualizerWidth = useCompactDesktopSizing
+    ? 'clamp(5.5rem, 9vw, 7rem)'
     : 'clamp(7rem, 14vw, 10rem)';
-  const desktopVisualizerHeight = shortHeightLayout
-    ? 'clamp(1rem, 1.8vh, 1.4rem)'
+  const desktopVisualizerHeight = useCompactDesktopSizing
+    ? 'clamp(0.95rem, 1.55vh, 1.2rem)'
     : 'clamp(1.25rem, 2.6vw, 2rem)';
-  const desktopTitleSize = shortHeightLayout
-    ? 'clamp(1.7rem, 2.2vw, 2.1rem)'
+  const desktopTitleSize = useCompactDesktopSizing
+    ? 'clamp(1.45rem, 1.7vw, 1.9rem)'
     : 'clamp(2rem, 2.8vw, 2.8rem)';
-  const desktopSubtitleSize = shortHeightLayout
-    ? 'clamp(0.92rem, 1.1vw, 1.02rem)'
+  const desktopSubtitleSize = useCompactDesktopSizing
+    ? 'clamp(0.88rem, 0.98vw, 1rem)'
     : 'clamp(1rem, 1.4vw, 1.28rem)';
-  const desktopStationRailWidth = shortHeightLayout
-    ? 'min(100%, 22rem)'
+  const desktopStationRailWidth = useCompactDesktopSizing
+    ? 'min(100%, 20rem)'
     : 'min(100%, 24rem)';
-  const desktopStageWidth = shortHeightLayout
-    ? 'min(100%, 60rem)'
+  const desktopStageWidth = useCompactDesktopSizing
+    ? 'min(100%, 48rem)'
     : 'min(100%, 68rem)';
 
   const renderCoverArt = (desktop = false) => (
@@ -184,18 +184,22 @@ export default function RadioPlayer({ radioState }) {
     </motion.div>
   );
 
-  if (isSplitScreen) {
+  if (isDesktopShell) {
     if (useCenteredDesktopStack) {
       return (
         <ResponsiveContainer section="radio" className="justify-center">
-          <div className="mx-auto flex w-full max-w-[min(100%,56rem)] flex-col items-center text-center">
+          <div className="mx-auto flex w-full max-w-[min(100%,48rem)] flex-col items-center text-center">
             {renderCoverArt(true)}
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 }}
-              className="mt-[clamp(1.25rem,1rem+0.8vw,2rem)] flex w-full flex-col items-center gap-[clamp(0.9rem,0.72rem+0.55vw,1.5rem)]"
+              className={`flex w-full flex-col items-center ${
+                useCompactDesktopSizing
+                  ? 'mt-[clamp(0.8rem,0.7rem+0.35vw,1.1rem)] gap-[clamp(0.55rem,0.48rem+0.22vw,0.85rem)]'
+                  : 'mt-[clamp(1.25rem,1rem+0.8vw,2rem)] gap-[clamp(0.9rem,0.72rem+0.55vw,1.5rem)]'
+              }`}
             >
               <SpectrumVisualizer
                 analyserRef={audioAnalyserRef}
@@ -208,7 +212,7 @@ export default function RadioPlayer({ radioState }) {
                 }}
               />
 
-              <div className="flex w-full max-w-[min(100%,36rem)] flex-col items-center text-center">
+              <div className={`flex w-full flex-col items-center text-center ${useCompactDesktopSizing ? 'max-w-[min(100%,28rem)]' : 'max-w-[min(100%,36rem)]'}`}>
                 <Heading
                   level={2}
                   color="custom"
