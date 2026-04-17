@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Loader from './Loader';
 import { Heading, Body, Caption } from './ui';
 import NewsHeader from './NewsHeader';
@@ -7,10 +7,12 @@ import { useArticleMedia } from '../hooks/useArticleMedia';
 import analytics from '../utils/analytics';
 
 export default function NewsArticle({ article, onBack, radioState, isSplitScreen }) {
+  const scrollRef = useRef(null);
   const [fullContent, setFullContent] = useState(article.content || '');
   const [fullImage, setFullImage] = useState(article.image);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const splitShellClass = 'mx-auto w-full max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]';
   const articleShellClass = isSplitScreen
     ? `${splitShellClass} py-[clamp(1.3rem,1.15rem+0.52vw,2rem)]`
@@ -90,8 +92,29 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
     return articleDate < threeDaysAgo;
   }, [article.date]);
 
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+
+    const handleScroll = () => {
+      setShowBackToTop(node.scrollTop > 220);
+    };
+
+    handleScroll();
+    node.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      node.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const scrollToTop = () => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <motion.div
+      ref={scrollRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -248,6 +271,23 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           </div>
         )}
       </article>
+
+      {showBackToTop && (
+        <motion.button
+          initial={{ opacity: 0, y: 10, scale: 0.92 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.92 }}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-[70] flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-bg-tertiary/90 text-white shadow-[0_12px_28px_rgba(2,6,23,0.3)] backdrop-blur-lg transition-colors hover:bg-bg-tertiary"
+          aria-label="Back to top"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+          </svg>
+        </motion.button>
+      )}
     </motion.div>
   );
 }

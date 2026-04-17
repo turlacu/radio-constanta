@@ -1,4 +1,5 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
+import { motion } from 'framer-motion';
 import NewsList from '../components/NewsList';
 import NewsArticle from '../components/NewsArticle';
 import NewsHeader from '../components/NewsHeader';
@@ -9,6 +10,9 @@ import { DeviceContext } from '../App';
 export default function News({ radioState }) {
   const device = useContext(DeviceContext);
   const isSplitScreen = device?.policy?.canShowNewsRail;
+  const rootRef = useRef(null);
+  const [scrollTarget, setScrollTarget] = useState(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const [articles, setArticles] = useState([]);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +24,55 @@ export default function News({ radioState }) {
   useEffect(() => {
     loadInitialNews();
   }, []);
+
+  useEffect(() => {
+    const findScrollContainer = (node) => {
+      let current = node?.parentElement || null;
+
+      while (current) {
+        const style = window.getComputedStyle(current);
+        const isScrollable = /(auto|scroll)/.test(style.overflowY) && current.scrollHeight > current.clientHeight;
+
+        if (isScrollable) {
+          return current;
+        }
+
+        current = current.parentElement;
+      }
+
+      return window;
+    };
+
+    const target = findScrollContainer(rootRef.current);
+    setScrollTarget(target);
+  }, [isSplitScreen]);
+
+  useEffect(() => {
+    if (!scrollTarget) return;
+
+    const handleScroll = () => {
+      const top = scrollTarget === window ? window.scrollY : scrollTarget.scrollTop;
+      setShowBackToTop(top > 220);
+    };
+
+    handleScroll();
+    scrollTarget.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      scrollTarget.removeEventListener('scroll', handleScroll);
+    };
+  }, [scrollTarget]);
+
+  const scrollToTop = () => {
+    if (!scrollTarget) return;
+
+    if (scrollTarget === window) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const loadInitialNews = async () => {
     try {
@@ -108,11 +161,14 @@ export default function News({ radioState }) {
   }
 
   return (
-    <div className={
+    <div
+      ref={rootRef}
+      className={
       isSplitScreen
         ? "h-full w-full relative flex flex-col" // Split-screen: fill entire section with background and use flex layout
         : "min-app-height relative overflow-hidden" // Single page: full screen
-    }>
+      }
+    >
       {/* Subtle ambient glow accents */}
       {isSplitScreen ? (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -139,6 +195,23 @@ export default function News({ radioState }) {
           isSplitScreen={isSplitScreen}
         />
       </div>
+
+      {showBackToTop && (
+        <motion.button
+          initial={{ opacity: 0, y: 10, scale: 0.92 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.92 }}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-[70] flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-bg-tertiary/90 text-white shadow-[0_12px_28px_rgba(2,6,23,0.3)] backdrop-blur-lg transition-colors hover:bg-bg-tertiary"
+          aria-label="Back to top"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+          </svg>
+        </motion.button>
+      )}
     </div>
   );
 }

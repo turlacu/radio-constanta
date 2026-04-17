@@ -6,10 +6,12 @@ import { Card, Heading, Body, Button } from './ui';
 export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore, loading }) {
   const device = useContext(DeviceContext);
   const isSplitScreen = device?.policy?.canShowNewsRail;
+  const placeholderImage = 'https://via.placeholder.com/800x400/1A1F2E/7CA9DB?text=Radio+Constanta';
   const listShellClass = isSplitScreen
     ? 'mx-auto flex w-full max-w-[64rem] flex-col gap-[clamp(0.95rem,0.86rem+0.34vw,1.6rem)] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)] pt-[clamp(1.1rem,1rem+0.32vw,1.6rem)] pb-[clamp(0.5rem,0.38rem+0.18vw,0.8rem)]'
     : 'mx-auto grid w-full max-w-[96rem] grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-[clamp(1rem,0.9rem+0.35vw,1.75rem)] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] pt-[clamp(1.5rem,1.32rem+0.72vw,2.8rem)] min-[1100px]:grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))]';
-  const splitCardFrameClass = 'grid min-h-[clamp(11rem,10.1rem+1.9vw,14rem)] grid-cols-[minmax(clamp(9.5rem,8.8rem+1.5vw,13rem),34%)_minmax(0,1fr)] items-stretch';
+  const splitCardFrameClass = 'grid h-[clamp(11.6rem,11rem+1.2vw,13rem)] grid-cols-[minmax(clamp(9.5rem,8.8rem+1.5vw,13rem),34%)_minmax(0,1fr)] items-stretch';
+  const stackedCardFrameClass = 'flex h-[clamp(18.5rem,17.5rem+2vw,21rem)] flex-col';
   const splitMetaClass = 'mb-[clamp(0.5rem,0.42rem+0.16vw,0.72rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.7rem,0.67rem+0.12vw,0.84rem)] text-text-tertiary';
   const stackedMetaClass = 'mb-[clamp(0.65rem,0.58rem+0.2vw,0.95rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.75rem,0.72rem+0.12vw,0.92rem)] text-text-tertiary';
   const splitTitleClass = 'mb-[clamp(0.5rem,0.44rem+0.16vw,0.72rem)] line-clamp-2 text-[clamp(0.94rem,0.9rem+0.18vw,1.14rem)] font-bold leading-snug transition-colors group-hover:text-primary';
@@ -66,42 +68,39 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 className={
                   isSplitScreen
                     ? splitCardFrameClass
-                    : 'flex h-full flex-col'
+                    : stackedCardFrameClass
                 }
                 whileHover={isSplitScreen ? { scale: 1.01 } : {}}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
               >
                 {/* Image */}
-                {article.image && (
-                  <div
-                    className={
-                      isSplitScreen
-                        ? 'relative h-full overflow-hidden rounded-l-[12px] bg-bg-secondary'
-                        : 'relative aspect-[16/9] w-full overflow-hidden rounded-t-[12px] bg-bg-secondary'
-                    }
-                  >
-                    <motion.img
-                      src={article.image}
-                      alt={article.title}
-                      className="w-full h-full object-cover"
-                      whileHover={{ scale: 1.08 }}
-                      transition={{ duration: 0.4, ease: 'easeOut' }}
-                      loading="lazy"
-                      style={{ imageRendering: 'auto' }}
-                      onError={(e) => {
-                        e.target.src =
-                          'https://via.placeholder.com/800x400/1A1F2E/7CA9DB?text=Radio+Constanta';
-                      }}
-                    />
-                  </div>
-                )}
+                <div
+                  className={
+                    isSplitScreen
+                      ? 'relative h-full overflow-hidden rounded-l-[12px] bg-bg-secondary'
+                      : 'relative h-[clamp(8.6rem,8.2rem+1vw,9.8rem)] w-full overflow-hidden rounded-t-[12px] bg-bg-secondary'
+                  }
+                >
+                  <motion.img
+                    src={article.image || placeholderImage}
+                    alt={article.title}
+                    className="w-full h-full object-cover"
+                    whileHover={{ scale: 1.08 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    loading="lazy"
+                    style={{ imageRendering: 'auto' }}
+                    onError={(e) => {
+                      e.target.src = placeholderImage;
+                    }}
+                  />
+                </div>
 
                 {/* Content */}
                 <div
                   className={
                     isSplitScreen
                       ? 'flex flex-1 flex-col justify-center overflow-hidden p-[clamp(1.1rem,1rem+0.32vw,1.7rem)]'
-                      : 'flex flex-1 flex-col justify-between p-[clamp(1rem,0.92rem+0.34vw,1.6rem)]'
+                      : 'flex flex-1 flex-col justify-between overflow-hidden p-[clamp(1rem,0.92rem+0.34vw,1.6rem)]'
                   }
                 >
                   {/* Category & Date */}
