@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { authenticateAdmin } from '../middleware/auth.js';
 import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
+import { normalizeStyledUnicode } from '../utils/normalizeStyledUnicode.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -191,19 +192,19 @@ const fetchFromWordPressAPI = async (limit = 20) => {
         }
 
         // Create summary from excerpt
-        const cleanExcerpt = stripHtml(excerpt);
+        const cleanExcerpt = normalizeStyledUnicode(stripHtml(excerpt));
         const summary = truncateAtWord(cleanExcerpt, 200);
 
         return {
           id: id,
-          title: stripHtml(title),
+          title: normalizeStyledUnicode(stripHtml(title)),
           summary: summary,
           image: image, // Will be processed later
-          category: stripHtml(categoryName),
+          category: normalizeStyledUnicode(stripHtml(categoryName)),
           date: date,
           link: link,
           content: '', // Don't include full content for list view
-          author: stripHtml(authorName),
+          author: normalizeStyledUnicode(stripHtml(authorName)),
           needsOgImage: !image // Flag for posts that need og:image fetch
         };
       } catch (err) {

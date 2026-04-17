@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
+import { normalizeStyledUnicode } from '../utils/normalizeStyledUnicode.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -107,6 +108,18 @@ const sanitizeArticleHtml = (html) => {
   });
 
   root.find('a[target="_blank"]').attr('rel', 'noopener noreferrer');
+
+  root.find('*').contents().each((_, node) => {
+    if (node.type === 'text' && node.data) {
+      node.data = normalizeStyledUnicode(node.data);
+    }
+  });
+
+  root.contents().each((_, node) => {
+    if (node.type === 'text' && node.data) {
+      node.data = normalizeStyledUnicode(node.data);
+    }
+  });
 
   return root.html();
 };
