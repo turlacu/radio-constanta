@@ -11,14 +11,14 @@ export default {
       },
       borderRadius: {
         none: '0',
-        sm: '0.14rem',
-        DEFAULT: '0.22rem',
-        md: '0.22rem',
-        lg: '0.28rem',
-        xl: '0.34rem',
-        '2xl': '0.42rem',
-        '3xl': '0.52rem',
-        full: '0.56rem',
+        sm: '0.2rem',
+        DEFAULT: '0.32rem',
+        md: '0.32rem',
+        lg: '0.42rem',
+        xl: '0.54rem',
+        '2xl': '0.7rem',
+        '3xl': '0.9rem',
+        full: '9999px',
       },
       colors: {
         // Dark mode pastel colors

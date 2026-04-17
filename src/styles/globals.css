@@ -265,9 +265,9 @@
 
   /* ===== GLOBAL RADIUS NORMALIZATION ===== */
   :root {
-    --radius-flat-sm: 0.14rem;
-    --radius-flat: 0.28rem;
-    --radius-flat-lg: 0.38rem;
+    --radius-flat-sm: 0.2rem;
+    --radius-flat: 0.42rem;
+    --radius-flat-lg: 0.7rem;
   }
 
   .rounded,
@@ -281,10 +281,6 @@
 
   .rounded-sm {
     border-radius: var(--radius-flat-sm) !important;
-  }
-
-  .rounded-full {
-    border-radius: var(--radius-flat-lg) !important;
   }
 
   [class^='rounded-['],

@@ -11,6 +11,7 @@ export default function News({ radioState }) {
   const device = useContext(DeviceContext);
   const isSplitScreen = device?.policy?.canShowNewsRail;
   const rootRef = useRef(null);
+  const listScrollRef = useRef(null);
   const [scrollTarget, setScrollTarget] = useState(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [articles, setArticles] = useState([]);
@@ -26,6 +27,11 @@ export default function News({ radioState }) {
   }, []);
 
   useEffect(() => {
+    if (isSplitScreen && listScrollRef.current) {
+      setScrollTarget(listScrollRef.current);
+      return;
+    }
+
     const findScrollContainer = (node) => {
       let current = node?.parentElement || null;
 
@@ -45,7 +51,7 @@ export default function News({ radioState }) {
 
     const target = findScrollContainer(rootRef.current);
     setScrollTarget(target);
-  }, [isSplitScreen, articles.length]);
+  }, [isSplitScreen, articles.length, selectedArticle]);
 
   useEffect(() => {
     if (!scrollTarget) return;
@@ -165,7 +171,7 @@ export default function News({ radioState }) {
       ref={rootRef}
       className={
       isSplitScreen
-        ? "h-full w-full relative flex flex-col" // Split-screen: fill entire section with background and use flex layout
+        ? "h-full w-full relative flex flex-col overflow-hidden" // Split-screen: keep sticky header visible while list scrolls internally
         : "min-app-height relative overflow-hidden" // Single page: full screen
       }
     >
@@ -185,7 +191,10 @@ export default function News({ radioState }) {
       <NewsHeader isSplitScreen={isSplitScreen} />
 
       {/* News List */}
-      <div className="relative">
+      <div
+        ref={listScrollRef}
+        className={isSplitScreen ? 'relative flex-1 overflow-y-auto scrollbar-hide' : 'relative'}
+      >
         <NewsList
           articles={articles}
           onArticleClick={setSelectedArticle}
