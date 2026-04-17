@@ -73,6 +73,9 @@ const sanitizeArticleHtml = (html) => {
   const root = $('#article-root');
 
   root.find('script, style, iframe, object, embed, form, input, button, textarea, select, link, meta, base').remove();
+  root.find('font').each((_, element) => {
+    $(element).replaceWith($(element).contents());
+  });
 
   root.find('*').each((_, element) => {
     const attrs = element.attribs || {};
@@ -81,7 +84,7 @@ const sanitizeArticleHtml = (html) => {
       const normalizedName = name.toLowerCase();
       const normalizedValue = String(value).trim().toLowerCase();
 
-      if (normalizedName.startsWith('on') || normalizedName === 'style') {
+      if (normalizedName.startsWith('on') || normalizedName === 'style' || normalizedName === 'face') {
         $(element).removeAttr(name);
         continue;
       }

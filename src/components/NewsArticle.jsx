@@ -250,7 +250,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
 
         {/* Content */}
         {!loading && fullContent && (
-          <div className="prose prose-invert max-w-none overflow-x-hidden font-sans">
+          <div className="prose prose-invert max-w-none overflow-x-hidden font-sans force-geist">
             <div
               className={articleBodyClass}
               dangerouslySetInnerHTML={{ __html: fullContent }}

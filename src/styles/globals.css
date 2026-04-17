@@ -193,6 +193,11 @@
     overflow: hidden;
   }
 
+  .force-geist,
+  .force-geist * {
+    font-family: 'Geist' !important;
+  }
+
   /* ===== DARK MODE SURFACE UTILITIES ===== */
   .surface-base {
     background: var(--bg-secondary);
