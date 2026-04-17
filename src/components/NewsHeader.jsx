@@ -14,7 +14,7 @@ export default function NewsHeader({
     : `${stackedShellClass} py-[clamp(0.8rem,0.72rem+0.28vw,1.35rem)]`;
 
   return (
-    <div className="sticky top-0 z-10">
+    <div className="sticky top-0 z-20 isolate overflow-hidden">
       <div className={`absolute inset-0 border-b border-border ${isSplitScreen ? 'bg-bg-secondary' : 'bg-bg-primary'}`} />
 
       <div className={`relative ${headerShellClass}`}>

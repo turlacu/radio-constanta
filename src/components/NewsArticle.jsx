@@ -35,7 +35,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
   const [showBackToTop, setShowBackToTop] = useState(false);
   const splitShellClass = 'mx-auto w-full max-w-[64rem] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)]';
   const articleShellClass = isSplitScreen
-    ? `${splitShellClass} py-[clamp(1.3rem,1.15rem+0.52vw,2rem)]`
+    ? `${splitShellClass} pt-[clamp(1.55rem,1.38rem+0.56vw,2.25rem)] pb-[clamp(1.3rem,1.15rem+0.52vw,2rem)]`
     : 'mx-auto w-full max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1.25rem,1.12rem+0.55vw,2.4rem)] min-[1500px]:max-w-[66rem]';
   const articleBodyClass = [
     'font-sans text-[clamp(0.94rem,0.9rem+0.22vw,1.14rem)] leading-[1.8] text-white/84 [&_*]:!font-sans',
@@ -164,9 +164,8 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative mb-[clamp(1.25rem,1.1rem+0.52vw,2rem)] aspect-[16/9] w-full overflow-hidden rounded-[1.25rem] shadow-2xl"
+            className="relative mb-[clamp(1.25rem,1.1rem+0.52vw,2rem)] aspect-[16/9] w-full overflow-hidden rounded-[1.25rem] shadow-[0_16px_34px_rgba(2,6,23,0.28)]"
           >
-            <div className="absolute inset-0 z-10 rounded-[1.25rem] border border-white/10 pointer-events-none" />
             <img
               src={fullImage}
               alt={article.title}
@@ -208,7 +207,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Heading level={2} gradient className="mb-[clamp(0.72rem,0.62rem+0.34vw,1.25rem)] text-balance text-[clamp(1.14rem,1.06rem+0.32vw,1.52rem)]">
+          <Heading level={2} gradient className="mb-[clamp(0.72rem,0.62rem+0.34vw,1.25rem)] text-pretty leading-[1.24] text-[clamp(1.02rem,0.96rem+0.28vw,1.34rem)]">
             {article.title}
           </Heading>
         </motion.div>
