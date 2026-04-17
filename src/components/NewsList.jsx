@@ -10,14 +10,14 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
   const listShellClass = isSplitScreen
     ? 'mx-auto flex w-full max-w-[64rem] flex-col gap-[clamp(0.95rem,0.86rem+0.34vw,1.6rem)] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)] pt-[clamp(1.1rem,1rem+0.32vw,1.6rem)] pb-[clamp(0.5rem,0.38rem+0.18vw,0.8rem)]'
     : 'mx-auto grid w-full max-w-[96rem] grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-[clamp(1rem,0.9rem+0.35vw,1.75rem)] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] pt-[clamp(1.5rem,1.32rem+0.72vw,2.8rem)] min-[1100px]:grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))]';
-  const splitCardFrameClass = 'grid h-[clamp(11.6rem,11rem+1.2vw,13rem)] grid-cols-[minmax(clamp(9.5rem,8.8rem+1.5vw,13rem),34%)_minmax(0,1fr)] items-stretch';
-  const stackedCardFrameClass = 'flex h-[clamp(18.5rem,17.5rem+2vw,21rem)] flex-col';
+  const splitCardFrameClass = 'grid h-[clamp(13.4rem,12.8rem+1.4vw,15rem)] grid-cols-[minmax(clamp(9.5rem,8.8rem+1.5vw,13rem),34%)_minmax(0,1fr)] items-stretch';
+  const stackedCardFrameClass = 'flex h-[clamp(20rem,19rem+2.2vw,23rem)] flex-col';
   const splitMetaClass = 'mb-[clamp(0.5rem,0.42rem+0.16vw,0.72rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.7rem,0.67rem+0.12vw,0.84rem)] text-text-tertiary';
   const stackedMetaClass = 'mb-[clamp(0.65rem,0.58rem+0.2vw,0.95rem)] flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-[clamp(0.75rem,0.72rem+0.12vw,0.92rem)] text-text-tertiary';
-  const splitTitleClass = 'mb-[clamp(0.42rem,0.38rem+0.12vw,0.58rem)] line-clamp-3 text-[clamp(0.8rem,0.76rem+0.12vw,0.94rem)] font-bold leading-snug transition-colors group-hover:text-primary';
-  const stackedTitleClass = 'mb-[clamp(0.5rem,0.46rem+0.14vw,0.72rem)] line-clamp-3 text-[clamp(0.82rem,0.78rem+0.14vw,0.98rem)] leading-snug transition-colors group-hover:text-primary';
-  const splitSummaryClass = 'line-clamp-2 text-[clamp(0.76rem,0.73rem+0.12vw,0.9rem)] leading-relaxed';
-  const stackedSummaryClass = 'line-clamp-3 text-[clamp(0.78rem,0.74rem+0.14vw,0.94rem)] leading-relaxed';
+  const splitTitleClass = 'mb-[clamp(0.36rem,0.34rem+0.1vw,0.5rem)] line-clamp-2 text-[clamp(0.76rem,0.73rem+0.1vw,0.88rem)] font-bold leading-snug transition-colors group-hover:text-primary';
+  const stackedTitleClass = 'mb-[clamp(0.42rem,0.38rem+0.12vw,0.62rem)] line-clamp-2 text-[clamp(0.78rem,0.74rem+0.12vw,0.92rem)] leading-snug transition-colors group-hover:text-primary';
+  const splitSummaryClass = 'text-[clamp(0.72rem,0.69rem+0.1vw,0.84rem)] leading-relaxed';
+  const stackedSummaryClass = 'text-[clamp(0.74rem,0.7rem+0.12vw,0.88rem)] leading-relaxed';
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -99,8 +99,8 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                 <div
                   className={
                     isSplitScreen
-                      ? 'flex flex-1 flex-col justify-center overflow-hidden p-[clamp(1.1rem,1rem+0.32vw,1.7rem)]'
-                      : 'flex flex-1 flex-col justify-between overflow-hidden p-[clamp(1rem,0.92rem+0.34vw,1.6rem)]'
+                      ? 'flex flex-1 flex-col justify-start overflow-hidden p-[clamp(1.1rem,1rem+0.32vw,1.7rem)]'
+                      : 'flex flex-1 flex-col justify-start overflow-hidden p-[clamp(1rem,0.92rem+0.34vw,1.6rem)]'
                   }
                 >
                   {/* Category & Date */}
@@ -135,7 +135,6 @@ export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore
                     <Body
                       size="small"
                       opacity="secondary"
-                      clamp={isSplitScreen ? 2 : 2}
                       className={
                         isSplitScreen
                           ? splitSummaryClass
