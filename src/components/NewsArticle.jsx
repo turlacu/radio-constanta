@@ -13,6 +13,10 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
 
     // Source pages often embed inline font stacks; remove those so app typography stays consistent.
     return html
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<font\b[^>]*>/gi, '')
+      .replace(/<\/font>/gi, '')
+      .replace(/\sface=(['"])(.*?)\1/gi, '')
       .replace(/\sstyle=(['"])(.*?)\1/gi, (match, quote, styleValue) => {
         const cleanedStyle = styleValue
           .replace(/font-family\s*:[^;]+;?/gi, '')
@@ -34,7 +38,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
     ? `${splitShellClass} py-[clamp(1.3rem,1.15rem+0.52vw,2rem)]`
     : 'mx-auto w-full max-w-[54rem] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] py-[clamp(1.25rem,1.12rem+0.55vw,2.4rem)] min-[1500px]:max-w-[66rem]';
   const articleBodyClass = [
-    'font-sans text-[clamp(0.94rem,0.9rem+0.22vw,1.14rem)] leading-[1.8] text-white/84',
+    'font-sans text-[clamp(0.94rem,0.9rem+0.22vw,1.14rem)] leading-[1.8] text-white/84 [&_*]:!font-sans',
     '[&_p]:mb-[clamp(1rem,0.92rem+0.25vw,1.4rem)] [&_p]:text-pretty',
     '[&_h2]:mb-[clamp(0.8rem,0.74rem+0.16vw,1rem)] [&_h2]:mt-[clamp(2rem,1.8rem+0.7vw,3rem)] [&_h2]:text-[clamp(1.22rem,1.12rem+0.34vw,1.55rem)] [&_h2]:font-bold [&_h2]:leading-tight',
     '[&_h3]:mb-[clamp(0.72rem,0.67rem+0.14vw,0.9rem)] [&_h3]:mt-[clamp(1.7rem,1.55rem+0.5vw,2.5rem)] [&_h3]:text-[clamp(1rem,0.93rem+0.24vw,1.22rem)] [&_h3]:font-semibold [&_h3]:leading-tight',
