@@ -43,6 +43,9 @@ export default function Admin() {
   const [scheduleForm, setScheduleForm] = useState({
     name: '',
     coverPath: '',
+    mediaType: 'image',
+    videoUrl: '',
+    videoLabel: '',
     days: [],
     startTime: '09:00',
     endTime: '17:00',
@@ -832,9 +835,13 @@ export default function Admin() {
       setScheduleError('Schedule name is required');
       return;
     }
-    if (!scheduleForm.coverPath) {
+    if (scheduleForm.mediaType !== 'video' && !scheduleForm.coverPath) {
       console.log('[Admin] ❌ Validation failed: coverPath is required');
       setScheduleError('Please select a cover from the library below. Upload a cover first if needed.');
+      return;
+    }
+    if (scheduleForm.mediaType === 'video' && !scheduleForm.videoUrl.trim()) {
+      setScheduleError('Video stream URL is required');
       return;
     }
     if (scheduleForm.days.length === 0) {
@@ -852,7 +859,18 @@ export default function Admin() {
 
     const scheduleData = {
       name: scheduleForm.name,
-      coverPath: scheduleForm.coverPath,
+      mediaType: scheduleForm.mediaType,
+      ...(scheduleForm.mediaType === 'video'
+        ? {
+          videoUrl: scheduleForm.videoUrl.trim(),
+          videoLabel: scheduleForm.videoLabel.trim(),
+          muted: true,
+          aspectRatio: '16:9',
+          coverPath: scheduleForm.coverPath || ''
+        }
+        : {
+          coverPath: scheduleForm.coverPath
+        }),
       days: scheduleForm.days,
       type: scheduleForm.type,
       priority: scheduleForm.type === 'news' ? 100 : scheduleForm.priority, // News always has highest priority
@@ -2017,6 +2035,9 @@ export default function Admin() {
                             setScheduleForm({
                               name: '',
                               coverPath: '',
+                              mediaType: 'image',
+                              videoUrl: '',
+                              videoLabel: '',
                               days: [],
                               startTime: '09:00',
                               endTime: '17:00',
@@ -2047,6 +2068,11 @@ export default function Admin() {
                                       📰 News
                                     </span>
                                   )}
+                                  {schedule.mediaType === 'video' && (
+                                    <span className="px-2 py-0.5 text-xs rounded-full bg-red-500/20 text-red-400 font-medium">
+                                      Video
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="text-xs text-text-tertiary mt-1">
                                   {schedule.days?.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')}
@@ -2067,6 +2093,11 @@ export default function Admin() {
                                     <img src={schedule.coverPath} alt="Schedule cover" className="w-16 h-16 rounded object-cover border border-border" />
                                   </div>
                                 )}
+                                {schedule.mediaType === 'video' && schedule.videoUrl && (
+                                  <div className="mt-2 text-xs text-text-secondary break-all">
+                                    {schedule.videoLabel || 'Live video'} | {schedule.videoUrl}
+                                  </div>
+                                )}
                               </div>
                               <div className="flex gap-1">
                                 <button
@@ -2075,6 +2106,9 @@ export default function Admin() {
                                     setScheduleForm({
                                       name: schedule.name || '',
                                       coverPath: schedule.coverPath || '',
+                                      mediaType: schedule.mediaType || 'image',
+                                      videoUrl: schedule.videoUrl || '',
+                                      videoLabel: schedule.videoLabel || '',
                                       days: schedule.days || [],
                                       startTime: schedule.startTime || '09:00',
                                       endTime: schedule.endTime || '17:00',
@@ -2754,43 +2788,100 @@ export default function Admin() {
                   />
                 </div>
 
-                {/* Cover Selection */}
+                {/* Media Type */}
                 <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Select Cover (from Covers Library)</Body>
-                  <div className="grid grid-cols-4 gap-2">
-                    {settings.coverScheduling[selectedStation].covers?.filter(c => c.category === 'scheduling' || !c.category).map((cover) => (
-                      <div
-                        key={cover.id}
-                        onClick={() => setScheduleForm({ ...scheduleForm, coverPath: cover.path })}
-                        className={`relative cursor-pointer rounded border-2 transition-all ${
-                          scheduleForm.coverPath === cover.path
-                            ? 'border-primary ring-2 ring-primary/30'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <img
-                          src={cover.path}
-                          alt={cover.label}
-                          className="w-full aspect-square object-cover rounded"
-                        />
-                        {scheduleForm.coverPath === cover.path && (
-                          <div className="absolute top-1 right-1 bg-primary rounded-full p-0.5">
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        )}
-                        <div className="mt-1 text-xs text-text-secondary truncate">{cover.label}</div>
-                      </div>
-                    ))}
-                    {(!settings.coverScheduling[selectedStation].covers ||
-                      settings.coverScheduling[selectedStation].covers.filter(c => c.category === 'scheduling' || !c.category).length === 0) && (
-                      <div className="col-span-4 text-center py-4 text-xs text-text-tertiary border border-dashed border-border rounded">
-                        No scheduling covers available. Upload covers to the Covers Library first.
-                      </div>
-                    )}
+                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Schedule Media</Body>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setScheduleForm({ ...scheduleForm, mediaType: 'image' })}
+                      className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
+                        scheduleForm.mediaType !== 'video'
+                          ? 'bg-primary text-white'
+                          : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
+                      }`}
+                    >
+                      Cover Image
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setScheduleForm({ ...scheduleForm, mediaType: 'video' })}
+                      className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
+                        scheduleForm.mediaType === 'video'
+                          ? 'bg-primary text-white'
+                          : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
+                      }`}
+                    >
+                      Video Stream
+                    </button>
                   </div>
                 </div>
+
+                {scheduleForm.mediaType === 'video' ? (
+                  <div className="space-y-3 rounded-lg border border-border bg-bg-tertiary p-4">
+                    <div>
+                      <Body size="small" opacity="secondary" className="mb-2 text-xs">HLS Video URL</Body>
+                      <input
+                        type="url"
+                        value={scheduleForm.videoUrl}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, videoUrl: e.target.value })}
+                        placeholder="https://example.com/live/stream.m3u8"
+                        className="w-full px-3 py-2 text-sm rounded-lg bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <Body size="small" opacity="secondary" className="mb-2 text-xs">Video Label</Body>
+                      <input
+                        type="text"
+                        value={scheduleForm.videoLabel}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, videoLabel: e.target.value })}
+                        placeholder="e.g., Live video"
+                        className="w-full px-3 py-2 text-sm rounded-lg bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="aspect-video rounded-lg border border-border bg-black/80" aria-hidden="true" />
+                    <Body size="small" opacity="secondary" className="text-xs">
+                      Video schedules are muted and use the existing radio audio. The cover area changes to 16:9 while active.
+                    </Body>
+                  </div>
+                ) : (
+                  <div>
+                    <Body size="small" opacity="secondary" className="mb-2 text-xs">Select Cover (from Covers Library)</Body>
+                    <div className="grid grid-cols-4 gap-2">
+                      {settings.coverScheduling[selectedStation].covers?.filter(c => c.category === 'scheduling' || !c.category).map((cover) => (
+                        <div
+                          key={cover.id}
+                          onClick={() => setScheduleForm({ ...scheduleForm, coverPath: cover.path })}
+                          className={`relative cursor-pointer rounded border-2 transition-all ${
+                            scheduleForm.coverPath === cover.path
+                              ? 'border-primary ring-2 ring-primary/30'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <img
+                            src={cover.path}
+                            alt={cover.label}
+                            className="w-full aspect-square object-cover rounded"
+                          />
+                          {scheduleForm.coverPath === cover.path && (
+                            <div className="absolute top-1 right-1 bg-primary rounded-full p-0.5">
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                          <div className="mt-1 text-xs text-text-secondary truncate">{cover.label}</div>
+                        </div>
+                      ))}
+                      {(!settings.coverScheduling[selectedStation].covers ||
+                        settings.coverScheduling[selectedStation].covers.filter(c => c.category === 'scheduling' || !c.category).length === 0) && (
+                        <div className="col-span-4 text-center py-4 text-xs text-text-tertiary border border-dashed border-border rounded">
+                          No scheduling covers available. Upload covers to the Covers Library first.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Days of Week - Starting with Monday */}
                 <div>

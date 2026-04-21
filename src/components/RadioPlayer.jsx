@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import Loader from './Loader';
 import SpectrumVisualizer from './SpectrumVisualizer';
@@ -43,6 +43,10 @@ export default function RadioPlayer({ radioState }) {
     : Math.min(viewportWidth * 0.72, viewportHeight * 0.42);
   const mobileCoverWidth = Math.max(188, Math.min(mobileCoverMaxPx || 0, 360));
   const weatherTextColor = useWeatherTextColor();
+  const coverMedia = currentStation.coverMedia || { type: 'image', coverPath: currentStation.coverArt };
+  const isVideoCover = coverMedia.type === 'video' && coverMedia.videoUrl;
+  const videoRef = useRef(null);
+  const [videoFailed, setVideoFailed] = useState(false);
   const currentSubtitle = nowPlayingEnabled && nowPlayingOverride?.text
     ? nowPlayingOverride.text
     : nowPlayingEnabled && nowPlaying?.text
@@ -115,6 +119,65 @@ export default function RadioPlayer({ radioState }) {
     ? 'min(100%, 58rem)'
     : 'min(100%, 68rem)';
 
+  useEffect(() => {
+    setVideoFailed(false);
+  }, [coverMedia.type, coverMedia.videoUrl]);
+
+  useEffect(() => {
+    if (!isVideoCover || videoFailed || !videoRef.current) {
+      return undefined;
+    }
+
+    const video = videoRef.current;
+    let hls = null;
+    let cancelled = false;
+
+    video.muted = coverMedia.muted !== false;
+    video.playsInline = true;
+
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = coverMedia.videoUrl;
+      video.play().catch(() => {});
+    } else {
+      import('hls.js').then(({ default: Hls }) => {
+        if (cancelled) {
+          return;
+        }
+
+        if (!Hls.isSupported()) {
+          setVideoFailed(true);
+          return;
+        }
+
+        hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+        });
+        hls.loadSource(coverMedia.videoUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play().catch(() => {});
+        });
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (data?.fatal) {
+            setVideoFailed(true);
+          }
+        });
+      }).catch(() => {
+        setVideoFailed(true);
+      });
+    }
+
+    return () => {
+      cancelled = true;
+      if (hls) {
+        hls.destroy();
+      }
+      video.removeAttribute('src');
+      video.load();
+    };
+  }, [coverMedia.muted, coverMedia.videoUrl, isVideoCover, videoFailed]);
+
   const renderCoverArt = (desktop = false) => (
     <motion.div
       initial={{ scale: 0.95, opacity: 0 }}
@@ -125,18 +188,35 @@ export default function RadioPlayer({ radioState }) {
         : `relative w-full ${useCompactStackedSizing ? 'mb-[clamp(1.1rem,0.98rem+0.4vw,1.6rem)]' : 'mb-[clamp(1.75rem,1.4rem+1.2vw,3rem)]'}`}
       style={desktop ? { width: desktopCoverWidth } : { maxWidth: `${mobileCoverWidth}px` }}
     >
-      <div className={`rc-player-cover relative w-full aspect-square overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
-        <motion.img
-          key={currentStation.coverArt}
-          src={currentStation.coverArt}
-          alt={`${currentStation.name} cover art`}
-          className="h-full w-full object-cover"
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
-          whileHover={desktop ? { scale: 1.015 } : { scale: 1.02 }}
-        />
+      <div className={`rc-player-cover relative w-full ${isVideoCover && !videoFailed ? 'aspect-video' : 'aspect-square'} overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
+        {isVideoCover && !videoFailed ? (
+          <motion.video
+            key={coverMedia.videoUrl}
+            ref={videoRef}
+            className="h-full w-full bg-black object-cover"
+            muted={coverMedia.muted !== false}
+            playsInline
+            autoPlay
+            preload="auto"
+            onError={() => setVideoFailed(true)}
+            initial={{ opacity: 0, scale: 1.01 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            aria-label={coverMedia.videoLabel || `${currentStation.name} live video`}
+          />
+        ) : (
+          <motion.img
+            key={coverMedia.coverPath || currentStation.coverArt}
+            src={coverMedia.coverPath || coverMedia.fallbackCoverPath || currentStation.coverArt}
+            alt={`${currentStation.name} cover art`}
+            className="h-full w-full object-cover"
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            whileHover={desktop ? { scale: 1.015 } : { scale: 1.02 }}
+          />
+        )}
 
         {isPlaying && (
           <motion.div

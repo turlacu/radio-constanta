@@ -25,6 +25,7 @@
     "express": "^4.21.2",
     "express-rate-limit": "^7.4.1",
     "framer-motion": "^11.11.17",
+    "hls.js": "^1.6.16",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.0-rc.4",
     "node-cron": "^4.2.1",

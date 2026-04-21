@@ -128,7 +128,12 @@ const coverSchema = z.object({
 const scheduleSchema = z.object({
   id: z.string(),
   name: z.string(),
-  coverPath: z.string(),
+  coverPath: z.string().optional(),
+  mediaType: z.enum(['image', 'video']).optional(),
+  videoUrl: z.string().optional(),
+  videoLabel: z.string().optional(),
+  muted: z.boolean().optional(),
+  aspectRatio: z.enum(['16:9']).optional(),
   days: z.array(z.number().int().min(0).max(6)),
   startTime: z.string().optional(),
   endTime: z.string().optional(),
@@ -279,6 +284,43 @@ function hasMusicTrackAfterScheduleStart(station, scheduleStartMs) {
 
   const updatedAtMs = new Date(nowPlaying.updatedAt).getTime();
   return Number.isFinite(updatedAtMs) && updatedAtMs >= scheduleStartMs;
+}
+
+function buildCoverMedia(station, coverPath) {
+  const path = coverPath || (station === 'fm' ? '/rcfm.png' : '/rcf.png');
+
+  return {
+    type: 'image',
+    coverPath: path,
+  };
+}
+
+function buildVideoMedia(schedule, fallbackCoverPath) {
+  return {
+    type: 'video',
+    videoUrl: schedule.videoUrl,
+    videoLabel: schedule.videoLabel || schedule.name,
+    muted: schedule.muted !== false,
+    aspectRatio: schedule.aspectRatio || '16:9',
+    fallbackCoverPath,
+  };
+}
+
+function buildScheduleMedia(station, config, schedule) {
+  const fallbackCoverPath = config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png');
+
+  if (schedule.mediaType === 'video' && schedule.videoUrl) {
+    return {
+      ...buildVideoMedia(schedule, fallbackCoverPath),
+      coverPath: fallbackCoverPath,
+      scheduleId: schedule.id,
+    };
+  }
+
+  return {
+    ...buildCoverMedia(station, schedule.coverPath || fallbackCoverPath),
+    scheduleId: schedule.id,
+  };
 }
 
 // Admin login endpoint - with rate limiting
@@ -592,7 +634,7 @@ async function evaluateCurrentCover(station, verbose = true) {
     // If not enabled, return default cover
     if (!config.enabled) {
       if (verbose) logger.debug('[Cover]', `Cover scheduling disabled for ${station}, returning default: ${config.defaultCover}`);
-      return { coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') };
+      return buildCoverMedia(station, config.defaultCover);
     }
 
     // Find active schedule based on current day/time (using Europe/Bucharest timezone)
@@ -673,19 +715,16 @@ async function evaluateCurrentCover(station, verbose = true) {
       .sort((a, b) => (b.priority || 0) - (a.priority || 0)); // Sort by priority descending
 
     if (activeSchedules.length > 0) {
-      if (verbose) logger.debug('[Cover]', `✅ Active schedule found: "${activeSchedules[0].name}" -> ${activeSchedules[0].coverPath}`);
-      return {
-        coverPath: activeSchedules[0].coverPath,
-        scheduleId: activeSchedules[0].id
-      };
+      if (verbose) logger.debug('[Cover]', `✅ Active schedule found: "${activeSchedules[0].name}"`);
+      return buildScheduleMedia(station, config, activeSchedules[0]);
     }
 
     // No active schedule, return default
     if (verbose) logger.debug('[Cover]', `No active schedules, returning default: ${config.defaultCover}`);
-    return { coverPath: config.defaultCover || (station === 'fm' ? '/rcfm.png' : '/rcf.png') };
+    return buildCoverMedia(station, config.defaultCover);
   } catch (error) {
     logger.error('[Cover]', 'Error evaluating current cover:', error);
-    return { coverPath: station === 'fm' ? '/rcfm.png' : '/rcf.png' };
+    return buildCoverMedia(station);
   }
 }
 
@@ -729,8 +768,8 @@ router.get('/covers/stream', (req, res) => {
       const folclorCover = await evaluateCurrentCover('folclor', false);
 
       const covers = {
-        fm: fmCover.coverPath,
-        folclor: folclorCover.coverPath
+        fm: fmCover,
+        folclor: folclorCover
       };
 
       res.write(`data: ${JSON.stringify({ type: 'covers', covers })}\n\n`);
@@ -772,12 +811,12 @@ export async function broadcastCurrentCovers() {
   const folclorCover = await evaluateCurrentCover('folclor', false);
 
   const currentCovers = {
-    fm: fmCover.coverPath,
-    folclor: folclorCover.coverPath
+    fm: fmCover,
+    folclor: folclorCover
   };
 
-  const fmChanged = lastKnownCovers.fm !== currentCovers.fm;
-  const folclorChanged = lastKnownCovers.folclor !== currentCovers.folclor;
+  const fmChanged = JSON.stringify(lastKnownCovers.fm) !== JSON.stringify(currentCovers.fm);
+  const folclorChanged = JSON.stringify(lastKnownCovers.folclor) !== JSON.stringify(currentCovers.folclor);
 
   if (!fmChanged && !folclorChanged) {
     return;

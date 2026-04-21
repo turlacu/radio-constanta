@@ -55,6 +55,39 @@ const STATIONS = {
 
 const QUALITY_STORAGE_KEY = 'preferredStreamQuality';
 const EMPTY_NOW_PLAYING = { text: '', artist: null, title: null, updatedAt: null };
+const DEFAULT_COVER_MEDIA = {
+  fm: { type: 'image', coverPath: '/rcfm.png' },
+  folclor: { type: 'image', coverPath: '/rcf.png' },
+};
+
+const normalizeCoverMedia = (stationId, media) => {
+  const fallback = DEFAULT_COVER_MEDIA[stationId] || DEFAULT_COVER_MEDIA.fm;
+
+  if (typeof media === 'string') {
+    return { type: 'image', coverPath: media || fallback.coverPath };
+  }
+
+  if (!media || typeof media !== 'object') {
+    return fallback;
+  }
+
+  if (media.type === 'video' && media.videoUrl) {
+    return {
+      type: 'video',
+      videoUrl: media.videoUrl,
+      videoLabel: media.videoLabel || 'Live video',
+      muted: media.muted !== false,
+      aspectRatio: media.aspectRatio || '16:9',
+      fallbackCoverPath: media.fallbackCoverPath || media.coverPath || fallback.coverPath,
+      coverPath: media.coverPath || media.fallbackCoverPath || fallback.coverPath,
+    };
+  }
+
+  return {
+    type: 'image',
+    coverPath: media.coverPath || fallback.coverPath,
+  };
+};
 
 const getRomaniaDate = (date = new Date()) => (
   new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Bucharest' }))
@@ -253,8 +286,8 @@ function AppContent() {
 
   // Dynamic cover art state
   const [dynamicCovers, setDynamicCovers] = useState({
-    fm: '/rcfm.png',
-    folclor: '/rcf.png'
+    fm: DEFAULT_COVER_MEDIA.fm,
+    folclor: DEFAULT_COVER_MEDIA.folclor
   });
 
   // Dynamic stream configurations from API
@@ -374,8 +407,8 @@ function AppContent() {
         console.log('[App] Folclor cover data:', folclorData);
 
         const newCovers = {
-          fm: fmData.coverPath || '/rcfm.png',
-          folclor: folclorData.coverPath || '/rcf.png'
+          fm: normalizeCoverMedia('fm', fmData),
+          folclor: normalizeCoverMedia('folclor', folclorData)
         };
 
         console.log('[App] Setting dynamic covers:', newCovers);
@@ -513,8 +546,8 @@ function AppContent() {
             if (data.type === 'covers' && data.covers) {
               console.log('[App] Updating covers from SSE:', data.covers);
               setDynamicCovers({
-                fm: data.covers.fm || '/rcfm.png',
-                folclor: data.covers.folclor || '/rcf.png'
+                fm: normalizeCoverMedia('fm', data.covers.fm),
+                folclor: normalizeCoverMedia('folclor', data.covers.folclor)
               });
             }
           } catch (error) {
@@ -667,13 +700,15 @@ function AppContent() {
     return {
       fm: {
         ...STATIONS.fm,
-        coverArt: dynamicCovers.fm,
+        coverArt: dynamicCovers.fm.coverPath,
+        coverMedia: dynamicCovers.fm,
         qualities: fmQualities,
         defaultQuality: getPreferredDefaultQuality('fm', fmQualities)
       },
       folclor: {
         ...STATIONS.folclor,
-        coverArt: dynamicCovers.folclor,
+        coverArt: dynamicCovers.folclor.coverPath,
+        coverMedia: dynamicCovers.folclor,
         qualities: folclorQualities,
         defaultQuality: getPreferredDefaultQuality('folclor', folclorQualities)
       }
