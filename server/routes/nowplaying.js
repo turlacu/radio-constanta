@@ -18,6 +18,7 @@ const latestNowPlaying = {
 };
 
 let broadcastUpdate = () => {};
+let handleNowPlayingUpdate = () => {};
 
 function getBearerToken(req) {
   const authorization = req.get('authorization') || '';
@@ -52,6 +53,10 @@ function normalizeNullableString(value) {
 
 export function setNowPlayingBroadcaster(broadcaster) {
   broadcastUpdate = typeof broadcaster === 'function' ? broadcaster : () => {};
+}
+
+export function setNowPlayingUpdateHandler(handler) {
+  handleNowPlayingUpdate = typeof handler === 'function' ? handler : () => {};
 }
 
 export function getNowPlayingState() {
@@ -119,6 +124,7 @@ router.post('/update', authenticateNowPlaying, (req, res) => {
     station,
     data: next,
   });
+  handleNowPlayingUpdate(station, next);
 
   res.json({
     success: true,

@@ -10,6 +10,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { authenticateAdmin, getJWTSecret } from '../middleware/auth.js';
 import logger from '../utils/logger.js';
+import { getNowPlayingState } from './nowplaying.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -135,6 +136,7 @@ const scheduleSchema = z.object({
   type: z.enum(['regular', 'news']).optional(),
   newsHours: z.array(z.number().int().min(0).max(23)).optional(),
   duration: z.number().positive().optional(),
+  endOnFirstTrack: z.boolean().optional(),
 });
 
 const coverSchedulingStationSchema = z.object({
@@ -267,6 +269,16 @@ function sanitizeUploadFilename(originalname) {
   const safeName = parsed.name.replace(/[^a-zA-Z0-9-_]+/g, '-').replace(/-+/g, '-').slice(0, 80) || 'cover';
   const safeExt = parsed.ext.replace(/[^a-zA-Z0-9.]/g, '').slice(0, 10).toLowerCase();
   return `${safeName}${safeExt}`;
+}
+
+function hasMusicTrackAfterScheduleStart(station, scheduleStartMs) {
+  const nowPlaying = getNowPlayingState()[station];
+  if (!nowPlaying?.updatedAt || !nowPlaying.artist || !nowPlaying.title) {
+    return false;
+  }
+
+  const updatedAtMs = new Date(nowPlaying.updatedAt).getTime();
+  return Number.isFinite(updatedAtMs) && updatedAtMs >= scheduleStartMs;
 }
 
 // Admin login endpoint - with rate limiting
@@ -639,6 +651,14 @@ async function evaluateCurrentCover(station, verbose = true) {
           const duration = schedule.duration || 3; // Duration in minutes (can be fractional like 3.5)
           const durationInSeconds = duration * 60;
           const currentTimeInSeconds = currentMinutes * 60 + currentSeconds;
+          if (schedule.endOnFirstTrack) {
+            const scheduleStartMs = now.getTime() - (currentTimeInSeconds * 1000) - now.getMilliseconds();
+            const musicTrackStarted = hasMusicTrackAfterScheduleStart(station, scheduleStartMs);
+            if (verbose) logger.debug('[Cover]', `  - End on first track enabled. Music after start? ${musicTrackStarted ? '✅' : '❌'}`);
+            if (musicTrackStarted) {
+              return false;
+            }
+          }
           const matched = currentTimeInSeconds < durationInSeconds;
           if (verbose) logger.debug('[Cover]', `  - Time ${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} within ${duration}min (${durationInSeconds}s)? ${matched ? '✅' : '❌'}`);
           return matched;
@@ -743,6 +763,43 @@ router.get('/covers/stream', (req, res) => {
 // Periodic check for cover changes and broadcast to all connected clients
 let coverCheckInterval = null;
 
+export async function broadcastCurrentCovers() {
+  if (coverStreamClients.size === 0) {
+    return;
+  }
+
+  const fmCover = await evaluateCurrentCover('fm', false);
+  const folclorCover = await evaluateCurrentCover('folclor', false);
+
+  const currentCovers = {
+    fm: fmCover.coverPath,
+    folclor: folclorCover.coverPath
+  };
+
+  const fmChanged = lastKnownCovers.fm !== currentCovers.fm;
+  const folclorChanged = lastKnownCovers.folclor !== currentCovers.folclor;
+
+  if (!fmChanged && !folclorChanged) {
+    return;
+  }
+
+  lastKnownCovers = currentCovers;
+  const message = `data: ${JSON.stringify({ type: 'covers', covers: currentCovers })}\n\n`;
+
+  coverStreamClients.forEach(client => {
+    try {
+      client.write(message);
+    } catch (error) {
+      console.error('[SSE] Error broadcasting to client:', error);
+      coverStreamClients.delete(client);
+    }
+  });
+
+  if (coverStreamClients.size === 0) {
+    stopCoverChangeMonitoring();
+  }
+}
+
 function startCoverChangeMonitoring() {
   if (coverCheckInterval || coverStreamClients.size === 0) {
     return; // Already running
@@ -752,47 +809,7 @@ function startCoverChangeMonitoring() {
 
   coverCheckInterval = setInterval(async () => {
     try {
-      // Evaluate current covers for both stations
-      const fmCover = await evaluateCurrentCover('fm', false);
-      const folclorCover = await evaluateCurrentCover('folclor', false);
-
-      const currentCovers = {
-        fm: fmCover.coverPath,
-        folclor: folclorCover.coverPath
-      };
-
-      // Check if covers have changed
-      const fmChanged = lastKnownCovers.fm !== currentCovers.fm;
-      const folclorChanged = lastKnownCovers.folclor !== currentCovers.folclor;
-
-      if (fmChanged || folclorChanged) {
-        console.log('[SSE] Cover change detected!');
-        if (fmChanged) console.log(`[SSE]   FM: ${lastKnownCovers.fm} → ${currentCovers.fm}`);
-        if (folclorChanged) console.log(`[SSE]   Folclor: ${lastKnownCovers.folclor} → ${currentCovers.folclor}`);
-
-        // Update last known covers
-        lastKnownCovers = currentCovers;
-
-        // Broadcast to all connected clients
-        const message = `data: ${JSON.stringify({ type: 'covers', covers: currentCovers })}\n\n`;
-        let broadcastCount = 0;
-
-        coverStreamClients.forEach(client => {
-          try {
-            client.write(message);
-            broadcastCount++;
-          } catch (error) {
-            console.error('[SSE] Error broadcasting to client:', error);
-            coverStreamClients.delete(client);
-          }
-        });
-
-        if (coverStreamClients.size === 0) {
-          stopCoverChangeMonitoring();
-        }
-
-        console.log(`[SSE] Broadcasted update to ${broadcastCount} client(s)`);
-      }
+      await broadcastCurrentCovers();
     } catch (error) {
       console.error('[SSE] Error in cover change monitoring:', error);
     }

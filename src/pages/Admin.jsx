@@ -49,7 +49,8 @@ export default function Admin() {
     priority: 0,
     type: 'regular', // 'regular' or 'news'
     newsHours: [], // For news type: array of hours when news airs (e.g., [7, 9, 12, 18])
-    duration: 3 // For news type: duration in minutes
+    duration: 3, // For news type: maximum duration in minutes
+    endOnFirstTrack: true
   });
 
   // Active tab state
@@ -857,7 +858,8 @@ export default function Admin() {
       priority: scheduleForm.type === 'news' ? 100 : scheduleForm.priority, // News always has highest priority
       ...(scheduleForm.type === 'news' ? {
         newsHours: scheduleForm.newsHours,
-        duration: scheduleForm.duration
+        duration: scheduleForm.duration,
+        endOnFirstTrack: scheduleForm.endOnFirstTrack
       } : {
         startTime: scheduleForm.startTime,
         endTime: scheduleForm.endTime
@@ -2021,7 +2023,8 @@ export default function Admin() {
                               priority: 0,
                               type: 'regular',
                               newsHours: [],
-                              duration: 3
+                              duration: 3,
+                              endOnFirstTrack: true
                             });
                             setScheduleError('');
                             setShowScheduleModal(true);
@@ -2054,7 +2057,7 @@ export default function Admin() {
                                       const seconds = Math.round((duration - minutes) * 60);
                                       if (seconds === 0) return `${minutes}min`;
                                       return `${minutes}m ${seconds}s`;
-                                    })()})</>
+                                    })()}{schedule.endOnFirstTrack ? ', ends on first track' : ''})</>
                                   ) : (
                                     <> | {schedule.startTime} - {schedule.endTime}</>
                                   )}
@@ -2078,7 +2081,8 @@ export default function Admin() {
                                       priority: schedule.priority || 0,
                                       type: schedule.type || 'regular',
                                       newsHours: schedule.newsHours || [],
-                                      duration: schedule.duration || 3
+                                      duration: schedule.duration || 3,
+                                      endOnFirstTrack: schedule.endOnFirstTrack !== false
                                     });
                                     setScheduleError('');
                                     setShowScheduleModal(true);
@@ -2726,7 +2730,7 @@ export default function Admin() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setScheduleForm({ ...scheduleForm, type: 'news' })}
+                      onClick={() => setScheduleForm({ ...scheduleForm, type: 'news', endOnFirstTrack: true })}
                       className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
                         scheduleForm.type === 'news'
                           ? 'bg-primary text-white'
@@ -2902,7 +2906,7 @@ export default function Admin() {
                     {/* Duration */}
                     <div>
                       <Body size="small" opacity="secondary" className="mb-2 text-xs">
-                        Duration (minutes and seconds)
+                        Maximum Duration (minutes and seconds)
                       </Body>
                       <div className="flex items-center gap-3">
                         <input
@@ -2926,7 +2930,7 @@ export default function Admin() {
                         </span>
                       </div>
                       <Body size="small" opacity="secondary" className="mt-1 text-xs">
-                        News bulletin will show from :00 to :{(() => {
+                        Fallback limit: news cover will show from :00 to :{(() => {
                           const totalSeconds = Math.round(scheduleForm.duration * 60);
                           const minutes = Math.floor(totalSeconds / 60);
                           const seconds = totalSeconds % 60;
@@ -2935,9 +2939,26 @@ export default function Admin() {
                       </Body>
                     </div>
 
+                    <label className="flex items-start gap-3 rounded-lg border border-border bg-bg-tertiary p-3">
+                      <input
+                        type="checkbox"
+                        checked={scheduleForm.endOnFirstTrack !== false}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, endOnFirstTrack: e.target.checked })}
+                        className="mt-0.5 w-4 h-4 rounded border-border bg-bg-primary text-primary focus:ring-primary"
+                      />
+                      <div>
+                        <Body size="small" className="font-medium">
+                          End news cover when first music track appears
+                        </Body>
+                        <Body size="small" opacity="secondary" className="mt-1 text-xs">
+                          Uses the FM now-playing feed. A payload with both artist and title after the news start switches back before the maximum duration.
+                        </Body>
+                      </div>
+                    </label>
+
                     <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                       <Body size="small" className="text-xs text-blue-400">
-                        ℹ️ News bulletins automatically have the highest priority and will override any other schedules during the selected hours.
+                        ℹ️ News bulletins automatically have the highest priority. The maximum duration still protects against a stuck cover if no track update arrives.
                       </Body>
                     </div>
                   </>

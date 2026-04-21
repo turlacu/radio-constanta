@@ -8,10 +8,10 @@ import { mkdir, copyFile, access } from 'fs/promises';
 import newsRouter from './routes/news.js';
 import articleRouter from './routes/article.js';
 import imageProxyRouter from './routes/imageProxy.js';
-import adminRouter from './routes/admin.js';
+import adminRouter, { broadcastCurrentCovers } from './routes/admin.js';
 import analyticsRouter from './routes/analytics.js';
 import weatherRouter from './routes/weather.js';
-import nowPlayingRouter, { getNowPlayingState, setNowPlayingBroadcaster } from './routes/nowplaying.js';
+import nowPlayingRouter, { getNowPlayingState, setNowPlayingBroadcaster, setNowPlayingUpdateHandler } from './routes/nowplaying.js';
 import { initializeDatabase as initAnalyticsDB } from './database/analytics.js';
 import { startAnalyticsCronJobs } from './jobs/analytics-cron.js';
 import logger from './utils/logger.js';
@@ -176,6 +176,12 @@ nowPlayingWss.on('connection', (ws) => {
 setNowPlayingBroadcaster((message) => {
   nowPlayingWss.clients.forEach((client) => {
     sendNowPlayingMessage(client, message);
+  });
+});
+
+setNowPlayingUpdateHandler(() => {
+  broadcastCurrentCovers().catch((error) => {
+    logger.error('[NowPlaying]', 'Error refreshing covers after now playing update:', error);
   });
 });
 
