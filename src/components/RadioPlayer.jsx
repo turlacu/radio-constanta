@@ -121,6 +121,12 @@ export default function RadioPlayer({ radioState }) {
   const desktopStageWidth = useCompactDesktopSizing
     ? 'min(100%, 58rem)'
     : 'min(100%, 68rem)';
+  const hasExpandedVideoCover = isVideoCover && !videoFailed;
+  const desktopPlayerGridColumns = hasExpandedVideoCover
+    ? useCompactDesktopSizing
+      ? 'minmax(22rem,36rem) minmax(18rem,1fr)'
+      : 'minmax(28rem,46rem) minmax(18rem,1fr)'
+    : 'minmax(14rem,24rem) minmax(18rem,1fr)';
   const mobileVideoCoverWidth = Math.max(
     mobileCoverWidth,
     Math.min(
@@ -189,10 +195,9 @@ export default function RadioPlayer({ radioState }) {
   }, [coverMedia.muted, coverMedia.videoUrl, isVideoCover, videoFailed]);
 
   const renderCoverArt = (desktop = false) => {
-    const isExpandedVideo = isVideoCover && !videoFailed;
     const activeCoverWidth = desktop
-      ? (isExpandedVideo ? desktopVideoCoverWidth : desktopCoverWidth)
-      : `${isExpandedVideo ? mobileVideoCoverWidth : mobileCoverWidth}px`;
+      ? (hasExpandedVideoCover ? desktopVideoCoverWidth : desktopCoverWidth)
+      : `${hasExpandedVideoCover ? mobileVideoCoverWidth : mobileCoverWidth}px`;
 
     return (
     <motion.div
@@ -204,8 +209,8 @@ export default function RadioPlayer({ radioState }) {
         : `relative w-full ${useCompactStackedSizing ? 'mb-[clamp(1.1rem,0.98rem+0.4vw,1.6rem)]' : 'mb-[clamp(1.75rem,1.4rem+1.2vw,3rem)]'}`}
       style={desktop ? { width: activeCoverWidth } : { maxWidth: activeCoverWidth }}
     >
-      <div className={`rc-player-cover relative w-full ${isExpandedVideo ? 'aspect-video' : 'aspect-square'} overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
-        {isExpandedVideo ? (
+      <div className={`rc-player-cover relative w-full ${hasExpandedVideoCover ? 'aspect-video' : 'aspect-square'} overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
+        {hasExpandedVideoCover ? (
           <motion.video
             key={coverMedia.videoUrl}
             ref={videoRef}
@@ -447,7 +452,10 @@ export default function RadioPlayer({ radioState }) {
         <div className="mx-auto flex w-full justify-center">
           <div
             className="grid w-full items-center gap-[clamp(1.5rem,1.2rem+1vw,2.5rem)] grid-cols-[minmax(14rem,24rem)_minmax(18rem,1fr)]"
-            style={{ maxWidth: desktopStageWidth }}
+            style={{
+              maxWidth: desktopStageWidth,
+              gridTemplateColumns: desktopPlayerGridColumns,
+            }}
           >
             <div className="flex w-full justify-start">
               {renderCoverArt(true)}
