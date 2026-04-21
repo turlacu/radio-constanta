@@ -255,6 +255,7 @@ async function getPasswordHash() {
 const coverStreamClients = new Set();
 const MAX_SSE_CLIENTS = 100; // Prevent memory issues
 let lastKnownCovers = { fm: null, folclor: null };
+const endedNewsCoverWindows = new Set();
 
 // Helper function to validate file paths are within allowed directory
 function validateFilePath(filePath, allowedDir) {
@@ -284,6 +285,23 @@ function hasMusicTrackAfterScheduleStart(station, scheduleStartMs) {
 
   const updatedAtMs = new Date(nowPlaying.updatedAt).getTime();
   return Number.isFinite(updatedAtMs) && updatedAtMs >= scheduleStartMs;
+}
+
+function getNewsCoverWindowKey(station, scheduleId, scheduleStartMs) {
+  return `${station}:${scheduleId}:${scheduleStartMs}`;
+}
+
+function hasEndedNewsCoverWindow(station, scheduleId, scheduleStartMs) {
+  return endedNewsCoverWindows.has(getNewsCoverWindowKey(station, scheduleId, scheduleStartMs));
+}
+
+function markEndedNewsCoverWindow(station, scheduleId, scheduleStartMs) {
+  endedNewsCoverWindows.add(getNewsCoverWindowKey(station, scheduleId, scheduleStartMs));
+
+  if (endedNewsCoverWindows.size > 500) {
+    const keysToDelete = Array.from(endedNewsCoverWindows).slice(0, endedNewsCoverWindows.size - 500);
+    keysToDelete.forEach((key) => endedNewsCoverWindows.delete(key));
+  }
 }
 
 function buildCoverMedia(station, coverPath) {
@@ -695,9 +713,15 @@ async function evaluateCurrentCover(station, verbose = true) {
           const currentTimeInSeconds = currentMinutes * 60 + currentSeconds;
           if (schedule.endOnFirstTrack) {
             const scheduleStartMs = now.getTime() - (currentTimeInSeconds * 1000) - now.getMilliseconds();
+            if (hasEndedNewsCoverWindow(station, schedule.id, scheduleStartMs)) {
+              if (verbose) logger.debug('[Cover]', '  - News cover already ended for this bulletin window');
+              return false;
+            }
+
             const musicTrackStarted = hasMusicTrackAfterScheduleStart(station, scheduleStartMs);
             if (verbose) logger.debug('[Cover]', `  - End on first track enabled. Music after start? ${musicTrackStarted ? '✅' : '❌'}`);
             if (musicTrackStarted) {
+              markEndedNewsCoverWindow(station, schedule.id, scheduleStartMs);
               return false;
             }
           }
