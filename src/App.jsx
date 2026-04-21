@@ -85,6 +85,15 @@ const getActiveNowPlayingOverride = (stationConfig, date = new Date()) => {
     .sort((a, b) => (b.priority || 0) - (a.priority || 0))[0] || null;
 };
 
+const isKnownTvBrowserRuntime = () => {
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
+
+  return /tizen|webos|web0s|netcast|hbbtv|smart-tv|smarttv|googletv|appletv|bravia|viera|aquos|roku|aft|fire tv|nettv|pov_tv/i
+    .test(navigator.userAgent);
+};
+
 const getPreferredDefaultQuality = (stationId, qualities = []) => {
   if (qualities.some((quality) => quality.id === 'flac')) {
     return 'flac';
@@ -239,6 +248,8 @@ function AppContent() {
   const audioContextRef = useRef(null);
   const audioSourceNodeRef = useRef(null);
   const analyserRef = useRef(null);
+  const audioAnalyserUnavailableRef = useRef(false);
+  const shouldDisableAudioAnalyser = device.isTV || isKnownTvBrowserRuntime();
 
   // Dynamic cover art state
   const [dynamicCovers, setDynamicCovers] = useState({
@@ -779,7 +790,7 @@ function AppContent() {
     if (!detectedSampleRateRef.current && audioContextRef.current) {
       detectedSampleRateRef.current = `${(audioContextRef.current.sampleRate / 1000).toFixed(1)} kHz`;
       sampleRate = detectedSampleRateRef.current;
-    } else if (!detectedSampleRateRef.current && (window.AudioContext || window.webkitAudioContext)) {
+    } else if (!shouldDisableAudioAnalyser && !detectedSampleRateRef.current && (window.AudioContext || window.webkitAudioContext)) {
       try {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         const audioContext = new AudioContextClass();
@@ -999,7 +1010,13 @@ function AppContent() {
 
   const ensureAudioAnalyser = () => {
     const audio = audioRef.current;
-    if (!audio || analyserRef.current || !(window.AudioContext || window.webkitAudioContext)) {
+    if (
+      shouldDisableAudioAnalyser ||
+      audioAnalyserUnavailableRef.current ||
+      !audio ||
+      analyserRef.current ||
+      !(window.AudioContext || window.webkitAudioContext)
+    ) {
       return analyserRef.current;
     }
 
@@ -1021,11 +1038,26 @@ function AppContent() {
       audioSourceNodeRef.current = sourceNode;
       analyserRef.current = analyser;
     } catch (error) {
+      audioAnalyserUnavailableRef.current = true;
       console.warn('Unable to initialize audio analyser:', error);
     }
 
     return analyserRef.current;
   };
+
+  useEffect(() => {
+    if (!shouldDisableAudioAnalyser) {
+      return;
+    }
+
+    analyserRef.current = null;
+    audioSourceNodeRef.current = null;
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+  }, [shouldDisableAudioAnalyser]);
 
   // Create Audio element (HTML5 approach - mobile friendly)
   useEffect(() => {
