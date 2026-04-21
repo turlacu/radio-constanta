@@ -4,6 +4,21 @@ import logger from '../utils/logger.js';
 const router = express.Router();
 const VALID_STATIONS = new Set(['fm', 'folclor']);
 const DEFAULT_NOWPLAYING_TOKEN = '9506174b7f6eb7371f8c0c41397fd6cbadce23620bb4aa95fe43ca5b6e8bcab7';
+const STATION_ALIASES = new Map([
+  ['fm', 'fm'],
+  ['radio constanta fm', 'fm'],
+  ['radio constanța fm', 'fm'],
+  ['constanta fm', 'fm'],
+  ['constanța fm', 'fm'],
+  ['rcfm', 'fm'],
+  ['folclor', 'folclor'],
+  ['folklor', 'folclor'],
+  ['radio constanta folclor', 'folclor'],
+  ['radio constanța folclor', 'folclor'],
+  ['constanta folclor', 'folclor'],
+  ['constanța folclor', 'folclor'],
+  ['rcf', 'folclor'],
+]);
 
 const emptyNowPlaying = () => ({
   text: '',
@@ -51,6 +66,27 @@ function normalizeNullableString(value) {
   return trimmed || null;
 }
 
+function normalizeStation(value) {
+  if (value === undefined || value === null || value === '') {
+    return 'fm';
+  }
+
+  const normalized = String(value).trim().toLowerCase();
+  return STATION_ALIASES.get(normalized) || null;
+}
+
+function getStationFromBody(body) {
+  return normalizeStation(
+    body.station
+      ?? body.stationId
+      ?? body.stationName
+      ?? body.station_identifier
+      ?? body.station_name
+      ?? body.STATION_NAME
+      ?? body.channel
+  );
+}
+
 export function setNowPlayingBroadcaster(broadcaster) {
   broadcastUpdate = typeof broadcaster === 'function' ? broadcaster : () => {};
 }
@@ -67,10 +103,10 @@ export function getNowPlayingState() {
 }
 
 router.get('/', (req, res) => {
-  const station = req.query.station;
+  const station = normalizeStation(req.query.station);
 
-  if (station) {
-    if (!VALID_STATIONS.has(station)) {
+  if (req.query.station) {
+    if (!station) {
       return res.status(400).json({ error: 'Invalid station' });
     }
 
@@ -87,8 +123,8 @@ router.post('/update', authenticateNowPlaying, (req, res) => {
     return res.status(400).json({ error: 'JSON body is required' });
   }
 
-  const station = body.station || 'fm';
-  if (!VALID_STATIONS.has(station)) {
+  const station = getStationFromBody(body);
+  if (!station || !VALID_STATIONS.has(station)) {
     return res.status(400).json({ error: 'Invalid station' });
   }
 

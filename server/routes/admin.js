@@ -210,10 +210,10 @@ const adminSettingsSchema = z.object({
   }),
   nowPlaying: z.object({
     fm: nowPlayingStationSchema.default({ enabled: true, overrideSchedules: [] }),
-    folclor: nowPlayingStationSchema.default({ enabled: false, overrideSchedules: [] }),
+    folclor: nowPlayingStationSchema.default({ enabled: true, overrideSchedules: [] }),
   }).default({
     fm: { enabled: true, overrideSchedules: [] },
-    folclor: { enabled: false, overrideSchedules: [] },
+    folclor: { enabled: true, overrideSchedules: [] },
   }),
   timeSynchronization: z.object({
     enabled: z.boolean(),
@@ -453,7 +453,7 @@ router.get('/public-settings', async (req, res) => {
       coverScheduling: settings.coverScheduling || {},
       nowPlaying: settings.nowPlaying || {
         fm: { enabled: true, overrideSchedules: [] },
-        folclor: { enabled: false, overrideSchedules: [] },
+        folclor: { enabled: true, overrideSchedules: [] },
       }
     });
   } catch (error) {

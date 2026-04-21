@@ -241,7 +241,7 @@ export default function Admin() {
       ...settings,
       nowPlaying: {
         fm: { enabled: settings.nowPlaying?.fm?.enabled ?? true, overrideSchedules: settings.nowPlaying?.fm?.overrideSchedules || [] },
-        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? false, overrideSchedules: settings.nowPlaying?.folclor?.overrideSchedules || [] },
+        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? true, overrideSchedules: settings.nowPlaying?.folclor?.overrideSchedules || [] },
         [station]: {
           enabled,
           overrideSchedules: settings.nowPlaying?.[station]?.overrideSchedules || []
@@ -364,7 +364,7 @@ export default function Admin() {
     }
 
     const currentStationConfig = settings.nowPlaying?.[nowPlayingOverrideStation] || {
-      enabled: nowPlayingOverrideStation === 'fm',
+      enabled: true,
       overrideSchedules: []
     };
 
@@ -389,7 +389,7 @@ export default function Admin() {
       ...settings,
       nowPlaying: {
         fm: { enabled: settings.nowPlaying?.fm?.enabled ?? true, overrideSchedules: settings.nowPlaying?.fm?.overrideSchedules || [] },
-        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? false, overrideSchedules: settings.nowPlaying?.folclor?.overrideSchedules || [] },
+        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? true, overrideSchedules: settings.nowPlaying?.folclor?.overrideSchedules || [] },
         [nowPlayingOverrideStation]: {
           ...currentStationConfig,
           overrideSchedules: nextSchedules
@@ -414,7 +414,7 @@ export default function Admin() {
     }
 
     const currentStationConfig = settings.nowPlaying?.[station] || {
-      enabled: station === 'fm',
+      enabled: true,
       overrideSchedules: []
     };
 
@@ -422,7 +422,7 @@ export default function Admin() {
       ...settings,
       nowPlaying: {
         fm: { enabled: settings.nowPlaying?.fm?.enabled ?? true, overrideSchedules: settings.nowPlaying?.fm?.overrideSchedules || [] },
-        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? false, overrideSchedules: settings.nowPlaying?.folclor?.overrideSchedules || [] },
+        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? true, overrideSchedules: settings.nowPlaying?.folclor?.overrideSchedules || [] },
         [station]: {
           ...currentStationConfig,
           overrideSchedules: (currentStationConfig.overrideSchedules || []).filter((schedule) => schedule.id !== scheduleId)
@@ -1152,7 +1152,7 @@ export default function Admin() {
   };
 
   const renderNowPlayingStation = (station, label, sourceLabel) => {
-    const config = settings.nowPlaying?.[station] || { enabled: station === 'fm', overrideSchedules: [] };
+    const config = settings.nowPlaying?.[station] || { enabled: true, overrideSchedules: [] };
     const preview = nowPlayingPreview[station] || {};
     const activeOverride = getActiveNowPlayingOverride(station);
     const schedules = config.overrideSchedules || [];
@@ -2170,7 +2170,7 @@ export default function Admin() {
                   {renderNowPlayingStation(
                     'folclor',
                     'Radio Constanța Folclor',
-                    'Ready for future Folclor feed integration'
+                    'Raspberry Pi / Folclor text feed'
                   )}
 
                   {saveMessage && (

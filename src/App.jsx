@@ -294,7 +294,7 @@ function AppContent() {
   const [dynamicStreams, setDynamicStreams] = useState(null);
   const [nowPlayingConfig, setNowPlayingConfig] = useState({
     fm: { enabled: true, overrideSchedules: [] },
-    folclor: { enabled: false, overrideSchedules: [] }
+    folclor: { enabled: true, overrideSchedules: [] }
   });
   const [nowPlaying, setNowPlaying] = useState({
     fm: EMPTY_NOW_PLAYING,
@@ -493,7 +493,7 @@ function AppContent() {
               overrideSchedules: data.nowPlaying.fm?.overrideSchedules || []
             },
             folclor: {
-              enabled: data.nowPlaying.folclor?.enabled ?? false,
+              enabled: data.nowPlaying.folclor?.enabled ?? true,
               overrideSchedules: data.nowPlaying.folclor?.overrideSchedules || []
             }
           });
