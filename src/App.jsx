@@ -54,6 +54,36 @@ const STATIONS = {
 };
 
 const QUALITY_STORAGE_KEY = 'preferredStreamQuality';
+const EMPTY_NOW_PLAYING = { text: '', artist: null, title: null, updatedAt: null };
+
+const getRomaniaDate = (date = new Date()) => (
+  new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Bucharest' }))
+);
+
+const getActiveNowPlayingOverride = (stationConfig, date = new Date()) => {
+  const schedules = stationConfig?.overrideSchedules || [];
+  if (schedules.length === 0) {
+    return null;
+  }
+
+  const romaniaDate = getRomaniaDate(date);
+  const currentDay = romaniaDate.getDay();
+  const currentTime = `${String(romaniaDate.getHours()).padStart(2, '0')}:${String(romaniaDate.getMinutes()).padStart(2, '0')}`;
+
+  return schedules
+    .filter((schedule) => {
+      if (!schedule.enabled || !schedule.text || !schedule.days?.includes(currentDay)) {
+        return false;
+      }
+
+      if (schedule.startTime <= schedule.endTime) {
+        return currentTime >= schedule.startTime && currentTime <= schedule.endTime;
+      }
+
+      return currentTime >= schedule.startTime || currentTime <= schedule.endTime;
+    })
+    .sort((a, b) => (b.priority || 0) - (a.priority || 0))[0] || null;
+};
 
 const getPreferredDefaultQuality = (stationId, qualities = []) => {
   if (qualities.some((quality) => quality.id === 'flac')) {
@@ -219,13 +249,14 @@ function AppContent() {
   // Dynamic stream configurations from API
   const [dynamicStreams, setDynamicStreams] = useState(null);
   const [nowPlayingConfig, setNowPlayingConfig] = useState({
-    fm: { enabled: true },
-    folclor: { enabled: false }
+    fm: { enabled: true, overrideSchedules: [] },
+    folclor: { enabled: false, overrideSchedules: [] }
   });
   const [nowPlaying, setNowPlaying] = useState({
-    fm: { text: '', artist: null, title: null, updatedAt: null },
-    folclor: { text: '', artist: null, title: null, updatedAt: null }
+    fm: EMPTY_NOW_PLAYING,
+    folclor: EMPTY_NOW_PLAYING
   });
+  const [nowPlayingScheduleTick, setNowPlayingScheduleTick] = useState(Date.now());
 
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
@@ -413,8 +444,14 @@ function AppContent() {
 
         if (data.nowPlaying) {
           setNowPlayingConfig({
-            fm: { enabled: data.nowPlaying.fm?.enabled ?? true },
-            folclor: { enabled: data.nowPlaying.folclor?.enabled ?? false }
+            fm: {
+              enabled: data.nowPlaying.fm?.enabled ?? true,
+              overrideSchedules: data.nowPlaying.fm?.overrideSchedules || []
+            },
+            folclor: {
+              enabled: data.nowPlaying.folclor?.enabled ?? false,
+              overrideSchedules: data.nowPlaying.folclor?.overrideSchedules || []
+            }
           });
         }
       }
@@ -430,8 +467,8 @@ function AppContent() {
       if (response.ok) {
         const data = await response.json();
         setNowPlaying({
-          fm: data.fm || { text: '', artist: null, title: null, updatedAt: null },
-          folclor: data.folclor || { text: '', artist: null, title: null, updatedAt: null }
+          fm: data.fm || EMPTY_NOW_PLAYING,
+          folclor: data.folclor || EMPTY_NOW_PLAYING
         });
       }
     } catch (error) {
@@ -596,6 +633,19 @@ function AppContent() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNowPlayingScheduleTick(Date.now());
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeNowPlayingOverride = useMemo(
+    () => getActiveNowPlayingOverride(nowPlayingConfig[currentStation.id], new Date(nowPlayingScheduleTick)),
+    [currentStation.id, nowPlayingConfig, nowPlayingScheduleTick]
+  );
 
   // Create station objects with dynamic covers and streams
   const stationsWithDynamicCovers = useMemo(() => {
@@ -1265,6 +1315,7 @@ function AppContent() {
     metadata,
     nowPlaying: nowPlaying[currentStation.id],
     nowPlayingEnabled: nowPlayingConfig[currentStation.id]?.enabled ?? false,
+    nowPlayingOverride: activeNowPlayingOverride,
     streamInfo,
     stations: Object.values(stationsWithDynamicCovers), // Convert to array with dynamic covers
     selectedQuality: selectedQuality[currentStation.id],

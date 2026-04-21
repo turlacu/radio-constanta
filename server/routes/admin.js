@@ -154,8 +154,20 @@ const ntpServerSchema = z.object({
   priority: z.number().int().min(1),
 });
 
+const nowPlayingOverrideScheduleSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1),
+  text: z.string().min(1),
+  days: z.array(z.number().int().min(0).max(6)),
+  startTime: z.string(),
+  endTime: z.string(),
+  priority: z.number().optional(),
+  enabled: z.boolean().default(true),
+});
+
 const nowPlayingStationSchema = z.object({
   enabled: z.boolean(),
+  overrideSchedules: z.array(nowPlayingOverrideScheduleSchema).default([]),
 });
 
 const adminSettingsSchema = z.object({
@@ -190,11 +202,11 @@ const adminSettingsSchema = z.object({
     folclor: coverSchedulingStationSchema,
   }),
   nowPlaying: z.object({
-    fm: nowPlayingStationSchema.default({ enabled: true }),
-    folclor: nowPlayingStationSchema.default({ enabled: false }),
+    fm: nowPlayingStationSchema.default({ enabled: true, overrideSchedules: [] }),
+    folclor: nowPlayingStationSchema.default({ enabled: false, overrideSchedules: [] }),
   }).default({
-    fm: { enabled: true },
-    folclor: { enabled: false },
+    fm: { enabled: true, overrideSchedules: [] },
+    folclor: { enabled: false, overrideSchedules: [] },
   }),
   timeSynchronization: z.object({
     enabled: z.boolean(),
@@ -368,8 +380,8 @@ router.get('/public-settings', async (req, res) => {
       weatherProvider: settings.weatherProvider || 'openmeteo',
       coverScheduling: settings.coverScheduling || {},
       nowPlaying: settings.nowPlaying || {
-        fm: { enabled: true },
-        folclor: { enabled: false },
+        fm: { enabled: true, overrideSchedules: [] },
+        folclor: { enabled: false, overrideSchedules: [] },
       }
     });
   } catch (error) {

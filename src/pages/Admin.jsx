@@ -25,6 +25,19 @@ export default function Admin() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [scheduleError, setScheduleError] = useState(''); // Error message for schedule modal
+  const [showNowPlayingOverrideModal, setShowNowPlayingOverrideModal] = useState(false);
+  const [editingNowPlayingOverride, setEditingNowPlayingOverride] = useState(null);
+  const [nowPlayingOverrideStation, setNowPlayingOverrideStation] = useState('fm');
+  const [nowPlayingOverrideError, setNowPlayingOverrideError] = useState('');
+  const [nowPlayingOverrideForm, setNowPlayingOverrideForm] = useState({
+    name: '',
+    text: '',
+    days: [],
+    startTime: '10:00',
+    endTime: '11:00',
+    priority: 0,
+    enabled: true
+  });
 
   // Schedule form state
   const [scheduleForm, setScheduleForm] = useState({
@@ -223,9 +236,12 @@ export default function Admin() {
     const updatedSettings = {
       ...settings,
       nowPlaying: {
-        fm: { enabled: settings.nowPlaying?.fm?.enabled ?? true },
-        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? false },
-        [station]: { enabled }
+        fm: { enabled: settings.nowPlaying?.fm?.enabled ?? true, overrideSchedules: settings.nowPlaying?.fm?.overrideSchedules || [] },
+        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? false, overrideSchedules: settings.nowPlaying?.folclor?.overrideSchedules || [] },
+        [station]: {
+          enabled,
+          overrideSchedules: settings.nowPlaying?.[station]?.overrideSchedules || []
+        }
       }
     };
 
@@ -256,6 +272,165 @@ export default function Admin() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const saveSettingsPayload = async (updatedSettings, successMessage, failureMessage) => {
+    setSettings(updatedSettings);
+    setIsSaving(true);
+    setSaveMessage('');
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedSettings)
+      });
+
+      if (response.ok) {
+        setSaveMessage(successMessage);
+        setTimeout(() => setSaveMessage(''), 3000);
+        return true;
+      }
+
+      setSaveMessage(failureMessage);
+      return false;
+    } catch (error) {
+      setSaveMessage(failureMessage);
+      console.error('Settings save error:', error);
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const openNowPlayingOverrideModal = (station, schedule = null) => {
+    setNowPlayingOverrideStation(station);
+    setEditingNowPlayingOverride(schedule);
+    setNowPlayingOverrideError('');
+
+    if (schedule) {
+      setNowPlayingOverrideForm({
+        name: schedule.name || '',
+        text: schedule.text || '',
+        days: schedule.days || [],
+        startTime: schedule.startTime || '10:00',
+        endTime: schedule.endTime || '11:00',
+        priority: schedule.priority || 0,
+        enabled: schedule.enabled !== false
+      });
+    } else {
+      setNowPlayingOverrideForm({
+        name: '',
+        text: '',
+        days: [],
+        startTime: '10:00',
+        endTime: '11:00',
+        priority: 0,
+        enabled: true
+      });
+    }
+
+    setShowNowPlayingOverrideModal(true);
+  };
+
+  const closeNowPlayingOverrideModal = () => {
+    setShowNowPlayingOverrideModal(false);
+    setEditingNowPlayingOverride(null);
+    setNowPlayingOverrideError('');
+  };
+
+  const handleSaveNowPlayingOverride = async () => {
+    if (!nowPlayingOverrideForm.name.trim()) {
+      setNowPlayingOverrideError('Schedule name is required');
+      return;
+    }
+
+    if (!nowPlayingOverrideForm.text.trim()) {
+      setNowPlayingOverrideError('Override text is required');
+      return;
+    }
+
+    if (nowPlayingOverrideForm.days.length === 0) {
+      setNowPlayingOverrideError('Please select at least one day');
+      return;
+    }
+
+    const currentStationConfig = settings.nowPlaying?.[nowPlayingOverrideStation] || {
+      enabled: nowPlayingOverrideStation === 'fm',
+      overrideSchedules: []
+    };
+
+    const schedulePayload = {
+      id: editingNowPlayingOverride?.id || `nowplaying-override-${Date.now()}`,
+      name: nowPlayingOverrideForm.name.trim(),
+      text: nowPlayingOverrideForm.text.trim(),
+      days: nowPlayingOverrideForm.days,
+      startTime: nowPlayingOverrideForm.startTime,
+      endTime: nowPlayingOverrideForm.endTime,
+      priority: parseInt(nowPlayingOverrideForm.priority, 10) || 0,
+      enabled: nowPlayingOverrideForm.enabled
+    };
+
+    const nextSchedules = editingNowPlayingOverride
+      ? (currentStationConfig.overrideSchedules || []).map((schedule) =>
+        schedule.id === editingNowPlayingOverride.id ? schedulePayload : schedule
+      )
+      : [...(currentStationConfig.overrideSchedules || []), schedulePayload];
+
+    const updatedSettings = {
+      ...settings,
+      nowPlaying: {
+        fm: { enabled: settings.nowPlaying?.fm?.enabled ?? true, overrideSchedules: settings.nowPlaying?.fm?.overrideSchedules || [] },
+        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? false, overrideSchedules: settings.nowPlaying?.folclor?.overrideSchedules || [] },
+        [nowPlayingOverrideStation]: {
+          ...currentStationConfig,
+          overrideSchedules: nextSchedules
+        }
+      }
+    };
+
+    const saved = await saveSettingsPayload(
+      updatedSettings,
+      'Now playing override saved successfully!',
+      'Failed to save now playing override'
+    );
+
+    if (saved) {
+      closeNowPlayingOverrideModal();
+    }
+  };
+
+  const handleDeleteNowPlayingOverride = async (station, scheduleId) => {
+    if (!confirm('Are you sure you want to delete this override schedule?')) {
+      return;
+    }
+
+    const currentStationConfig = settings.nowPlaying?.[station] || {
+      enabled: station === 'fm',
+      overrideSchedules: []
+    };
+
+    const updatedSettings = {
+      ...settings,
+      nowPlaying: {
+        fm: { enabled: settings.nowPlaying?.fm?.enabled ?? true, overrideSchedules: settings.nowPlaying?.fm?.overrideSchedules || [] },
+        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? false, overrideSchedules: settings.nowPlaying?.folclor?.overrideSchedules || [] },
+        [station]: {
+          ...currentStationConfig,
+          overrideSchedules: (currentStationConfig.overrideSchedules || []).filter((schedule) => schedule.id !== scheduleId)
+        }
+      }
+    };
+
+    await saveSettingsPayload(
+      updatedSettings,
+      'Now playing override deleted successfully!',
+      'Failed to delete now playing override'
+    );
   };
 
   const updateStreamConfig = (station, streamType, field, value) => {
@@ -930,9 +1105,37 @@ export default function Admin() {
     });
   };
 
+  const getActiveNowPlayingOverride = (station) => {
+    const schedules = settings.nowPlaying?.[station]?.overrideSchedules || [];
+    const romaniaDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Bucharest' }));
+    const currentDay = romaniaDate.getDay();
+    const currentTime = `${String(romaniaDate.getHours()).padStart(2, '0')}:${String(romaniaDate.getMinutes()).padStart(2, '0')}`;
+
+    return schedules
+      .filter((schedule) => {
+        if (!schedule.enabled || !schedule.text || !schedule.days?.includes(currentDay)) {
+          return false;
+        }
+
+        if (schedule.startTime <= schedule.endTime) {
+          return currentTime >= schedule.startTime && currentTime <= schedule.endTime;
+        }
+
+        return currentTime >= schedule.startTime || currentTime <= schedule.endTime;
+      })
+      .sort((a, b) => (b.priority || 0) - (a.priority || 0))[0] || null;
+  };
+
+  const formatScheduleDays = (days = []) => {
+    const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days.map((day) => labels[day]).join(', ');
+  };
+
   const renderNowPlayingStation = (station, label, sourceLabel) => {
-    const config = settings.nowPlaying?.[station] || { enabled: station === 'fm' };
+    const config = settings.nowPlaying?.[station] || { enabled: station === 'fm', overrideSchedules: [] };
     const preview = nowPlayingPreview[station] || {};
+    const activeOverride = getActiveNowPlayingOverride(station);
+    const schedules = config.overrideSchedules || [];
 
     return (
       <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
@@ -972,6 +1175,73 @@ export default function Admin() {
           <div className="p-4 rounded-lg bg-bg-tertiary border border-border md:col-span-2">
             <Body size="small" opacity="secondary" className="mb-2 text-xs">Last Updated</Body>
             <Body size="small">{formatNowPlayingUpdatedAt(preview.updatedAt)}</Body>
+          </div>
+        </div>
+
+        {activeOverride && (
+          <div className="mt-4 p-4 rounded-lg bg-primary/10 border border-primary/30">
+            <Body size="small" opacity="secondary" className="mb-1 text-xs">Active Override</Body>
+            <Body className="font-medium text-primary">{activeOverride.text}</Body>
+            <Body size="small" opacity="secondary" className="mt-1 text-xs">
+              {activeOverride.name} | {activeOverride.startTime} - {activeOverride.endTime}
+            </Body>
+          </div>
+        )}
+
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-3">
+            <Body size="small" opacity="secondary" className="text-xs">Override Schedules</Body>
+            <button
+              onClick={() => openNowPlayingOverrideModal(station)}
+              className="px-3 py-1.5 text-xs rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors"
+            >
+              + Add Override
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {schedules.map((schedule) => (
+              <div key={schedule.id} className={`p-3 rounded-lg border ${
+                schedule.enabled
+                  ? 'bg-bg-tertiary border-border'
+                  : 'bg-bg-tertiary/50 border-border/50 opacity-60'
+              }`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium text-xs text-text-primary">{schedule.name}</div>
+                      {!schedule.enabled && (
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-gray-500/20 text-gray-400">Disabled</span>
+                      )}
+                    </div>
+                    <div className="mt-1 text-xs text-text-secondary break-words">{schedule.text}</div>
+                    <div className="mt-1 text-xs text-text-tertiary">
+                      {formatScheduleDays(schedule.days)} | {schedule.startTime} - {schedule.endTime} | Priority {schedule.priority || 0}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <button
+                      onClick={() => openNowPlayingOverrideModal(station, schedule)}
+                      className="px-2 py-1 text-xs rounded bg-bg-secondary text-text-primary hover:bg-bg-secondary/80 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteNowPlayingOverride(station, schedule.id)}
+                      className="px-2 py-1 text-xs rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {schedules.length === 0 && (
+              <div className="text-center py-5 text-xs text-text-tertiary border border-dashed border-border rounded-lg">
+                No override schedules created yet.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -2695,6 +2965,164 @@ export default function Admin() {
                       setShowScheduleModal(false);
                       setScheduleError('');
                     }}
+                    className="px-4 py-2 rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Now Playing Override Modal */}
+        {showNowPlayingOverrideModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" onClick={closeNowPlayingOverrideModal}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-xl rounded-2xl bg-bg-secondary border border-border shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <Heading level={5} className="text-base">
+                  {editingNowPlayingOverride ? 'Edit Override Schedule' : 'Add Override Schedule'}
+                </Heading>
+                <button
+                  onClick={closeNowPlayingOverrideModal}
+                  className="text-text-tertiary hover:text-text-primary transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="p-3 rounded-lg bg-bg-tertiary border border-border">
+                  <Body size="small" opacity="secondary" className="text-xs">Station</Body>
+                  <Body className="font-medium">
+                    {nowPlayingOverrideStation === 'fm' ? 'Radio Constanța FM' : 'Radio Constanța Folclor'}
+                  </Body>
+                </div>
+
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={nowPlayingOverrideForm.enabled}
+                    onChange={(e) => setNowPlayingOverrideForm({ ...nowPlayingOverrideForm, enabled: e.target.checked })}
+                    className="w-4 h-4 rounded border-border bg-bg-primary text-primary focus:ring-primary"
+                  />
+                  <Body size="small">Enable this override schedule</Body>
+                </label>
+
+                <div>
+                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Schedule Name</Body>
+                  <input
+                    type="text"
+                    value={nowPlayingOverrideForm.name}
+                    onChange={(e) => setNowPlayingOverrideForm({ ...nowPlayingOverrideForm, name: e.target.value })}
+                    placeholder="e.g., Relay program"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Override Text</Body>
+                  <input
+                    type="text"
+                    value={nowPlayingOverrideForm.text}
+                    onChange={(e) => setNowPlayingOverrideForm({ ...nowPlayingOverrideForm, text: e.target.value })}
+                    placeholder="e.g., Program preluat de la Radio România Actualități"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Active Days</Body>
+                  <div className="grid grid-cols-7 gap-2">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => {
+                      const dayNum = idx === 6 ? 0 : idx + 1;
+                      return (
+                        <button
+                          key={dayNum}
+                          type="button"
+                          onClick={() => {
+                            const days = nowPlayingOverrideForm.days.includes(dayNum)
+                              ? nowPlayingOverrideForm.days.filter(d => d !== dayNum)
+                              : [...nowPlayingOverrideForm.days, dayNum].sort((a, b) => a - b);
+                            setNowPlayingOverrideForm({ ...nowPlayingOverrideForm, days });
+                          }}
+                          className={`px-2 py-2 text-xs rounded-lg font-medium transition-colors ${
+                            nowPlayingOverrideForm.days.includes(dayNum)
+                              ? 'bg-primary text-white'
+                              : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Body size="small" opacity="secondary" className="mb-2 text-xs">Start Time</Body>
+                    <input
+                      type="time"
+                      value={nowPlayingOverrideForm.startTime}
+                      onChange={(e) => setNowPlayingOverrideForm({ ...nowPlayingOverrideForm, startTime: e.target.value })}
+                      className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <Body size="small" opacity="secondary" className="mb-2 text-xs">End Time</Body>
+                    <input
+                      type="time"
+                      value={nowPlayingOverrideForm.endTime}
+                      onChange={(e) => setNowPlayingOverrideForm({ ...nowPlayingOverrideForm, endTime: e.target.value })}
+                      className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Body size="small" opacity="secondary" className="mb-2 text-xs">
+                    Priority (higher number wins when overrides overlap)
+                  </Body>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="10"
+                      value={nowPlayingOverrideForm.priority}
+                      onChange={(e) => setNowPlayingOverrideForm({ ...nowPlayingOverrideForm, priority: parseInt(e.target.value, 10) })}
+                      className="flex-1"
+                    />
+                    <span className="text-sm font-medium text-text-primary w-8 text-center">
+                      {nowPlayingOverrideForm.priority}
+                    </span>
+                  </div>
+                </div>
+
+                {nowPlayingOverrideError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    <Body size="small" className="text-xs text-red-400">
+                      {nowPlayingOverrideError}
+                    </Body>
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-4">
+                  <button
+                    onClick={handleSaveNowPlayingOverride}
+                    className="flex-1 px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition-colors text-sm"
+                  >
+                    {editingNowPlayingOverride ? 'Update Override' : 'Add Override'}
+                  </button>
+                  <button
+                    onClick={closeNowPlayingOverrideModal}
                     className="px-4 py-2 rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors text-sm"
                   >
                     Cancel

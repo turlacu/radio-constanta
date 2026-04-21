@@ -89,10 +89,12 @@
   },
   "nowPlaying": {
     "fm": {
-      "enabled": true
+      "enabled": true,
+      "overrideSchedules": []
     },
     "folclor": {
-      "enabled": false
+      "enabled": false,
+      "overrideSchedules": []
     }
   },
   "timeSynchronization": {

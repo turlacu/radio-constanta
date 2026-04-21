@@ -14,6 +14,7 @@ export default function RadioPlayer({ radioState }) {
     metadata,
     nowPlaying,
     nowPlayingEnabled,
+    nowPlayingOverride,
     streamInfo,
     stations,
     selectedQuality,
@@ -42,7 +43,9 @@ export default function RadioPlayer({ radioState }) {
     : Math.min(viewportWidth * 0.72, viewportHeight * 0.42);
   const mobileCoverWidth = Math.max(188, Math.min(mobileCoverMaxPx || 0, 360));
   const weatherTextColor = useWeatherTextColor();
-  const currentSubtitle = nowPlayingEnabled && nowPlaying?.text
+  const currentSubtitle = nowPlayingEnabled && nowPlayingOverride?.text
+    ? nowPlayingOverride.text
+    : nowPlayingEnabled && nowPlaying?.text
     ? nowPlaying.text
     : metadata || 'Primul radio din Dobrogea';
 
