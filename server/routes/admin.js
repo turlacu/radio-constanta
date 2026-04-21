@@ -154,6 +154,10 @@ const ntpServerSchema = z.object({
   priority: z.number().int().min(1),
 });
 
+const nowPlayingStationSchema = z.object({
+  enabled: z.boolean(),
+});
+
 const adminSettingsSchema = z.object({
   weatherProvider: z.enum(['openmeteo', 'openweathermap']).default('openmeteo'),
   weatherApiKey: z.string().default(''),
@@ -184,6 +188,13 @@ const adminSettingsSchema = z.object({
   coverScheduling: z.object({
     fm: coverSchedulingStationSchema,
     folclor: coverSchedulingStationSchema,
+  }),
+  nowPlaying: z.object({
+    fm: nowPlayingStationSchema.default({ enabled: true }),
+    folclor: nowPlayingStationSchema.default({ enabled: false }),
+  }).default({
+    fm: { enabled: true },
+    folclor: { enabled: false },
   }),
   timeSynchronization: z.object({
     enabled: z.boolean(),
@@ -355,7 +366,11 @@ router.get('/public-settings', async (req, res) => {
       defaultLocation: settings.defaultLocation,
       apiBaseUrl: settings.apiBaseUrl,
       weatherProvider: settings.weatherProvider || 'openmeteo',
-      coverScheduling: settings.coverScheduling || {}
+      coverScheduling: settings.coverScheduling || {},
+      nowPlaying: settings.nowPlaying || {
+        fm: { enabled: true },
+        folclor: { enabled: false },
+      }
     });
   } catch (error) {
     logger.error('[Settings]', 'Error reading public settings:', error);

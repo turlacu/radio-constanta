@@ -218,6 +218,14 @@ function AppContent() {
 
   // Dynamic stream configurations from API
   const [dynamicStreams, setDynamicStreams] = useState(null);
+  const [nowPlayingConfig, setNowPlayingConfig] = useState({
+    fm: { enabled: true },
+    folclor: { enabled: false }
+  });
+  const [nowPlaying, setNowPlaying] = useState({
+    fm: { text: '', artist: null, title: null, updatedAt: null },
+    folclor: { text: '', artist: null, title: null, updatedAt: null }
+  });
 
   // News visibility toggle for wide screen
   const [showNews, setShowNews] = useState(false);
@@ -402,9 +410,32 @@ function AppContent() {
           console.log('[App] Converted stream configs:', newStreams);
           setDynamicStreams(newStreams);
         }
+
+        if (data.nowPlaying) {
+          setNowPlayingConfig({
+            fm: { enabled: data.nowPlaying.fm?.enabled ?? true },
+            folclor: { enabled: data.nowPlaying.folclor?.enabled ?? false }
+          });
+        }
       }
     } catch (error) {
       console.error('[App] Error fetching stream configurations:', error);
+    }
+  };
+
+  const fetchNowPlaying = async () => {
+    try {
+      const response = await fetch('/api/nowplaying');
+
+      if (response.ok) {
+        const data = await response.json();
+        setNowPlaying({
+          fm: data.fm || { text: '', artist: null, title: null, updatedAt: null },
+          folclor: data.folclor || { text: '', artist: null, title: null, updatedAt: null }
+        });
+      }
+    } catch (error) {
+      console.error('[App] Error fetching now playing:', error);
     }
   };
 
@@ -486,6 +517,82 @@ function AppContent() {
       }
       if (streamConfigInterval) {
         clearInterval(streamConfigInterval);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    let socket = null;
+    let reconnectTimeout = null;
+    let reconnectAttempts = 0;
+    let shouldReconnect = true;
+    const MAX_RECONNECT_DELAY = 30000;
+
+    const buildWebSocketUrl = () => {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${protocol}//${window.location.host}/api/nowplaying/ws`;
+    };
+
+    const connectToNowPlaying = () => {
+      try {
+        socket = new WebSocket(buildWebSocketUrl());
+
+        socket.onopen = () => {
+          console.log('[App] ✅ Now playing WebSocket connected');
+          reconnectAttempts = 0;
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+
+            if (message.type === 'nowplaying:snapshot' && message.data) {
+              setNowPlaying({
+                fm: message.data.fm || { text: '', artist: null, title: null, updatedAt: null },
+                folclor: message.data.folclor || { text: '', artist: null, title: null, updatedAt: null }
+              });
+              return;
+            }
+
+            if (message.type === 'nowplaying:update' && message.station && message.data) {
+              setNowPlaying(prev => ({
+                ...prev,
+                [message.station]: message.data
+              }));
+            }
+          } catch (error) {
+            console.error('[App] Error parsing now playing WebSocket message:', error);
+          }
+        };
+
+        socket.onerror = (error) => {
+          console.error('[App] Now playing WebSocket error:', error);
+        };
+
+        socket.onclose = () => {
+          if (!shouldReconnect) {
+            return;
+          }
+
+          reconnectAttempts++;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), MAX_RECONNECT_DELAY);
+          reconnectTimeout = setTimeout(connectToNowPlaying, delay);
+        };
+      } catch (error) {
+        console.error('[App] Error creating now playing WebSocket:', error);
+      }
+    };
+
+    fetchNowPlaying();
+    connectToNowPlaying();
+
+    return () => {
+      shouldReconnect = false;
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+      if (socket) {
+        socket.close();
       }
     };
   }, []);
@@ -1156,6 +1263,8 @@ function AppContent() {
     isLoading,
     currentStation,
     metadata,
+    nowPlaying: nowPlaying[currentStation.id],
+    nowPlayingEnabled: nowPlayingConfig[currentStation.id]?.enabled ?? false,
     streamInfo,
     stations: Object.values(stationsWithDynamicCovers), // Convert to array with dynamic covers
     selectedQuality: selectedQuality[currentStation.id],

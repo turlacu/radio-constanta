@@ -12,6 +12,8 @@ export default function RadioPlayer({ radioState }) {
     isLoading,
     currentStation,
     metadata,
+    nowPlaying,
+    nowPlayingEnabled,
     streamInfo,
     stations,
     selectedQuality,
@@ -40,6 +42,9 @@ export default function RadioPlayer({ radioState }) {
     : Math.min(viewportWidth * 0.72, viewportHeight * 0.42);
   const mobileCoverWidth = Math.max(188, Math.min(mobileCoverMaxPx || 0, 360));
   const weatherTextColor = useWeatherTextColor();
+  const currentSubtitle = nowPlayingEnabled && nowPlaying?.text
+    ? nowPlaying.text
+    : metadata || 'Primul radio din Dobrogea';
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
   const buttonBorderColor =
@@ -235,7 +240,7 @@ export default function RadioPlayer({ radioState }) {
                   className={`${textSecondaryClass} max-w-full text-pretty text-center`}
                   style={{ fontSize: desktopSubtitleSize, lineHeight: 1.25 }}
                 >
-                  {metadata || 'Primul radio din Dobrogea'}
+                  {currentSubtitle}
                 </Body>
               </div>
 
@@ -413,7 +418,7 @@ export default function RadioPlayer({ radioState }) {
                       className={`${textSecondaryClass} max-w-full text-pretty text-right`}
                       style={{ fontSize: desktopSubtitleSize, lineHeight: 1.25 }}
                     >
-                      {metadata || 'Primul radio din Dobrogea'}
+                      {currentSubtitle}
                     </Body>
                   </div>
                 </div>

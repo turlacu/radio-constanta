@@ -13,6 +13,10 @@ export default function Admin() {
   const [settings, setSettings] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [nowPlayingPreview, setNowPlayingPreview] = useState({
+    fm: { text: '', artist: null, title: null, updatedAt: null },
+    folclor: { text: '', artist: null, title: null, updatedAt: null }
+  });
 
   // Cover scheduling state
   const [selectedStation, setSelectedStation] = useState('fm');
@@ -183,6 +187,72 @@ export default function Admin() {
     } catch (error) {
       setSaveMessage('Error saving settings');
       console.error('Save error:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const fetchNowPlayingPreview = async () => {
+    try {
+      const response = await fetch('/api/nowplaying');
+
+      if (response.ok) {
+        const data = await response.json();
+        setNowPlayingPreview({
+          fm: data.fm || { text: '', artist: null, title: null, updatedAt: null },
+          folclor: data.folclor || { text: '', artist: null, title: null, updatedAt: null }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch now playing preview:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated || activeTab !== 'nowplaying') {
+      return;
+    }
+
+    fetchNowPlayingPreview();
+    const interval = setInterval(fetchNowPlayingPreview, 5000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, activeTab]);
+
+  const handleToggleNowPlaying = async (station, enabled) => {
+    const updatedSettings = {
+      ...settings,
+      nowPlaying: {
+        fm: { enabled: settings.nowPlaying?.fm?.enabled ?? true },
+        folclor: { enabled: settings.nowPlaying?.folclor?.enabled ?? false },
+        [station]: { enabled }
+      }
+    };
+
+    setSettings(updatedSettings);
+    setIsSaving(true);
+    setSaveMessage('');
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedSettings)
+      });
+
+      if (response.ok) {
+        setSaveMessage(`Now playing ${enabled ? 'enabled' : 'disabled'} for ${station === 'fm' ? 'FM' : 'Folclor'}.`);
+        setTimeout(() => setSaveMessage(''), 3000);
+      } else {
+        setSaveMessage('Failed to save now playing settings');
+      }
+    } catch (error) {
+      setSaveMessage('Error saving now playing settings');
+      console.error('Now playing save error:', error);
     } finally {
       setIsSaving(false);
     }
@@ -794,6 +864,7 @@ export default function Admin() {
     { id: 'weather', name: 'Weather', icon: 'CloudSun' },
     { id: 'streams', name: 'Radio Streams', icon: 'Radio' },
     { id: 'covers', name: 'Cover Scheduling', icon: 'Images' },
+    { id: 'nowplaying', name: 'Now Playing', icon: 'Broadcast' },
     { id: 'news', name: 'News Source', icon: 'Newspaper' },
     { id: 'time', name: 'Time Sync', icon: 'Clock' }
   ];
@@ -813,6 +884,11 @@ export default function Admin() {
     Radio: () => (
       <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
         <path d="M104,72a8,8,0,0,1,8-8h32a8,8,0,0,1,0,16H112A8,8,0,0,1,104,72Zm128,56A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128ZM128,176a48,48,0,1,1,48-48A48.05,48.05,0,0,1,128,176Zm0-80a32,32,0,1,0,32,32A32,32,0,0,0,128,96Zm0,48a16,16,0,1,1,16-16A16,16,0,0,1,128,144Z"/>
+      </svg>
+    ),
+    Broadcast: () => (
+      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M160,128a32,32,0,1,1-32-32A32,32,0,0,1,160,128Zm-32-56a56,56,0,0,0-38.55,96.63,8,8,0,0,0,11-11.63,40,40,0,1,1,55.1,0,8,8,0,0,0,11,11.63A56,56,0,0,0,128,72ZM72.2,67.8a8,8,0,0,0-11.31,0,88,88,0,0,0,0,124.4,8,8,0,0,0,11.31-11.31,72,72,0,0,1,0-101.78A8,8,0,0,0,72.2,67.8Zm122.91,0A8,8,0,1,0,183.8,79.11a72,72,0,0,1,0,101.78,8,8,0,0,0,11.31,11.31,88,88,0,0,0,0-124.4ZM38.34,45.17a8,8,0,0,0-11.31,0,120,120,0,0,0,0,165.66,8,8,0,1,0,11.31-11.32,104,104,0,0,1,0-143A8,8,0,0,0,38.34,45.17Zm190.63,0a8,8,0,0,0-11.31,11.32,104,104,0,0,1,0,143A8,8,0,1,0,229,210.83a120,120,0,0,0,0-165.66Z"/>
       </svg>
     ),
     Images: () => (
@@ -835,6 +911,71 @@ export default function Admin() {
         <path d="M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z"/>
       </svg>
     )
+  };
+
+  const formatNowPlayingUpdatedAt = (value) => {
+    if (!value) {
+      return 'No update received';
+    }
+
+    return new Date(value).toLocaleString('en-US', {
+      timeZone: 'Europe/Bucharest',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  };
+
+  const renderNowPlayingStation = (station, label, sourceLabel) => {
+    const config = settings.nowPlaying?.[station] || { enabled: station === 'fm' };
+    const preview = nowPlayingPreview[station] || {};
+
+    return (
+      <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+        <div className="flex items-start justify-between gap-4 mb-5">
+          <div>
+            <Heading level={6} className="text-base">{label}</Heading>
+            <Body size="small" opacity="secondary" className="mt-1 text-xs">
+              {sourceLabel}
+            </Body>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={config.enabled}
+              onChange={(e) => handleToggleNowPlaying(station, e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="p-4 rounded-lg bg-bg-tertiary border border-border md:col-span-2">
+            <Body size="small" opacity="secondary" className="mb-2 text-xs">Current Text</Body>
+            <Body className="font-medium">
+              {preview.text || 'No text received yet'}
+            </Body>
+          </div>
+          <div className="p-4 rounded-lg bg-bg-tertiary border border-border">
+            <Body size="small" opacity="secondary" className="mb-2 text-xs">Artist</Body>
+            <Body size="small">{preview.artist || '-'}</Body>
+          </div>
+          <div className="p-4 rounded-lg bg-bg-tertiary border border-border">
+            <Body size="small" opacity="secondary" className="mb-2 text-xs">Title</Body>
+            <Body size="small">{preview.title || '-'}</Body>
+          </div>
+          <div className="p-4 rounded-lg bg-bg-tertiary border border-border md:col-span-2">
+            <Body size="small" opacity="secondary" className="mb-2 text-xs">Last Updated</Body>
+            <Body size="small">{formatNowPlayingUpdatedAt(preview.updatedAt)}</Body>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Admin panel
@@ -1697,6 +1838,42 @@ export default function Admin() {
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Now Playing Tab */}
+            {activeTab === 'nowplaying' && (
+              <div>
+                <div className="mb-6">
+                  <Heading level={3} className="text-2xl">Now Playing</Heading>
+                  <Body size="small" opacity="secondary" className="mt-2">
+                    Control live track text shown in the stream window for each station
+                  </Body>
+                </div>
+
+                <div className="space-y-6">
+                  {renderNowPlayingStation(
+                    'fm',
+                    'Radio Constanța FM',
+                    'Raspberry Pi / Studio Q feed'
+                  )}
+
+                  {renderNowPlayingStation(
+                    'folclor',
+                    'Radio Constanța Folclor',
+                    'Ready for future Folclor feed integration'
+                  )}
+
+                  {saveMessage && (
+                    <div className={`p-3 rounded-lg text-sm ${
+                      saveMessage.includes('Failed') || saveMessage.includes('Error')
+                        ? 'bg-red-500/10 text-red-500 border border-red-500/20'
+                        : 'bg-green-500/10 text-green-500 border border-green-500/20'
+                    }`}>
+                      {saveMessage}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

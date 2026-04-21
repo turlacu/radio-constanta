@@ -87,6 +87,14 @@
       "schedules": []
     }
   },
+  "nowPlaying": {
+    "fm": {
+      "enabled": true
+    },
+    "folclor": {
+      "enabled": false
+    }
+  },
   "timeSynchronization": {
     "enabled": true,
     "ntpServers": [

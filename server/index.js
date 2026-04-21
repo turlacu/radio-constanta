@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import { createServer } from 'http';
+import WebSocket, { WebSocketServer } from 'ws';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir, copyFile, access } from 'fs/promises';
@@ -9,6 +11,7 @@ import imageProxyRouter from './routes/imageProxy.js';
 import adminRouter from './routes/admin.js';
 import analyticsRouter from './routes/analytics.js';
 import weatherRouter from './routes/weather.js';
+import nowPlayingRouter, { getNowPlayingState, setNowPlayingBroadcaster } from './routes/nowplaying.js';
 import { initializeDatabase as initAnalyticsDB } from './database/analytics.js';
 import { startAnalyticsCronJobs } from './jobs/analytics-cron.js';
 import logger from './utils/logger.js';
@@ -90,6 +93,14 @@ app.use(cors(corsOptions));
 app.use(express.text({ type: 'text/plain' }));
 app.use(express.json());
 
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid JSON body' });
+  }
+
+  next(err);
+});
+
 // Request logging middleware
 app.use((req, res, next) => {
   logger.debug('[HTTP]', `${req.method} ${req.path}`);
@@ -106,6 +117,7 @@ app.use('/api/image-proxy', imageProxyRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/weather', weatherRouter);
+app.use('/api/nowplaying', nowPlayingRouter);
 
 // Health check endpoint (lightweight, no logging)
 app.get('/api/health', (req, res) => {
@@ -132,6 +144,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  void next;
   logger.error('[Server]', `Error on ${req.method} ${req.path}:`, err);
   res.status(500).json({
     error: 'Internal server error',
@@ -139,7 +152,47 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = createServer(app);
+const nowPlayingWss = new WebSocketServer({ noServer: true });
+
+function sendNowPlayingMessage(client, message) {
+  if (client.readyState === WebSocket.OPEN) {
+    client.send(JSON.stringify(message));
+  }
+}
+
+nowPlayingWss.on('connection', (ws) => {
+  logger.debug('[NowPlaying]', 'WebSocket client connected');
+  sendNowPlayingMessage(ws, {
+    type: 'nowplaying:snapshot',
+    data: getNowPlayingState(),
+  });
+
+  ws.on('close', () => {
+    logger.debug('[NowPlaying]', 'WebSocket client disconnected');
+  });
+});
+
+setNowPlayingBroadcaster((message) => {
+  nowPlayingWss.clients.forEach((client) => {
+    sendNowPlayingMessage(client, message);
+  });
+});
+
+server.on('upgrade', (request, socket, head) => {
+  const { pathname } = new URL(request.url, `http://${request.headers.host}`);
+
+  if (pathname !== '/api/nowplaying/ws') {
+    socket.destroy();
+    return;
+  }
+
+  nowPlayingWss.handleUpgrade(request, socket, head, (ws) => {
+    nowPlayingWss.emit('connection', ws, request);
+  });
+});
+
+server.listen(PORT, '0.0.0.0', () => {
   logger.info('[Server]', `🚀 Server running on port ${PORT}`);
   logger.info('[Server]', `📍 Environment: ${config.nodeEnv}`);
   logger.info('[Server]', `📊 Log level: ${config.logLevel}`);
