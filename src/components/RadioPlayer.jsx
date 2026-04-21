@@ -97,6 +97,9 @@ export default function RadioPlayer({ radioState }) {
   const desktopCoverWidth = useCompactDesktopSizing
     ? 'min(100%, clamp(15rem, 33vh, 20.5rem))'
     : 'clamp(16rem, 28vw, 26rem)';
+  const desktopVideoCoverWidth = useCompactDesktopSizing
+    ? 'min(100%, clamp(24rem, 58vh, 36rem))'
+    : 'min(100%, clamp(28rem, 50vw, 46rem))';
   const desktopPlayButtonSize = useCompactDesktopSizing
     ? 'clamp(3.6rem, 5.7vh, 4.6rem)'
     : 'clamp(3.75rem, 4.6vw, 5rem)';
@@ -118,6 +121,13 @@ export default function RadioPlayer({ radioState }) {
   const desktopStageWidth = useCompactDesktopSizing
     ? 'min(100%, 58rem)'
     : 'min(100%, 68rem)';
+  const mobileVideoCoverWidth = Math.max(
+    mobileCoverWidth,
+    Math.min(
+      Math.max(0, viewportWidth - 32),
+      mobileCoverWidth * 1.78
+    )
+  );
 
   useEffect(() => {
     setVideoFailed(false);
@@ -178,18 +188,24 @@ export default function RadioPlayer({ radioState }) {
     };
   }, [coverMedia.muted, coverMedia.videoUrl, isVideoCover, videoFailed]);
 
-  const renderCoverArt = (desktop = false) => (
+  const renderCoverArt = (desktop = false) => {
+    const isExpandedVideo = isVideoCover && !videoFailed;
+    const activeCoverWidth = desktop
+      ? (isExpandedVideo ? desktopVideoCoverWidth : desktopCoverWidth)
+      : `${isExpandedVideo ? mobileVideoCoverWidth : mobileCoverWidth}px`;
+
+    return (
     <motion.div
       initial={{ scale: 0.95, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
+      animate={{ scale: 1, opacity: 1, width: activeCoverWidth }}
       transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
       className={desktop
         ? 'relative shrink-0'
         : `relative w-full ${useCompactStackedSizing ? 'mb-[clamp(1.1rem,0.98rem+0.4vw,1.6rem)]' : 'mb-[clamp(1.75rem,1.4rem+1.2vw,3rem)]'}`}
-      style={desktop ? { width: desktopCoverWidth } : { maxWidth: `${mobileCoverWidth}px` }}
+      style={desktop ? { width: activeCoverWidth } : { maxWidth: activeCoverWidth }}
     >
-      <div className={`rc-player-cover relative w-full ${isVideoCover && !videoFailed ? 'aspect-video' : 'aspect-square'} overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
-        {isVideoCover && !videoFailed ? (
+      <div className={`rc-player-cover relative w-full ${isExpandedVideo ? 'aspect-video' : 'aspect-square'} overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
+        {isExpandedVideo ? (
           <motion.video
             key={coverMedia.videoUrl}
             ref={videoRef}
@@ -238,7 +254,8 @@ export default function RadioPlayer({ radioState }) {
         )}
       </div>
     </motion.div>
-  );
+    );
+  };
 
   const renderMobileQualitySelector = () => (
     <motion.div
