@@ -78,6 +78,38 @@ const upload = multer({
   }
 });
 
+const preRollStorage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../data/prerolls');
+
+    try {
+      await fs.mkdir(uploadPath, { recursive: true });
+    } catch (error) {
+      console.error('Error creating pre-roll upload directory:', error);
+    }
+
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${sanitizeUploadFilename(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+const preRollUpload = multer({
+  storage: preRollStorage,
+  limits: {
+    fileSize: 50 * 1024 * 1024
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only video files are allowed'));
+    }
+  }
+});
+
 function normalizePasswordHash(value) {
   if (typeof value !== 'string') {
     return '';
@@ -104,6 +136,7 @@ const ENV_PASSWORD_HASH = normalizePasswordHash(process.env.ADMIN_PASSWORD_HASH)
 
 const SETTINGS_FILE = path.join(__dirname, '../data/admin-settings.json');
 const COVERS_DIR = path.join(__dirname, '../data/covers');
+const PREROLLS_DIR = path.join(__dirname, '../data/prerolls');
 
 const streamConfigSchema = z.object({
   enabled: z.boolean(),
@@ -125,6 +158,17 @@ const coverSchema = z.object({
   uploadedAt: z.string(),
 });
 
+const preRollVideoSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  label: z.string(),
+  path: z.string(),
+  filename: z.string(),
+  size: z.number().nonnegative(),
+  mimeType: z.string().optional(),
+  uploadedAt: z.string(),
+});
+
 const scheduleSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -132,6 +176,9 @@ const scheduleSchema = z.object({
   mediaType: z.enum(['image', 'video']).optional(),
   videoUrl: z.string().optional(),
   videoLabel: z.string().optional(),
+  preRollId: z.string().optional(),
+  preRollPath: z.string().optional(),
+  preRollLabel: z.string().optional(),
   muted: z.boolean().optional(),
   aspectRatio: z.enum(['16:9']).optional(),
   days: z.array(z.number().int().min(0).max(6)),
@@ -204,6 +251,7 @@ const adminSettingsSchema = z.object({
     name: z.string().min(1),
   }),
   apiBaseUrl: z.string().default(''),
+  preRollVideos: z.array(preRollVideoSchema).default([]),
   coverScheduling: z.object({
     fm: coverSchedulingStationSchema,
     folclor: coverSchedulingStationSchema,
@@ -318,6 +366,9 @@ function buildVideoMedia(schedule, fallbackCoverPath) {
     type: 'video',
     videoUrl: schedule.videoUrl,
     videoLabel: schedule.videoLabel || schedule.name,
+    preRollUrl: schedule.preRollPath || '',
+    preRollLabel: schedule.preRollLabel || '',
+    preRollWindowKey: schedule.preRollWindowKey || '',
     muted: schedule.muted !== false,
     aspectRatio: schedule.aspectRatio || '16:9',
     fallbackCoverPath,
@@ -380,6 +431,23 @@ function isCurrentTimeWithinRegularSchedule(schedule, currentTimeInSeconds) {
 
   // Overnight schedules wrap past midnight.
   return currentTimeInSeconds >= startTimeInSeconds || currentTimeInSeconds < endTimeInSeconds;
+}
+
+function getRomaniaDateKey(romaniaDate) {
+  const year = romaniaDate.getFullYear();
+  const month = String(romaniaDate.getMonth() + 1).padStart(2, '0');
+  const day = String(romaniaDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getPreRollWindowKey(schedule, romaniaDate, currentHour) {
+  const dateKey = getRomaniaDateKey(romaniaDate);
+
+  if (schedule.type === 'news') {
+    return `${schedule.id}:news:${dateKey}:${currentHour}`;
+  }
+
+  return `${schedule.id}:regular:${dateKey}:${schedule.startTime || ''}:${schedule.endTime || ''}`;
 }
 
 // Admin login endpoint - with rate limiting
@@ -611,6 +679,93 @@ router.post('/covers/:station/upload-default', authenticateAdmin, upload.single(
   }
 });
 
+router.post('/prerolls/upload', authenticateAdmin, preRollUpload.single('preRoll'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const data = await fs.readFile(SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+
+    if (!Array.isArray(settings.preRollVideos)) {
+      settings.preRollVideos = [];
+    }
+
+    const label = req.body.label || req.body.name || req.file.originalname.replace(/\.[^/.]+$/, '');
+    const preRoll = {
+      id: `preroll-${Date.now()}`,
+      name: req.body.name || req.file.originalname,
+      label,
+      path: `/prerolls/${req.file.filename}`,
+      filename: req.file.filename,
+      size: req.file.size,
+      mimeType: req.file.mimetype,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    settings.preRollVideos.push(preRoll);
+    await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
+
+    res.json({ success: true, preRoll });
+  } catch (error) {
+    logger.error('[PreRoll]', 'Error uploading pre-roll video:', error);
+    res.status(500).json({ error: 'Failed to upload pre-roll video' });
+  }
+});
+
+router.delete('/prerolls/:preRollId', authenticateAdmin, async (req, res) => {
+  try {
+    const { preRollId } = req.params;
+    const data = await fs.readFile(SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+    const preRolls = settings.preRollVideos || [];
+    const preRollIndex = preRolls.findIndex(preRoll => preRoll.id === preRollId);
+
+    if (preRollIndex === -1) {
+      return res.status(404).json({ error: 'Pre-roll not found' });
+    }
+
+    const [preRoll] = preRolls.splice(preRollIndex, 1);
+    const relativePreRollPath = preRoll.path.replace(/^\/prerolls\//, '');
+    const filePath = path.resolve(PREROLLS_DIR, relativePreRollPath);
+
+    if (!validateFilePath(filePath, PREROLLS_DIR)) {
+      logger.warn('[Security]', `Path traversal attempt blocked: ${preRoll.path}`);
+      return res.status(403).json({ error: 'Invalid file path' });
+    }
+
+    try {
+      await fs.unlink(filePath);
+      logger.info('[PreRoll]', `Deleted pre-roll file: ${path.basename(preRoll.path)}`);
+    } catch (error) {
+      logger.warn('[PreRoll]', 'Could not delete pre-roll file:', error);
+    }
+
+    Object.values(settings.coverScheduling || {}).forEach((stationConfig) => {
+      stationConfig.schedules = (stationConfig.schedules || []).map((schedule) => {
+        if (schedule.preRollId !== preRollId) {
+          return schedule;
+        }
+
+        const scheduleWithoutPreRoll = { ...schedule };
+        delete scheduleWithoutPreRoll.preRollId;
+        delete scheduleWithoutPreRoll.preRollPath;
+        delete scheduleWithoutPreRoll.preRollLabel;
+        return scheduleWithoutPreRoll;
+      });
+    });
+
+    settings.preRollVideos = preRolls;
+    await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
+
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('[PreRoll]', 'Error deleting pre-roll video:', error);
+    res.status(500).json({ error: 'Failed to delete pre-roll video' });
+  }
+});
+
 // Delete cover image
 router.delete('/covers/:station/:coverId', authenticateAdmin, async (req, res) => {
   try {
@@ -781,8 +936,12 @@ async function evaluateCurrentCover(station, verbose = true) {
       .sort((a, b) => (b.priority || 0) - (a.priority || 0)); // Sort by priority descending
 
     if (activeSchedules.length > 0) {
-      if (verbose) logger.debug('[Cover]', `✅ Active schedule found: "${activeSchedules[0].name}"`);
-      return buildScheduleMedia(station, config, activeSchedules[0]);
+      const activeSchedule = activeSchedules[0];
+      if (verbose) logger.debug('[Cover]', `✅ Active schedule found: "${activeSchedule.name}"`);
+      return buildScheduleMedia(station, config, {
+        ...activeSchedule,
+        preRollWindowKey: getPreRollWindowKey(activeSchedule, romaniaDate, currentHour),
+      });
     }
 
     // No active schedule, return default

@@ -36,12 +36,14 @@ if (config.nodeEnv === 'production') {
 const initializeDataDirectories = async () => {
   const dataDir = path.join(__dirname, 'data');
   const coversDir = path.join(dataDir, 'covers');
+  const preRollsDir = path.join(dataDir, 'prerolls');
   const fmCoversDir = path.join(coversDir, 'fm');
   const folclorCoversDir = path.join(coversDir, 'folclor');
 
   try {
     await mkdir(dataDir, { recursive: true });
     await mkdir(coversDir, { recursive: true });
+    await mkdir(preRollsDir, { recursive: true });
     await mkdir(fmCoversDir, { recursive: true });
     await mkdir(folclorCoversDir, { recursive: true });
     logger.info('[Server]', '✓ Persistent data directories initialized');
@@ -109,6 +111,7 @@ app.use((req, res, next) => {
 
 // Serve uploaded cover images from persistent storage
 app.use('/covers', express.static(path.join(__dirname, 'data/covers')));
+app.use('/prerolls', express.static(path.join(__dirname, 'data/prerolls')));
 
 // API Routes
 app.use('/api/news', newsRouter);

@@ -21,6 +21,7 @@ export default function Admin() {
   // Cover scheduling state
   const [selectedStation, setSelectedStation] = useState('fm');
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingPreRoll, setUploadingPreRoll] = useState(false);
   const [uploadCategory, setUploadCategory] = useState('scheduling'); // 'default' or 'scheduling'
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
@@ -48,6 +49,9 @@ export default function Admin() {
     mediaType: 'image',
     videoUrl: '',
     videoLabel: '',
+    preRollId: '',
+    preRollPath: '',
+    preRollLabel: '',
     days: [],
     startTime: '09:00',
     endTime: '17:00',
@@ -890,6 +894,108 @@ export default function Admin() {
     }
   };
 
+  const handlePreRollUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPreRoll(true);
+
+    try {
+      const formData = new FormData();
+      const label = file.name.replace(/\.[^/.]+$/, '');
+      formData.append('preRoll', file);
+      formData.append('name', file.name);
+      formData.append('label', label);
+
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/prerolls/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSettings(prevSettings => ({
+          ...prevSettings,
+          preRollVideos: [...(prevSettings.preRollVideos || []), data.preRoll]
+        }));
+        setScheduleForm(prevForm => ({
+          ...prevForm,
+          preRollId: data.preRoll.id,
+          preRollPath: data.preRoll.path,
+          preRollLabel: data.preRoll.label
+        }));
+        setSaveMessage('Pre-roll video uploaded successfully!');
+        setTimeout(() => setSaveMessage(''), 3000);
+      } else {
+        setSaveMessage('Failed to upload pre-roll video');
+      }
+    } catch (error) {
+      console.error('Error uploading pre-roll video:', error);
+      setSaveMessage('Error uploading pre-roll video');
+    } finally {
+      setUploadingPreRoll(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleDeletePreRoll = async (preRollId) => {
+    if (!confirm('Are you sure you want to delete this pre-roll video?')) return;
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`/api/admin/prerolls/${preRollId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setSettings(prevSettings => ({
+          ...prevSettings,
+          preRollVideos: (prevSettings.preRollVideos || []).filter(preRoll => preRoll.id !== preRollId),
+          coverScheduling: Object.fromEntries(
+            Object.entries(prevSettings.coverScheduling || {}).map(([station, config]) => [
+              station,
+              {
+                ...config,
+                schedules: (config.schedules || []).map(schedule => (
+                  schedule.preRollId === preRollId
+                    ? {
+                      ...schedule,
+                      preRollId: '',
+                      preRollPath: '',
+                      preRollLabel: ''
+                    }
+                    : schedule
+                ))
+              }
+            ])
+          )
+        }));
+        if (scheduleForm.preRollId === preRollId) {
+          setScheduleForm(prevForm => ({
+            ...prevForm,
+            preRollId: '',
+            preRollPath: '',
+            preRollLabel: ''
+          }));
+        }
+        setSaveMessage('Pre-roll video deleted successfully!');
+        setTimeout(() => setSaveMessage(''), 3000);
+      } else {
+        setSaveMessage('Failed to delete pre-roll video');
+      }
+    } catch (error) {
+      console.error('Error deleting pre-roll video:', error);
+      setSaveMessage('Error deleting pre-roll video');
+    }
+  };
+
   const handleAddSchedule = async () => {
     console.log('[Admin] handleAddSchedule called');
     console.log('[Admin] Schedule form data:', scheduleForm);
@@ -933,6 +1039,11 @@ export default function Admin() {
         ? {
           videoUrl: scheduleForm.videoUrl.trim(),
           videoLabel: scheduleForm.videoLabel.trim(),
+          ...(scheduleForm.preRollPath ? {
+            preRollId: scheduleForm.preRollId,
+            preRollPath: scheduleForm.preRollPath,
+            preRollLabel: scheduleForm.preRollLabel
+          } : {}),
           muted: true,
           aspectRatio: '16:9',
           coverPath: scheduleForm.coverPath || ''
@@ -2107,6 +2218,9 @@ export default function Admin() {
                               mediaType: 'image',
                               videoUrl: '',
                               videoLabel: '',
+                              preRollId: '',
+                              preRollPath: '',
+                              preRollLabel: '',
                               days: [],
                               startTime: '09:00',
                               endTime: '17:00',
@@ -2165,6 +2279,11 @@ export default function Admin() {
                                 {schedule.mediaType === 'video' && schedule.videoUrl && (
                                   <div className="mt-2 text-xs text-text-secondary break-all">
                                     {schedule.videoLabel || 'Live video'} | {schedule.videoUrl}
+                                    {schedule.preRollPath && (
+                                      <div className="mt-1 text-text-tertiary">
+                                        Pre-roll: {schedule.preRollLabel || schedule.preRollPath}
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -2178,6 +2297,9 @@ export default function Admin() {
                                       mediaType: schedule.mediaType || 'image',
                                       videoUrl: schedule.videoUrl || '',
                                       videoLabel: schedule.videoLabel || '',
+                                      preRollId: schedule.preRollId || '',
+                                      preRollPath: schedule.preRollPath || '',
+                                      preRollLabel: schedule.preRollLabel || '',
                                       days: schedule.days || [],
                                       startTime: schedule.startTime || '09:00',
                                       endTime: schedule.endTime || '17:00',
@@ -2930,6 +3052,106 @@ export default function Admin() {
                       ) : (
                         <div className="flex aspect-video items-center justify-center px-4 text-center text-xs text-text-tertiary">
                           Enter an HLS video URL to preview the stream.
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-3 rounded-lg border border-border bg-bg-secondary p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <Body size="small" opacity="secondary" className="text-xs">Pre-roll Video</Body>
+                          <div className="mt-1 text-xs text-text-tertiary">
+                            Optional. Plays before the live video stream.
+                          </div>
+                        </div>
+                        <label className="cursor-pointer rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary/90">
+                          {uploadingPreRoll ? 'Uploading...' : '+ Upload'}
+                          <input
+                            type="file"
+                            accept="video/mp4,video/webm,video/*"
+                            onChange={handlePreRollUpload}
+                            disabled={uploadingPreRoll}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      {scheduleForm.preRollPath && (
+                        <div className="overflow-hidden rounded-lg border border-border bg-black">
+                          <video
+                            src={scheduleForm.preRollPath}
+                            className="aspect-video w-full bg-black object-cover"
+                            muted
+                            controls
+                            playsInline
+                            preload="metadata"
+                          />
+                          <div className="border-t border-border bg-bg-tertiary px-3 py-2 text-xs text-text-secondary">
+                            Selected: {scheduleForm.preRollLabel || 'Pre-roll video'}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => setScheduleForm({
+                            ...scheduleForm,
+                            preRollId: '',
+                            preRollPath: '',
+                            preRollLabel: ''
+                          })}
+                          className={`rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
+                            !scheduleForm.preRollPath
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-border bg-bg-tertiary text-text-secondary hover:bg-bg-tertiary/80'
+                          }`}
+                        >
+                          No pre-roll
+                        </button>
+                        {(settings.preRollVideos || []).map((preRoll) => (
+                          <div
+                            key={preRoll.id}
+                            className={`rounded-lg border p-2 transition-colors ${
+                              scheduleForm.preRollId === preRoll.id
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border bg-bg-tertiary'
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => setScheduleForm({
+                                ...scheduleForm,
+                                preRollId: preRoll.id,
+                                preRollPath: preRoll.path,
+                                preRollLabel: preRoll.label
+                              })}
+                              className="w-full text-left"
+                            >
+                              <video
+                                src={preRoll.path}
+                                className="aspect-video w-full rounded bg-black object-cover"
+                                muted
+                                playsInline
+                                preload="metadata"
+                              />
+                              <div className="mt-1 truncate text-xs font-medium text-text-primary">
+                                {preRoll.label}
+                              </div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePreRoll(preRoll.id)}
+                              className="mt-2 text-xs text-red-400 hover:text-red-300"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {(settings.preRollVideos || []).length === 0 && (
+                        <div className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-text-tertiary">
+                          No pre-roll videos uploaded yet.
                         </div>
                       )}
                     </div>

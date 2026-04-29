@@ -69,6 +69,7 @@
     "name": "Constanța, România"
   },
   "apiBaseUrl": "",
+  "preRollVideos": [],
   "coverScheduling": {
     "fm": {
       "enabled": false,

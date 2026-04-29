@@ -39,6 +39,7 @@ export default function RadioPlayer({ radioState }) {
   const coverMedia = currentStation.coverMedia || { type: 'image', coverPath: currentStation.coverArt };
   const isVideoCover = coverMedia.type === 'video' && coverMedia.videoUrl;
   const videoRef = useRef(null);
+  const playedPreRollsRef = useRef(new Set());
   const [videoFailed, setVideoFailed] = useState(false);
   const useCompactDesktopSizing = isDesktopShell && (forceCompactLayout || shortHeightLayout);
   const useCenteredDesktopStack = isDesktopShell && (forceCompactLayout || shortHeightLayout || effectivePaneAspectRatio < 1.25);
@@ -143,7 +144,7 @@ export default function RadioPlayer({ radioState }) {
 
   useEffect(() => {
     setVideoFailed(false);
-  }, [coverMedia.type, coverMedia.videoUrl]);
+  }, [coverMedia.type, coverMedia.videoUrl, coverMedia.preRollUrl]);
 
   useEffect(() => {
     if (!shouldRenderVideoCover || !videoRef.current) {
@@ -153,21 +154,82 @@ export default function RadioPlayer({ radioState }) {
     const video = videoRef.current;
     let hls = null;
     let cancelled = false;
+    let currentSource = '';
 
     video.muted = coverMedia.muted !== false;
     video.playsInline = true;
+    const preRollPlaybackKey = coverMedia.preRollWindowKey
+      || `${coverMedia.scheduleId || currentStation.id}:${coverMedia.preRollUrl || ''}:${coverMedia.videoUrl}`;
+    const shouldPlayPreRoll = Boolean(coverMedia.preRollUrl)
+      && !playedPreRollsRef.current.has(preRollPlaybackKey);
 
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = coverMedia.videoUrl;
-      video.play().catch(() => {});
-    } else {
-      import('hls.js').then(({ default: Hls }) => {
+    const destroyHls = () => {
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+    };
+
+    const playVideo = () => {
+      if (!cancelled) {
+        video.play().catch(() => {});
+      }
+    };
+
+    const isHlsSource = (source) => /\.m3u8($|\?)/i.test(source);
+
+    const loadSource = (source, { isPreRoll = false } = {}) => {
+      if (!source || cancelled) {
+        return;
+      }
+
+      currentSource = source;
+      destroyHls();
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      video.onended = null;
+      video.onerror = null;
+
+      if (isPreRoll) {
+        video.onended = () => {
+          playedPreRollsRef.current.add(preRollPlaybackKey);
+          loadSource(coverMedia.videoUrl);
+        };
+      }
+
+      video.onerror = () => {
         if (cancelled) {
           return;
         }
 
-        if (!Hls.isSupported()) {
+        if (isPreRoll) {
+          playedPreRollsRef.current.add(preRollPlaybackKey);
+          loadSource(coverMedia.videoUrl);
+        } else {
           setVideoFailed(true);
+        }
+      };
+
+      if (!isHlsSource(source) || video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = source;
+        video.addEventListener('loadedmetadata', playVideo, { once: true });
+        video.load();
+        return;
+      }
+
+      import('hls.js').then(({ default: Hls }) => {
+        if (cancelled || currentSource !== source) {
+          return;
+        }
+
+        if (!Hls.isSupported()) {
+          if (isPreRoll) {
+            playedPreRollsRef.current.add(preRollPlaybackKey);
+            loadSource(coverMedia.videoUrl);
+          } else {
+            setVideoFailed(true);
+          }
           return;
         }
 
@@ -175,30 +237,50 @@ export default function RadioPlayer({ radioState }) {
           enableWorker: true,
           lowLatencyMode: true,
         });
-        hls.loadSource(coverMedia.videoUrl);
+        hls.loadSource(source);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          video.play().catch(() => {});
+          playVideo();
         });
         hls.on(Hls.Events.ERROR, (_, data) => {
           if (data?.fatal) {
-            setVideoFailed(true);
+            if (isPreRoll) {
+              playedPreRollsRef.current.add(preRollPlaybackKey);
+              loadSource(coverMedia.videoUrl);
+            } else {
+              setVideoFailed(true);
+            }
           }
         });
       }).catch(() => {
-        setVideoFailed(true);
+        if (isPreRoll) {
+          playedPreRollsRef.current.add(preRollPlaybackKey);
+          loadSource(coverMedia.videoUrl);
+        } else {
+          setVideoFailed(true);
+        }
       });
-    }
+    };
+
+    loadSource(shouldPlayPreRoll ? coverMedia.preRollUrl : coverMedia.videoUrl, { isPreRoll: shouldPlayPreRoll });
 
     return () => {
       cancelled = true;
-      if (hls) {
-        hls.destroy();
-      }
+      destroyHls();
+      video.onended = null;
+      video.onerror = null;
       video.removeAttribute('src');
       video.load();
     };
-  }, [coverMedia.muted, coverMedia.videoUrl, shouldRenderVideoCover]);
+  }, [
+    coverMedia.muted,
+    coverMedia.preRollUrl,
+    coverMedia.preRollWindowKey,
+    coverMedia.scheduleId,
+    coverMedia.videoUrl,
+    currentStation.id,
+    shouldRenderVideoCover,
+  ]);
 
   const renderCoverArt = (desktop = false) => {
     const coverBaseSize = desktop
@@ -268,14 +350,13 @@ export default function RadioPlayer({ radioState }) {
         className={`rc-player-cover relative h-full w-full overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}
       >
         <motion.video
-          key={coverMedia.videoUrl}
+          key={`${coverMedia.preRollUrl || ''}:${coverMedia.videoUrl}`}
           ref={videoRef}
           className="h-full w-full bg-black object-cover"
           muted={coverMedia.muted !== false}
           playsInline
           autoPlay
           preload="auto"
-          onError={() => setVideoFailed(true)}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.35, ease: 'easeInOut' }}
