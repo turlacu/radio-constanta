@@ -894,7 +894,7 @@ export default function Admin() {
     }
   };
 
-  const handlePreRollUpload = async (event) => {
+  const handlePreRollUpload = async (event, station = selectedStation, selectUploaded = showScheduleModal) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -908,7 +908,7 @@ export default function Admin() {
       formData.append('label', label);
 
       const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/prerolls/upload', {
+      const response = await fetch(`/api/admin/prerolls/${station}/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -922,12 +922,14 @@ export default function Admin() {
           ...prevSettings,
           preRollVideos: [...(prevSettings.preRollVideos || []), data.preRoll]
         }));
-        setScheduleForm(prevForm => ({
-          ...prevForm,
-          preRollId: data.preRoll.id,
-          preRollPath: data.preRoll.path,
-          preRollLabel: data.preRoll.label
-        }));
+        if (selectUploaded) {
+          setScheduleForm(prevForm => ({
+            ...prevForm,
+            preRollId: data.preRoll.id,
+            preRollPath: data.preRoll.path,
+            preRollLabel: data.preRoll.label
+          }));
+        }
         setSaveMessage('Pre-roll video uploaded successfully!');
         setTimeout(() => setSaveMessage(''), 3000);
       } else {
@@ -1239,6 +1241,7 @@ export default function Admin() {
     { id: 'weather', name: 'Weather', icon: 'CloudSun' },
     { id: 'streams', name: 'Radio Streams', icon: 'Radio' },
     { id: 'covers', name: 'Cover Scheduling', icon: 'Images' },
+    { id: 'videos', name: 'Video Scheduling', icon: 'Video' },
     { id: 'nowplaying', name: 'Now Playing', icon: 'Broadcast' },
     { id: 'news', name: 'News Source', icon: 'Newspaper' },
     { id: 'time', name: 'Time Sync', icon: 'Clock' }
@@ -1269,6 +1272,11 @@ export default function Admin() {
     Images: () => (
       <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
         <path d="M216,40H72A16,16,0,0,0,56,56V72H40A16,16,0,0,0,24,88V200a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V184h16a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM72,56H216v62.75l-10.07-10.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L72,109.37ZM184,200H40V88H56v80a16,16,0,0,0,16,16H184Zm32-32H72V132l36-36,49.66,49.66a8,8,0,0,0,11.31,0L194.63,120,216,141.38V168ZM160,84a12,12,0,1,1,12,12A12,12,0,0,1,160,84Z"/>
+      </svg>
+    ),
+    Video: () => (
+      <svg className="w-5 h-5" viewBox="0 0 256 256" fill="currentColor">
+        <path d="M216,72H40A16,16,0,0,0,24,88v80a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V88A16,16,0,0,0,216,72ZM40,88H216v80H40Zm128,40a8,8,0,0,1-3.7,6.75l-48,32A8,8,0,0,1,104,160V96a8,8,0,0,1,12.44-6.66l48,32A8,8,0,0,1,168,128Zm-16,0-32-21.33v42.66Z"/>
       </svg>
     ),
     Clock: () => (
@@ -1330,6 +1338,143 @@ export default function Admin() {
     const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     return days.map((day) => labels[day]).join(', ');
   };
+
+  const getPreRollStation = (preRoll) => (
+    preRoll.station === 'folclor' ? 'folclor' : 'fm'
+  );
+
+  const getStationPreRolls = (station) => (
+    (settings.preRollVideos || []).filter((preRoll) => getPreRollStation(preRoll) === station)
+  );
+
+  const renderServerTimePanel = () => (
+    <div className="mb-6 p-4 rounded-xl bg-bg-secondary border border-border">
+      <div className="flex items-center justify-between">
+        <div>
+          <Body size="small" className="font-medium text-xs text-text-secondary mb-1">
+            Server Time (Europe/Bucharest)
+          </Body>
+          <div className="flex items-baseline gap-3">
+            <Body className="text-2xl font-bold text-primary font-mono">
+              {serverTime.toLocaleString('en-US', {
+                timeZone: 'Europe/Bucharest',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+              })}
+            </Body>
+            <Body size="small" className="text-text-tertiary">
+              {serverTime.toLocaleString('en-US', {
+                timeZone: 'Europe/Bucharest',
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </Body>
+          </div>
+        </div>
+        <div className="text-right">
+          <Body size="small" className="text-xs text-text-tertiary mb-1">
+            Timezone
+          </Body>
+          <Body size="small" className="text-xs font-medium text-text-secondary">
+            UTC{serverTime.toLocaleString('en-US', {
+              timeZone: 'Europe/Bucharest',
+              timeZoneName: 'short'
+            }).match(/UTC([+-]\d+)/)?.[1] || '+2/+3'}
+          </Body>
+          <Body size="small" className="text-xs text-green-500 mt-1">
+            Auto-adjusts for DST
+          </Body>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStationTabs = () => (
+    <div className="flex gap-2 mb-4">
+      <button
+        onClick={() => setSelectedStation('fm')}
+        className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors ${
+          selectedStation === 'fm'
+            ? 'bg-primary text-white'
+            : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
+        }`}
+      >
+        Radio Constanța FM
+      </button>
+      <button
+        onClick={() => setSelectedStation('folclor')}
+        className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium transition-colors ${
+          selectedStation === 'folclor'
+            ? 'bg-primary text-white'
+            : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
+        }`}
+      >
+        Radio Constanța Folclor
+      </button>
+    </div>
+  );
+
+  const renderDynamicSchedulingToggle = (title = 'Enable Dynamic Covers', description = 'Automatically change covers based on schedule') => (
+    <div className="flex items-center justify-between p-3 rounded-lg bg-bg-tertiary border border-border">
+      <div>
+        <Body size="small" className="font-medium text-xs">{title}</Body>
+        <Body size="small" opacity="secondary" className="text-xs mt-0.5">
+          {description}
+        </Body>
+      </div>
+      <label className="relative inline-flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          checked={settings.coverScheduling[selectedStation].enabled || false}
+          onChange={async (e) => {
+            const enabled = e.target.checked;
+            const updatedSettings = {
+              ...settings,
+              coverScheduling: {
+                ...settings.coverScheduling,
+                [selectedStation]: {
+                  ...settings.coverScheduling[selectedStation],
+                  enabled
+                }
+              }
+            };
+            setSettings(updatedSettings);
+
+            setIsSaving(true);
+            try {
+              const token = localStorage.getItem('adminToken');
+              const response = await fetch('/api/admin/settings', {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(updatedSettings)
+              });
+
+              if (response.ok) {
+                setSaveMessage(`Dynamic scheduling ${enabled ? 'enabled' : 'disabled'} successfully!`);
+                setTimeout(() => setSaveMessage(''), 3000);
+              } else {
+                setSaveMessage('Failed to save settings');
+              }
+            } catch (error) {
+              setSaveMessage('Error saving settings');
+              console.error('Save error:', error);
+            } finally {
+              setIsSaving(false);
+            }
+          }}
+          className="sr-only peer"
+        />
+        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+      </label>
+    </div>
+  );
 
   const createScheduleForm = (mediaType = 'image') => ({
     name: '',
@@ -1483,6 +1628,66 @@ export default function Admin() {
               {isVideoSection
                 ? 'No video schedules created yet. Add a video schedule to start.'
                 : 'No cover schedules created yet. Add a cover schedule to start.'}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderPreRollLibrary = () => {
+    const stationPreRolls = getStationPreRolls(selectedStation);
+
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <Body size="small" opacity="secondary" className="text-xs">Pre-roll Video Library</Body>
+            <Body size="small" opacity="secondary" className="text-xs mt-1">
+              Videos uploaded here are available only for the selected station.
+            </Body>
+          </div>
+          <label className="px-3 py-1.5 text-xs rounded-lg bg-primary text-white font-medium hover:bg-primary-dark cursor-pointer transition-colors">
+            {uploadingPreRoll ? 'Uploading...' : '+ Upload Pre-roll'}
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/*"
+              onChange={(event) => handlePreRollUpload(event, selectedStation, false)}
+              disabled={uploadingPreRoll}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {stationPreRolls.map((preRoll) => (
+            <div key={preRoll.id} className="rounded-lg border border-border bg-bg-tertiary p-2">
+              <video
+                src={preRoll.path}
+                className="aspect-video w-full rounded bg-black object-cover"
+                muted
+                controls
+                playsInline
+                preload="metadata"
+              />
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="truncate text-xs font-medium text-text-primary">{preRoll.label}</div>
+                  <div className="text-xs text-text-tertiary">{selectedStation.toUpperCase()}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDeletePreRoll(preRoll.id)}
+                  className="shrink-0 px-2 py-1 text-xs rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+          {stationPreRolls.length === 0 && (
+            <div className="sm:col-span-2 lg:col-span-3 text-center py-6 text-xs text-text-tertiary border border-dashed border-border rounded-lg">
+              No pre-roll videos uploaded for this station yet.
             </div>
           )}
         </div>
@@ -2371,12 +2576,46 @@ export default function Admin() {
                         'image',
                         settings.coverScheduling[selectedStation].schedules || []
                       )}
-                      {renderCoverScheduleSection(
-                        'Video Schedules',
-                        'video',
-                        settings.coverScheduling[selectedStation].schedules || []
-                      )}
                     </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Video Scheduling Tab */}
+            {activeTab === 'videos' && settings.coverScheduling && (
+              <div>
+                <div className="mb-6">
+                  <Heading level={3} className="text-2xl">Video Scheduling</Heading>
+                  <Body size="small" opacity="secondary" className="mt-2">
+                    Schedule video streams and station-specific pre-roll videos based on day and time
+                  </Body>
+                </div>
+
+                {renderServerTimePanel()}
+
+                <div className="space-y-6">
+                  <div className="rounded-2xl bg-bg-secondary border border-border shadow-lg p-6">
+                    {renderStationTabs()}
+
+                    {settings.coverScheduling[selectedStation] && (
+                      <div className="space-y-4">
+                        {renderDynamicSchedulingToggle(
+                          'Enable Dynamic Scheduling',
+                          'Automatically activate cover and video schedules for this station'
+                        )}
+
+                        {renderPreRollLibrary()}
+
+                        <div className="space-y-5">
+                          {renderCoverScheduleSection(
+                            'Video Schedules',
+                            'video',
+                            settings.coverScheduling[selectedStation].schedules || []
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -3084,7 +3323,7 @@ export default function Admin() {
                           <input
                             type="file"
                             accept="video/mp4,video/webm,video/*"
-                            onChange={handlePreRollUpload}
+                            onChange={(event) => handlePreRollUpload(event, selectedStation, true)}
                             disabled={uploadingPreRoll}
                             className="hidden"
                           />
@@ -3124,7 +3363,7 @@ export default function Admin() {
                         >
                           No pre-roll
                         </button>
-                        {(settings.preRollVideos || []).map((preRoll) => (
+                        {getStationPreRolls(selectedStation).map((preRoll) => (
                           <div
                             key={preRoll.id}
                             className={`rounded-lg border p-2 transition-colors ${
@@ -3165,9 +3404,9 @@ export default function Admin() {
                         ))}
                       </div>
 
-                      {(settings.preRollVideos || []).length === 0 && (
+                      {getStationPreRolls(selectedStation).length === 0 && (
                         <div className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-text-tertiary">
-                          No pre-roll videos uploaded yet.
+                          No pre-roll videos uploaded for this station yet.
                         </div>
                       )}
                     </div>

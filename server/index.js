@@ -39,6 +39,8 @@ const initializeDataDirectories = async () => {
   const preRollsDir = path.join(dataDir, 'prerolls');
   const fmCoversDir = path.join(coversDir, 'fm');
   const folclorCoversDir = path.join(coversDir, 'folclor');
+  const fmPreRollsDir = path.join(preRollsDir, 'fm');
+  const folclorPreRollsDir = path.join(preRollsDir, 'folclor');
 
   try {
     await mkdir(dataDir, { recursive: true });
@@ -46,6 +48,8 @@ const initializeDataDirectories = async () => {
     await mkdir(preRollsDir, { recursive: true });
     await mkdir(fmCoversDir, { recursive: true });
     await mkdir(folclorCoversDir, { recursive: true });
+    await mkdir(fmPreRollsDir, { recursive: true });
+    await mkdir(folclorPreRollsDir, { recursive: true });
     logger.info('[Server]', '✓ Persistent data directories initialized');
   } catch (error) {
     logger.error('[Server]', 'Error creating data directories:', error);

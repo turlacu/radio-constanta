@@ -80,7 +80,14 @@ const upload = multer({
 
 const preRollStorage = multer.diskStorage({
   destination: async (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../data/prerolls');
+    const station = req.params.station || 'fm';
+
+    if (!validateStationParam(station)) {
+      cb(new Error('Invalid station'));
+      return;
+    }
+
+    const uploadPath = path.join(__dirname, '../data/prerolls', station);
 
     try {
       await fs.mkdir(uploadPath, { recursive: true });
@@ -164,6 +171,7 @@ const preRollVideoSchema = z.object({
   label: z.string(),
   path: z.string(),
   filename: z.string(),
+  station: z.enum(['fm', 'folclor']).optional(),
   size: z.number().nonnegative(),
   mimeType: z.string().optional(),
   uploadedAt: z.string(),
@@ -316,6 +324,16 @@ function validateFilePath(filePath, allowedDir) {
 
 function validateStationParam(station) {
   return VALID_STATIONS.has(station);
+}
+
+function normalizePreRollVideos(settings) {
+  return {
+    ...settings,
+    preRollVideos: (settings.preRollVideos || []).map(preRoll => ({
+      ...preRoll,
+      station: validateStationParam(preRoll.station) ? preRoll.station : 'fm'
+    }))
+  };
 }
 
 function sanitizeUploadFilename(originalname) {
@@ -497,7 +515,7 @@ router.post('/login', authLimiter, async (req, res) => {
 router.get('/settings', authenticateAdmin, async (req, res) => {
   try {
     const data = await fs.readFile(SETTINGS_FILE, 'utf8');
-    const settings = JSON.parse(data);
+    const settings = normalizePreRollVideos(JSON.parse(data));
     res.json(settings);
   } catch (error) {
     logger.error('[Settings]', 'Error reading settings:', error);
@@ -508,7 +526,7 @@ router.get('/settings', authenticateAdmin, async (req, res) => {
 // Update admin settings
 router.put('/settings', authenticateAdmin, async (req, res) => {
   try {
-    const newSettings = adminSettingsSchema.parse(req.body);
+    const newSettings = normalizePreRollVideos(adminSettingsSchema.parse(req.body));
 
     if (newSettings.coverScheduling) {
       Object.keys(newSettings.coverScheduling).forEach(station => {
@@ -679,10 +697,15 @@ router.post('/covers/:station/upload-default', authenticateAdmin, upload.single(
   }
 });
 
-router.post('/prerolls/upload', authenticateAdmin, preRollUpload.single('preRoll'), async (req, res) => {
+router.post('/prerolls/:station/upload', authenticateAdmin, preRollUpload.single('preRoll'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { station } = req.params;
+    if (!validateStationParam(station)) {
+      return res.status(400).json({ error: 'Invalid station' });
     }
 
     const data = await fs.readFile(SETTINGS_FILE, 'utf8');
@@ -697,8 +720,9 @@ router.post('/prerolls/upload', authenticateAdmin, preRollUpload.single('preRoll
       id: `preroll-${Date.now()}`,
       name: req.body.name || req.file.originalname,
       label,
-      path: `/prerolls/${req.file.filename}`,
+      path: `/prerolls/${station}/${req.file.filename}`,
       filename: req.file.filename,
+      station,
       size: req.file.size,
       mimeType: req.file.mimetype,
       uploadedAt: new Date().toISOString(),
@@ -706,6 +730,43 @@ router.post('/prerolls/upload', authenticateAdmin, preRollUpload.single('preRoll
 
     settings.preRollVideos.push(preRoll);
     await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
+
+    res.json({ success: true, preRoll });
+  } catch (error) {
+    logger.error('[PreRoll]', 'Error uploading pre-roll video:', error);
+    res.status(500).json({ error: 'Failed to upload pre-roll video' });
+  }
+});
+
+router.post('/prerolls/upload', authenticateAdmin, preRollUpload.single('preRoll'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const data = await fs.readFile(SETTINGS_FILE, 'utf8');
+    const settings = JSON.parse(data);
+
+    if (!Array.isArray(settings.preRollVideos)) {
+      settings.preRollVideos = [];
+    }
+
+    const station = 'fm';
+    const label = req.body.label || req.body.name || req.file.originalname.replace(/\.[^/.]+$/, '');
+    const preRoll = {
+      id: `preroll-${Date.now()}`,
+      name: req.body.name || req.file.originalname,
+      label,
+      path: `/prerolls/${station}/${req.file.filename}`,
+      filename: req.file.filename,
+      station,
+      size: req.file.size,
+      mimeType: req.file.mimetype,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    settings.preRollVideos.push(preRoll);
+    await fs.writeFile(SETTINGS_FILE, JSON.stringify(normalizePreRollVideos(settings), null, 2), 'utf8');
 
     res.json({ success: true, preRoll });
   } catch (error) {
