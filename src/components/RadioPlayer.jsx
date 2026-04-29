@@ -493,6 +493,7 @@ export default function RadioPlayer({ radioState }) {
       <ResponsiveContainer section="radio" className="justify-center">
         {hasExpandedVideoCover ? (
           <motion.div
+            key="desktop-video-player"
             transition={{ duration: 0.42, type: 'spring', stiffness: 180, damping: 28 }}
             className="flex w-screen justify-center px-[clamp(1.5rem,2.8vw,4rem)]"
             style={{
@@ -658,6 +659,7 @@ export default function RadioPlayer({ radioState }) {
           </motion.div>
         ) : (
           <motion.div
+            key="desktop-split-player"
             layout
             transition={{ layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
             className="grid w-screen min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-0"
