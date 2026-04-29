@@ -99,7 +99,9 @@ export default function RadioPlayer({ radioState }) {
   const desktopCoverSize = useCompactDesktopSizing
     ? 'min(100%, clamp(15rem, 33vh, 20.5rem))'
     : 'clamp(16rem, 28vw, 26rem)';
-  const desktopVideoCoverWidth = `calc(${desktopCoverSize} * 16 / 9)`;
+  const desktopVideoCoverWidth = useCompactDesktopSizing
+    ? 'clamp(26.667rem, 58.667vh, 36.444rem)'
+    : 'clamp(28.444rem, 49.778vw, 46.222rem)';
   const desktopPlayButtonSize = useCompactDesktopSizing
     ? 'clamp(3.6rem, 5.7vh, 4.6rem)'
     : 'clamp(3.75rem, 4.6vw, 5rem)';
@@ -460,13 +462,14 @@ export default function RadioPlayer({ radioState }) {
       <ResponsiveContainer section="radio" className="justify-center">
         {hasExpandedVideoCover ? (
           <motion.div
-            layout
-            transition={{ layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
-            className="flex w-full justify-center px-[clamp(1.5rem,2.8vw,4rem)]"
+            transition={{ duration: 0.42, type: 'spring', stiffness: 180, damping: 28 }}
+            className="flex w-screen justify-center px-[clamp(1.5rem,2.8vw,4rem)]"
+            style={{
+              marginLeft: 'calc(50% - 50vw)',
+              marginRight: 'calc(50% - 50vw)',
+            }}
           >
             <motion.div
-              layout
-              transition={{ layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
               className="grid min-w-0 max-w-full items-center"
               style={{
                 width: desktopWidePlayerWidth,
@@ -476,18 +479,15 @@ export default function RadioPlayer({ radioState }) {
               }}
             >
               <motion.div
-                layout
-                transition={{ layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
                 className="flex min-w-0 justify-end"
               >
                 {renderCoverArt(true)}
               </motion.div>
 
               <motion.div
-                layout
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.08, layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
+                transition={{ delay: 0.08 }}
                 className="flex min-w-0 justify-start py-2"
               >
                 <div
