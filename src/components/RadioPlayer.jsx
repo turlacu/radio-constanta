@@ -221,34 +221,17 @@ export default function RadioPlayer({ radioState }) {
       <div
         className={`rc-player-cover relative h-full w-full overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}
       >
-        {shouldRenderVideoCover ? (
-          <motion.video
-            key={coverMedia.videoUrl}
-            ref={videoRef}
-            className="h-full w-full bg-black object-cover"
-            muted={coverMedia.muted !== false}
-            playsInline
-            autoPlay
-            preload="auto"
-            onError={() => setVideoFailed(true)}
-            initial={{ opacity: 0, scale: 1.01 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
-            aria-label={coverMedia.videoLabel || `${currentStation.name} live video`}
-          />
-        ) : (
-          <motion.img
-            key={coverMedia.coverPath || coverMedia.fallbackCoverPath || currentStation.coverArt}
-            src={coverMedia.coverPath || coverMedia.fallbackCoverPath || currentStation.coverArt}
-            alt={`${currentStation.name} cover art`}
-            className="h-full w-full object-cover"
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
-            whileHover={desktop ? { scale: 1.015 } : { scale: 1.02 }}
-          />
-        )}
+        <motion.img
+          key={coverMedia.coverPath || coverMedia.fallbackCoverPath || currentStation.coverArt}
+          src={coverMedia.coverPath || coverMedia.fallbackCoverPath || currentStation.coverArt}
+          alt={`${currentStation.name} cover art`}
+          className="h-full w-full object-cover"
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          whileHover={desktop ? { scale: 1.015 } : { scale: 1.02 }}
+        />
 
         {isPlaying && (
           <motion.div
@@ -272,6 +255,54 @@ export default function RadioPlayer({ radioState }) {
     </motion.div>
     );
   };
+
+  const renderVideoCoverArt = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35, ease: 'easeInOut' }}
+      className="relative shrink-0"
+      style={{ width: desktopVideoCoverWidth, height: desktopCoverSize }}
+    >
+      <div
+        className={`rc-player-cover relative h-full w-full overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}
+      >
+        <motion.video
+          key={coverMedia.videoUrl}
+          ref={videoRef}
+          className="h-full w-full bg-black object-cover"
+          muted={coverMedia.muted !== false}
+          playsInline
+          autoPlay
+          preload="auto"
+          onError={() => setVideoFailed(true)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.35, ease: 'easeInOut' }}
+          aria-label={coverMedia.videoLabel || `${currentStation.name} live video`}
+        />
+
+        {isPlaying && (
+          <motion.div
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className={`absolute right-[clamp(0.9rem,0.8rem+0.35vw,1.5rem)] top-[clamp(0.9rem,0.8rem+0.35vw,1.5rem)] flex items-center gap-1.5 rounded-xl border bg-error/95 px-[clamp(0.65rem,0.55rem+0.3vw,0.95rem)] py-[clamp(0.3rem,0.24rem+0.18vw,0.5rem)] text-white backdrop-blur-sm ${textColor === 'dark' ? 'border-gray-900/18' : 'border-white/20'}`}
+            style={{ borderColor: textColor === 'dark' ? 'rgba(17, 24, 39, 0.18)' : 'rgba(255, 255, 255, 0.20)' }}
+          >
+            <motion.span
+              animate={{ opacity: [1, 0.5, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="h-1.5 w-1.5 rounded-full bg-white"
+              aria-hidden="true"
+            />
+            <Caption uppercase weight="semibold" className="text-[clamp(0.68rem,0.65rem+0.08vw,0.78rem)] text-white">
+              Live
+            </Caption>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
+  );
 
   const renderMobileQualitySelector = () => (
     <motion.div
@@ -481,7 +512,7 @@ export default function RadioPlayer({ radioState }) {
               <motion.div
                 className="flex min-w-0 justify-end"
               >
-                {renderCoverArt(true)}
+                {renderVideoCoverArt()}
               </motion.div>
 
               <motion.div
