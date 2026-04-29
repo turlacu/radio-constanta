@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Heading, Body, Button, Card } from '../components/ui';
 import StatisticsTab from '../components/admin/StatisticsTab';
@@ -25,6 +25,8 @@ export default function Admin() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [scheduleError, setScheduleError] = useState(''); // Error message for schedule modal
+  const scheduleVideoPreviewRef = useRef(null);
+  const [scheduleVideoPreviewError, setScheduleVideoPreviewError] = useState('');
   const [showNowPlayingOverrideModal, setShowNowPlayingOverrideModal] = useState(false);
   const [editingNowPlayingOverride, setEditingNowPlayingOverride] = useState(null);
   const [nowPlayingOverrideStation, setNowPlayingOverrideStation] = useState('fm');
@@ -58,6 +60,73 @@ export default function Admin() {
 
   // Active tab state
   const [activeTab, setActiveTab] = useState('statistics');
+
+  useEffect(() => {
+    const video = scheduleVideoPreviewRef.current;
+    const videoUrl = scheduleForm.videoUrl.trim();
+
+    if (!showScheduleModal || scheduleForm.mediaType !== 'video' || !video || !videoUrl) {
+      setScheduleVideoPreviewError('');
+      return undefined;
+    }
+
+    let hls = null;
+    let cancelled = false;
+
+    setScheduleVideoPreviewError('');
+    video.muted = true;
+    video.playsInline = true;
+
+    const playPreview = () => {
+      if (cancelled) return;
+      video.play().catch(() => {
+        if (!cancelled) {
+          setScheduleVideoPreviewError('Preview loaded. Press play to start.');
+        }
+      });
+    };
+
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoUrl;
+      video.addEventListener('loadedmetadata', playPreview, { once: true });
+    } else {
+      import('hls.js').then(({ default: Hls }) => {
+        if (cancelled) return;
+
+        if (!Hls.isSupported()) {
+          setScheduleVideoPreviewError('HLS preview is not supported in this browser.');
+          return;
+        }
+
+        hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+        });
+        hls.loadSource(videoUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, playPreview);
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (data?.fatal) {
+            setScheduleVideoPreviewError('Unable to load this video stream.');
+          }
+        });
+      }).catch(() => {
+        if (!cancelled) {
+          setScheduleVideoPreviewError('Unable to initialize video preview.');
+        }
+      });
+    }
+
+    return () => {
+      cancelled = true;
+      video.removeEventListener('loadedmetadata', playPreview);
+      if (hls) {
+        hls.destroy();
+      }
+      video.removeAttribute('src');
+      video.load();
+    };
+  }, [scheduleForm.mediaType, scheduleForm.videoUrl, showScheduleModal]);
 
 
   // NTP Server modal state
@@ -2839,7 +2908,31 @@ export default function Admin() {
                         className="w-full px-3 py-2 text-sm rounded-lg bg-bg-secondary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
                       />
                     </div>
-                    <div className="aspect-video rounded-lg border border-border bg-black/80" aria-hidden="true" />
+                    <div className="overflow-hidden rounded-lg border border-border bg-black">
+                      {scheduleForm.videoUrl.trim() ? (
+                        <>
+                          <video
+                            ref={scheduleVideoPreviewRef}
+                            className="aspect-video w-full bg-black object-cover"
+                            muted
+                            controls
+                            playsInline
+                            preload="metadata"
+                            onError={() => setScheduleVideoPreviewError('Unable to load this video stream.')}
+                            aria-label="Video stream preview"
+                          />
+                          {scheduleVideoPreviewError && (
+                            <div className="border-t border-border bg-bg-secondary px-3 py-2 text-xs text-text-secondary">
+                              {scheduleVideoPreviewError}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="flex aspect-video items-center justify-center px-4 text-center text-xs text-text-tertiary">
+                          Enter an HLS video URL to preview the stream.
+                        </div>
+                      )}
+                    </div>
                     <Body size="small" opacity="secondary" className="text-xs">
                       Video schedules are muted and use the existing radio audio. The cover area changes to 16:9 while active.
                     </Body>
