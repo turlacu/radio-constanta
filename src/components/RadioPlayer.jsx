@@ -42,7 +42,7 @@ export default function RadioPlayer({ radioState }) {
   const [videoFailed, setVideoFailed] = useState(false);
   const hasExpandedVideoCover = isVideoCover && !videoFailed;
   const useCompactDesktopSizing = isDesktopShell && (forceCompactLayout || shortHeightLayout);
-  const useCenteredDesktopStack = isDesktopShell && !hasExpandedVideoCover && (forceCompactLayout || effectivePaneAspectRatio < 1.25);
+  const useCenteredDesktopStack = isDesktopShell && (forceCompactLayout || effectivePaneAspectRatio < 1.25);
   const useCompactStackedSizing = !isDesktopShell && (shortHeightLayout || aspectRatio > 0.72);
   const mobileCoverMaxPx = useCompactStackedSizing
     ? Math.min(viewportWidth * 0.62, viewportHeight * 0.34)
@@ -123,9 +123,13 @@ export default function RadioPlayer({ radioState }) {
   const desktopWideDetailsMaxWidth = useCompactDesktopSizing
     ? 'min(100%, 30rem)'
     : 'min(100%, 34rem)';
+  const desktopWideDetailsWidth = useCompactDesktopSizing
+    ? 'min(30rem, calc(100vw - 2rem))'
+    : 'clamp(24rem, 28vw, 34rem)';
   const desktopWidePlayerMaxWidth = useCompactDesktopSizing
     ? 'min(100%, calc(36rem + 30rem + 2.25rem))'
     : 'min(100%, calc(46rem + 34rem + 3rem))';
+  const desktopWidePlayerWidth = `min(100%, calc(${desktopVideoCoverWidth} + ${desktopWidePlayerGap} + ${desktopWideDetailsWidth}))`;
   const mobileVideoCoverWidth = Math.max(
     mobileCoverWidth,
     Math.min(
@@ -462,12 +466,12 @@ export default function RadioPlayer({ radioState }) {
             <motion.div
               layout
               transition={{ layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
-              className="inline-grid min-w-0 max-w-full items-center"
+              className="grid min-w-0 max-w-full items-center"
               style={{
-                width: 'fit-content',
+                width: desktopWidePlayerWidth,
                 gap: desktopWidePlayerGap,
                 maxWidth: desktopWidePlayerMaxWidth,
-                gridTemplateColumns: 'auto minmax(0, 1fr)',
+                gridTemplateColumns: `${desktopVideoCoverWidth} minmax(0, ${desktopWideDetailsWidth})`,
               }}
             >
               <motion.div
