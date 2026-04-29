@@ -341,6 +341,47 @@ function buildScheduleMedia(station, config, schedule) {
   };
 }
 
+function parseTimeToSeconds(timeString) {
+  if (typeof timeString !== 'string') {
+    return null;
+  }
+
+  const [hoursRaw, minutesRaw] = timeString.split(':');
+  const hours = Number.parseInt(hoursRaw, 10);
+  const minutes = Number.parseInt(minutesRaw, 10);
+
+  if (
+    !Number.isInteger(hours)
+    || !Number.isInteger(minutes)
+    || hours < 0
+    || hours > 23
+    || minutes < 0
+    || minutes > 59
+  ) {
+    return null;
+  }
+
+  return (hours * 3600) + (minutes * 60);
+}
+
+function isCurrentTimeWithinRegularSchedule(schedule, currentTimeInSeconds) {
+  const startTimeInSeconds = parseTimeToSeconds(schedule.startTime);
+  const endTimeInSeconds = parseTimeToSeconds(schedule.endTime);
+
+  if (startTimeInSeconds === null || endTimeInSeconds === null) {
+    return false;
+  }
+
+  // Half-open intervals prevent an HH:MM -> HH:MM+1 schedule
+  // from staying active for the entire ending minute.
+  if (startTimeInSeconds < endTimeInSeconds) {
+    return currentTimeInSeconds >= startTimeInSeconds && currentTimeInSeconds < endTimeInSeconds;
+  }
+
+  // Overnight schedules wrap past midnight.
+  return currentTimeInSeconds >= startTimeInSeconds || currentTimeInSeconds < endTimeInSeconds;
+}
+
 // Admin login endpoint - with rate limiting
 router.post('/login', authLimiter, async (req, res) => {
   try {
@@ -677,6 +718,7 @@ async function evaluateCurrentCover(station, verbose = true) {
     const currentHour = romaniaDate.getHours();
     const currentMinutes = romaniaDate.getMinutes();
     const currentSeconds = romaniaDate.getSeconds();
+    const currentTimeInSeconds = (currentHour * 3600) + (currentMinutes * 60) + currentSeconds;
     const currentTime = `${currentHour.toString().padStart(2, '0')}:${currentMinutes.toString().padStart(2, '0')}`;
 
     if (verbose) {
@@ -710,9 +752,9 @@ async function evaluateCurrentCover(station, verbose = true) {
           // Convert to seconds for accurate fractional minute support (e.g., 3.5 min = 210 sec)
           const duration = schedule.duration || 3; // Duration in minutes (can be fractional like 3.5)
           const durationInSeconds = duration * 60;
-          const currentTimeInSeconds = currentMinutes * 60 + currentSeconds;
+          const currentHourTimeInSeconds = currentMinutes * 60 + currentSeconds;
           if (schedule.endOnFirstTrack) {
-            const scheduleStartMs = now.getTime() - (currentTimeInSeconds * 1000) - now.getMilliseconds();
+            const scheduleStartMs = now.getTime() - (currentHourTimeInSeconds * 1000) - now.getMilliseconds();
             if (hasEndedNewsCoverWindow(station, schedule.id, scheduleStartMs)) {
               if (verbose) logger.debug('[Cover]', '  - News cover already ended for this bulletin window');
               return false;
@@ -725,14 +767,14 @@ async function evaluateCurrentCover(station, verbose = true) {
               return false;
             }
           }
-          const matched = currentTimeInSeconds < durationInSeconds;
+          const matched = currentHourTimeInSeconds < durationInSeconds;
           if (verbose) logger.debug('[Cover]', `  - Time ${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} within ${duration}min (${durationInSeconds}s)? ${matched ? '✅' : '❌'}`);
           return matched;
         }
 
         // Handle regular schedules (time range)
         if (verbose) logger.debug('[Cover]', `  - Time range: ${schedule.startTime} - ${schedule.endTime} (current: ${currentTime})`);
-        const matched = currentTime >= schedule.startTime && currentTime <= schedule.endTime;
+        const matched = isCurrentTimeWithinRegularSchedule(schedule, currentTimeInSeconds);
         if (verbose) logger.debug('[Cover]', `  - ${matched ? '✅ MATCHED' : '❌ Not in range'}`);
         return matched;
       })

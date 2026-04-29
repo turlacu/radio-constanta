@@ -118,6 +118,15 @@ export default function RadioPlayer({ radioState }) {
   const desktopStationRailWidth = useCompactDesktopSizing
     ? 'min(100%, 23rem)'
     : 'min(100%, 24rem)';
+  const desktopWidePlayerGap = useCompactDesktopSizing
+    ? 'clamp(1.5rem, 2vw, 2.25rem)'
+    : 'clamp(1.75rem, 2.6vw, 3rem)';
+  const desktopWideDetailsMaxWidth = useCompactDesktopSizing
+    ? 'min(100%, 30rem)'
+    : 'min(100%, 34rem)';
+  const desktopWidePlayerMaxWidth = useCompactDesktopSizing
+    ? 'min(100%, calc(36rem + 30rem + 2.25rem))'
+    : 'min(100%, calc(46rem + 34rem + 3rem))';
   const hasExpandedVideoCover = isVideoCover && !videoFailed;
   const mobileVideoCoverWidth = Math.max(
     mobileCoverWidth,
@@ -441,168 +450,329 @@ export default function RadioPlayer({ radioState }) {
 
     return (
       <ResponsiveContainer section="radio" className="justify-center">
-        <div
-          className="grid w-screen min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-0"
-          style={{
-            marginLeft: 'calc(50% - 50vw)',
-            marginRight: 'calc(50% - 50vw)',
-          }}
-        >
-          <div
-            className="flex min-w-0 justify-end pr-[clamp(1.5rem,2.8vw,4.5rem)]"
-          >
-            {renderCoverArt(true)}
-          </div>
-
+        {hasExpandedVideoCover ? (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 }}
-            className="flex min-w-0 justify-start py-2 pl-[clamp(1.75rem,3vw,4.75rem)]"
+            layout
+            transition={{ layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
+            className="flex w-full justify-center px-[clamp(1.5rem,2.8vw,4rem)]"
           >
-            <div
-              className={`flex w-full min-w-0 flex-col items-start text-left ${
-                useCenteredDesktopStack
-                  ? 'max-w-[min(100%,30rem)] gap-[clamp(0.9rem,0.8rem+0.45vw,1.3rem)]'
-                  : 'max-w-[min(100%,34rem)] gap-5'
-              }`}
+            <motion.div
+              layout
+              transition={{ layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
+              className="grid min-w-0 items-center"
+              style={{
+                gap: desktopWidePlayerGap,
+                maxWidth: desktopWidePlayerMaxWidth,
+                gridTemplateColumns: 'auto minmax(0, 1fr)',
+              }}
             >
-              <SpectrumVisualizer
-                analyserRef={audioAnalyserRef}
-                isPlaying={isPlaying}
-                tone={textColor}
-                className="shrink-0"
-                style={{
-                  width: desktopVisualizerWidth,
-                  height: desktopVisualizerHeight,
-                }}
-              />
-
-              <div
-                className={`grid w-full min-w-0 items-start ${
-                  useCenteredDesktopStack
-                    ? 'gap-[clamp(0.85rem,0.76rem+0.32vw,1.1rem)]'
-                    : 'gap-4'
-                }`}
-              >
-                <div className="flex min-w-0 flex-col items-start text-left" style={{ minWidth: 0, width: '100%' }}>
-                  <Heading
-                    level={2}
-                    color="custom"
-                    className={`mb-1 max-w-full text-balance text-left ${desktopTitleClass} ${textPrimaryClass}`}
-                    style={{ fontSize: desktopTitleSize }}
-                  >
-                    Radio Constanța
-                  </Heading>
-                  <Body
-                    size="normal"
-                    weight="medium"
-                    opacity="custom"
-                    className={`${textSecondaryClass} max-w-full text-pretty text-left`}
-                    style={{ fontSize: desktopSubtitleSize, lineHeight: 1.25 }}
-                  >
-                    {currentSubtitle}
-                  </Body>
-                </div>
-              </div>
-
-              {streamInfo && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 }}
-                  className={`flex flex-wrap items-center justify-start gap-2 text-left ${desktopMetaClass}`}
-                  role="status"
-                  aria-label="Stream information"
-                >
-                  <span>{streamInfo.sampleRate}</span>
-                  <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
-                  <span>{streamInfo.channels}</span>
-                  <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
-                  <span>{streamInfo.bitrate}</span>
-                  <span className={`${streamBadgeBaseClass} ${streamFormatBadgeClass}`}>
-                    {streamInfo.format}
-                  </span>
-                </motion.div>
-              )}
-
               <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex w-full justify-start gap-2"
-                style={{ maxWidth: desktopStationRailWidth }}
-                role="group"
-                aria-label="Station selection"
+                layout
+                transition={{ layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
+                className="flex min-w-0 justify-end"
               >
-                {stations.map((station, index) => {
-                  const isActive = currentStation.id === station.id;
-                  const stationLabel = station.id === 'fm' ? 'FM' : 'Folclor';
-                  return (
-                    <motion.button
-                      key={station.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => switchStation(station)}
-                      initial={{ x: -10, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.24 + index * 0.05 }}
-                      tabIndex={0}
-                      data-dpad="true"
-                      data-dpad-group="player"
-                      className={`${stationButtonBaseClass} ${desktopStationButtonClass} ${
-                        isActive
-                          ? activeStationButtonClass
-                          : inactiveButtonClass
-                      }`}
-                      style={{ borderColor: isActive ? strongButtonBorderColor : buttonBorderColor }}
-                      aria-pressed={isActive}
-                      aria-label={`Switch to ${stationLabel} station`}
-                    >
-                      <span
-                        className={`${stationLabelBaseClass} ${
-                          station.id === 'fm' ? 'whitespace-nowrap' : 'text-[clamp(0.72rem,0.68rem+0.12vw,0.82rem)] tracking-[0.01em]'
-                        }`}
-                      >
-                        {stationLabel}
-                      </span>
-                    </motion.button>
-                  );
-                })}
+                {renderCoverArt(true)}
               </motion.div>
 
-              <motion.button
-                whileHover={{ scale: isLoading ? 1 : 1.05 }}
-                whileTap={{ scale: isLoading ? 1 : 0.95 }}
-                onClick={togglePlay}
-                disabled={isLoading}
-                tabIndex={0}
-                data-dpad="true"
-                data-dpad-group="player"
-                data-dpad-default="play"
-                className={`flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
-                style={{
-                  width: desktopPlayButtonSize,
-                  height: desktopPlayButtonSize,
-                  borderColor: buttonBorderColor,
-                }}
-                aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
+              <motion.div
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08, layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
+                className="flex min-w-0 justify-start py-2"
               >
-                {isLoading ? (
-                  <Loader size="small" />
-                ) : isPlaying ? (
-                  <svg className="h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                  </svg>
-                ) : (
-                  <svg className="ml-[clamp(0.12rem,0.08rem+0.08vw,0.2rem)] h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                )}
-              </motion.button>
-            </div>
+                <div
+                  className="flex w-full min-w-0 flex-col items-start gap-5 text-left"
+                  style={{ maxWidth: desktopWideDetailsMaxWidth }}
+                >
+                  <SpectrumVisualizer
+                    analyserRef={audioAnalyserRef}
+                    isPlaying={isPlaying}
+                    tone={textColor}
+                    className="shrink-0"
+                    style={{
+                      width: desktopVisualizerWidth,
+                      height: desktopVisualizerHeight,
+                    }}
+                  />
+
+                  <div className="grid w-full min-w-0 items-start gap-4">
+                    <div className="flex min-w-0 flex-col items-start text-left" style={{ minWidth: 0, width: '100%' }}>
+                      <Heading
+                        level={2}
+                        color="custom"
+                        className={`mb-1 max-w-full text-balance text-left ${desktopTitleClass} ${textPrimaryClass}`}
+                        style={{ fontSize: desktopTitleSize }}
+                      >
+                        Radio Constanța
+                      </Heading>
+                      <Body
+                        size="normal"
+                        weight="medium"
+                        opacity="custom"
+                        className={`${textSecondaryClass} max-w-full text-pretty text-left`}
+                        style={{ fontSize: desktopSubtitleSize, lineHeight: 1.25 }}
+                      >
+                        {currentSubtitle}
+                      </Body>
+                    </div>
+                  </div>
+
+                  {streamInfo && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                      className={`flex flex-wrap items-center justify-start gap-2 text-left ${desktopMetaClass}`}
+                      role="status"
+                      aria-label="Stream information"
+                    >
+                      <span>{streamInfo.sampleRate}</span>
+                      <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                      <span>{streamInfo.channels}</span>
+                      <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                      <span>{streamInfo.bitrate}</span>
+                      <span className={`${streamBadgeBaseClass} ${streamFormatBadgeClass}`}>
+                        {streamInfo.format}
+                      </span>
+                    </motion.div>
+                  )}
+
+                  <motion.div
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex w-full justify-start gap-2"
+                    style={{ maxWidth: desktopStationRailWidth }}
+                    role="group"
+                    aria-label="Station selection"
+                  >
+                    {stations.map((station, index) => {
+                      const isActive = currentStation.id === station.id;
+                      const stationLabel = station.id === 'fm' ? 'FM' : 'Folclor';
+                      return (
+                        <motion.button
+                          key={station.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => switchStation(station)}
+                          initial={{ x: -10, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: 0.24 + index * 0.05 }}
+                          tabIndex={0}
+                          data-dpad="true"
+                          data-dpad-group="player"
+                          className={`${stationButtonBaseClass} ${desktopStationButtonClass} ${
+                            isActive
+                              ? activeStationButtonClass
+                              : inactiveButtonClass
+                          }`}
+                          style={{ borderColor: isActive ? strongButtonBorderColor : buttonBorderColor }}
+                          aria-pressed={isActive}
+                          aria-label={`Switch to ${stationLabel} station`}
+                        >
+                          <span
+                            className={`${stationLabelBaseClass} ${
+                              station.id === 'fm' ? 'whitespace-nowrap' : 'text-[clamp(0.72rem,0.68rem+0.12vw,0.82rem)] tracking-[0.01em]'
+                            }`}
+                          >
+                            {stationLabel}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                  </motion.div>
+
+                  <motion.button
+                    whileHover={{ scale: isLoading ? 1 : 1.05 }}
+                    whileTap={{ scale: isLoading ? 1 : 0.95 }}
+                    onClick={togglePlay}
+                    disabled={isLoading}
+                    tabIndex={0}
+                    data-dpad="true"
+                    data-dpad-group="player"
+                    data-dpad-default="play"
+                    className={`flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
+                    style={{
+                      width: desktopPlayButtonSize,
+                      height: desktopPlayButtonSize,
+                      borderColor: buttonBorderColor,
+                    }}
+                    aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
+                  >
+                    {isLoading ? (
+                      <Loader size="small" />
+                    ) : isPlaying ? (
+                      <svg className="h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                      </svg>
+                    ) : (
+                      <svg className="ml-[clamp(0.12rem,0.08rem+0.08vw,0.2rem)] h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    )}
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
           </motion.div>
-        </div>
+        ) : (
+          <motion.div
+            layout
+            transition={{ layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
+            className="grid w-screen min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-0"
+            style={{
+              marginLeft: 'calc(50% - 50vw)',
+              marginRight: 'calc(50% - 50vw)',
+            }}
+          >
+            <motion.div
+              layout
+              transition={{ layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
+              className="flex min-w-0 justify-end pr-[clamp(1.5rem,2.8vw,4.5rem)]"
+            >
+              {renderCoverArt(true)}
+            </motion.div>
+
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08, layout: { duration: 0.42, type: 'spring', stiffness: 180, damping: 28 } }}
+              className="flex min-w-0 justify-start py-2 pl-[clamp(1.75rem,3vw,4.75rem)]"
+            >
+              <div className="flex w-full min-w-0 flex-col items-start gap-5 text-left" style={{ maxWidth: desktopWideDetailsMaxWidth }}>
+                <SpectrumVisualizer
+                  analyserRef={audioAnalyserRef}
+                  isPlaying={isPlaying}
+                  tone={textColor}
+                  className="shrink-0"
+                  style={{
+                    width: desktopVisualizerWidth,
+                    height: desktopVisualizerHeight,
+                  }}
+                />
+
+                <div className="grid w-full min-w-0 items-start gap-4">
+                  <div className="flex min-w-0 flex-col items-start text-left" style={{ minWidth: 0, width: '100%' }}>
+                    <Heading
+                      level={2}
+                      color="custom"
+                      className={`mb-1 max-w-full text-balance text-left ${desktopTitleClass} ${textPrimaryClass}`}
+                      style={{ fontSize: desktopTitleSize }}
+                    >
+                      Radio Constanța
+                    </Heading>
+                    <Body
+                      size="normal"
+                      weight="medium"
+                      opacity="custom"
+                      className={`${textSecondaryClass} max-w-full text-pretty text-left`}
+                      style={{ fontSize: desktopSubtitleSize, lineHeight: 1.25 }}
+                    >
+                      {currentSubtitle}
+                    </Body>
+                  </div>
+                </div>
+
+                {streamInfo && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className={`flex flex-wrap items-center justify-start gap-2 text-left ${desktopMetaClass}`}
+                    role="status"
+                    aria-label="Stream information"
+                  >
+                    <span>{streamInfo.sampleRate}</span>
+                    <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                    <span>{streamInfo.channels}</span>
+                    <span className={`h-1 w-1 rounded-full ${textColor === 'dark' ? 'bg-gray-500' : 'bg-white/40'}`} aria-hidden="true" />
+                    <span>{streamInfo.bitrate}</span>
+                    <span className={`${streamBadgeBaseClass} ${streamFormatBadgeClass}`}>
+                      {streamInfo.format}
+                    </span>
+                  </motion.div>
+                )}
+
+                <motion.div
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex w-full justify-start gap-2"
+                  style={{ maxWidth: desktopStationRailWidth }}
+                  role="group"
+                  aria-label="Station selection"
+                >
+                  {stations.map((station, index) => {
+                    const isActive = currentStation.id === station.id;
+                    const stationLabel = station.id === 'fm' ? 'FM' : 'Folclor';
+                    return (
+                      <motion.button
+                        key={station.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => switchStation(station)}
+                        initial={{ x: -10, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.24 + index * 0.05 }}
+                        tabIndex={0}
+                        data-dpad="true"
+                        data-dpad-group="player"
+                        className={`${stationButtonBaseClass} ${desktopStationButtonClass} ${
+                          isActive
+                            ? activeStationButtonClass
+                            : inactiveButtonClass
+                        }`}
+                        style={{ borderColor: isActive ? strongButtonBorderColor : buttonBorderColor }}
+                        aria-pressed={isActive}
+                        aria-label={`Switch to ${stationLabel} station`}
+                      >
+                        <span
+                          className={`${stationLabelBaseClass} ${
+                            station.id === 'fm' ? 'whitespace-nowrap' : 'text-[clamp(0.72rem,0.68rem+0.12vw,0.82rem)] tracking-[0.01em]'
+                          }`}
+                        >
+                          {stationLabel}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
+                </motion.div>
+
+                <motion.button
+                  whileHover={{ scale: isLoading ? 1 : 1.05 }}
+                  whileTap={{ scale: isLoading ? 1 : 0.95 }}
+                  onClick={togglePlay}
+                  disabled={isLoading}
+                  tabIndex={0}
+                  data-dpad="true"
+                  data-dpad-group="player"
+                  data-dpad-default="play"
+                  className={`flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
+                  style={{
+                    width: desktopPlayButtonSize,
+                    height: desktopPlayButtonSize,
+                    borderColor: buttonBorderColor,
+                  }}
+                  aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
+                >
+                  {isLoading ? (
+                    <Loader size="small" />
+                  ) : isPlaying ? (
+                    <svg className="h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                    </svg>
+                  ) : (
+                    <svg className="ml-[clamp(0.12rem,0.08rem+0.08vw,0.2rem)] h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </ResponsiveContainer>
     );
   }
