@@ -94,12 +94,10 @@ export default function RadioPlayer({ radioState }) {
   const stationLabelBaseClass = 'block w-full overflow-hidden text-center leading-none';
   const qualityButtonBaseClass = 'relative flex-1 overflow-hidden rounded-[10px] border px-[clamp(0.75rem,0.68rem+0.22vw,1rem)] py-[clamp(0.55rem,0.5rem+0.16vw,0.75rem)] text-[clamp(0.76rem,0.72rem+0.16vw,0.92rem)] font-medium leading-none transition-all focusable';
   const desktopTitleClass = '!leading-[0.96]';
-  const desktopCoverWidth = useCompactDesktopSizing
+  const desktopCoverSize = useCompactDesktopSizing
     ? 'min(100%, clamp(15rem, 33vh, 20.5rem))'
     : 'clamp(16rem, 28vw, 26rem)';
-  const desktopVideoCoverWidth = useCompactDesktopSizing
-    ? 'min(100%, clamp(24rem, 58vh, 36rem))'
-    : 'min(100%, clamp(28rem, 50vw, 46rem))';
+  const desktopVideoCoverWidth = `calc(${desktopCoverSize} * 16 / 9)`;
   const desktopPlayButtonSize = useCompactDesktopSizing
     ? 'clamp(3.6rem, 5.7vh, 4.6rem)'
     : 'clamp(3.75rem, 4.6vw, 5rem)';
@@ -196,8 +194,11 @@ export default function RadioPlayer({ radioState }) {
   }, [coverMedia.muted, coverMedia.videoUrl, isVideoCover, videoFailed]);
 
   const renderCoverArt = (desktop = false) => {
+    const coverBaseSize = desktop
+      ? desktopCoverSize
+      : `${mobileCoverWidth}px`;
     const activeCoverWidth = desktop
-      ? (hasExpandedVideoCover ? desktopVideoCoverWidth : desktopCoverWidth)
+      ? (hasExpandedVideoCover ? desktopVideoCoverWidth : desktopCoverSize)
       : `${hasExpandedVideoCover ? mobileVideoCoverWidth : mobileCoverWidth}px`;
 
     return (
@@ -208,9 +209,11 @@ export default function RadioPlayer({ radioState }) {
       className={desktop
         ? 'relative shrink-0 origin-right'
         : `relative w-full ${useCompactStackedSizing ? 'mb-[clamp(1.1rem,0.98rem+0.4vw,1.6rem)]' : 'mb-[clamp(1.75rem,1.4rem+1.2vw,3rem)]'}`}
-      style={desktop ? { width: activeCoverWidth } : { maxWidth: activeCoverWidth }}
+      style={desktop ? { width: activeCoverWidth, height: coverBaseSize } : { maxWidth: activeCoverWidth, height: coverBaseSize }}
     >
-      <div className={`rc-player-cover relative w-full ${hasExpandedVideoCover ? 'aspect-video' : 'aspect-square'} overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}>
+      <div
+        className={`rc-player-cover relative h-full w-full overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}
+      >
         {hasExpandedVideoCover ? (
           <motion.video
             key={coverMedia.videoUrl}
