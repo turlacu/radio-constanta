@@ -336,40 +336,10 @@ export default function RadioPlayer({ radioState }) {
               <div
                 className={`grid w-full min-w-0 items-start ${
                   useCenteredDesktopStack
-                    ? 'gap-[clamp(0.85rem,0.76rem+0.32vw,1.1rem)] grid-cols-[auto_minmax(0,1fr)]'
-                    : 'gap-4 grid-cols-[auto_minmax(0,1fr)]'
+                    ? 'gap-[clamp(0.85rem,0.76rem+0.32vw,1.1rem)]'
+                    : 'gap-4'
                 }`}
               >
-                <motion.button
-                  whileHover={{ scale: isLoading ? 1 : 1.05 }}
-                  whileTap={{ scale: isLoading ? 1 : 0.95 }}
-                  onClick={togglePlay}
-                  disabled={isLoading}
-                  tabIndex={0}
-                  data-dpad="true"
-                  data-dpad-group="player"
-                  data-dpad-default="play"
-                  className={`flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
-                  style={{
-                    width: desktopPlayButtonSize,
-                    height: desktopPlayButtonSize,
-                    borderColor: buttonBorderColor,
-                  }}
-                  aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
-                >
-                  {isLoading ? (
-                    <Loader size="small" />
-                  ) : isPlaying ? (
-                    <svg className="h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                    </svg>
-                  ) : (
-                    <svg className="ml-[clamp(0.12rem,0.08rem+0.08vw,0.2rem)] h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  )}
-                </motion.button>
-
                 <div className="flex min-w-0 flex-col items-start text-left" style={{ minWidth: 0, width: '100%' }}>
                   <Heading
                     level={2}
@@ -455,9 +425,39 @@ export default function RadioPlayer({ radioState }) {
                   );
                 })}
               </motion.div>
+
+              <motion.button
+                whileHover={{ scale: isLoading ? 1 : 1.05 }}
+                whileTap={{ scale: isLoading ? 1 : 0.95 }}
+                onClick={togglePlay}
+                disabled={isLoading}
+                tabIndex={0}
+                data-dpad="true"
+                data-dpad-group="player"
+                data-dpad-default="play"
+                className={`flex shrink-0 items-center justify-center rounded-full border backdrop-blur-md transition-all disabled:opacity-40 ${desktopAccentBorderClass} ${desktopAccentSurfaceClass} ${desktopButtonTextClass}`}
+                style={{
+                  width: desktopPlayButtonSize,
+                  height: desktopPlayButtonSize,
+                  borderColor: buttonBorderColor,
+                }}
+                aria-label={isPlaying ? 'Pause radio stream' : 'Play radio stream'}
+              >
+                {isLoading ? (
+                  <Loader size="small" />
+                ) : isPlaying ? (
+                  <svg className="h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                  </svg>
+                ) : (
+                  <svg className="ml-[clamp(0.12rem,0.08rem+0.08vw,0.2rem)] h-[clamp(2rem,1.8rem+0.45vw,2.5rem)] w-[clamp(2rem,1.8rem+0.45vw,2.5rem)]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                )}
+              </motion.button>
             </div>
           </motion.div>
-          </div>
+        </div>
       </ResponsiveContainer>
     );
   }
