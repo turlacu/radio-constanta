@@ -40,9 +40,10 @@ export default function RadioPlayer({ radioState }) {
   const isVideoCover = coverMedia.type === 'video' && coverMedia.videoUrl;
   const videoRef = useRef(null);
   const [videoFailed, setVideoFailed] = useState(false);
-  const hasExpandedVideoCover = isVideoCover && !videoFailed;
   const useCompactDesktopSizing = isDesktopShell && (forceCompactLayout || shortHeightLayout);
-  const useCenteredDesktopStack = isDesktopShell && (forceCompactLayout || effectivePaneAspectRatio < 1.25);
+  const useCenteredDesktopStack = isDesktopShell && (forceCompactLayout || shortHeightLayout || effectivePaneAspectRatio < 1.25);
+  const shouldRenderVideoCover = isDesktopShell && isVideoCover && !videoFailed && !useCenteredDesktopStack;
+  const hasExpandedVideoCover = shouldRenderVideoCover;
   const useCompactStackedSizing = !isDesktopShell && (shortHeightLayout || aspectRatio > 0.72);
   const mobileCoverMaxPx = useCompactStackedSizing
     ? Math.min(viewportWidth * 0.62, viewportHeight * 0.34)
@@ -143,7 +144,7 @@ export default function RadioPlayer({ radioState }) {
   }, [coverMedia.type, coverMedia.videoUrl]);
 
   useEffect(() => {
-    if (!isVideoCover || videoFailed || !videoRef.current) {
+    if (!shouldRenderVideoCover || !videoRef.current) {
       return undefined;
     }
 
@@ -195,7 +196,7 @@ export default function RadioPlayer({ radioState }) {
       video.removeAttribute('src');
       video.load();
     };
-  }, [coverMedia.muted, coverMedia.videoUrl, isVideoCover, videoFailed]);
+  }, [coverMedia.muted, coverMedia.videoUrl, shouldRenderVideoCover]);
 
   const renderCoverArt = (desktop = false) => {
     const coverBaseSize = desktop
@@ -218,7 +219,7 @@ export default function RadioPlayer({ radioState }) {
       <div
         className={`rc-player-cover relative h-full w-full overflow-hidden rounded-[clamp(1.125rem,0.95rem+0.7vw,1.75rem)] border shadow-[0_18px_42px_rgba(15,20,25,0.14)] ${coverBorderClass}`}
       >
-        {hasExpandedVideoCover ? (
+        {shouldRenderVideoCover ? (
           <motion.video
             key={coverMedia.videoUrl}
             ref={videoRef}
@@ -235,7 +236,7 @@ export default function RadioPlayer({ radioState }) {
           />
         ) : (
           <motion.img
-            key={coverMedia.coverPath || currentStation.coverArt}
+            key={coverMedia.coverPath || coverMedia.fallbackCoverPath || currentStation.coverArt}
             src={coverMedia.coverPath || coverMedia.fallbackCoverPath || currentStation.coverArt}
             alt={`${currentStation.name} cover art`}
             className="h-full w-full object-cover"
