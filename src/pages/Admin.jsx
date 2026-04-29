@@ -1331,6 +1331,165 @@ export default function Admin() {
     return days.map((day) => labels[day]).join(', ');
   };
 
+  const createScheduleForm = (mediaType = 'image') => ({
+    name: '',
+    coverPath: '',
+    mediaType,
+    videoUrl: '',
+    videoLabel: '',
+    preRollId: '',
+    preRollPath: '',
+    preRollLabel: '',
+    days: [],
+    startTime: '09:00',
+    endTime: '17:00',
+    priority: 0,
+    type: 'regular',
+    newsHours: [],
+    duration: 3,
+    endOnFirstTrack: true
+  });
+
+  const mapScheduleToForm = (schedule) => ({
+    name: schedule.name || '',
+    coverPath: schedule.coverPath || '',
+    mediaType: schedule.mediaType === 'video' ? 'video' : 'image',
+    videoUrl: schedule.videoUrl || '',
+    videoLabel: schedule.videoLabel || '',
+    preRollId: schedule.preRollId || '',
+    preRollPath: schedule.preRollPath || '',
+    preRollLabel: schedule.preRollLabel || '',
+    days: schedule.days || [],
+    startTime: schedule.startTime || '09:00',
+    endTime: schedule.endTime || '17:00',
+    priority: schedule.priority || 0,
+    type: schedule.type || 'regular',
+    newsHours: schedule.newsHours || [],
+    duration: schedule.duration || 3,
+    endOnFirstTrack: schedule.endOnFirstTrack !== false
+  });
+
+  const openNewScheduleModal = (mediaType) => {
+    setEditingSchedule(null);
+    setScheduleForm(createScheduleForm(mediaType));
+    setScheduleError('');
+    setShowScheduleModal(true);
+  };
+
+  const openEditScheduleModal = (schedule) => {
+    setEditingSchedule(schedule);
+    setScheduleForm(mapScheduleToForm(schedule));
+    setScheduleError('');
+    setShowScheduleModal(true);
+  };
+
+  const formatDuration = (duration = 3) => {
+    const minutes = Math.floor(duration);
+    const seconds = Math.round((duration - minutes) * 60);
+    if (seconds === 0) return `${minutes}min`;
+    return `${minutes}m ${seconds}s`;
+  };
+
+  const formatCoverScheduleTiming = (schedule) => {
+    const days = formatScheduleDays(schedule.days || []);
+    if (schedule.type === 'news') {
+      const hours = schedule.newsHours?.map(h => `${String(h).padStart(2, '0')}:00`).join(', ');
+      return `${days} | Hours: ${hours || '-'} (${formatDuration(schedule.duration)}${schedule.endOnFirstTrack ? ', ends on first track' : ''}) | Priority ${schedule.priority || 0}`;
+    }
+
+    return `${days} | ${schedule.startTime} - ${schedule.endTime} | Priority ${schedule.priority || 0}`;
+  };
+
+  const renderCoverScheduleCard = (schedule) => {
+    const isVideoSchedule = schedule.mediaType === 'video';
+
+    return (
+      <div key={schedule.id} className="p-3 rounded-lg bg-bg-tertiary border border-border">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <div className="font-medium text-xs text-text-primary truncate">{schedule.name}</div>
+              {schedule.type === 'news' && (
+                <span className="shrink-0 px-2 py-0.5 text-xs rounded-full bg-blue-500/20 text-blue-400 font-medium">
+                  News
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-text-tertiary mt-1">
+              {formatCoverScheduleTiming(schedule)}
+            </div>
+
+            {isVideoSchedule ? (
+              <div className="mt-2 text-xs text-text-secondary break-all">
+                <div className="font-medium text-text-primary">
+                  {schedule.videoLabel || 'Live video'}
+                </div>
+                {schedule.videoUrl}
+                {schedule.preRollPath && (
+                  <div className="mt-1 text-text-tertiary">
+                    Pre-roll: {schedule.preRollLabel || schedule.preRollPath}
+                  </div>
+                )}
+              </div>
+            ) : (
+              schedule.coverPath && (
+                <div className="mt-2">
+                  <img src={schedule.coverPath} alt="Schedule cover" className="w-16 h-16 rounded object-cover border border-border" />
+                </div>
+              )
+            )}
+          </div>
+          <div className="flex gap-1 shrink-0">
+            <button
+              onClick={() => openEditScheduleModal(schedule)}
+              className="px-2 py-1 text-xs rounded bg-bg-secondary text-text-primary hover:bg-bg-secondary/80 transition-colors"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => handleDeleteSchedule(selectedStation, schedule.id)}
+              className="px-2 py-1 text-xs rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCoverScheduleSection = (title, mediaType, schedules) => {
+    const filteredSchedules = schedules.filter((schedule) => (
+      mediaType === 'video' ? schedule.mediaType === 'video' : schedule.mediaType !== 'video'
+    ));
+    const isVideoSection = mediaType === 'video';
+
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <Body size="small" opacity="secondary" className="text-xs">{title}</Body>
+          <button
+            onClick={() => openNewScheduleModal(mediaType)}
+            className="px-3 py-1.5 text-xs rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors"
+          >
+            {isVideoSection ? '+ Add Video Schedule' : '+ Add Cover Schedule'}
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {filteredSchedules.map(renderCoverScheduleCard)}
+          {filteredSchedules.length === 0 && (
+            <div className="text-center py-6 text-xs text-text-tertiary border border-dashed border-border rounded-lg">
+              {isVideoSection
+                ? 'No video schedules created yet. Add a video schedule to start.'
+                : 'No cover schedules created yet. Add a cover schedule to start.'}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderNowPlayingStation = (station, label, sourceLabel) => {
     const config = settings.nowPlaying?.[station] || { enabled: true, overrideSchedules: [] };
     const preview = nowPlayingPreview[station] || {};
@@ -2205,134 +2364,18 @@ export default function Admin() {
                       </div>
                     </div>
 
-                    {/* Schedules List */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <Body size="small" opacity="secondary" className="text-xs">Active Schedules</Body>
-                        <button
-                          onClick={() => {
-                            setEditingSchedule(null);
-                            setScheduleForm({
-                              name: '',
-                              coverPath: '',
-                              mediaType: 'image',
-                              videoUrl: '',
-                              videoLabel: '',
-                              preRollId: '',
-                              preRollPath: '',
-                              preRollLabel: '',
-                              days: [],
-                              startTime: '09:00',
-                              endTime: '17:00',
-                              priority: 0,
-                              type: 'regular',
-                              newsHours: [],
-                              duration: 3,
-                              endOnFirstTrack: true
-                            });
-                            setScheduleError('');
-                            setShowScheduleModal(true);
-                          }}
-                          className="px-3 py-1.5 text-xs rounded-lg bg-bg-tertiary text-text-primary font-medium hover:bg-bg-tertiary/80 transition-colors"
-                        >
-                          + Add Schedule
-                        </button>
-                      </div>
-
-                      <div className="space-y-2">
-                        {settings.coverScheduling[selectedStation].schedules?.map((schedule) => (
-                          <div key={schedule.id} className="p-3 rounded-lg bg-bg-tertiary border border-border">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <div className="font-medium text-xs text-text-primary">{schedule.name}</div>
-                                  {schedule.type === 'news' && (
-                                    <span className="px-2 py-0.5 text-xs rounded-full bg-blue-500/20 text-blue-400 font-medium">
-                                      📰 News
-                                    </span>
-                                  )}
-                                  {schedule.mediaType === 'video' && (
-                                    <span className="px-2 py-0.5 text-xs rounded-full bg-red-500/20 text-red-400 font-medium">
-                                      Video
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs text-text-tertiary mt-1">
-                                  {schedule.days?.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')}
-                                  {schedule.type === 'news' ? (
-                                    <> | Hours: {schedule.newsHours?.map(h => `${String(h).padStart(2, '0')}:00`).join(', ')} ({(() => {
-                                      const duration = schedule.duration || 3;
-                                      const minutes = Math.floor(duration);
-                                      const seconds = Math.round((duration - minutes) * 60);
-                                      if (seconds === 0) return `${minutes}min`;
-                                      return `${minutes}m ${seconds}s`;
-                                    })()}{schedule.endOnFirstTrack ? ', ends on first track' : ''})</>
-                                  ) : (
-                                    <> | {schedule.startTime} - {schedule.endTime}</>
-                                  )}
-                                </div>
-                                {schedule.coverPath && (
-                                  <div className="mt-2">
-                                    <img src={schedule.coverPath} alt="Schedule cover" className="w-16 h-16 rounded object-cover border border-border" />
-                                  </div>
-                                )}
-                                {schedule.mediaType === 'video' && schedule.videoUrl && (
-                                  <div className="mt-2 text-xs text-text-secondary break-all">
-                                    {schedule.videoLabel || 'Live video'} | {schedule.videoUrl}
-                                    {schedule.preRollPath && (
-                                      <div className="mt-1 text-text-tertiary">
-                                        Pre-roll: {schedule.preRollLabel || schedule.preRollPath}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => {
-                                    setEditingSchedule(schedule);
-                                    setScheduleForm({
-                                      name: schedule.name || '',
-                                      coverPath: schedule.coverPath || '',
-                                      mediaType: schedule.mediaType || 'image',
-                                      videoUrl: schedule.videoUrl || '',
-                                      videoLabel: schedule.videoLabel || '',
-                                      preRollId: schedule.preRollId || '',
-                                      preRollPath: schedule.preRollPath || '',
-                                      preRollLabel: schedule.preRollLabel || '',
-                                      days: schedule.days || [],
-                                      startTime: schedule.startTime || '09:00',
-                                      endTime: schedule.endTime || '17:00',
-                                      priority: schedule.priority || 0,
-                                      type: schedule.type || 'regular',
-                                      newsHours: schedule.newsHours || [],
-                                      duration: schedule.duration || 3,
-                                      endOnFirstTrack: schedule.endOnFirstTrack !== false
-                                    });
-                                    setScheduleError('');
-                                    setShowScheduleModal(true);
-                                  }}
-                                  className="px-2 py-1 text-xs rounded bg-bg-secondary text-text-primary hover:bg-bg-secondary/80 transition-colors"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteSchedule(selectedStation, schedule.id)}
-                                  className="px-2 py-1 text-xs rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        {(!settings.coverScheduling[selectedStation].schedules ||
-                          settings.coverScheduling[selectedStation].schedules.length === 0) && (
-                          <div className="text-center py-6 text-xs text-text-tertiary border border-dashed border-border rounded-lg">
-                            No schedules created yet. Add a schedule to start.
-                          </div>
-                        )}
-                      </div>
+                    {/* Schedules Lists */}
+                    <div className="space-y-5">
+                      {renderCoverScheduleSection(
+                        'Cover Schedules',
+                        'image',
+                        settings.coverScheduling[selectedStation].schedules || []
+                      )}
+                      {renderCoverScheduleSection(
+                        'Video Schedules',
+                        'video',
+                        settings.coverScheduling[selectedStation].schedules || []
+                      )}
                     </div>
                       </div>
                     )}
@@ -2925,7 +2968,9 @@ export default function Admin() {
             >
               <div className="flex items-center justify-between mb-4">
                 <Heading level={5} className="text-base">
-                  {editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}
+                  {editingSchedule
+                    ? `Edit ${scheduleForm.mediaType === 'video' ? 'Video' : 'Cover'} Schedule`
+                    : `Add New ${scheduleForm.mediaType === 'video' ? 'Video' : 'Cover'} Schedule`}
                 </Heading>
                 <button
                   onClick={() => setShowScheduleModal(false)}
@@ -2977,35 +3022,6 @@ export default function Admin() {
                     placeholder={scheduleForm.type === 'news' ? 'e.g., Morning News, Evening News' : 'e.g., Morning Show, Weekend Special'}
                     className="w-full px-3 py-2 text-sm rounded-lg bg-bg-tertiary border border-border text-text-primary placeholder-text-tertiary focus:outline-none focus:border-primary"
                   />
-                </div>
-
-                {/* Media Type */}
-                <div>
-                  <Body size="small" opacity="secondary" className="mb-2 text-xs">Schedule Media</Body>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setScheduleForm({ ...scheduleForm, mediaType: 'image' })}
-                      className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
-                        scheduleForm.mediaType !== 'video'
-                          ? 'bg-primary text-white'
-                          : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
-                      }`}
-                    >
-                      Cover Image
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setScheduleForm({ ...scheduleForm, mediaType: 'video' })}
-                      className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
-                        scheduleForm.mediaType === 'video'
-                          ? 'bg-primary text-white'
-                          : 'bg-bg-tertiary text-text-primary hover:bg-bg-tertiary/80'
-                      }`}
-                    >
-                      Video Stream
-                    </button>
-                  </div>
                 </div>
 
                 {scheduleForm.mediaType === 'video' ? (
@@ -3385,7 +3401,9 @@ export default function Admin() {
                     onClick={handleAddSchedule}
                     className="flex-1 px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition-colors text-sm"
                   >
-                    {editingSchedule ? 'Update Schedule' : 'Add Schedule'}
+                    {editingSchedule
+                      ? `Update ${scheduleForm.mediaType === 'video' ? 'Video' : 'Cover'} Schedule`
+                      : `Add ${scheduleForm.mediaType === 'video' ? 'Video' : 'Cover'} Schedule`}
                   </button>
                   <button
                     onClick={() => {
