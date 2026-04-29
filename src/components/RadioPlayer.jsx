@@ -35,6 +35,11 @@ export default function RadioPlayer({ radioState }) {
   const viewportHeight = device?.viewportHeight || device?.screenHeight || 0;
   const aspectRatio = viewportHeight > 0 ? viewportWidth / viewportHeight : 1;
   const effectivePaneAspectRatio = availablePaneAspectRatio || aspectRatio;
+  const weatherTextColor = useWeatherTextColor();
+  const coverMedia = currentStation.coverMedia || { type: 'image', coverPath: currentStation.coverArt };
+  const isVideoCover = coverMedia.type === 'video' && coverMedia.videoUrl;
+  const videoRef = useRef(null);
+  const [videoFailed, setVideoFailed] = useState(false);
   const hasExpandedVideoCover = isVideoCover && !videoFailed;
   const useCompactDesktopSizing = isDesktopShell && (forceCompactLayout || shortHeightLayout);
   const useCenteredDesktopStack = isDesktopShell && !hasExpandedVideoCover && (forceCompactLayout || effectivePaneAspectRatio < 1.25);
@@ -43,11 +48,6 @@ export default function RadioPlayer({ radioState }) {
     ? Math.min(viewportWidth * 0.62, viewportHeight * 0.34)
     : Math.min(viewportWidth * 0.72, viewportHeight * 0.42);
   const mobileCoverWidth = Math.max(188, Math.min(mobileCoverMaxPx || 0, 360));
-  const weatherTextColor = useWeatherTextColor();
-  const coverMedia = currentStation.coverMedia || { type: 'image', coverPath: currentStation.coverArt };
-  const isVideoCover = coverMedia.type === 'video' && coverMedia.videoUrl;
-  const videoRef = useRef(null);
-  const [videoFailed, setVideoFailed] = useState(false);
   const currentSubtitle = nowPlayingEnabled && nowPlayingOverride?.text
     ? nowPlayingOverride.text
     : nowPlayingEnabled && nowPlaying?.text
