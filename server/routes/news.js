@@ -43,6 +43,7 @@ let cacheTimestamp = null;
 let cacheReady = false;
 const CACHE_MAX_SIZE = 100;              // Maximum articles to keep in cache
 const REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes - background refresh interval
+const WORDPRESS_FETCH_TIMEOUT_MS = 20000;
 
 // Helper to strip HTML tags from text
 const stripHtml = (html) => {
@@ -124,7 +125,7 @@ const fetchFromWordPressAPI = async (limit = 20) => {
 
     // Use _embed to get featured images and author info in one request
     const url = `${wpConfig.apiUrl}?per_page=${limit}&_embed`;
-    const response = await fetchWithTimeout(url, {}, 8000);
+    const response = await fetchWithTimeout(url, {}, WORDPRESS_FETCH_TIMEOUT_MS);
 
     if (!response.ok) {
       throw new Error(`WordPress API fetch failed: ${response.status}`);
@@ -290,8 +291,15 @@ const mergeArticlesIntoCache = (newArticles) => {
   return { addedCount, updatedCount };
 };
 
+let activeRefreshPromise = null;
+
 // Background refresh - fetches and merges new articles
 const refreshCache = async () => {
+  if (activeRefreshPromise) {
+    return activeRefreshPromise;
+  }
+
+  activeRefreshPromise = (async () => {
   try {
     logger.info('🔄 Background refresh started');
     const fetchedArticles = await fetchFromWordPressAPI(CACHE_MAX_SIZE);
@@ -303,7 +311,12 @@ const refreshCache = async () => {
   } catch (err) {
     logger.error('❌ Background refresh failed:', err.message);
     // Keep serving existing cache - don't clear it on error
+  } finally {
+    activeRefreshPromise = null;
   }
+  })();
+
+  return activeRefreshPromise;
 };
 
 // Background refresh timer - runs every 10 minutes
@@ -329,7 +342,7 @@ const initializeCache = async () => {
     startBackgroundRefresh();
   } catch (err) {
     logger.error('❌ Cache initialization failed:', err.message);
-    logger.info('⚠️ Cache will be empty until next refresh attempt');
+    logger.info('⚠️ Cache will refresh on the next request or scheduled refresh');
     cacheReady = true; // Mark ready even if empty - don't block requests
     startBackgroundRefresh(); // Start timer anyway to retry
   }
@@ -338,12 +351,17 @@ const initializeCache = async () => {
 // Initialize cache when module loads
 initializeCache();
 
-// GET /api/news - Pure cache read, never triggers fetch
-router.get('/', (req, res) => {
+// GET /api/news - serve cache, with on-demand recovery if startup fetch failed.
+router.get('/', async (req, res) => {
   try {
     const { page = 1, limit = 20, category } = req.query;
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
+
+    if (cachedArticles.length === 0) {
+      logger.info('📭 Cache empty - attempting on-demand refresh before responding');
+      await refreshCache();
+    }
 
     // Calculate cache age for logging
     const cacheAge = cacheTimestamp ? Math.round((Date.now() - cacheTimestamp) / 1000) : null;
