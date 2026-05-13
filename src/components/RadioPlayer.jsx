@@ -24,6 +24,7 @@ export default function RadioPlayer({ radioState }) {
     switchQuality,
     showWeatherBackground,
     audioAnalyserRef,
+    showAudioAnalyser,
     forceCompactLayout,
     shortHeightLayout,
     availablePaneAspectRatio,
@@ -57,6 +58,21 @@ export default function RadioPlayer({ radioState }) {
     : metadata || 'Primul radio din Dobrogea';
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
+  const renderSpectrumVisualizer = (props = {}) => {
+    if (!showAudioAnalyser) {
+      return null;
+    }
+
+    return (
+      <SpectrumVisualizer
+        analyserRef={audioAnalyserRef}
+        isPlaying={isPlaying}
+        tone={textColor}
+        {...props}
+      />
+    );
+  };
+
   const buttonBorderColor =
     textColor === 'dark' ? 'rgba(17, 24, 39, 0.18)' : 'rgba(255, 255, 255, 0.18)';
   const strongButtonBorderColor =
@@ -441,16 +457,13 @@ export default function RadioPlayer({ radioState }) {
                   : 'mt-[clamp(1.25rem,1rem+0.8vw,2rem)] gap-[clamp(0.9rem,0.72rem+0.55vw,1.5rem)]'
               }`}
             >
-              <SpectrumVisualizer
-                analyserRef={audioAnalyserRef}
-                isPlaying={isPlaying}
-                tone={textColor}
-                className="shrink-0"
-                style={{
+              {renderSpectrumVisualizer({
+                className: "shrink-0",
+                style: {
                   width: desktopVisualizerWidth,
                   height: desktopVisualizerHeight,
-                }}
-              />
+                },
+              })}
 
               <div className={`flex w-full flex-col items-center text-center ${useCompactDesktopSizing ? 'max-w-[min(100%,33rem)]' : 'max-w-[min(100%,36rem)]'}`}>
                 <Heading
@@ -607,16 +620,13 @@ export default function RadioPlayer({ radioState }) {
                   className="flex w-full min-w-0 flex-col items-start gap-5 text-left"
                   style={{ maxWidth: desktopWideDetailsMaxWidth }}
                 >
-                  <SpectrumVisualizer
-                    analyserRef={audioAnalyserRef}
-                    isPlaying={isPlaying}
-                    tone={textColor}
-                    className="shrink-0"
-                    style={{
+                  {renderSpectrumVisualizer({
+                    className: "shrink-0",
+                    style: {
                       width: desktopVisualizerWidth,
                       height: desktopVisualizerHeight,
-                    }}
-                  />
+                    },
+                  })}
 
                   <div className="grid w-full min-w-0 items-start gap-4">
                     <div className="flex min-w-0 flex-col items-start text-left" style={{ minWidth: 0, width: '100%' }}>
@@ -765,16 +775,13 @@ export default function RadioPlayer({ radioState }) {
               className="flex min-w-0 justify-start py-2 pl-[clamp(1.75rem,3vw,4.75rem)]"
             >
               <div className="flex w-full min-w-0 flex-col items-start gap-5 text-left" style={{ maxWidth: desktopWideDetailsMaxWidth }}>
-                <SpectrumVisualizer
-                  analyserRef={audioAnalyserRef}
-                  isPlaying={isPlaying}
-                  tone={textColor}
-                  className="shrink-0"
-                  style={{
+                {renderSpectrumVisualizer({
+                  className: "shrink-0",
+                  style: {
                     width: desktopVisualizerWidth,
                     height: desktopVisualizerHeight,
-                  }}
-                />
+                  },
+                })}
 
                 <div className="grid w-full min-w-0 items-start gap-4">
                   <div className="flex min-w-0 flex-col items-start text-left" style={{ minWidth: 0, width: '100%' }}>

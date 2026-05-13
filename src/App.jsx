@@ -287,7 +287,8 @@ function AppContent() {
   const audioSourceNodeRef = useRef(null);
   const analyserRef = useRef(null);
   const audioAnalyserUnavailableRef = useRef(false);
-  const shouldDisableAudioAnalyser = device.isTV || isKnownTvBrowserRuntime();
+  const usePlainAudioPlayback = device.isTV || isKnownTvBrowserRuntime();
+  const [audioElementGeneration, setAudioElementGeneration] = useState(0);
 
   // Dynamic cover art state
   const [dynamicCovers, setDynamicCovers] = useState({
@@ -827,7 +828,7 @@ function AppContent() {
     if (!detectedSampleRateRef.current && audioContextRef.current) {
       detectedSampleRateRef.current = `${(audioContextRef.current.sampleRate / 1000).toFixed(1)} kHz`;
       sampleRate = detectedSampleRateRef.current;
-    } else if (!shouldDisableAudioAnalyser && !detectedSampleRateRef.current && (window.AudioContext || window.webkitAudioContext)) {
+    } else if (!usePlainAudioPlayback && !detectedSampleRateRef.current && (window.AudioContext || window.webkitAudioContext)) {
       try {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         const audioContext = new AudioContextClass();
@@ -845,7 +846,7 @@ function AppContent() {
       channels,
       sampleRate
     };
-  }, [shouldDisableAudioAnalyser]);
+  }, [usePlainAudioPlayback]);
 
   const waitForAudioReset = (audio, transitionId, timeoutMs = 400) => new Promise((resolve) => {
     let settled = false;
@@ -1048,7 +1049,7 @@ function AppContent() {
   const ensureAudioAnalyser = () => {
     const audio = audioRef.current;
     if (
-      shouldDisableAudioAnalyser ||
+      usePlainAudioPlayback ||
       audioAnalyserUnavailableRef.current ||
       !audio ||
       analyserRef.current ||
@@ -1083,18 +1084,55 @@ function AppContent() {
   };
 
   useEffect(() => {
-    if (!shouldDisableAudioAnalyser) {
+    if (!usePlainAudioPlayback) {
+      audioAnalyserUnavailableRef.current = false;
       return;
+    }
+
+    const hadWebAudioAttached = Boolean(audioSourceNodeRef.current || analyserRef.current);
+
+    try {
+      audioSourceNodeRef.current?.disconnect();
+    } catch {
+      // Some TV browsers throw when disconnecting already released nodes.
+    }
+
+    try {
+      analyserRef.current?.disconnect();
+    } catch {
+      // Some TV browsers throw when disconnecting already released nodes.
     }
 
     analyserRef.current = null;
     audioSourceNodeRef.current = null;
+    audioAnalyserUnavailableRef.current = true;
 
     if (audioContextRef.current) {
       audioContextRef.current.close().catch(() => {});
       audioContextRef.current = null;
     }
-  }, [shouldDisableAudioAnalyser]);
+
+    if (hadWebAudioAttached && audioRef.current) {
+      const previousAudio = audioRef.current;
+      const previousSrc = previousAudio.currentSrc || previousAudio.src;
+      const shouldResume = playbackIntentRef.current && previousSrc;
+
+      audioEventCleanupRef.current?.();
+      previousAudio.pause();
+      previousAudio.removeAttribute('src');
+      previousAudio.load();
+      audioRef.current = null;
+      setAudioElementGeneration((generation) => generation + 1);
+
+      if (shouldResume) {
+        pendingPlaybackTargetRef.current = {
+          stationId: currentStation.id,
+          qualityId: selectedQualityRef.current[currentStation.id],
+          reason: 'plain-audio-reset'
+        };
+      }
+    }
+  }, [currentStation.id, usePlainAudioPlayback]);
 
   // Create Audio element (HTML5 approach - mobile friendly)
   useEffect(() => {
@@ -1168,6 +1206,16 @@ function AppContent() {
     };
     audioRef.current = audio;
 
+    const pendingPlaybackTarget = pendingPlaybackTargetRef.current;
+    if (pendingPlaybackTarget?.reason === 'plain-audio-reset') {
+      pendingPlaybackTargetRef.current = null;
+      schedulePlaybackTransition({
+        stationId: pendingPlaybackTarget.stationId,
+        qualityId: pendingPlaybackTarget.qualityId,
+        reason: 'plain-audio-reset'
+      });
+    }
+
     return () => {
       const currentAudio = audioRef.current || audio;
       audioEventCleanupRef.current?.();
@@ -1183,7 +1231,10 @@ function AppContent() {
         audioContextRef.current = null;
       }
     };
-  }, []);
+  // This effect owns the physical audio element lifecycle; it should only rerun
+  // when we intentionally replace the element, not on transition callback churn.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioElementGeneration]);
 
   // Update stream info based on current station and quality
   useEffect(() => {
@@ -1401,6 +1452,7 @@ function AppContent() {
     forceCompactLayout: resizePolicy.showInlineNews,
     shortHeightLayout: isShortHeightShell,
     availablePaneAspectRatio: resizePolicy.activePlayerPaneAspectRatio,
+    showAudioAnalyser: !usePlainAudioPlayback,
   };
 
   const desktopWeatherCardWidth = Math.min(460, Math.max(280, Math.round(viewportWidth * 0.24)));
