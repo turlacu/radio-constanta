@@ -43,10 +43,18 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(request).then((cachedResponse) => (
       cachedResponse || fetch(request).then((response) => {
-        const responseClone = response.clone();
-        caches.open(CACHE_VERSION).then((cache) => {
-          cache.put(request, responseClone);
-        });
+        const isCacheable = response.ok
+          && response.status === 200
+          && response.type !== 'opaque'
+          && !request.headers.has('range');
+
+        if (isCacheable) {
+          const responseClone = response.clone();
+          caches.open(CACHE_VERSION).then((cache) => {
+            cache.put(request, responseClone).catch(() => {});
+          });
+        }
+
         return response;
       })
     ))
