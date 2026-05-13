@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { authenticateAdmin } from '../middleware/auth.js';
 import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
 import { normalizeStyledUnicode } from '../utils/normalizeStyledUnicode.js';
+import logger from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -109,7 +110,7 @@ const fetchOgImage = async (url) => {
     }
     return null;
   } catch (error) {
-    console.log(`Failed to fetch og:image from ${url}: ${error.message}`);
+    logger.info(`Failed to fetch og:image from ${url}: ${error.message}`);
     return null;
   }
 };
@@ -119,7 +120,7 @@ const fetchFromWordPressAPI = async (limit = 20) => {
   try {
     // Get WordPress config from settings
     const wpConfig = await getWordPressConfig();
-    console.log(`Fetching from WordPress REST API: ${wpConfig.apiUrl}`);
+    logger.info(`Fetching from WordPress REST API: ${wpConfig.apiUrl}`);
 
     // Use _embed to get featured images and author info in one request
     const url = `${wpConfig.apiUrl}?per_page=${limit}&_embed`;
@@ -130,7 +131,7 @@ const fetchFromWordPressAPI = async (limit = 20) => {
     }
 
     const posts = await response.json();
-    console.log(`Fetched ${posts.length} posts from WordPress API`);
+    logger.info(`Fetched ${posts.length} posts from WordPress API`);
 
     const articles = posts.map((post) => {
       try {
@@ -208,7 +209,7 @@ const fetchFromWordPressAPI = async (limit = 20) => {
           needsOgImage: !image // Flag for posts that need og:image fetch
         };
       } catch (err) {
-        console.error('Error parsing WordPress post:', err);
+        logger.error('Error parsing WordPress post:', err);
         return null;
       }
     }).filter(article => article !== null && article.title && article.link);
@@ -216,7 +217,7 @@ const fetchFromWordPressAPI = async (limit = 20) => {
     // Fetch og:image for articles without images (in parallel, max 10 at a time)
     const articlesNeedingImages = articles.filter(a => a.needsOgImage);
     if (articlesNeedingImages.length > 0) {
-      console.log(`🖼️ Fetching og:image for ${articlesNeedingImages.length} articles without images...`);
+      logger.info(`🖼️ Fetching og:image for ${articlesNeedingImages.length} articles without images...`);
 
       // Process in batches to avoid overwhelming the server
       const batchSize = 10;
@@ -233,9 +234,8 @@ const fetchFromWordPressAPI = async (limit = 20) => {
       }
     }
 
-    // Apply placeholder and proxy to all images
-    const placeholderText = encodeURIComponent(wpConfig.siteName.replace(/\s+/g, '+'));
-    const placeholder = `https://via.placeholder.com/768x432/1A1A1A/00BFFF?text=${placeholderText}`;
+    // Apply local branded fallback and proxy external images.
+    const placeholder = '/og-image.png';
 
     articles.forEach(article => {
       if (!article.image) {
@@ -245,12 +245,12 @@ const fetchFromWordPressAPI = async (limit = 20) => {
       delete article.needsOgImage; // Clean up internal flag
     });
 
-    const articlesWithImages = articles.filter(a => !a.image.includes('placeholder')).length;
-    console.log(`Successfully parsed ${articles.length} articles (${articlesWithImages} with images)`);
+    const articlesWithImages = articles.filter(a => a.image !== placeholder).length;
+    logger.info(`Successfully parsed ${articles.length} articles (${articlesWithImages} with images)`);
     return articles;
 
   } catch (error) {
-    console.error('Error fetching from WordPress API:', error);
+    logger.error('Error fetching from WordPress API:', error);
     throw error;
   }
 };
@@ -284,7 +284,7 @@ const mergeArticlesIntoCache = (newArticles) => {
   if (cachedArticles.length > CACHE_MAX_SIZE) {
     const pruned = cachedArticles.length - CACHE_MAX_SIZE;
     cachedArticles = cachedArticles.slice(0, CACHE_MAX_SIZE);
-    console.log(`🗑️ Pruned ${pruned} old articles from cache`);
+    logger.info(`🗑️ Pruned ${pruned} old articles from cache`);
   }
 
   return { addedCount, updatedCount };
@@ -293,22 +293,22 @@ const mergeArticlesIntoCache = (newArticles) => {
 // Background refresh - fetches and merges new articles
 const refreshCache = async () => {
   try {
-    console.log('🔄 Background refresh started');
+    logger.info('🔄 Background refresh started');
     const fetchedArticles = await fetchFromWordPressAPI(CACHE_MAX_SIZE);
 
     const { addedCount, updatedCount } = mergeArticlesIntoCache(fetchedArticles);
     cacheTimestamp = Date.now();
 
-    console.log(`✅ Background refresh complete: ${addedCount} new, ${updatedCount} updated, ${cachedArticles.length} total in cache`);
+    logger.info(`✅ Background refresh complete: ${addedCount} new, ${updatedCount} updated, ${cachedArticles.length} total in cache`);
   } catch (err) {
-    console.error('❌ Background refresh failed:', err.message);
+    logger.error('❌ Background refresh failed:', err.message);
     // Keep serving existing cache - don't clear it on error
   }
 };
 
 // Background refresh timer - runs every 10 minutes
 const startBackgroundRefresh = () => {
-  console.log(`🕐 Starting background refresh interval (every ${REFRESH_INTERVAL / 1000 / 60} minutes)`);
+  logger.info(`🕐 Starting background refresh interval (every ${REFRESH_INTERVAL / 1000 / 60} minutes)`);
 
   setInterval(async () => {
     await refreshCache();
@@ -318,18 +318,18 @@ const startBackgroundRefresh = () => {
 // Initial cache population on server start
 const initializeCache = async () => {
   try {
-    console.log('🚀 Initializing cache on server start...');
+    logger.info('🚀 Initializing cache on server start...');
     const articles = await fetchFromWordPressAPI(CACHE_MAX_SIZE);
     cachedArticles = articles;
     cacheTimestamp = Date.now();
     cacheReady = true;
-    console.log(`✅ Cache initialized: ${articles.length} articles loaded`);
+    logger.info(`✅ Cache initialized: ${articles.length} articles loaded`);
 
     // Start background refresh timer
     startBackgroundRefresh();
   } catch (err) {
-    console.error('❌ Cache initialization failed:', err.message);
-    console.log('⚠️ Cache will be empty until next refresh attempt');
+    logger.error('❌ Cache initialization failed:', err.message);
+    logger.info('⚠️ Cache will be empty until next refresh attempt');
     cacheReady = true; // Mark ready even if empty - don't block requests
     startBackgroundRefresh(); // Start timer anyway to retry
   }
@@ -352,9 +352,9 @@ router.get('/', (req, res) => {
     let articles = [...cachedArticles]; // Shallow copy for filtering
 
     if (articles.length === 0) {
-      console.log(`📭 Cache empty (ready: ${cacheReady}, age: ${cacheAge}s) - returning empty list`);
+      logger.info(`📭 Cache empty (ready: ${cacheReady}, age: ${cacheAge}s) - returning empty list`);
     } else {
-      console.log(`✅ Serving ${articles.length} cached articles (age: ${cacheAge}s)`);
+      logger.info(`✅ Serving ${articles.length} cached articles (age: ${cacheAge}s)`);
     }
 
     // Filter by category if specified
@@ -380,7 +380,7 @@ router.get('/', (req, res) => {
     });
 
   } catch (error) {
-    console.error('API Error:', error);
+    logger.error('API Error:', error);
     res.status(500).json({
       error: 'Failed to fetch news',
       message: error.message
@@ -391,7 +391,7 @@ router.get('/', (req, res) => {
 // POST /api/news/refresh-cache - Force refresh the news cache (admin only)
 router.post('/refresh-cache', authenticateAdmin, async (req, res) => {
   try {
-    console.log('🔄 Manual cache refresh requested');
+    logger.info('🔄 Manual cache refresh requested');
 
     // Fetch fresh articles first (don't clear cache until we have new data)
     const fetchedArticles = await fetchFromWordPressAPI(CACHE_MAX_SIZE);
@@ -401,7 +401,7 @@ router.post('/refresh-cache', authenticateAdmin, async (req, res) => {
     const { addedCount, updatedCount } = mergeArticlesIntoCache(fetchedArticles);
     cacheTimestamp = Date.now();
 
-    console.log(`✅ Manual cache refresh complete: ${addedCount} new, ${updatedCount} updated, ${cachedArticles.length} total`);
+    logger.info(`✅ Manual cache refresh complete: ${addedCount} new, ${updatedCount} updated, ${cachedArticles.length} total`);
 
     res.json({
       success: true,
@@ -412,7 +412,7 @@ router.post('/refresh-cache', authenticateAdmin, async (req, res) => {
       updated: updatedCount
     });
   } catch (error) {
-    console.error('❌ Manual cache refresh failed:', error);
+    logger.error('❌ Manual cache refresh failed:', error);
     // Don't clear cache on error - keep serving existing data
     res.status(500).json({
       success: false,

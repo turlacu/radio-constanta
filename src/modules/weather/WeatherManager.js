@@ -5,11 +5,12 @@
  */
 
 import { VISUAL_STATES, WEATHER_CODE_MAP, WMO_CODE_MAP, TIME_CONFIG } from '../../config/weather/visualStates';
+import { clientDebug, clientError, clientWarn } from '../../utils/clientLogger';
 
 const isDebugEnabled = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
 const debugLog = (...args) => {
   if (isDebugEnabled) {
-    console.log(...args);
+    clientDebug(...args);
   }
 };
 
@@ -51,7 +52,7 @@ export class WeatherManager {
         }
       }
     } catch (error) {
-      console.warn('Could not fetch settings from admin:', error);
+      clientWarn('Could not fetch settings from admin:', error);
     }
   }
 
@@ -82,7 +83,7 @@ export class WeatherManager {
         // Try to get user's location
         await this.getUserLocation();
       } catch (error) {
-        console.warn('Could not get user location, using default:', error);
+        clientWarn('Could not get user location, using default:', error);
       }
     }
 
@@ -94,7 +95,7 @@ export class WeatherManager {
       try {
         await this.fetchWeather();
       } catch (error) {
-        console.warn('Could not fetch weather, using placeholder:', error);
+        clientWarn('Could not fetch weather, using placeholder:', error);
         // Only set placeholder if weather fetch fails
         this.setPlaceholderWeather();
       }
@@ -160,7 +161,7 @@ export class WeatherManager {
         await this.fetchWeatherOpenMeteo();
       }
     } catch (error) {
-      console.error('Failed to fetch weather:', error);
+      clientError('Failed to fetch weather:', error);
       this.setPlaceholderWeather();
     }
   }
@@ -306,8 +307,6 @@ export class WeatherManager {
    * Set placeholder weather for offline/demo mode
    */
   setPlaceholderWeather() {
-    const hour = new Date().getHours();
-    const isDay = hour >= TIME_CONFIG.dayStart && hour < TIME_CONFIG.dayEnd;
     const placeholderConditionCode = this.weatherProvider === 'openmeteo' ? 0 : 800;
 
     this.currentWeather = {
@@ -367,7 +366,7 @@ export class WeatherManager {
     const visualState = VISUAL_STATES[stateKey];
 
     if (!visualState) {
-      console.warn(`Visual state not found: ${stateKey}, using default`);
+      clientWarn(`Visual state not found: ${stateKey}, using default`);
       this.currentVisualState = VISUAL_STATES[isNight ? 'clear_night' : 'sunny_day'];
     } else {
       this.currentVisualState = {
@@ -397,7 +396,7 @@ export class WeatherManager {
    * @param {number} sunset - Sunset Unix timestamp in seconds (UTC)
    * @param {number} timezone - Timezone offset in seconds from UTC
    */
-  isNightTime(currentTime, sunrise, sunset, timezone) {
+  isNightTime(currentTime, sunrise, sunset) {
     // If we don't have sunrise/sunset data, use time-based logic
     if (!sunrise || !sunset) {
       const hour = new Date().getHours();

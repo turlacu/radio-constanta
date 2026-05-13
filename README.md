@@ -1,17 +1,15 @@
 # Radio Constanța Web App
 
-Modern web app for Radio Constanța with live radio streaming, news, admin-managed station settings, cover scheduling, and weather-driven backgrounds.
+Responsive web app for Radio Constanța live audio, news, weather-driven visuals, admin-managed station settings, cover scheduling, analytics, and optional live video embedding.
 
-![Radio Constanța](https://via.placeholder.com/800x400/0C0C0C/00BFFF?text=Radio+Constanta)
+## Current Architecture
 
-## ✨ Features
-
-- 🎵 **Live Radio Streaming** - Listen to Radio Constanța FM and Folclor
-- 📰 **Latest News** - Read the latest news from Constanța
-- 🌙 **Dark Mode Only** - Optimized for comfortable viewing
-- 📱 **Mobile-First Design** - Perfect for portrait mode, optimized for Android
-- ⚡ **Fast & Smooth** - Built with React + Vite for lightning-fast performance
-- 🎨 **Modern UI** - Clean design with smooth animations
+- The production app is served from `https://stream.turlacu.ro`.
+- Express serves the built React frontend from `dist/` and exposes API routes under `/api/*`.
+- Admin settings, uploaded covers, pre-roll videos, schedules, and stream URLs are persisted in `server/data/`.
+- Live radio audio URLs are configured in the admin panel and played directly by the browser with an HTML audio element.
+- News is fetched server-side from the configured WordPress REST API, normalized, cached, and returned to the frontend through `/api/news`.
+- Live video is handled by an external streaming server, such as MediaMTX, and embedded from a public playback URL such as `https://video.turlacu.ro/live/constanta/`.
 
 ## Tech Stack
 
@@ -22,272 +20,145 @@ Modern web app for Radio Constanța with live radio streaming, news, admin-manag
 - React Router
 - Express
 - SQLite via `better-sqlite3`
+- `hls.js` for HLS video schedule playback
+- WebSocket/SSE for now-playing and cover updates
 
-## Deployment
+## Runtime Flows
 
-For the current production deployment flow, use:
+### Audio
 
-- `COOLIFY.md` for Coolify
-- `DEPLOY.md` for the broader deployment notes
+```text
+Browser app
+  -> admin-configured radio stream URL
+  -> remote audio streaming server
+```
 
-## Getting Started
+The Node server stores and validates the stream URLs. It does not relay, transcode, or proxy live audio.
 
-### Prerequisites
+### Video
 
-- Node.js 18+ (current version: 18.20.6)
-- npm or yarn
+```text
+OBS / VDO.Ninja
+  -> WHIP/WebRTC ingest
+  -> external video server
+  -> public WebRTC playback URL
+  -> embedded in the app
+```
 
-### Installation
+The current React video schedule player supports HLS/direct video URLs. A custom WHEP player can be added separately for tighter WebRTC integration.
 
-1. **Install dependencies:**
+### News
+
+```text
+React app
+  -> /api/news
+  -> Express backend
+  -> WordPress REST API
+  -> normalized cached JSON
+```
+
+External article images are proxied through `/api/image-proxy`; missing article images use local branded fallback assets.
+
+## Environment Variables
+
+Frontend metadata is build-time configurable through Vite:
+
+```text
+VITE_APP_NAME=Radio Constanța
+VITE_APP_URL=https://stream.turlacu.ro/
+VITE_OG_IMAGE_URL=https://stream.turlacu.ro/og-image.png
+VITE_VIDEO_URL=https://video.turlacu.ro/live/constanta/
+```
+
+Backend production variables:
+
+```text
+JWT_SECRET=replace-with-a-long-random-secret
+ALLOWED_ORIGINS=https://stream.turlacu.ro
+LOG_LEVEL=info
+ADMIN_PASSWORD_HASH='optional-bcrypt-hash'
+```
+
+## Development
+
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. **Run the frontend dev server:**
+Run the frontend:
 
 ```bash
 npm run dev
 ```
 
-3. **Run the backend server in a second terminal:**
+Run the backend in a second terminal:
 
 ```bash
 npm run dev:server
 ```
 
-The app expects the API server on `http://localhost:3001` in development.
+The Vite dev server proxies `/api/*` to the backend on `http://localhost:3001`.
 
-4. **Configure streams and admin settings:**
+## Production
 
-- Start the app, open `/admin`, and sign in.
-- Update stream URLs from the admin settings UI instead of editing frontend source files.
-- Settings are stored in `server/data/admin-settings.json`.
+Build:
 
-Default fallback admin password:
+```bash
+npm run build
+```
+
+Start:
+
+```bash
+npm start
+```
+
+For Coolify deployment, use `COOLIFY.md`. For broader deployment details, use `DEPLOY.md`.
+
+## PWA Support
+
+The app includes:
+
+- `public/manifest.json`
+- `public/sw.js`
+- manifest/mobile metadata in `index.html`
+- production-only service worker registration
+
+The service worker caches the app shell and uses network-first behavior for API requests.
+
+## Admin
+
+Open:
+
+```text
+/admin
+```
+
+Admin settings include:
+
+- radio stream URLs and quality labels
+- WordPress news source
+- weather provider/settings
+- cover and video schedules
+- pre-roll videos
+- now-playing overrides
+- analytics and NTP settings
+
+Default fallback admin password is:
 
 ```text
 admin123
 ```
 
-### Building for Production
+Set `ADMIN_PASSWORD_HASH` in production.
+
+## Verification
 
 ```bash
+npm run lint
 npm run build
 ```
 
-The production-ready files will be in the `dist/` folder.
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-## 📱 Wrapping as Android App
-
-There are several ways to wrap this web app as an Android application:
-
-### Option 1: Google Bubblewrap (Recommended)
-
-Bubblewrap creates a Trusted Web Activity (TWA) for your Progressive Web App.
-
-1. **Install Bubblewrap:**
-
-```bash
-npm install -g @bubblewrap/cli
-```
-
-2. **Initialize your project:**
-
-```bash
-bubblewrap init --manifest https://your-domain.com/manifest.json
-```
-
-3. **Build the Android app:**
-
-```bash
-bubblewrap build
-```
-
-4. **The APK will be generated in the project folder**
-
-[Learn more about Bubblewrap](https://github.com/GoogleChromeLabs/bubblewrap)
-
-### Option 2: Apache Cordova
-
-1. **Install Cordova:**
-
-```bash
-npm install -g cordova
-```
-
-2. **Create Cordova project:**
-
-```bash
-cordova create RadioConstanta com.radioconstanta.app RadioConstanta
-cd RadioConstanta
-cordova platform add android
-```
-
-3. **Copy your dist/ folder to www/**
-
-4. **Build:**
-
-```bash
-cordova build android
-```
-
-### Option 3: Capacitor (Recommended for React)
-
-1. **Install Capacitor:**
-
-```bash
-npm install @capacitor/core @capacitor/cli
-npx cap init
-npx cap add android
-```
-
-2. **Build and sync:**
-
-```bash
-npm run build
-npx cap sync
-npx cap open android
-```
-
-3. **Build APK in Android Studio**
-
-## Runtime Notes
-
-### News
-
-- News is already fetched server-side from the configured WordPress API.
-- The source is managed from admin settings.
-- Manual cache refresh is an authenticated admin action.
-
-### Weather
-
-- Open-Meteo works without an API key.
-- If you switch to OpenWeatherMap, the API key is stored server-side and requests go through `/api/weather/current`.
-- The public settings endpoint no longer exposes the weather API key.
-
-### Settings Validation
-
-- Admin settings writes are schema-validated on the server.
-- Invalid payloads now fail with `400 Invalid settings payload` instead of being saved partially.
-- If you edit `server/data/admin-settings.json` manually, keep the structure aligned with `server/admin-settings.template.json`.
-
-## 🎨 Customization
-
-### Colors
-
-Edit `tailwind.config.js` to change colors:
-
-```javascript
-colors: {
-  primary: '#00BFFF',        // Main accent color
-  'dark-bg': '#0C0C0C',      // Background
-  'dark-surface': '#1A1A1A', // Surface color
-  'dark-card': '#1F1F1F',    // Card background
-}
-```
-
-### Fonts
-
-Edit `index.html` to change fonts:
-
-```html
-<link href="https://fonts.googleapis.com/css2?family=Your+Font:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-```
-
-### Station Art
-
-Replace the fallback public images in `public/` or update cover/default-cover settings from the admin UI.
-
-```javascript
-coverArt: '/path/to/your/station-artwork.jpg'
-```
-
-## 📂 Project Structure
-
-```
-radio-constanta/
-├── public/                 # Static assets
-├── src/
-│   ├── components/        # React components
-│   │   ├── BottomNav.jsx
-│   │   ├── Loader.jsx
-│   │   ├── NewsArticle.jsx
-│   │   ├── NewsList.jsx
-│   │   └── RadioPlayer.jsx
-│   ├── pages/            # Page components
-│   │   ├── News.jsx
-│   │   └── Radio.jsx
-│   ├── styles/           # Global styles
-│   │   └── globals.css
-│   ├── utils/            # Utility functions
-│   │   └── fetchNews.js
-│   ├── App.jsx           # Main app component
-│   └── main.jsx          # Entry point
-├── index.html            # HTML template
-├── package.json          # Dependencies
-├── tailwind.config.js    # Tailwind configuration
-└── vite.config.js        # Vite configuration
-```
-
-## 🔧 Configuration
-
-### Stream URLs
-
-- Update stream URLs from the admin panel
-
-### News Source
-
-Update news fetching logic in `src/utils/fetchNews.js`
-
-### App Metadata
-
-Update `index.html` for SEO and PWA:
-
-```html
-<meta name="description" content="Your description">
-<meta name="theme-color" content="#0C0C0C">
-<title>Your Title</title>
-```
-
-## 🐛 Troubleshooting
-
-### Audio not playing
-
-- Check that configured stream URLs in admin settings are correct and accessible
-- Ensure CORS is properly configured on the stream server
-- Test stream URLs directly in browser
-
-### News not loading
-
-- Check browser console for errors
-- Verify network requests in DevTools
-- Ensure mock data is being generated correctly
-
-### Build errors
-
-- Clear node_modules and reinstall: `rm -rf node_modules && npm install`
-- Clear Vite cache: `rm -rf node_modules/.vite`
-
-## 📄 License
-
-This project is created for Radio Constanța.
-
-## 🤝 Contributing
-
-For contributions or issues, please contact the development team.
-
-## 📞 Support
-
-For questions or support, please contact Radio Constanța.
-
----
-
-Built with ❤️ for Radio Constanța
+Known lint policy note: the repo still has many `no-console` and `react/prop-types` warnings. Treat lint errors as blockers; warning cleanup can be handled in a separate pass.

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Heading, Body, Button, Card } from '../components/ui';
+import { Heading, Body, Button } from '../components/ui';
 import StatisticsTab from '../components/admin/StatisticsTab';
+import { clientDebug, clientError } from '../utils/clientLogger';
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -22,7 +23,6 @@ export default function Admin() {
   const [selectedStation, setSelectedStation] = useState('fm');
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingPreRoll, setUploadingPreRoll] = useState(false);
-  const [uploadCategory, setUploadCategory] = useState('scheduling'); // 'default' or 'scheduling'
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [scheduleError, setScheduleError] = useState(''); // Error message for schedule modal
@@ -186,7 +186,7 @@ export default function Admin() {
         localStorage.removeItem('adminToken');
       }
     } catch (error) {
-      console.error('Token verification failed:', error);
+      clientError('Token verification failed:', error);
       localStorage.removeItem('adminToken');
     }
   };
@@ -240,7 +240,7 @@ export default function Admin() {
       }
     } catch (error) {
       setError('Login failed. Please try again.');
-      console.error('Login error:', error);
+      clientError('Login error:', error);
     } finally {
       setLoading(false);
     }
@@ -276,7 +276,7 @@ export default function Admin() {
       }
     } catch (error) {
       setSaveMessage('Error saving settings');
-      console.error('Save error:', error);
+      clientError('Save error:', error);
     } finally {
       setIsSaving(false);
     }
@@ -294,7 +294,7 @@ export default function Admin() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch now playing preview:', error);
+      clientError('Failed to fetch now playing preview:', error);
     }
   };
 
@@ -345,7 +345,7 @@ export default function Admin() {
       }
     } catch (error) {
       setSaveMessage('Error saving now playing settings');
-      console.error('Now playing save error:', error);
+      clientError('Now playing save error:', error);
     } finally {
       setIsSaving(false);
     }
@@ -377,7 +377,7 @@ export default function Admin() {
       return false;
     } catch (error) {
       setSaveMessage(failureMessage);
-      console.error('Settings save error:', error);
+      clientError('Settings save error:', error);
       return false;
     } finally {
       setIsSaving(false);
@@ -699,7 +699,7 @@ export default function Admin() {
       setTimeout(() => setSyncMessage(''), 5000);
 
     } catch (error) {
-      console.error('Test NTP server error:', error);
+      clientError('Test NTP server error:', error);
       setSyncMessage(`✗ Failed to test ${server.hostname}: ${error.message}`);
       setTimeout(() => setSyncMessage(''), 5000);
     } finally {
@@ -750,7 +750,7 @@ export default function Admin() {
       setTimeout(() => setSyncMessage(''), 10000);
 
     } catch (error) {
-      console.error('Sync NTP error:', error);
+      clientError('Sync NTP error:', error);
       setSyncMessage(`✗ Failed to synchronize: ${error.message}`);
       setTimeout(() => setSyncMessage(''), 10000);
     } finally {
@@ -802,59 +802,10 @@ export default function Admin() {
         setSaveMessage('Failed to upload cover');
       }
     } catch (error) {
-      console.error('Error uploading cover:', error);
+      clientError('Error uploading cover:', error);
       setSaveMessage('Error uploading cover');
     } finally {
       setUploadingCover(false);
-    }
-  };
-
-  const handleDefaultCoverUpload = async (event, station) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploadingCover(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('cover', file);
-
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/admin/covers/${station}/upload-default`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-
-        // Update settings with new default cover path
-        setSettings(prevSettings => ({
-          ...prevSettings,
-          coverScheduling: {
-            ...prevSettings.coverScheduling,
-            [station]: {
-              ...prevSettings.coverScheduling[station],
-              defaultCover: data.coverPath
-            }
-          }
-        }));
-
-        setSaveMessage('Default cover uploaded successfully!');
-        setTimeout(() => setSaveMessage(''), 3000);
-      } else {
-        setSaveMessage('Failed to upload default cover');
-      }
-    } catch (error) {
-      console.error('Error uploading default cover:', error);
-      setSaveMessage('Error uploading default cover');
-    } finally {
-      setUploadingCover(false);
-      // Reset the input
-      event.target.value = '';
     }
   };
 
@@ -889,7 +840,7 @@ export default function Admin() {
         setSaveMessage('Failed to delete cover');
       }
     } catch (error) {
-      console.error('Error deleting cover:', error);
+      clientError('Error deleting cover:', error);
       setSaveMessage('Error deleting cover');
     }
   };
@@ -936,7 +887,7 @@ export default function Admin() {
         setSaveMessage('Failed to upload pre-roll video');
       }
     } catch (error) {
-      console.error('Error uploading pre-roll video:', error);
+      clientError('Error uploading pre-roll video:', error);
       setSaveMessage('Error uploading pre-roll video');
     } finally {
       setUploadingPreRoll(false);
@@ -993,27 +944,27 @@ export default function Admin() {
         setSaveMessage('Failed to delete pre-roll video');
       }
     } catch (error) {
-      console.error('Error deleting pre-roll video:', error);
+      clientError('Error deleting pre-roll video:', error);
       setSaveMessage('Error deleting pre-roll video');
     }
   };
 
   const handleAddSchedule = async () => {
-    console.log('[Admin] handleAddSchedule called');
-    console.log('[Admin] Schedule form data:', scheduleForm);
-    console.log('[Admin] Selected station:', selectedStation);
+    clientDebug('[Admin] handleAddSchedule called');
+    clientDebug('[Admin] Schedule form data:', scheduleForm);
+    clientDebug('[Admin] Selected station:', selectedStation);
 
     // Clear previous errors
     setScheduleError('');
 
     // Validate form
     if (!scheduleForm.name.trim()) {
-      console.log('[Admin] ❌ Validation failed: name is required');
+      clientDebug('[Admin] ❌ Validation failed: name is required');
       setScheduleError('Schedule name is required');
       return;
     }
     if (scheduleForm.mediaType !== 'video' && !scheduleForm.coverPath) {
-      console.log('[Admin] ❌ Validation failed: coverPath is required');
+      clientDebug('[Admin] ❌ Validation failed: coverPath is required');
       setScheduleError('Please select a cover from the library below. Upload a cover first if needed.');
       return;
     }
@@ -1022,17 +973,17 @@ export default function Admin() {
       return;
     }
     if (scheduleForm.days.length === 0) {
-      console.log('[Admin] ❌ Validation failed: no days selected');
+      clientDebug('[Admin] ❌ Validation failed: no days selected');
       setScheduleError('Please select at least one day');
       return;
     }
     if (scheduleForm.type === 'news' && scheduleForm.newsHours.length === 0) {
-      console.log('[Admin] ❌ Validation failed: news type needs hours');
+      clientDebug('[Admin] ❌ Validation failed: news type needs hours');
       setScheduleError('Please select at least one hour for news');
       return;
     }
 
-    console.log('[Admin] ✅ Validation passed');
+    clientDebug('[Admin] ✅ Validation passed');
 
     const scheduleData = {
       name: scheduleForm.name,
@@ -1066,12 +1017,12 @@ export default function Admin() {
       })
     };
 
-    console.log('[Admin] Schedule data to save:', scheduleData);
+    clientDebug('[Admin] Schedule data to save:', scheduleData);
 
     let updatedSettings;
 
     if (editingSchedule) {
-      console.log('[Admin] Updating existing schedule:', editingSchedule.id);
+      clientDebug('[Admin] Updating existing schedule:', editingSchedule.id);
       // Update existing schedule
       updatedSettings = {
         ...settings,
@@ -1086,7 +1037,7 @@ export default function Admin() {
         }
       };
     } else {
-      console.log('[Admin] Adding new schedule');
+      clientDebug('[Admin] Adding new schedule');
       // Add new schedule
       updatedSettings = {
         ...settings,
@@ -1103,18 +1054,18 @@ export default function Admin() {
       };
     }
 
-    console.log('[Admin] Updated settings:', updatedSettings.coverScheduling[selectedStation]);
+    clientDebug('[Admin] Updated settings:', updatedSettings.coverScheduling[selectedStation]);
 
     setSettings(updatedSettings);
     setShowScheduleModal(false);
     setEditingSchedule(null);
 
     // Auto-save to server
-    console.log('[Admin] Sending settings to server...');
+    clientDebug('[Admin] Sending settings to server...');
     setIsSaving(true);
     try {
       const token = localStorage.getItem('adminToken');
-      console.log('[Admin] Token exists:', !!token);
+      clientDebug('[Admin] Token exists:', !!token);
 
       const response = await fetch('/api/admin/settings', {
         method: 'PUT',
@@ -1125,20 +1076,20 @@ export default function Admin() {
         body: JSON.stringify(updatedSettings)
       });
 
-      console.log('[Admin] Server response status:', response.status);
+      clientDebug('[Admin] Server response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('[Admin] ✅ Server response:', data);
+        clientDebug('[Admin] ✅ Server response:', data);
         setSaveMessage('Schedule saved successfully!');
         setTimeout(() => setSaveMessage(''), 3000);
       } else {
         const errorText = await response.text();
-        console.log('[Admin] ❌ Server error:', response.status, errorText);
+        clientDebug('[Admin] ❌ Server error:', response.status, errorText);
         setSaveMessage('Failed to save schedule');
       }
     } catch (error) {
-      console.error('[Admin] ❌ Network error:', error);
+      clientError('[Admin] ❌ Network error:', error);
       setSaveMessage('Error saving schedule');
     } finally {
       setIsSaving(false);
@@ -1182,7 +1133,7 @@ export default function Admin() {
       }
     } catch (error) {
       setSaveMessage('Error deleting schedule');
-      console.error('Save error:', error);
+      clientError('Save error:', error);
     } finally {
       setIsSaving(false);
     }
@@ -1464,7 +1415,7 @@ export default function Admin() {
               }
             } catch (error) {
               setSaveMessage('Error saving settings');
-              console.error('Save error:', error);
+              clientError('Save error:', error);
             } finally {
               setIsSaving(false);
             }
@@ -2365,7 +2316,7 @@ export default function Admin() {
                                       }
                                     } catch (error) {
                                       setSaveMessage('Error updating default cover');
-                                      console.error('Save error:', error);
+                                      clientError('Save error:', error);
                                     } finally {
                                       setIsSaving(false);
                                     }
@@ -2473,7 +2424,7 @@ export default function Admin() {
                               }
                             } catch (error) {
                               setSaveMessage('Error saving settings');
-                              console.error('Save error:', error);
+                              clientError('Save error:', error);
                             } finally {
                               setIsSaving(false);
                             }
@@ -2930,8 +2881,8 @@ export default function Admin() {
                       <p>1. Enter your WordPress REST API URL (usually: yoursite.com/wp-json/wp/v2/posts)</p>
                       <p>2. The site domain will be auto-extracted and used for article validation</p>
                       <p>3. Image domains are auto-configured to include WordPress CDN and your site</p>
-                      <p>4. Click "Save All Settings" to apply changes</p>
-                      <p>5. Click "Refresh News Cache Now" to immediately load news from the new source</p>
+                      <p>4. Click &quot;Save All Settings&quot; to apply changes</p>
+                      <p>5. Click &quot;Refresh News Cache Now&quot; to immediately load news from the new source</p>
                     </Body>
                   </div>
                 </div>
@@ -3154,7 +3105,7 @@ export default function Admin() {
                           ))
                       ) : (
                         <Body size="small" opacity="secondary" className="text-center py-8 text-xs">
-                          No NTP servers configured. Click "Add NTP Server" to get started.
+                          No NTP servers configured. Click &quot;Add NTP Server&quot; to get started.
                         </Body>
                       )}
                     </div>

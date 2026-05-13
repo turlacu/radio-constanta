@@ -3,6 +3,7 @@ import { useContext, useState } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 import { Heading, Body } from './ui';
 import { DeviceContext } from '../App';
+import { clientError, clientWarn } from '../utils/clientLogger';
 
 // Phosphor Icon SVGs
 const PhosphorIcons = {
@@ -212,7 +213,7 @@ export default function SettingsModal({
       setLocationInput('');
       setLocationError('');
     } catch (error) {
-      console.error('Error geocoding location:', error);
+      clientError('Error geocoding location:', error);
       setLocationError('Căutarea locației a eșuat. Te rog încearcă din nou.');
     } finally {
       setIsSearchingLocation(false);
@@ -273,7 +274,7 @@ export default function SettingsModal({
         }
       } catch (geocodeError) {
         // Fallback if reverse geocoding fails
-        console.warn('Reverse geocoding failed:', geocodeError);
+        clientWarn('Reverse geocoding failed:', geocodeError);
         setWeatherLocation({
           lat,
           lon,
@@ -281,7 +282,7 @@ export default function SettingsModal({
         });
       }
     } catch (error) {
-      console.error('Error getting location:', error);
+      clientError('Error getting location:', error);
 
       let errorMessage = 'Nu am putut obține locația ta. ';
       switch (error.code) {

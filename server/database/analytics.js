@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { mkdir } from 'fs/promises';
 import { BUCHAREST_TIMEZONE, addDaysToDateString, formatDateInTimeZone, getDayRangeInTimeZone } from '../utils/time.js';
+import logger from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -85,9 +86,9 @@ export async function initializeDatabase() {
     const tableInfo = db.prepare("PRAGMA table_info(listener_sessions)").all();
     const hasUserId = tableInfo.some(col => col.name === 'user_id');
     if (!hasUserId) {
-      console.log('[Analytics] Migrating: Adding user_id column to listener_sessions...');
+      logger.info('[Analytics] Migrating: Adding user_id column to listener_sessions...');
       db.exec(`ALTER TABLE listener_sessions ADD COLUMN user_id TEXT`);
-      console.log('[Analytics] Migration complete: user_id column added');
+      logger.info('[Analytics] Migration complete: user_id column added');
     }
 
     // Create user_id index if it doesn't exist (safe to run multiple times)
@@ -96,17 +97,17 @@ export async function initializeDatabase() {
     // Migration: Fix old quality IDs ('128' → 'mp3_128')
     const oldQualityCount = db.prepare(`SELECT COUNT(*) as count FROM listener_sessions WHERE quality = '128'`).get();
     if (oldQualityCount.count > 0) {
-      console.log(`[Analytics] Migrating: Fixing ${oldQualityCount.count} sessions with old quality ID '128' → 'mp3_128'...`);
+      logger.info(`[Analytics] Migrating: Fixing ${oldQualityCount.count} sessions with old quality ID '128' → 'mp3_128'...`);
       db.exec(`UPDATE listener_sessions SET quality = 'mp3_128' WHERE quality = '128'`);
-      console.log('[Analytics] Migration complete: listener_sessions quality IDs updated');
+      logger.info('[Analytics] Migration complete: listener_sessions quality IDs updated');
     }
 
     // Also fix stream_events table
     const oldEventsCount = db.prepare(`SELECT COUNT(*) as count FROM stream_events WHERE quality = '128'`).get();
     if (oldEventsCount.count > 0) {
-      console.log(`[Analytics] Migrating: Fixing ${oldEventsCount.count} events with old quality ID '128' → 'mp3_128'...`);
+      logger.info(`[Analytics] Migrating: Fixing ${oldEventsCount.count} events with old quality ID '128' → 'mp3_128'...`);
       db.exec(`UPDATE stream_events SET quality = 'mp3_128' WHERE quality = '128'`);
-      console.log('[Analytics] Migration complete: stream_events quality IDs updated');
+      logger.info('[Analytics] Migration complete: stream_events quality IDs updated');
     }
 
     // Migration: Remove UNIQUE constraint from session_id to allow multiple sessions per browser session
@@ -116,7 +117,7 @@ export async function initializeDatabase() {
     `).get();
 
     if (hasUniqueConstraint) {
-      console.log('[Analytics] Migrating: Removing UNIQUE constraint from session_id...');
+      logger.info('[Analytics] Migrating: Removing UNIQUE constraint from session_id...');
       db.exec(`
         BEGIN TRANSACTION;
 
@@ -151,12 +152,12 @@ export async function initializeDatabase() {
 
         COMMIT;
       `);
-      console.log('[Analytics] Migration complete: UNIQUE constraint removed from session_id');
+      logger.info('[Analytics] Migration complete: UNIQUE constraint removed from session_id');
     }
 
-    console.log('✅ Analytics database initialized:', DB_PATH);
+    logger.info('✅ Analytics database initialized:', DB_PATH);
   } catch (error) {
-    console.error('Error initializing analytics database:', error);
+    logger.error('Error initializing analytics database:', error);
     throw error;
   }
 }
@@ -186,7 +187,7 @@ export function startSession(sessionId, userId, station, quality) {
     // Log event
     logStreamEvent(sessionId, 'start', station, quality);
   } catch (error) {
-    console.error('Error starting session:', error);
+    logger.error('Error starting session:', error);
   }
 }
 
@@ -203,7 +204,7 @@ export function updateHeartbeat(sessionId) {
     `);
     stmt.run(now, sessionId);
   } catch (error) {
-    console.error('Error updating heartbeat:', error);
+    logger.error('Error updating heartbeat:', error);
   }
 }
 
@@ -232,7 +233,7 @@ export function endSession(sessionId) {
       logStreamEvent(sessionId, 'stop', activeSession.station, activeSession.quality);
     }
   } catch (error) {
-    console.error('Error ending session:', error);
+    logger.error('Error ending session:', error);
   }
 }
 
@@ -265,7 +266,7 @@ export function switchStation(sessionId, userId, newStation, quality) {
 
     logStreamEvent(sessionId, 'switch_station', newStation, quality);
   } catch (error) {
-    console.error('Error switching station:', error);
+    logger.error('Error switching station:', error);
   }
 }
 
@@ -298,7 +299,7 @@ export function changeQuality(sessionId, userId, station, newQuality) {
 
     logStreamEvent(sessionId, 'change_quality', station, newQuality);
   } catch (error) {
-    console.error('Error changing quality:', error);
+    logger.error('Error changing quality:', error);
   }
 }
 
@@ -313,7 +314,7 @@ export function logStreamEvent(sessionId, eventType, station, quality) {
     `);
     stmt.run(sessionId, eventType, station, quality, Date.now());
   } catch (error) {
-    console.error('Error logging stream event:', error);
+    logger.error('Error logging stream event:', error);
   }
 }
 
@@ -332,7 +333,7 @@ export function logArticleView(articleId, articleTitle) {
     `);
     stmt.run(articleId, articleTitle, dateStr, now.getTime());
   } catch (error) {
-    console.error('Error logging article view:', error);
+    logger.error('Error logging article view:', error);
   }
 }
 
@@ -352,10 +353,10 @@ export function cleanupStaleSessions() {
     const result = stmt.run(fiveMinutesAgo);
 
     if (result.changes > 0) {
-      console.log(`[Analytics] Cleaned up ${result.changes} stale session(s)`);
+      logger.info(`[Analytics] Cleaned up ${result.changes} stale session(s)`);
     }
   } catch (error) {
-    console.error('Error cleaning up stale sessions:', error);
+    logger.error('Error cleaning up stale sessions:', error);
   }
 }
 
@@ -448,7 +449,7 @@ export function getCurrentStats() {
       }, {})
     };
   } catch (error) {
-    console.error('Error getting current stats:', error);
+    logger.error('Error getting current stats:', error);
     return { total: 0, uniqueUsers: 0, byStation: {}, byQuality: {}, byStationQuality: {} };
   }
 }
@@ -561,7 +562,7 @@ export function getDailyStats(startDate, endDate) {
 
     return result;
   } catch (error) {
-    console.error('Error getting daily stats:', error);
+    logger.error('Error getting daily stats:', error);
     return [];
   }
 }
@@ -639,7 +640,7 @@ export function getTodayStats() {
       station_quality: getStationQualityStatsForRange(db, todayStart, tomorrowStart)
     };
   } catch (error) {
-    console.error('Error getting today stats:', error);
+    logger.error('Error getting today stats:', error);
     return null;
   }
 }
@@ -665,7 +666,7 @@ export function getMostViewedArticles(limit = 10, days = 30) {
     `);
     return stmt.all(cutoffDateStr, limit);
   } catch (error) {
-    console.error('Error getting most viewed articles:', error);
+    logger.error('Error getting most viewed articles:', error);
     return [];
   }
 }
@@ -753,10 +754,10 @@ export function aggregateDailyStats(dateStr) {
       stats.avg_listeners
     );
 
-    console.log(`[Analytics] Aggregated stats for ${dateStr}:`, stats);
+    logger.info(`[Analytics] Aggregated stats for ${dateStr}:`, stats);
     return stats;
   } catch (error) {
-    console.error('Error aggregating daily stats:', error);
+    logger.error('Error aggregating daily stats:', error);
     return null;
   }
 }
@@ -765,7 +766,7 @@ export function aggregateDailyStats(dateStr) {
 export function closeDatabase() {
   if (db) {
     db.close();
-    console.log('✅ Analytics database closed');
+    logger.info('✅ Analytics database closed');
   }
 }
 

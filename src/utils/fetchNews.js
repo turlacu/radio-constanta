@@ -1,10 +1,12 @@
 // API URL - uses the server's /api/news endpoint
+import { clientDebug, clientError } from './clientLogger';
+
 const API_URL = import.meta.env.VITE_API_URL || '/api/news';
 
 // Function to fetch news from API
 export const fetchNews = async (page = 1, limit = 20, category = null) => {
   try {
-    console.log('Fetching news from API...');
+    clientDebug('Fetching news from API...');
 
     // Build query parameters
     const params = new URLSearchParams({
@@ -25,7 +27,7 @@ export const fetchNews = async (page = 1, limit = 20, category = null) => {
 
     const data = await response.json();
 
-    console.log(`Fetched ${data.articles.length} articles from API`);
+    clientDebug(`Fetched ${data.articles.length} articles from API`);
 
     return {
       articles: data.articles,
@@ -34,7 +36,7 @@ export const fetchNews = async (page = 1, limit = 20, category = null) => {
     };
 
   } catch (error) {
-    console.error('Error fetching news from API:', error);
+    clientError('Error fetching news from API:', error);
     throw new Error('Nu s-au putut încărca știrile. Verificați conexiunea la internet.');
   }
 };

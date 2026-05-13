@@ -11,6 +11,7 @@ import BackgroundRenderer from './weather/BackgroundRenderer';
 import ParticleLayer from './weather/ParticleLayer';
 import AuroraLayer from './weather/AuroraLayer';
 import { useSettings } from '../contexts/SettingsContext';
+import { clientDebug, clientError } from '../utils/clientLogger';
 
 export default function WeatherBackground() {
   const settings = useSettings();
@@ -47,7 +48,7 @@ export default function WeatherBackground() {
 
           // If already initialized, just fetch new weather for the new location
           if (weatherManager.currentWeather) {
-            console.log('Location changed, fetching weather for new location:', settings.weatherLocation.name);
+            clientDebug('Location changed, fetching weather for new location:', settings.weatherLocation.name);
             await weatherManager.fetchWeather();
           } else {
             // First time initialization
@@ -57,7 +58,7 @@ export default function WeatherBackground() {
 
         setIsLoading(false);
       } catch (error) {
-        console.error('Failed to initialize weather:', error);
+        clientError('Failed to initialize weather:', error);
         setIsLoading(false);
       }
     };
@@ -66,7 +67,7 @@ export default function WeatherBackground() {
 
     // Subscribe to weather updates
     const unsubscribe = weatherManager.subscribe((newState) => {
-      console.log('Weather visual state updated:', newState);
+      clientDebug('Weather visual state updated:', newState);
       setVisualState(newState);
     });
 

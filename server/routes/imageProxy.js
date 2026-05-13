@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
+import logger from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,7 +64,7 @@ router.get('/', async (req, res) => {
       return res.status(400).json({ error: 'Invalid image domain' });
     }
 
-    console.log(`Proxying image: ${url}`);
+    logger.info(`Proxying image: ${url}`);
 
     // Fetch image from original source
     const response = await fetchWithTimeout(url, {}, 8000);
@@ -94,7 +95,7 @@ router.get('/', async (req, res) => {
     res.send(Buffer.from(imageBuffer));
 
   } catch (error) {
-    console.error('Error proxying image:', error);
+    logger.error('Error proxying image:', error);
     res.status(500).json({
       error: 'Failed to proxy image',
       message: error.message

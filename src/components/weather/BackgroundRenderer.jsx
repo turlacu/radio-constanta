@@ -79,10 +79,13 @@ export const BackgroundRenderer = ({ visualState, performanceLevel }) => {
     window.addEventListener('resize', resizeCanvas);
 
     return () => {
+      // Cancel the most recent frame scheduled by this renderer before unmounting.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const animationFrame = animationFrameRef.current;
       clearTimeout(timer);
       window.removeEventListener('resize', resizeCanvas);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
       }
     };
   }, [visualState, performanceLevel]);
@@ -210,7 +213,7 @@ const LightningFlash = () => {
  * Renders a soft, animated sun glow with halos for lens flare effect
  */
 const SunGlow = ({ config }) => {
-  const { position, colors, radius, opacity, halos, animate, pulseScale, pulseDuration } = config;
+  const { position, colors, radius, halos, animate, pulseScale, pulseDuration } = config;
 
   // Create the main sun glow gradient
   const mainGlowGradient = `radial-gradient(circle at ${position.x}% ${position.y}%,

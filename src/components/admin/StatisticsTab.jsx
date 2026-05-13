@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { Pie, Line, Bar } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { format, subDays, startOfMonth, endOfMonth, subMonths, getDaysInMonth } from 'date-fns';
 import { Heading, Body, Caption } from '../ui';
+import { clientError } from '../../utils/clientLogger';
 
 // Register Chart.js components
 ChartJS.register(
@@ -42,12 +43,12 @@ export default function StatisticsTab({ token }) {
         setDebugData(data);
       }
     } catch (error) {
-      console.error('Error fetching debug data:', error);
+      clientError('Error fetching debug data:', error);
     }
   };
 
   // Fetch period stats (for 7/30 day calculations)
-  const fetchPeriodStats = async () => {
+  const fetchPeriodStats = useCallback(async () => {
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
 
@@ -62,17 +63,14 @@ export default function StatisticsTab({ token }) {
         setPeriodStats(data);
       }
     } catch (error) {
-      console.error('Error fetching period statistics:', error);
+      clientError('Error fetching period statistics:', error);
     }
-  };
+  }, [qualityPeriod, stationPeriod, token]);
 
   // Fetch statistics
-  const fetchStats = async (isManual = false) => {
+  const fetchStats = useCallback(async (isManual = false) => {
     try {
-      // Only show full loading on initial load
-      if (!currentStats && !isManual) {
-        setIsInitialLoading(true);
-      } else {
+      if (isManual) {
         setIsRefreshing(true);
       }
 
@@ -115,26 +113,26 @@ export default function StatisticsTab({ token }) {
 
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Error fetching statistics:', error);
+      clientError('Error fetching statistics:', error);
     } finally {
       setIsInitialLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [fetchPeriodStats, selectedMonth, token]);
 
   useEffect(() => {
     if (token) {
       fetchStats();
       // No auto-refresh - only manual refresh via button
     }
-  }, [token, selectedMonth]);
+  }, [fetchStats, token, selectedMonth]);
 
   // Re-fetch period stats when period selection changes
   useEffect(() => {
-    if (token && currentStats) {
+    if (token) {
       fetchPeriodStats();
     }
-  }, [stationPeriod, qualityPeriod]);
+  }, [fetchPeriodStats, token, stationPeriod, qualityPeriod]);
 
   // Export to CSV
   const exportToCSV = async () => {
@@ -157,7 +155,7 @@ export default function StatisticsTab({ token }) {
         window.URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error('Error exporting CSV:', error);
+      clientError('Error exporting CSV:', error);
     }
   };
 
@@ -346,7 +344,7 @@ export default function StatisticsTab({ token }) {
                     // Refresh debug data
                     await fetchDebugData();
                   } catch (error) {
-                    console.error('Cleanup failed:', error);
+                    clientError('Cleanup failed:', error);
                   }
                 }}
                 className="px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-400/50 rounded text-yellow-300 text-sm transition-colors"
@@ -474,7 +472,7 @@ export default function StatisticsTab({ token }) {
 
         <div className="bg-bg-secondary border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-2">
-            <Caption uppercase opacity="secondary" className="text-xs">Today's Analytics</Caption>
+            <Caption uppercase opacity="secondary" className="text-xs">Today&apos;s Analytics</Caption>
             <svg className="w-6 h-6 text-secondary" viewBox="0 0 256 256" fill="currentColor">
               <path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/>
             </svg>

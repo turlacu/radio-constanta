@@ -12,6 +12,7 @@ import { getLosslessStreamUrl, getLosslessFormatLabel } from './utils/osDetectio
 import { useWeatherTextColor } from './hooks/useWeatherTextColor';
 import { useTvDpadNavigation } from './hooks/useTvDpadNavigation';
 import analytics from './utils/analytics';
+import { clientDebug, clientError, clientWarn } from './utils/clientLogger';
 
 const loadNewsPage = () => import('./pages/News');
 const loadAdminPage = () => import('./pages/Admin');
@@ -148,7 +149,7 @@ const readStoredQualityPreferences = () => {
     const stored = localStorage.getItem(QUALITY_STORAGE_KEY);
     return stored ? JSON.parse(stored) : {};
   } catch (error) {
-    console.warn('Failed to read stored quality preferences:', error);
+    clientWarn('Failed to read stored quality preferences:', error);
     return {};
   }
 };
@@ -266,7 +267,7 @@ function AppContent() {
     fm: getInitialStationQuality('fm'),
     folclor: getInitialStationQuality('folclor')
   });
-  const [metadata, setMetadata] = useState('');
+  const metadata = '';
   const [streamInfo, setStreamInfo] = useState(null);
   const audioRef = useRef(null);
   const audioEventCleanupRef = useRef(() => {});
@@ -380,9 +381,6 @@ function AppContent() {
   const desktopActionSurfaceClass = desktopUiTone === 'dark'
     ? 'border-gray-900/18 bg-gray-900/10 text-gray-900 hover:bg-gray-900/16'
     : 'border-white/20 bg-white/12 text-white hover:bg-white/18';
-  const desktopUiBorderColor = desktopUiTone === 'dark'
-    ? 'rgba(17, 24, 39, 0.18)'
-    : 'rgba(255, 255, 255, 0.20)';
   const desktopControlRailClass = desktopUiTone === 'dark'
     ? 'border-gray-900/12 bg-white/40 text-gray-900 shadow-[0_2px_8px_rgba(15,23,42,0.03)]'
     : 'border-white/14 bg-slate-950/18 text-white shadow-[0_2px_8px_rgba(2,6,23,0.04)]';
@@ -395,43 +393,43 @@ function AppContent() {
 
   // Fetch dynamic covers from API (fallback for SSE failure)
   const fetchCurrentCovers = async () => {
-    console.log('[App] Fetching current covers...');
+    clientDebug('[App] Fetching current covers...');
     try {
       const fmResponse = await fetch('/api/admin/covers/current/fm');
       const folclorResponse = await fetch('/api/admin/covers/current/folclor');
 
-      console.log('[App] FM response status:', fmResponse.status);
-      console.log('[App] Folclor response status:', folclorResponse.status);
+      clientDebug('[App] FM response status:', fmResponse.status);
+      clientDebug('[App] Folclor response status:', folclorResponse.status);
 
       if (fmResponse.ok && folclorResponse.ok) {
         const fmData = await fmResponse.json();
         const folclorData = await folclorResponse.json();
 
-        console.log('[App] FM cover data:', fmData);
-        console.log('[App] Folclor cover data:', folclorData);
+        clientDebug('[App] FM cover data:', fmData);
+        clientDebug('[App] Folclor cover data:', folclorData);
 
         const newCovers = {
           fm: normalizeCoverMedia('fm', fmData),
           folclor: normalizeCoverMedia('folclor', folclorData)
         };
 
-        console.log('[App] Setting dynamic covers:', newCovers);
+        clientDebug('[App] Setting dynamic covers:', newCovers);
         setDynamicCovers(newCovers);
       }
     } catch (error) {
-      console.error('[App] Error fetching covers:', error);
+      clientError('[App] Error fetching covers:', error);
     }
   };
 
   // Fetch stream configurations from API
   const fetchStreamConfigurations = async () => {
-    console.log('[App] Fetching stream configurations...');
+    clientDebug('[App] Fetching stream configurations...');
     try {
       const response = await fetch('/api/admin/public-settings');
 
       if (response.ok) {
         const data = await response.json();
-        console.log('[App] Stream config data:', data);
+        clientDebug('[App] Stream config data:', data);
 
         if (data.radioStreams) {
           // Convert new format to old format
@@ -486,7 +484,7 @@ function AppContent() {
             folclor: convertStreamConfig(data.radioStreams.folclor || {})
           };
 
-          console.log('[App] Converted stream configs:', newStreams);
+          clientDebug('[App] Converted stream configs:', newStreams);
           setDynamicStreams(newStreams);
         }
 
@@ -504,7 +502,7 @@ function AppContent() {
         }
       }
     } catch (error) {
-      console.error('[App] Error fetching stream configurations:', error);
+      clientError('[App] Error fetching stream configurations:', error);
     }
   };
 
@@ -520,7 +518,7 @@ function AppContent() {
         });
       }
     } catch (error) {
-      console.error('[App] Error fetching now playing:', error);
+      clientError('[App] Error fetching now playing:', error);
     }
   };
 
@@ -532,50 +530,50 @@ function AppContent() {
     const MAX_RECONNECT_DELAY = 30000; // Max 30 seconds between reconnects
 
     const connectToSSE = () => {
-      console.log('[App] Connecting to cover SSE stream...');
+      clientDebug('[App] Connecting to cover SSE stream...');
 
       try {
         eventSource = new EventSource('/api/admin/covers/stream');
 
         eventSource.onopen = () => {
-          console.log('[App] ✅ SSE connection established');
+          clientDebug('[App] ✅ SSE connection established');
           reconnectAttempts = 0; // Reset on successful connection
         };
 
         eventSource.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log('[App] SSE message received:', data);
+            clientDebug('[App] SSE message received:', data);
 
             if (data.type === 'covers' && data.covers) {
-              console.log('[App] Updating covers from SSE:', data.covers);
+              clientDebug('[App] Updating covers from SSE:', data.covers);
               setDynamicCovers({
                 fm: normalizeCoverMedia('fm', data.covers.fm),
                 folclor: normalizeCoverMedia('folclor', data.covers.folclor)
               });
             }
           } catch (error) {
-            console.error('[App] Error parsing SSE message:', error);
+            clientError('[App] Error parsing SSE message:', error);
           }
         };
 
         eventSource.onerror = (error) => {
-          console.error('[App] SSE connection error:', error);
+          clientError('[App] SSE connection error:', error);
           eventSource.close();
 
           // Exponential backoff for reconnection
           reconnectAttempts++;
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), MAX_RECONNECT_DELAY);
-          console.log(`[App] Reconnecting in ${delay}ms (attempt ${reconnectAttempts})...`);
+          clientDebug(`[App] Reconnecting in ${delay}ms (attempt ${reconnectAttempts})...`);
 
           reconnectTimeout = setTimeout(() => {
             connectToSSE();
           }, delay);
         };
       } catch (error) {
-        console.error('[App] Error creating SSE connection:', error);
+        clientError('[App] Error creating SSE connection:', error);
         // Fallback to polling if SSE fails completely
-        console.log('[App] Falling back to polling...');
+        clientDebug('[App] Falling back to polling...');
         fetchCurrentCovers();
       }
     };
@@ -593,7 +591,7 @@ function AppContent() {
 
     // Cleanup on unmount
     return () => {
-      console.log('[App] Cleaning up SSE connection...');
+      clientDebug('[App] Cleaning up SSE connection...');
       if (eventSource) {
         eventSource.close();
       }
@@ -623,7 +621,7 @@ function AppContent() {
         socket = new WebSocket(buildWebSocketUrl());
 
         socket.onopen = () => {
-          console.log('[App] ✅ Now playing WebSocket connected');
+          clientDebug('[App] ✅ Now playing WebSocket connected');
           reconnectAttempts = 0;
         };
 
@@ -646,12 +644,12 @@ function AppContent() {
               }));
             }
           } catch (error) {
-            console.error('[App] Error parsing now playing WebSocket message:', error);
+            clientError('[App] Error parsing now playing WebSocket message:', error);
           }
         };
 
         socket.onerror = (error) => {
-          console.error('[App] Now playing WebSocket error:', error);
+          clientError('[App] Now playing WebSocket error:', error);
         };
 
         socket.onclose = () => {
@@ -664,7 +662,7 @@ function AppContent() {
           reconnectTimeout = setTimeout(connectToNowPlaying, delay);
         };
       } catch (error) {
-        console.error('[App] Error creating now playing WebSocket:', error);
+        clientError('[App] Error creating now playing WebSocket:', error);
       }
     };
 
@@ -719,7 +717,7 @@ function AppContent() {
     };
   }, [dynamicCovers, dynamicStreams]);
 
-  const resolveQualityForStation = (stationId, preferredQualityId) => {
+  const resolveQualityForStation = useCallback((stationId, preferredQualityId) => {
     const station = stationsWithDynamicCovers[stationId];
     if (!station) {
       return null;
@@ -729,7 +727,7 @@ function AppContent() {
       || station.qualities.find((quality) => quality.id === station.defaultQuality)
       || station.qualities[0]
       || null;
-  };
+  }, [stationsWithDynamicCovers]);
 
   // Update current station when covers change
   useEffect(() => {
@@ -770,7 +768,7 @@ function AppContent() {
 
       return next;
     });
-  }, [stationsWithDynamicCovers, dynamicStreams]);
+  }, [stationsWithDynamicCovers, dynamicStreams, resolveQualityForStation]);
 
   useEffect(() => {
     selectedQualityRef.current = selectedQuality;
@@ -779,7 +777,7 @@ function AppContent() {
 
   // Helper to log debug info
   const logDebug = (message) => {
-    console.log(message);
+    clientDebug(message);
   };
 
   const getAbsoluteStreamUrl = (url) => {
@@ -791,9 +789,9 @@ function AppContent() {
   };
 
   // Get current quality object for the current station
-  const getCurrentQuality = () => {
+  const getCurrentQuality = useCallback(() => {
     return resolveQualityForStation(currentStation.id, selectedQuality[currentStation.id]) || currentStation.qualities[0];
-  };
+  }, [currentStation, resolveQualityForStation, selectedQuality]);
 
   // Get stream URL for current station and quality
   const getStreamUrl = () => {
@@ -822,7 +820,7 @@ function AppContent() {
     return candidates;
   };
 
-  const buildStreamInfoFromQuality = (quality, audio) => {
+  const buildStreamInfoFromQuality = useCallback((quality) => {
     let channels = 'Stereo';
     let sampleRate = detectedSampleRateRef.current || '48.0 kHz';
 
@@ -837,7 +835,7 @@ function AppContent() {
         sampleRate = detectedSampleRateRef.current;
         audioContext.close().catch(() => {});
       } catch (e) {
-        console.log('AudioContext not available:', e);
+        clientDebug('AudioContext not available:', e);
       }
     }
 
@@ -847,7 +845,7 @@ function AppContent() {
       channels,
       sampleRate
     };
-  };
+  }, [shouldDisableAudioAnalyser]);
 
   const waitForAudioReset = (audio, transitionId, timeoutMs = 400) => new Promise((resolve) => {
     let settled = false;
@@ -959,7 +957,7 @@ function AppContent() {
     const playPromise = audio.play();
     await waitForPlaybackStart(audio, transitionId, playPromise);
     ensureAudioAnalyser();
-    setStreamInfo(buildStreamInfoFromQuality(quality, audio));
+    setStreamInfo(buildStreamInfoFromQuality(quality));
 
     return { station, quality };
   };
@@ -1078,7 +1076,7 @@ function AppContent() {
       analyserRef.current = analyser;
     } catch (error) {
       audioAnalyserUnavailableRef.current = true;
-      console.warn('Unable to initialize audio analyser:', error);
+      clientWarn('Unable to initialize audio analyser:', error);
     }
 
     return analyserRef.current;
@@ -1194,7 +1192,7 @@ function AppContent() {
 
     const updateStreamInfo = () => {
       const quality = getCurrentQuality();
-      setStreamInfo(buildStreamInfoFromQuality(quality, audio));
+      setStreamInfo(buildStreamInfoFromQuality(quality));
     };
 
     const handleLoadedMetadata = () => {
@@ -1217,7 +1215,7 @@ function AppContent() {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('canplay', handleCanPlay);
     };
-  }, [currentStation, selectedQuality]);
+  }, [buildStreamInfoFromQuality, currentStation, getCurrentQuality, selectedQuality]);
 
   const togglePlay = async () => {
     const audio = audioRef.current;
@@ -1465,7 +1463,7 @@ function AppContent() {
         }
       } catch (error) {
         if (!cancelled) {
-          console.error('Failed to preload weather:', error);
+          clientError('Failed to preload weather:', error);
         }
       }
     };

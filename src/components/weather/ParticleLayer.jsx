@@ -148,7 +148,7 @@ function createParticle(config, width, height) {
       particle.vy = 0;
       break;
 
-    case 'bokeh':
+    case 'bokeh': {
       // Slow, gentle floating motion with parallax depth
       const depth = randomRange(0.3, 1);  // Depth factor for parallax
       particle.depth = depth;
@@ -157,6 +157,7 @@ function createParticle(config, width, height) {
       particle.fadePhase = Math.random() * Math.PI * 2;  // For fade in/out
       particle.fadeDuration = randomRange(3, 8);  // Random fade duration
       break;
+    }
 
     default:
       particle.vx = 0;

@@ -1,0 +1,26 @@
+{
+  "name": "Radio Constanța",
+  "short_name": "Radio CT",
+  "description": "Ascultă Radio Constanța live și citește ultimele știri.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0C0C0C",
+  "theme_color": "#0C0C0C",
+  "orientation": "portrait-primary",
+  "lang": "ro",
+  "icons": [
+    {
+      "src": "/rcf.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/rc-branding.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

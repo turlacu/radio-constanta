@@ -7,4 +7,3 @@ export { default as Caption } from './Caption';
 export { default as Button } from './Button';
 export { default as Card } from './Card';
 export { default as ResponsiveContainer } from './ResponsiveContainer';
-export { default as ThemeToggle } from './ThemeToggle';

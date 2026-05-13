@@ -77,7 +77,7 @@ router.post('/stream-event', (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Error logging stream event:', error);
+    logger.error('Error logging stream event:', error);
     res.status(500).json({ error: 'Failed to log event' });
   }
 });
@@ -95,7 +95,7 @@ router.post('/heartbeat', (req, res) => {
     updateHeartbeat(sessionId);
     res.json({ success: true });
   } catch (error) {
-    console.error('[Analytics] Error updating heartbeat:', error);
+    logger.error('[Analytics] Error updating heartbeat:', error);
     res.status(500).json({ error: 'Failed to update heartbeat' });
   }
 });
@@ -112,7 +112,7 @@ router.post('/article-view', (req, res) => {
     logArticleView(articleId, title || 'Unknown');
     res.json({ success: true });
   } catch (error) {
-    console.error('Error logging article view:', error);
+    logger.error('Error logging article view:', error);
     res.status(500).json({ error: 'Failed to log article view' });
   }
 });
@@ -132,7 +132,7 @@ router.get('/admin/health', authenticateAdmin, (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Health check error:', error);
+    logger.error('Health check error:', error);
     res.status(500).json({
       status: 'error',
       error: error.message,
@@ -191,7 +191,7 @@ router.get('/admin/debug/sessions', authenticateAdmin, (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error getting debug sessions:', error);
+    logger.error('Error getting debug sessions:', error);
     res.status(500).json({ error: 'Failed to get debug sessions', message: error.message });
   }
 });
@@ -203,7 +203,7 @@ router.post('/admin/debug/cleanup', authenticateAdmin, (req, res) => {
     cleanupStaleSessions();
     res.json({ success: true, message: 'Cleanup completed' });
   } catch (error) {
-    console.error('[Analytics] Error during manual cleanup:', error);
+    logger.error('[Analytics] Error during manual cleanup:', error);
     res.status(500).json({ error: 'Failed to cleanup', message: error.message });
   }
 });
@@ -214,7 +214,7 @@ router.get('/admin/current', authenticateAdmin, (req, res) => {
     const stats = getCurrentStats();
     res.json(stats);
   } catch (error) {
-    console.error('Error getting current stats:', error);
+    logger.error('Error getting current stats:', error);
     res.status(500).json({ error: 'Failed to get current stats' });
   }
 });
@@ -225,7 +225,7 @@ router.get('/admin/today', authenticateAdmin, (req, res) => {
     const stats = getTodayStats();
     res.json(stats);
   } catch (error) {
-    console.error('Error getting today stats:', error);
+    logger.error('Error getting today stats:', error);
     res.status(500).json({ error: 'Failed to get today stats' });
   }
 });
@@ -242,7 +242,7 @@ router.get('/admin/daily', authenticateAdmin, (req, res) => {
     const stats = getDailyStats(start, end);
     res.json(stats);
   } catch (error) {
-    console.error('Error getting daily stats:', error);
+    logger.error('Error getting daily stats:', error);
     res.status(500).json({ error: 'Failed to get daily stats' });
   }
 });
@@ -256,7 +256,7 @@ router.get('/admin/articles', authenticateAdmin, (req, res) => {
     const articles = getMostViewedArticles(limit, days);
     res.json(articles);
   } catch (error) {
-    console.error('Error getting article stats:', error);
+    logger.error('Error getting article stats:', error);
     res.status(500).json({ error: 'Failed to get article stats' });
   }
 });
@@ -310,7 +310,7 @@ router.get('/admin/export', authenticateAdmin, (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="radio-stats-${start}-to-${end}.csv"`);
     res.send(csv);
   } catch (error) {
-    console.error('Error exporting stats:', error);
+    logger.error('Error exporting stats:', error);
     res.status(500).json({ error: 'Failed to export stats' });
   }
 });

@@ -1,10 +1,12 @@
 // Analytics utility for tracking user events
 // Minimal tracking - only session counts, no personal data
 
+import { clientDebug, clientError } from './clientLogger';
+
 const isDebugEnabled = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
 const debugLog = (...args) => {
   if (isDebugEnabled) {
-    console.log(...args);
+    clientDebug(...args);
   }
 };
 
@@ -58,7 +60,7 @@ class AnalyticsClient {
 
       debugLog('[Analytics] Stream started:', { station, quality });
     } catch (error) {
-      console.error('[Analytics] Error tracking stream start:', error);
+      clientError('[Analytics] Error tracking stream start:', error);
     }
   }
 
@@ -80,7 +82,7 @@ class AnalyticsClient {
 
       debugLog('[Analytics] Stream stopped');
     } catch (error) {
-      console.error('[Analytics] Error tracking stream stop:', error);
+      clientError('[Analytics] Error tracking stream stop:', error);
     }
   }
 
@@ -106,7 +108,7 @@ class AnalyticsClient {
 
       debugLog('[Analytics] Station switched:', newStation);
     } catch (error) {
-      console.error('[Analytics] Error tracking station switch:', error);
+      clientError('[Analytics] Error tracking station switch:', error);
     }
   }
 
@@ -131,7 +133,7 @@ class AnalyticsClient {
 
       debugLog('[Analytics] Quality changed:', newQuality);
     } catch (error) {
-      console.error('[Analytics] Error tracking quality change:', error);
+      clientError('[Analytics] Error tracking quality change:', error);
     }
   }
 
@@ -149,10 +151,10 @@ class AnalyticsClient {
       if (response.ok) {
         debugLog('[Analytics] Heartbeat sent successfully');
       } else {
-        console.error('[Analytics] Heartbeat failed:', response.status, response.statusText);
+        clientError('[Analytics] Heartbeat failed:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('[Analytics] Error sending heartbeat:', error);
+      clientError('[Analytics] Error sending heartbeat:', error);
     }
   }
 
@@ -194,7 +196,7 @@ class AnalyticsClient {
 
       debugLog('[Analytics] Article viewed:', title);
     } catch (error) {
-      console.error('[Analytics] Error tracking article view:', error);
+      clientError('[Analytics] Error tracking article view:', error);
     }
   }
 

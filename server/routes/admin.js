@@ -51,7 +51,7 @@ const storage = multer.diskStorage({
     try {
       await fs.mkdir(uploadPath, { recursive: true });
     } catch (error) {
-      console.error('Error creating upload directory:', error);
+      logger.error('Error creating upload directory:', error);
     }
 
     cb(null, uploadPath);
@@ -92,7 +92,7 @@ const preRollStorage = multer.diskStorage({
     try {
       await fs.mkdir(uploadPath, { recursive: true });
     } catch (error) {
-      console.error('Error creating pre-roll upload directory:', error);
+      logger.error('Error creating pre-roll upload directory:', error);
     }
 
     cb(null, uploadPath);
@@ -650,7 +650,7 @@ router.post('/covers/:station/upload', authenticateAdmin, upload.single('cover')
 
     res.json({ success: true, cover });
   } catch (error) {
-    console.error('Error uploading cover:', error);
+    logger.error('Error uploading cover:', error);
     res.status(500).json({ error: 'Failed to upload cover' });
   }
 });
@@ -692,7 +692,7 @@ router.post('/covers/:station/upload-default', authenticateAdmin, upload.single(
       message: 'Default cover uploaded successfully'
     });
   } catch (error) {
-    console.error('Error uploading default cover:', error);
+    logger.error('Error uploading default cover:', error);
     res.status(500).json({ error: 'Failed to upload default cover' });
   }
 });
@@ -888,7 +888,7 @@ router.delete('/covers/:station/:coverId', authenticateAdmin, async (req, res) =
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Error deleting cover:', error);
+    logger.error('Error deleting cover:', error);
     res.status(500).json({ error: 'Failed to delete cover' });
   }
 });
@@ -914,19 +914,6 @@ async function evaluateCurrentCover(station, verbose = true) {
 
     // Find active schedule based on current day/time (using Europe/Bucharest timezone)
     const now = new Date();
-
-    // Get time in Romania timezone (Europe/Bucharest)
-    const romaniaTimeStr = now.toLocaleString('en-US', {
-      timeZone: 'Europe/Bucharest',
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      weekday: 'short',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
 
     // Parse Romania time components
     const romaniaDate = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Bucharest' }));
@@ -1115,7 +1102,7 @@ export async function broadcastCurrentCovers() {
     try {
       client.write(message);
     } catch (error) {
-      console.error('[SSE] Error broadcasting to client:', error);
+      logger.error('[SSE] Error broadcasting to client:', error);
       coverStreamClients.delete(client);
     }
   });
@@ -1130,13 +1117,13 @@ function startCoverChangeMonitoring() {
     return; // Already running
   }
 
-  console.log('[SSE] Starting cover change monitoring (every 5 seconds)');
+  logger.info('[SSE] Starting cover change monitoring (every 5 seconds)');
 
   coverCheckInterval = setInterval(async () => {
     try {
       await broadcastCurrentCovers();
     } catch (error) {
-      console.error('[SSE] Error in cover change monitoring:', error);
+      logger.error('[SSE] Error in cover change monitoring:', error);
     }
   }, 5000); // Check every 5 seconds
 }
@@ -1152,7 +1139,7 @@ function stopCoverChangeMonitoring() {
 
 // Test NTP server connectivity
 router.post('/ntp/test', authenticateAdmin, async (req, res) => {
-  const { hostname, port = 123, timeout = 5000 } = req.body;
+  const { hostname, port = 123 } = req.body;
 
   if (!hostname) {
     return res.status(400).json({ error: 'Hostname is required' });
@@ -1166,7 +1153,7 @@ router.post('/ntp/test', authenticateAdmin, async (req, res) => {
       const responseTime = Date.now() - startTime;
 
       if (err) {
-        console.error(`NTP test failed for ${hostname}:${port}:`, err.message);
+        logger.error(`NTP test failed for ${hostname}:${port}:`, err.message);
         return res.json({
           success: false,
           hostname,
@@ -1192,7 +1179,7 @@ router.post('/ntp/test', authenticateAdmin, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('NTP test error:', error);
+    logger.error('NTP test error:', error);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -1255,11 +1242,11 @@ router.post('/ntp/sync', authenticateAdmin, async (req, res) => {
         });
 
         if (syncSuccess) {
-          console.log(`Successfully synced with ${server.hostname}:${server.port}`);
+          logger.info(`Successfully synced with ${server.hostname}:${server.port}`);
           break;
         }
       } catch (error) {
-        console.error(`Failed to sync with ${server.hostname}:${server.port}:`, error.message);
+        logger.error(`Failed to sync with ${server.hostname}:${server.port}:`, error.message);
         lastError = error;
         continue;
       }
@@ -1294,7 +1281,7 @@ router.post('/ntp/sync', authenticateAdmin, async (req, res) => {
     }
 
   } catch (error) {
-    console.error('NTP sync error:', error);
+    logger.error('NTP sync error:', error);
     res.status(500).json({
       success: false,
       error: error.message,

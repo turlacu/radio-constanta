@@ -6,7 +6,7 @@ import { Card, Heading, Body, Button } from './ui';
 export default function NewsList({ articles, onArticleClick, onLoadMore, hasMore, loading }) {
   const device = useContext(DeviceContext);
   const isSplitScreen = device?.policy?.canShowNewsRail;
-  const placeholderImage = 'https://via.placeholder.com/800x400/1A1F2E/7CA9DB?text=Radio+Constanta';
+  const placeholderImage = '/og-image.png';
   const listShellClass = isSplitScreen
     ? 'mx-auto flex w-full max-w-[64rem] flex-col gap-[clamp(0.95rem,0.86rem+0.34vw,1.6rem)] px-[clamp(1.15rem,1rem+0.42vw,2.25rem)] pt-[clamp(1.1rem,1rem+0.32vw,1.6rem)] pb-[clamp(0.5rem,0.38rem+0.18vw,0.8rem)]'
     : 'mx-auto grid w-full max-w-[96rem] grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-[clamp(1rem,0.9rem+0.35vw,1.75rem)] px-[clamp(1rem,0.86rem+0.52vw,2.5rem)] pt-[clamp(1.5rem,1.32rem+0.72vw,2.8rem)] min-[1100px]:grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))]';

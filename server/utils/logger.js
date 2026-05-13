@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Logger utility - centralized logging with environment-based levels
  * Replaces scattered console.log statements throughout the codebase

@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { motion } from 'framer-motion';
+import { clientError } from '../utils/clientLogger';
 
 /**
  * Error Boundary component to catch JavaScript errors anywhere in the child component tree
@@ -15,7 +16,7 @@ class ErrorBoundary extends Component {
     };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     // Update state so the next render will show the fallback UI
     return { hasError: true };
   }
@@ -23,7 +24,7 @@ class ErrorBoundary extends Component {
   componentDidCatch(error, errorInfo) {
     // Log the error to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error caught by ErrorBoundary:', error, errorInfo);
+      clientError('Error caught by ErrorBoundary:', error, errorInfo);
     }
 
     // Update state with error details

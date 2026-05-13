@@ -104,7 +104,7 @@ Coolify is a self-hosted PaaS that makes deploying Docker apps easy.
 
 10. **Monitor**
     - Check logs in Coolify dashboard
-    - Access your app at `http://your-domain` or `http://your-server-ip:3001`
+    - Access your app at `https://stream.turlacu.ro` or `http://your-server-ip:3001`
 
 #### Coolify Auto-Deploy
 
@@ -161,7 +161,7 @@ If you prefer manual control without Coolify:
    # /etc/nginx/sites-available/radio-constanta
    server {
        listen 80;
-       server_name your-domain.com;
+       server_name stream.turlacu.ro;
 
        location / {
            proxy_pass http://localhost:3001;
@@ -177,7 +177,7 @@ If you prefer manual control without Coolify:
    Enable site and get SSL:
    ```bash
    sudo ln -s /etc/nginx/sites-available/radio-constanta /etc/nginx/sites-enabled/
-   sudo certbot --nginx -d your-domain.com
+   sudo certbot --nginx -d stream.turlacu.ro
    sudo systemctl reload nginx
    ```
 

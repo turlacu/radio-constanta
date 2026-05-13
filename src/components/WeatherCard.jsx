@@ -92,6 +92,8 @@ export default function WeatherCard({ className = '', style }) {
     return () => {
       unsubscribe();
     };
+  // Weather label/icon helpers are pure mappings; keeping this subscription tied to location avoids unnecessary resubscribes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.weatherLocation]);
 
   const getConditionFromCode = (code, provider) => {

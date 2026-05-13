@@ -5,9 +5,11 @@ import { Heading, Body, Caption } from './ui';
 import NewsHeader from './NewsHeader';
 import { useArticleMedia } from '../hooks/useArticleMedia';
 import analytics from '../utils/analytics';
+import { clientError } from '../utils/clientLogger';
 
 export default function NewsArticle({ article, onBack, radioState, isSplitScreen }) {
   const scrollRef = useRef(null);
+  const safeArticle = article || {};
   const normalizeArticleMarkup = (html) => {
     if (!html) return '';
 
@@ -28,8 +30,8 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         return cleanedStyle ? ` style=${quote}${cleanedStyle}${quote}` : '';
       });
   };
-  const [fullContent, setFullContent] = useState(normalizeArticleMarkup(article.content || ''));
-  const [fullImage, setFullImage] = useState(article.image);
+  const [fullContent, setFullContent] = useState(normalizeArticleMarkup(safeArticle.content || ''));
+  const [fullImage, setFullImage] = useState(safeArticle.image);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -49,13 +51,15 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
     '[&_img]:my-[clamp(1.6rem,1.45rem+0.5vw,2.4rem)] [&_img]:rounded-2xl'
   ].join(' ');
 
-  if (!article) return null;
-
   // Use custom hook for media handling
   useArticleMedia(fullContent, radioState);
 
   // Fetch full article content when component mounts
   useEffect(() => {
+    if (!article?.link) {
+      return;
+    }
+
     const fetchFullArticle = async () => {
       try {
         setLoading(true);
@@ -80,7 +84,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
         // Track article view
         analytics.trackArticleView(article.id || article.link, article.title);
       } catch (err) {
-        console.error('Error fetching full article:', err);
+        clientError('Error fetching full article:', err);
         setError(
           'Nu s-a putut încărca articolul complet. Click pe linkul de mai jos pentru a citi pe site.'
         );
@@ -90,11 +94,11 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
     };
 
     fetchFullArticle();
-  }, [article.link, article.id, article.title]);
+  }, [article?.link, article?.id, article?.title]);
 
   // Format date
   const formattedDate = useMemo(() => {
-    const date = new Date(article.date);
+    const date = new Date(safeArticle.date);
     return date.toLocaleDateString('ro-RO', {
       day: 'numeric',
       month: 'long',
@@ -102,15 +106,15 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
       hour: '2-digit',
       minute: '2-digit',
     });
-  }, [article.date]);
+  }, [safeArticle.date]);
 
   // Check if article is older than 3 days
   const isOlderThanThreeDays = useMemo(() => {
-    const articleDate = new Date(article.date);
+    const articleDate = new Date(safeArticle.date);
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     return articleDate < threeDaysAgo;
-  }, [article.date]);
+  }, [safeArticle.date]);
 
   useEffect(() => {
     const node = scrollRef.current;
@@ -131,6 +135,8 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
   const scrollToTop = () => {
     scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (!article) return null;
 
   return (
     <motion.div
@@ -172,8 +178,7 @@ export default function NewsArticle({ article, onBack, radioState, isSplitScreen
               className="w-full h-full object-cover"
               style={{ imageRendering: 'auto' }}
               onError={(e) => {
-                e.target.src =
-                  'https://via.placeholder.com/800x450/1A1A1A/00BFFF?text=Radio+Constanta';
+                e.target.src = '/og-image.png';
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-dark-bg/60 via-transparent to-transparent" />

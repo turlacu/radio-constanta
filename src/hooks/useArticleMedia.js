@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { clientError } from '../utils/clientLogger';
 
 /**
  * Custom hook for handling article audio and video players
@@ -190,7 +191,7 @@ export function useArticleMedia(fullContent, radioState) {
                       media.muted = false;
                     }, 200);
                   } catch (err) {
-                    console.error('Video play failed:', err);
+                    clientError('Video play failed:', err);
                     media.muted = false;
                   }
                 } else {
@@ -204,7 +205,7 @@ export function useArticleMedia(fullContent, radioState) {
                     `;
                     updateControlsVisibility();
                   } catch (err) {
-                    console.error('Video play failed:', err);
+                    clientError('Video play failed:', err);
                   }
                 }
               } else {

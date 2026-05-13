@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
 import { normalizeStyledUnicode } from '../utils/normalizeStyledUnicode.js';
+import logger from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -147,7 +148,7 @@ router.get('/', async (req, res) => {
       return res.status(400).json({ error: `Invalid URL domain. Expected: ${siteDomain}` });
     }
 
-    console.log(`Fetching full article from: ${url}`);
+    logger.info(`Fetching full article from: ${url}`);
 
     // Fetch article page
     const response = await fetchWithTimeout(url, {}, 8000);
@@ -242,7 +243,7 @@ router.get('/', async (req, res) => {
     const proxiedContent = sanitizeArticleHtml(proxyImagesInHtml(articleContent));
     const proxiedImage = proxyImageUrl(featuredImage);
 
-    console.log('Successfully extracted article content');
+    logger.info('Successfully extracted article content');
 
     res.json({
       content: proxiedContent,
@@ -251,7 +252,7 @@ router.get('/', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching article:', error);
+    logger.error('Error fetching article:', error);
     res.status(500).json({
       error: 'Failed to fetch article content',
       message: error.message

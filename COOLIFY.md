@@ -144,11 +144,11 @@ node scripts/generate-password-hash.js "your-password"
 
 After the deploy finishes, verify:
 
-1. `https://your-domain/api/health` returns JSON with `status: "ok"`.
+1. `https://stream.turlacu.ro/api/health` returns JSON with `status: "ok"`.
 2. The homepage loads.
 3. News requests work.
 4. Audio streams play.
-5. `https://your-domain/admin` loads.
+5. `https://stream.turlacu.ro/admin` loads.
 
 ## First Admin Login
 
@@ -221,7 +221,7 @@ The app works with Open-Meteo by default. If you switched to OpenWeatherMap, add
 
 Weather requests for keyed providers are now proxied through the backend. Verify:
 
-1. `https://your-domain/api/weather/current?lat=44.1598&lon=28.6348` returns JSON.
+1. `https://stream.turlacu.ro/api/weather/current?lat=44.1598&lon=28.6348` returns JSON.
 2. The selected weather provider is correct in admin settings.
 3. The saved API key is valid.
 
