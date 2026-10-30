@@ -1,134 +1,71 @@
-/**
- * AuroraLayer - Canvas-Based
- * Renders aurora using canvas with smooth gradients
- * No CSS gradient banding, better performance
- */
-
+/** A small, cached soft glow. Motion only composites the cached canvas. */
 import { useEffect, useRef } from 'react';
+import { getCanvasSize } from '../../modules/weather/rendering';
 
-export const AuroraLayer = ({ visualState, performanceLevel }) => {
+export const AuroraLayer = ({ visualState, performanceLevel, profile, onError }) => {
   const canvasRef = useRef(null);
-  const animationFrameRef = useRef(null);
-  const timeRef = useRef(0);
+  const enabled = visualState?.aurora?.enabled && performanceLevel !== 'low';
 
   useEffect(() => {
-    if (!visualState?.aurora?.enabled || performanceLevel === 'low') {
-      return;
-    }
-
+    if (!enabled || profile.static) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const ctx = canvas.getContext('2d', { alpha: true });
-    const auroraConfig = visualState.aurora;
-
-    // Set canvas size
-    const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-    };
-
-    const drawAurora = (time) => {
-      const width = canvas.width / (window.devicePixelRatio || 1);
-      const height = canvas.height / (window.devicePixelRatio || 1);
-
-      ctx.clearRect(0, 0, width, height);
-
-      // Simple, gentle animation on high performance
-      const animationProgress = performanceLevel === 'high' ? Math.sin(time * 0.00005) * 0.01 : 0;
-
-      // Parse colors from hex
-      const colors = auroraConfig.colors.map(hexToRgb);
-
-      // Main aurora glow
-      const gradient1 = ctx.createRadialGradient(
-        width * (0.5 + animationProgress),
-        height * 0.1,
-        0,
-        width * 0.5,
-        height * 0.4,
-        width * 0.6
-      );
-
-      gradient1.addColorStop(0, `rgba(${colors[0].r}, ${colors[0].g}, ${colors[0].b}, ${auroraConfig.intensity * 0.3})`);
-      gradient1.addColorStop(0.4, `rgba(${colors[1].r}, ${colors[1].g}, ${colors[1].b}, ${auroraConfig.intensity * 0.15})`);
-      gradient1.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-      ctx.fillStyle = gradient1;
-      ctx.fillRect(0, 0, width, height);
-
-      // Add dithering to aurora to prevent circular banding
-      addAuroraDithering(ctx, width, height, 2);
-
-      // Animation frame loop (high performance only)
-      if (performanceLevel === 'high') {
-        timeRef.current = time;
-        animationFrameRef.current = requestAnimationFrame(drawAurora);
+    const draw = () => {
+      try {
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Aurora canvas unavailable');
+        const rect = canvas.getBoundingClientRect();
+        const size = getCanvasSize(rect.width, rect.height, 1, { maxWidth: 640, maxHeight: 360 });
+        canvas.width = size.width;
+        canvas.height = size.height;
+        const { colors, intensity } = visualState.aurora;
+        const gradient = ctx.createRadialGradient(
+          size.width * 0.5,
+          size.height * 0.1,
+          0,
+          size.width * 0.5,
+          size.height * 0.4,
+          size.width * 0.6
+        );
+        gradient.addColorStop(0, rgba(colors[0], intensity * 0.3));
+        gradient.addColorStop(0.4, rgba(colors[1], intensity * 0.15));
+        gradient.addColorStop(1, rgba(colors[1], 0));
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size.width, size.height);
+      } catch (error) {
+        onError(error);
       }
     };
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    // Initial draw
-    drawAurora(0);
-
+    draw();
+    window.addEventListener('resize', draw);
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      window.removeEventListener('resize', draw);
+      canvas.width = canvas.height = 1;
     };
-  }, [visualState, performanceLevel]);
+  }, [enabled, visualState, profile, onError]);
 
-  if (!visualState?.aurora?.enabled || performanceLevel === 'low') {
-    return null;
+  if (!enabled) return null;
+  if (profile.static) {
+    return (
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(ellipse at 50% 10%, ${rgba(visualState.aurora.colors[0], visualState.aurora.intensity * 0.3)}, transparent 70%)`,
+        }}
+      />
+    );
   }
-
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{
-        mixBlendMode: 'screen',
-        filter: 'blur(50px)', // Consistent blur regardless of performance
-        // No global opacity - intensity controlled in canvas drawing
-      }}
+      className={`absolute inset-0 w-full h-full pointer-events-none ${profile.name !== 'full' || performanceLevel === 'high' ? 'weather-aurora-drift' : ''}`}
+      style={{ opacity: 1 }}
     />
   );
 };
 
-/**
- * Add dithering to aurora canvas to eliminate circular banding
- */
-function addAuroraDithering(ctx, width, height, intensity = 2) {
-  const imageData = ctx.getImageData(0, 0, width, height);
-  const data = imageData.data;
-
-  for (let i = 0; i < data.length; i += 4) {
-    // Add random noise to each color channel
-    const noise = (Math.random() - 0.5) * intensity;
-    data[i] += noise;     // Red
-    data[i + 1] += noise; // Green
-    data[i + 2] += noise; // Blue
-  }
-
-  ctx.putImageData(imageData, 0, 0);
-}
-
-/**
- * Convert hex color to RGB object
- */
-function hexToRgb(hex) {
-  hex = hex.replace('#', '');
-  return {
-    r: parseInt(hex.substring(0, 2), 16),
-    g: parseInt(hex.substring(2, 4), 16),
-    b: parseInt(hex.substring(4, 6), 16)
-  };
+function rgba(hex, alpha) {
+  return `rgba(${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)}, ${alpha})`;
 }
 
 export default AuroraLayer;

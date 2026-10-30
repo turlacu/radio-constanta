@@ -560,3 +560,26 @@ img {
     display: none;
   }
 }
+
+/* Cache aurora pixels and only composite their gentle movement. */
+@keyframes weather-aurora-drift {
+  from { transform: translateX(-1%); }
+  to { transform: translateX(1%); }
+}
+.weather-aurora-drift {
+  animation: weather-aurora-drift 30s ease-in-out infinite alternate;
+}
+
+/* Moving weather behind glass otherwise forces repeated backdrop filtering. */
+html[data-weather-rendering] [class*="backdrop-blur"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html[data-weather-rendering] .weather-glass-surface {
+  background-color: rgba(28, 36, 48, 0.75);
+}
+html[data-weather-rendering] .weather-glass-surface.text-gray-900,
+html[data-weather-rendering] .weather-glass-surface.weather-glass-light {
+  background-color: rgba(240, 244, 248, 0.8);
+}

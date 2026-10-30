@@ -10,11 +10,14 @@ import { getCrossfadeTransition } from '../modules/weather/TransitionController'
 import BackgroundRenderer from './weather/BackgroundRenderer';
 import ParticleLayer from './weather/ParticleLayer';
 import AuroraLayer from './weather/AuroraLayer';
+import { useWeatherRenderingProfile } from '../hooks/useWeatherRenderingProfile';
 import { useSettings } from '../contexts/SettingsContext';
 import { clientDebug, clientError } from '../utils/clientLogger';
 
 export default function WeatherBackground() {
   const settings = useSettings();
+  const rendering = useWeatherRenderingProfile();
+  const { profile } = rendering;
   const [visualState, setVisualState] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -82,6 +85,25 @@ export default function WeatherBackground() {
     return null;
   }
 
+  // Static rendering bypasses AnimatePresence and all animation loops.
+  if (profile.static) {
+    return (
+      <div className="fixed inset-0 z-0" aria-hidden="true">
+        <BackgroundRenderer
+          visualState={visualState}
+          performanceLevel={settings.weatherPerformance}
+          profile={profile}
+        />
+        <AuroraLayer
+          visualState={visualState}
+          performanceLevel={settings.weatherPerformance}
+          profile={profile}
+          onError={rendering.onError}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-0">
       {/* Loading State */}
@@ -100,6 +122,7 @@ export default function WeatherBackground() {
             <BackgroundRenderer
               visualState={visualState}
               performanceLevel={settings.weatherPerformance}
+              {...rendering}
             />
           </motion.div>
         )}
@@ -123,13 +146,14 @@ export default function WeatherBackground() {
             <AuroraLayer
               visualState={visualState}
               performanceLevel={settings.weatherPerformance}
+              {...rendering}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Particle Layer */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" key={profile.name}>
         {visualState && (
           <motion.div
             key={`particles-${visualState.stateKey}`}
@@ -146,6 +170,7 @@ export default function WeatherBackground() {
             <ParticleLayer
               visualState={visualState}
               performanceLevel={settings.weatherPerformance}
+              {...rendering}
             />
           </motion.div>
         )}

@@ -6,89 +6,119 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { getCanvasSize, startWeatherAnimation } from '../../modules/weather/rendering';
 import { PERFORMANCE_CONFIG } from '../../config/weather/visualStates';
 
-export const ParticleLayer = ({ visualState, performanceLevel }) => {
+export const ParticleLayer = ({
+  visualState,
+  performanceLevel,
+  profile,
+  onFrame,
+  onReset,
+  onError,
+}) => {
   const canvasRef = useRef(null);
-  const animationFrameRef = useRef(null);
-  const particlesRef = useRef([]);
 
   useEffect(() => {
-    if (!visualState || !visualState.particles) return;
-
+    if (!visualState?.particles || profile.static) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
+    let stop;
+    let resize;
+    try {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Weather canvas unavailable');
+      const config = visualState.particles;
+      const perfConfig = PERFORMANCE_CONFIG[performanceLevel] || PERFORMANCE_CONFIG.medium;
+      // Low stays Low; High cannot exceed the TV budget.
+      const multiplier = Math.min(perfConfig.particleMultiplier, profile.particleMultiplier ?? 1);
+      let width;
+      let height;
+      let particles = [];
+      // A bounded atlas replaces repeated radial gradients and filters.
+      const sprites = createSprites(config);
+      resize = () => {
+        try {
+          const rect = canvas.getBoundingClientRect();
+          width = Math.max(1, rect.width);
+          height = Math.max(1, rect.height);
+          const size = getCanvasSize(width, height, window.devicePixelRatio || 1, profile);
+          canvas.width = size.width;
+          canvas.height = size.height;
+          ctx.setTransform(size.width / width, 0, 0, size.height / height, 0, 0);
+          particles = createParticles(Math.floor(config.count * multiplier), config, width, height);
+          return true;
+        } catch (error) {
+          stop?.();
+          onError(error);
+          return false;
+        }
+      };
+      if (!resize()) return;
 
-    const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
-
-    // Set canvas size
-    const resizeCanvas = () => {
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-    };
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    // Get performance multiplier
-    const perfConfig = PERFORMANCE_CONFIG[performanceLevel] || PERFORMANCE_CONFIG.medium;
-    const particleCount = Math.floor(
-      visualState.particles.count * perfConfig.particleMultiplier
-    );
-
-    // Initialize particles
-    particlesRef.current = createParticles(
-      particleCount,
-      visualState.particles,
-      canvas.width / dpr,
-      canvas.height / dpr
-    );
-
-    // Animation loop
-    let lastTime = Date.now();
-
-    const animate = () => {
-      const now = Date.now();
-      const deltaTime = (now - lastTime) / 1000; // Convert to seconds
-      lastTime = now;
-
-      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-
-      // Update and draw particles
-      particlesRef.current.forEach(particle => {
-        updateParticle(particle, visualState.particles, canvas.width / dpr, canvas.height / dpr, deltaTime);
-        drawParticle(ctx, particle, visualState.particles);
+      window.addEventListener('resize', resize);
+      stop = startWeatherAnimation({
+        fps: profile.fps,
+        onFrame,
+        onReset,
+        onError,
+        draw: deltaTime => {
+          ctx.clearRect(0, 0, width, height);
+          particles.forEach(particle => {
+            updateParticle(particle, config, width, height, deltaTime);
+            if (sprites) {
+              const radius = particle.size * (config.type === 'stars' ? 3 : 1);
+              const sprite =
+                sprites[particle.size > (config.size.min + config.size.max) / 2 ? 1 : 0];
+              ctx.globalAlpha = particle.opacity;
+              ctx.drawImage(
+                sprite,
+                particle.x - radius,
+                particle.y - radius,
+                radius * 2,
+                radius * 2
+              );
+            } else {
+              drawParticle(ctx, particle, config);
+            }
+          });
+          ctx.globalAlpha = 1;
+        },
       });
+    } catch (error) {
+      onError(error);
+    }
 
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    // Cleanup
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      particlesRef.current = [];
+      stop?.();
+      if (resize) window.removeEventListener('resize', resize);
+      // Release backing storage, including on quality changes.
+      canvas.width = 1;
+      canvas.height = 1;
     };
-  }, [visualState, performanceLevel]);
+  }, [visualState, performanceLevel, profile, onFrame, onReset, onError]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{
-        // No global opacity - let individual particles control their own opacity
-        // Global opacity compounds with background layers causing banding
-      }}
-    />
-  );
+  if (profile.static) return null;
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
 };
+
+function createSprites(config) {
+  if (!['fog', 'stars', 'bokeh'].includes(config.type)) return null;
+  return [config.size.min, config.size.max].map(size => {
+    const sprite = document.createElement('canvas');
+    // Two size buckets keep even the largest fog/bokeh textures bounded.
+    sprite.width = sprite.height = Math.min(
+      256,
+      Math.max(16, Math.ceil(size * 2 * (config.type === 'stars' ? 3 : 1)))
+    );
+    const ctx = sprite.getContext('2d');
+    if (!ctx) throw new Error('Weather sprite canvas unavailable');
+    const center = sprite.width / 2;
+    const radius = config.type === 'stars' ? center / 3 : center;
+    drawParticle(ctx, { x: center, y: center, size: radius, opacity: 1 }, config);
+    return sprite;
+  });
+}
 
 /**
  * Create particles based on configuration

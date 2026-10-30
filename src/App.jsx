@@ -1579,7 +1579,7 @@ function AppContent() {
               )}
               {/* Top Right Buttons */}
               <div className="absolute right-3 top-3 z-50">
-                <div className={`flex items-center gap-2 rounded-[1.15rem] px-2 py-2 backdrop-blur-xl ${desktopControlRailClass}`}>
+                <div className={`flex items-center gap-2 weather-glass-surface rounded-[1.15rem] px-2 py-2 backdrop-blur-xl ${desktopControlRailClass}`}>
                 {/* Settings Button */}
                 <motion.button
                   onClick={() => setShowSettingsModal(true)}

@@ -44,7 +44,7 @@ export default function WeatherCard({ className = '', style }) {
   const [isLoading, setIsLoading] = useState(true);
   const textColor = useWeatherTextColor();
   const loadingSurfaceClass = textColor === 'dark'
-    ? 'border border-gray-900/18 bg-white/35'
+    ? 'weather-glass-light border border-gray-900/18 bg-white/35'
     : 'border border-white/18 bg-bg-tertiary/60';
   const loadingBlockClass = textColor === 'dark'
     ? 'bg-gray-900/12'
@@ -255,7 +255,7 @@ export default function WeatherCard({ className = '', style }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className={clsx(
-          'w-full max-w-[32rem] rounded-3xl p-8 shadow-2xl backdrop-blur-xl',
+          'weather-glass-surface w-full max-w-[32rem] rounded-3xl p-8 shadow-2xl backdrop-blur-xl',
           loadingSurfaceClass,
           className
         )}
