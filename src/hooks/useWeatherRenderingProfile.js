@@ -1,3 +1,4 @@
+import { useScreenProtection } from '../contexts/ScreenProtectionContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   createFrameMonitor,
@@ -11,6 +12,7 @@ import {
 let sessionTier = 0;
 
 export function useWeatherRenderingProfile() {
+  const { active: screenProtectionActive } = useScreenProtection();
   const [isTV] = useState(() => isTvBrowser(navigator.userAgent));
   const [hidden, setHidden] = useState(() => document.hidden);
   const [tier, setTier] = useState(() => sessionTier);
@@ -52,7 +54,7 @@ export function useWeatherRenderingProfile() {
   }, []);
 
   const profile =
-    reducedMotion || hidden || tier >= 2
+    screenProtectionActive || reducedMotion || hidden || tier >= 2
       ? STATIC_PROFILE
       : isTV
         ? TV_PROFILES[tier]

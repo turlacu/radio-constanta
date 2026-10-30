@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from
 import { AnimatePresence, motion } from 'framer-motion';
 import { lazy, Suspense, useState, useRef, useEffect, createContext, useMemo, useCallback } from 'react';
 import Radio from './pages/Radio';
+import ScreenProtection from './components/ScreenProtection';
+import { ScreenProtectionEffects, useScreenProtection } from './contexts/ScreenProtectionContext';
 import BottomNav from './components/BottomNav';
 import Loader from './components/Loader';
 import { useDeviceDetection } from './hooks/useDeviceDetection';
@@ -238,8 +240,9 @@ function TvDpadController({
     navigate('/');
   }, [navigate]);
 
+  const { active: screenProtectionActive } = useScreenProtection();
   useTvDpadNavigation({
-    enabled: enabled && !isAdminRoute,
+    enabled: enabled && !isAdminRoute && !screenProtectionActive,
     showSettingsModal,
     showInlineNews,
     onCloseSettings,
@@ -1556,6 +1559,7 @@ function AppContent() {
   return (
     <DeviceContext.Provider value={deviceContextValue}>
       <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ScreenProtection stationName={currentStation.name}>
         <TvDpadController
           enabled={device.isTV}
           showSettingsModal={showSettingsModal}
@@ -1635,6 +1639,7 @@ function AppContent() {
                   }`}
                   style={resizePolicy.showInlineNews ? { width: `${resizePolicy.activePlayerPaneWidth}px` } : undefined}
                 >
+                  <ScreenProtectionEffects>
                   {/* Floating particles animation - only show for minimal background */}
                   {!resizePolicy.showInlineNews && isPlaying && settings.backgroundAnimation === 'minimal' && (
                     <>
@@ -1673,6 +1678,8 @@ function AppContent() {
                       </div>
                     </>
                   )}
+
+                  </ScreenProtectionEffects>
 
                   <div className={`relative z-10 flex h-full w-full justify-center ${
                     resizePolicy.showInlineNews
@@ -1736,7 +1743,7 @@ function AppContent() {
                   </Routes>
                 </Suspense>
               </AnimatePresence>
-              <BottomNav />
+              <BottomNav onOpenSettings={() => setShowSettingsModal(true)} />
             </>
           )}
         </div>
@@ -1754,6 +1761,7 @@ function AppContent() {
           </Suspense>
         )}
         </RouteHandler>
+        </ScreenProtection>
       </Router>
     </DeviceContext.Provider>
   );

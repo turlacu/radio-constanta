@@ -1,3 +1,4 @@
+import ScreenProtectionSettings from './ScreenProtectionSettings';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useContext, useState } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
@@ -525,6 +526,11 @@ export default function SettingsModal({
                     </div>
                   )}
                 </div>
+
+                <ScreenProtectionSettings
+                  sectionClassName={denseSectionClass}
+                  buttonClassName={controlButtonClass}
+                />
 
                 {renderStreamQualitySection(fmStation)}
                 {renderStreamQualitySection(folclorStation)}

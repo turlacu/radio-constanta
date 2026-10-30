@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
+import { readScreenProtectionSettings } from '../utils/screenProtection';
+
 const SettingsContext = createContext();
 
 export const useSettings = () => {
@@ -15,6 +17,13 @@ export const SettingsProvider = ({ children }) => {
   const [backgroundAnimation, setBackgroundAnimation] = useState(() => {
     return localStorage.getItem('backgroundAnimation') || 'minimal';
   });
+
+  const [screenProtectionMode, setScreenProtectionMode] = useState(
+    () => readScreenProtectionSettings(localStorage, navigator.userAgent).mode
+  );
+  const [screenProtectionTimeoutMinutes, setScreenProtectionTimeoutMinutes] = useState(
+    () => readScreenProtectionSettings(localStorage, navigator.userAgent).timeoutMinutes
+  );
 
   // Weather settings
   const [weatherMode, setWeatherMode] = useState(() => {
@@ -63,7 +72,18 @@ export const SettingsProvider = ({ children }) => {
     localStorage.setItem('manualWeatherState', JSON.stringify(manualWeatherState));
   }, [manualWeatherState]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('screenProtectionMode', screenProtectionMode);
+      localStorage.setItem('screenProtectionTimeoutMinutes', String(screenProtectionTimeoutMinutes));
+    } catch { /* Protection still works when storage is unavailable. */ }
+  }, [screenProtectionMode, screenProtectionTimeoutMinutes]);
+
   const value = {
+    screenProtectionMode,
+    setScreenProtectionMode,
+    screenProtectionTimeoutMinutes,
+    setScreenProtectionTimeoutMinutes,
     backgroundAnimation,
     setBackgroundAnimation,
     weatherMode,

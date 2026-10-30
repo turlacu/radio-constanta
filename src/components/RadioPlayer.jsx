@@ -1,12 +1,14 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import Loader from './Loader';
+import { useScreenProtection } from '../contexts/ScreenProtectionContext';
 import SpectrumVisualizer from './SpectrumVisualizer';
 import { ResponsiveContainer, Heading, Body, Caption } from './ui';
 import { useWeatherTextColor } from '../hooks/useWeatherTextColor';
 import { DeviceContext } from '../App';
 
 export default function RadioPlayer({ radioState }) {
+  const { active: screenProtectionActive, reportVideoPlayback } = useScreenProtection();
   const {
     isPlaying,
     isLoading,
@@ -46,6 +48,24 @@ export default function RadioPlayer({ radioState }) {
   const useCenteredDesktopStack = isDesktopShell && (forceCompactLayout || shortHeightLayout || effectivePaneAspectRatio < 1.25);
   const shouldRenderVideoCover = isDesktopShell && isVideoCover && !videoFailed && !useCenteredDesktopStack;
   const hasExpandedVideoCover = shouldRenderVideoCover;
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!shouldRenderVideoCover || !video) {
+      reportVideoPlayback(false);
+      return;
+    }
+    const playing = () => reportVideoPlayback(true);
+    const stopped = () => reportVideoPlayback(false);
+    video.addEventListener('playing', playing);
+    ['pause', 'ended', 'error', 'emptied'].forEach(type => video.addEventListener(type, stopped));
+    if (!video.paused && !video.ended && video.readyState >= 2) playing();
+    return () => {
+      video.removeEventListener('playing', playing);
+      ['pause', 'ended', 'error', 'emptied'].forEach(type => video.removeEventListener(type, stopped));
+      stopped();
+    };
+  }, [shouldRenderVideoCover, coverMedia.videoUrl, coverMedia.preRollUrl, reportVideoPlayback]);
+
   const useCompactStackedSizing = !isDesktopShell && (shortHeightLayout || aspectRatio > 0.72);
   const mobileCoverMaxPx = useCompactStackedSizing
     ? Math.min(viewportWidth * 0.62, viewportHeight * 0.34)
@@ -59,7 +79,7 @@ export default function RadioPlayer({ radioState }) {
 
   const textColor = showWeatherBackground ? weatherTextColor : 'light';
   const renderSpectrumVisualizer = (props = {}) => {
-    if (!showAudioAnalyser) {
+    if (!showAudioAnalyser || screenProtectionActive) {
       return null;
     }
 
@@ -331,7 +351,7 @@ export default function RadioPlayer({ radioState }) {
           whileHover={desktop ? { scale: 1.015 } : { scale: 1.02 }}
         />
 
-        {isPlaying && (
+        {isPlaying && !screenProtectionActive && (
           <motion.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -379,7 +399,7 @@ export default function RadioPlayer({ radioState }) {
           aria-label={coverMedia.videoLabel || `${currentStation.name} live video`}
         />
 
-        {isPlaying && (
+        {isPlaying && !screenProtectionActive && (
           <motion.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
