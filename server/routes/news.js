@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { authenticateAdmin } from '../middleware/auth.js';
 import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
 import { normalizeStyledUnicode } from '../utils/normalizeStyledUnicode.js';
+import { stripHtml } from '../utils/stripHtml.js';
 import logger from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,23 +45,6 @@ let cacheReady = false;
 const CACHE_MAX_SIZE = 100;              // Maximum articles to keep in cache
 const REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes - background refresh interval
 const WORDPRESS_FETCH_TIMEOUT_MS = 20000;
-
-// Helper to strip HTML tags from text
-const stripHtml = (html) => {
-  if (!html) return '';
-  return html
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#8211;/g, '–')
-    .replace(/&#8217;/g, "'")
-    .replace(/&#8230;/g, '...')
-    .replace(/\s+/g, ' ')
-    .trim();
-};
 
 // Helper to truncate text at word boundary
 const truncateAtWord = (text, maxLength) => {
